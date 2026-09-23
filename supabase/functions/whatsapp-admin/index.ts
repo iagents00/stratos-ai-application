@@ -263,9 +263,10 @@ Deno.serve(async (req) => {
 
     if (action === "create_organization") {
       const name = String(body.name ?? "").trim();
-      const slug = slugify(String(body.slug ?? name));
+      const slug = slugify(String(body.slug || name));
       const seats = Math.max(1, Math.min(1000, Number(body.seats ?? 30) || 30));
-      if (name.length < 2 || !slug) return respond({ ok: false, error: "Falta un nombre válido para la empresa." }, 400, origin);
+      if (name.length < 2) return respond({ ok: false, error: "Escribe el nombre de la empresa." }, 400, origin);
+      if (!slug) return respond({ ok: false, error: "El nombre debe incluir al menos una letra o un número." }, 400, origin);
       const metaConfig = {
         onboarding: { status: "draft", createdFrom: "whatsapp_admin", createdAt: new Date().toISOString() },
         features: { crm: true, teamAdmin: true, whatsappSignup: true, whatsappModule: false, whatsappChat: false },
@@ -276,6 +277,7 @@ Deno.serve(async (req) => {
       if (scopeSchemaReady) organizationRow.parent_organization_id = scopeOrganizationId || null;
       const { data, error } = await admin.from("organizations").insert(organizationRow)
         .select("id,name,slug,seats,plan,active,subscription_status,meta_config,created_at").single();
+      if (error?.code === "23505") return respond({ ok: false, error: "Ya existe una empresa con ese nombre o identificador." }, 409, origin);
       if (error) throw error;
       return respond({ ok: true, organization: data }, 200, origin);
     }
@@ -299,8 +301,16 @@ Deno.serve(async (req) => {
         return respond({ ok: false, error: "El alcance seguro de distribuidores todavía no está habilitado." }, 503, origin);
       }
       if (password.length < 12) return respond({ ok: false, error: "La contraseña debe tener al menos 12 caracteres." }, 400, origin);
-      const { data: org } = await admin.from("organizations").select("id").eq("id", organizationId).eq("active", true).maybeSingle();
+      const { data: org } = await admin.from("organizations").select("id,name,seats").eq("id", organizationId).eq("active", true).maybeSingle();
       if (!org) return respond({ ok: false, error: "La empresa no existe o está inactiva." }, 404, origin);
+      const { count: activeUsers, error: countError } = await admin.from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", organizationId)
+        .eq("active", true);
+      if (countError) throw countError;
+      if ((activeUsers ?? 0) >= Number(org.seats || 0)) {
+        return respond({ ok: false, error: `${org.name} ya utiliza sus ${org.seats} licencias. Amplía el límite o desactiva un usuario.` }, 409, origin);
+      }
       const { data: created, error: createError } = await admin.auth.admin.createUser({
         email, password, email_confirm: true, user_metadata: { name },
       });

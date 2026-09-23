@@ -27,6 +27,10 @@ const EMPTY_ORG = { name: "", slug: "", seats: 30 };
 const EMPTY_USER = { organization_id: "", name: "", email: "", role: "admin" };
 const EMPTY_CHANNEL = { organization_id: "", advisor_id: "", owner_type: "company", owner_name: "", phone_e164: "" };
 const INFOBIP_SENDERS_URL = "https://portal.infobip.com/channels-and-numbers/channels/whatsapp/senders";
+const TENANT_LOGIN_PATH = "/tenant";
+const slugify = (value) => String(value || "")
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48);
 
 function StatusPill({ status }) {
   const [label, color] = STATUS[status] || [status || "Sin estado", "#94A3B8"];
@@ -83,18 +87,18 @@ export default function WhatsAppOnboardingAdmin({ T, onBack }) {
 
   const runAction = async (key, fn, message) => {
     setBusy(key); setError(""); setSuccess("");
-    try { const result = await fn(); setSuccess(message); await refresh(); return result; }
+    try { const result = await fn(); setSuccess(typeof message === "function" ? message(result) : message); await refresh(); return result; }
     catch (err) { setError(err.message || "No se pudo completar la acción."); return null; }
     finally { setBusy(""); }
   };
 
   const createOrg = () => runAction("org", async () => {
-    const result = await createWhatsAppOrganization(orgForm);
+    const result = await createWhatsAppOrganization({ ...orgForm, slug: orgForm.slug || slugify(orgForm.name) });
     setOrgForm(EMPTY_ORG);
     setUserForm(p => ({ ...p, organization_id: result.organization.id }));
     setChannelForm(p => ({ ...p, organization_id: result.organization.id }));
     return result;
-  }, "Empresa creada. Ahora agrega su administrador y su número.");
+  }, result => `${result.organization.name} creada con ${result.organization.seats} licencias. Ahora crea su administrador; el acceso neutral será ${TENANT_LOGIN_PATH}.`);
 
   const createUser = () => runAction("user", async () => {
     const result = await createWhatsAppTenantUser(userForm);
@@ -102,6 +106,13 @@ export default function WhatsAppOnboardingAdmin({ T, onBack }) {
     setUserForm(p => ({ ...EMPTY_USER, organization_id: p.organization_id }));
     return result;
   }, "Usuario creado. La clave temporal se muestra una sola vez.");
+
+  const selectedUserOrganization = organizations.find(org => org.id === userForm.organization_id);
+  const selectedUserCount = userForm.organization_id
+    ? profiles.filter(profile => profile.organization_id === userForm.organization_id && profile.active !== false).length
+    : 0;
+  const selectedSeatLimit = Number(selectedUserOrganization?.seats || 0);
+  const noSeatsAvailable = !!selectedUserOrganization && selectedUserCount >= selectedSeatLimit;
 
   const connect = async () => {
     if (!providerReady) { setError("Primero hay que completar las aprobaciones de Meta y configurar Infobip en el servidor."); return; }
@@ -169,17 +180,19 @@ export default function WhatsAppOnboardingAdmin({ T, onBack }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(270px,1fr))", gap: 14, marginBottom: 18 }}>
         <section style={card}>
           <div style={{ display: "flex", gap: 9, alignItems: "center", marginBottom: 14 }}><Building2 size={17} color={T.accent} /><strong>1. Crear empresa</strong></div>
-          <label style={label}>Nombre</label><input style={input} value={orgForm.name} onChange={e => setOrgForm(p => ({ ...p, name: e.target.value }))} placeholder="Inmobiliaria Horizonte" />
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 90px", gap: 9, marginTop: 10 }}><div><label style={label}>Ruta</label><input style={input} value={orgForm.slug} onChange={e => setOrgForm(p => ({ ...p, slug: e.target.value }))} placeholder="horizonte" /></div><div><label style={label}>Licencias</label><input style={input} type="number" min="1" max="1000" value={orgForm.seats} onChange={e => setOrgForm(p => ({ ...p, seats: Number(e.target.value) }))} /></div></div>
+          <label style={label}>Nombre de la empresa</label><input style={input} value={orgForm.name} onChange={e => { const name = e.target.value; setOrgForm(p => ({ ...p, name, slug: slugify(name) })); }} placeholder="Inmobiliaria Horizonte" />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 130px", gap: 9, marginTop: 10 }}><div><label style={label}>Identificador automático</label><input style={{ ...input, opacity: .72 }} value={orgForm.slug} readOnly placeholder="se genera con el nombre" /></div><div><label style={label}>Usuarios incluidos</label><input style={input} type="number" min="1" max="1000" value={orgForm.seats} onChange={e => setOrgForm(p => ({ ...p, seats: Number(e.target.value) }))} /></div></div>
+          <div style={{ color: T.txt3, fontSize: 11, lineHeight: 1.5, marginTop: 8 }}>No necesitas crear una URL. El equipo entrará por <strong style={{ color: T.txt2 }}>{TENANT_LOGIN_PATH}</strong>; al iniciar sesión, Stratos abre únicamente su empresa. Cada usuario activo consume una licencia, incluido el administrador.</div>
           <button onClick={createOrg} disabled={busy === "org"} style={{ ...button, width: "100%", marginTop: 13 }}>{busy === "org" ? <Loader2 size={14} /> : <Plus size={14} />} Crear empresa</button>
         </section>
 
         <section style={card}>
           <div style={{ display: "flex", gap: 9, alignItems: "center", marginBottom: 14 }}><Users size={17} color={T.accent} /><strong>2. Crear usuario</strong></div>
-          <label style={label}>Empresa</label><select style={input} value={userForm.organization_id} onChange={e => setUserForm(p => ({ ...p, organization_id: e.target.value }))}><option value="">Seleccionar…</option>{organizations.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</select>
+          <label style={label}>Empresa donde se creará</label><select style={input} value={userForm.organization_id} onChange={e => setUserForm(p => ({ ...p, organization_id: e.target.value }))}><option value="">Seleccionar…</option>{organizations.map(o => { const used = profiles.filter(profile => profile.organization_id === o.id && profile.active !== false).length; return <option key={o.id} value={o.id}>{o.name} — {used}/{o.seats || 0} licencias</option>; })}</select>
+          {selectedUserOrganization && <div style={{ color: noSeatsAvailable ? "#FCA5A5" : T.txt3, fontSize: 11, lineHeight: 1.5, marginTop: 7 }}>{noSeatsAvailable ? `Sin licencias disponibles en ${selectedUserOrganization.name}. Amplía el límite antes de crear otro usuario.` : `Se creará dentro de ${selectedUserOrganization.name}. Quedan ${Math.max(0, selectedSeatLimit - selectedUserCount)} de ${selectedSeatLimit} licencias.`}</div>}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9, marginTop: 10 }}><div><label style={label}>Nombre</label><input style={input} value={userForm.name} onChange={e => setUserForm(p => ({ ...p, name: e.target.value }))} /></div><div><label style={label}>Rol</label><select style={input} value={userForm.role} onChange={e => setUserForm(p => ({ ...p, role: e.target.value }))}><option value="admin">Administrador</option><option value="director">Director</option><option value="asesor">Asesor</option></select></div></div>
           <label style={{ ...label, marginTop: 10 }}>Correo</label><input style={input} type="email" value={userForm.email} onChange={e => setUserForm(p => ({ ...p, email: e.target.value }))} />
-          <button onClick={createUser} disabled={busy === "user"} style={{ ...button, width: "100%", marginTop: 13 }}>{busy === "user" ? <Loader2 size={14} /> : <Plus size={14} />} Crear usuario</button>
+          <button onClick={createUser} disabled={busy === "user" || noSeatsAvailable} style={{ ...button, width: "100%", marginTop: 13, opacity: noSeatsAvailable ? .5 : 1 }}>{busy === "user" ? <Loader2 size={14} /> : <Plus size={14} />} Crear usuario en {selectedUserOrganization?.name || "empresa"}</button>
         </section>
 
         <section style={card}>
