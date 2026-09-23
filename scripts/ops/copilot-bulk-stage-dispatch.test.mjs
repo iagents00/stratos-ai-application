@@ -10,9 +10,10 @@ test('changes only URL/body routing on the existing dispatch node', () => {
   const next = patchBulkStageDispatch(fixture);
   assert.equal(fixture[1].parameters.url, 'old');
   assert.match(next[1].parameters.url, /bot_bulk_change_stage/);
+  assert.match(next[1].parameters.url, /bot_clientes_de_asesor/);
   assert.match(next[1].parameters.jsonBody, /p_args/);
+  assert.match(next[1].parameters.jsonBody, /p_name/);
   assert.equal(next[1].parameters.method, 'POST');
   assert.equal(next[1].retryOnFail, true);
   assert.deepEqual(next[0], fixture[0]);
 });
-
