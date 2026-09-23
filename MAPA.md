@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**191 archivos · 78.292 líneas**
+**192 archivos · 78.348 líneas**
 
 ---
 
@@ -18,7 +18,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 |---|---|---|
 | **CRM** | `src/app/views/CRM/index.jsx` | 6677 |
 | **Mi Espacio** | _sin vista propia (redirige a otra)_ | — |
-| **Plan Semanal** | `src/app/views/PlanSemanal.jsx` | 500 |
+| **Plan Semanal** | `src/app/views/PlanSemanal.jsx` | 515 |
 | **Copilot** | `src/app/views/Copilot.jsx` | 1990 |
 | **Marketing** | `src/app/views/Marketing.jsx` | 3075 |
 | **Actividades** | `src/app/views/Marketing.jsx` | 3075 |
@@ -168,8 +168,8 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `Caja.jsx` | 587 | _sin describir_ |
 | `ChatEquipo.jsx` | 569 | _sin describir_ |
 | `MiDia.jsx` | 517 | Seller workspace. A result is completed only after the server acknowledges it. |
+| `PlanSemanal.jsx` | 515 | _sin describir_ |
 | `ComandoDirectivo.pdf.js` | 514 | _sin describir_ |
-| `PlanSemanal.jsx` | 500 | _sin describir_ |
 | `Resumen.jsx` | 480 | _sin describir_ |
 | `LandingPagePreview.jsx` | 476 | Pantalla de preview completa — landing pública para el cliente |
 | `CuentasCobro.jsx` | 463 | _sin describir_ |
@@ -363,7 +363,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | Archivo | Líneas | Qué hace |
 |---|---|---|
 | `telegram.js` | 811 | Pareo del bot de Telegram con el perfil del asesor. |
-| `auth.js` | 689 | _sin describir_ |
+| `auth.js` | 698 | _sin describir_ |
 | `push.js` | 416 | Sistema de suscripción a notificaciones Web Push |
 | `offline-mode.js` | 351 | _sin describir_ |
 | `next-action-engine.js` | 346 | _sin describir_ |
@@ -402,6 +402,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `suggest-actions.js` | 58 | Cliente del agente IA "co-pilot" que sugiere próximas acciones |
 | `financial-data.js` | 41 | _sin describir_ |
 | `app-review-access.native.js` | 32 | _sin describir_ |
+| `service-errors.js` | 32 | _sin describir_ |
 | `app-review-access.js` | 12 | Implementación web: App Review no existe fuera del binario móvil. |
 
 ---
@@ -472,7 +473,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Agregar link | `src/app/views/LandingPages/index.jsx:1936` |
 | Agregar otro | `src/app/views/Marketing.jsx:2514` |
 | Agregar propiedad | `src/app/views/Marketing.jsx:1448` |
-| Agregar tarea de prioridad… | `src/app/views/PlanSemanal.jsx:470` |
+| Agregar tarea de prioridad… | `src/app/views/PlanSemanal.jsx:485` |
 | Agregar una columna propia a la hoja | `src/app/views/Marketing.jsx:1459` |
 | Ahora no | `src/app/views/Copilot.jsx:1893` |
 | Ajusta el rango en el paso anterior | `src/app/views/LandingPages/index.jsx:1951` |
@@ -539,7 +540,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cargando actividad… | `src/app/views/Profile.jsx:998` |
 | Cargando conversación… | `src/app/views/Copilot.jsx:1154` |
 | Cargando conversaciones… | `src/app/views/WhatsApp.jsx:263` |
-| Cargando el plan… | `src/app/views/PlanSemanal.jsx:353` |
+| Cargando el plan… | `src/app/views/PlanSemanal.jsx:368` |
 | Cargando el proceso de tu equipo… | `src/app/features/Admin/RailsSettings.jsx:41` |
 | Cargando el tablero… | `src/app/views/ComandoOps.jsx:127` |
 | Cargando equipo… | `src/app/App.jsx:2336` |
@@ -686,15 +687,15 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/Admin/Rails.css` (832 líneas)
 - `src/app/views/InformeAvances.jsx` (747 líneas)
 - `src/app/views/ERP.jsx` (698 líneas)
-- `src/lib/auth.js` (689 líneas)
+- `src/lib/auth.js` (698 líneas)
 - `src/landing/OnboardingCallCenter.jsx` (686 líneas)
 - `src/app/views/WhatsApp.jsx` (667 líneas)
 - `src/app/data/catalogoProyectos.js` (611 líneas)
 - `src/app/views/Caja.jsx` (587 líneas)
 - `src/app/views/ChatEquipo.jsx` (569 líneas)
 - `src/landing/DataDeletion.jsx` (553 líneas)
+- `src/app/views/PlanSemanal.jsx` (515 líneas)
 - `src/app/views/ComandoDirectivo.pdf.js` (514 líneas)
-- `src/app/views/PlanSemanal.jsx` (500 líneas)
 - `src/app/views/ZoomControl/Resumen.jsx` (480 líneas)
 - `src/app/views/CuentasCobro.jsx` (463 líneas)
 - `src/app/views/FinanzasAdmin.jsx` (443 líneas)
