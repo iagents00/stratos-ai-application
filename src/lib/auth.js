@@ -22,6 +22,7 @@
 import { supabase, SUPABASE_REST_URL, SUPABASE_ANON_KEY } from './supabase'
 import { logAuthEvent } from './audit'
 import { getAppReviewLogin, readAppReviewSession } from './app-review-access'
+import { isServiceUnavailableError, SERVICE_UNAVAILABLE_MESSAGE } from './service-errors'
 import {
   isOfflineForced,
   signInOffline,
@@ -72,8 +73,6 @@ function withTimeout(promise, ms = TIMEOUT_MS, label = 'operación') {
  * Sin mencionar Supabase ni servicios técnicos — el asesor no debe
  * ver detalles de infraestructura.
  */
-const TIMEOUT_MESSAGE = 'La conexión está tardando. Vuelve a intentar en unos segundos.'
-
 /**
  * Detecta si un error vino del wrapper withTimeout.
  */
@@ -222,6 +221,8 @@ export async function signIn(email, password) {
         return { data: null, error: "Confirma tu correo antes de iniciar sesión." }
       if (msg.includes("too many requests"))
         return { data: null, error: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo." }
+      if (isServiceUnavailableError(error))
+        return { data: null, error: SERVICE_UNAVAILABLE_MESSAGE }
       return { data: null, error: "Error al iniciar sesión. Verifica tus datos e inténtalo de nuevo." }
     }
 
@@ -239,7 +240,13 @@ export async function signIn(email, password) {
       'profile',
     )
 
-    if (profileError || !profile) {
+    if (profileError) {
+      logAuthEvent('LOGIN_FAIL', data.user.id, { email, reason: 'profile_not_found' })
+      if (isServiceUnavailableError(profileError))
+        return { data: null, error: SERVICE_UNAVAILABLE_MESSAGE }
+      return { data: null, error: 'No se pudo verificar tu perfil. Inténtalo de nuevo.' }
+    }
+    if (!profile) {
       logAuthEvent('LOGIN_FAIL', data.user.id, { email, reason: 'profile_not_found' })
       return { data: null, error: 'No se encontró tu perfil. Contacta al administrador.' }
     }
@@ -285,9 +292,11 @@ export async function signIn(email, password) {
         // Marcar sesión como offline para que el resto de la app lo sepa
         return offline
       }
-      return { data: null, error: TIMEOUT_MESSAGE }
+      return { data: null, error: SERVICE_UNAVAILABLE_MESSAGE }
     }
-    return { data: null, error: 'Error de conexión. Verifica tu internet e inténtalo de nuevo.' }
+    if (isServiceUnavailableError(e))
+      return { data: null, error: SERVICE_UNAVAILABLE_MESSAGE }
+    return { data: null, error: 'No pudimos completar el inicio de sesión. Inténtalo de nuevo.' }
   }
 }
 

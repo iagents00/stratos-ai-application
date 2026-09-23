@@ -43,7 +43,7 @@ export function crearRailsStore(client, scope) {
         if (epoch !== generation) return;
         if (error || !data)
           throw new Error(
-            "No pudimos verificar el proceso de tu equipo. Reintenta cuando tengas conexión.",
+            "El servicio de Stratos no respondió. Tu internet puede estar bien; reintenta en unos minutos.",
           );
         // Preserve identity unless configuration really changed (seller list stays stable).
         publish({
