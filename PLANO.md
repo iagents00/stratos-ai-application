@@ -161,21 +161,21 @@ casa; por eso mismo son los que más cuidado piden.
 
 | Archivo | Archivos que lo importan |
 |---|---|
-| `design-system/tokens.js` | **75** |
+| `design-system/tokens.js` | **76** |
 | `lib/supabase.js` | **44** |
-| `hooks/useAuth.js` | **35** |
-| `hooks/useViewport.js` | **30** |
+| `hooks/useAuth.js` | **36** |
+| `hooks/useViewport.js` | **31** |
 | `app/SharedComponents.jsx` | **21** |
 | `hooks/useClient.js` | **18** |
 | `lib/native.js` | **18** |
 | `app/views/CRM/zoom-metrics.js` | **6** |
 | `app/components/Logo.jsx` | **5** |
+| `lib/whatsapp-admin.js` | **5** |
 | `app/views/CRM/date-range.js` | **5** |
 | `lib/utils.js` | **4** |
 | `lib/offline-mode.js` | **4** |
 | `app/constants/pipeline.js` | **4** |
 | `design-system/primitives.jsx` | **4** |
-| `lib/audit.js` | **4** |
 
 ---
 

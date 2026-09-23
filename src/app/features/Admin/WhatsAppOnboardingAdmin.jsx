@@ -159,7 +159,7 @@ export default function WhatsAppOnboardingAdmin({ T, onBack }) {
 
   return (
     <div style={{ padding: "22px 24px 60px", color: T.txt, fontFamily: font, overflowY: "auto" }}>
-      <button onClick={onBack} style={{ ...button, marginBottom: 16, background: "transparent", color: T.txt2, borderColor: T.border }}><ArrowLeft size={14} /> Usuarios</button>
+      {onBack && <button onClick={onBack} style={{ ...button, marginBottom: 16, background: "transparent", color: T.txt2, borderColor: T.border }}><ArrowLeft size={14} /> Volver</button>}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap", marginBottom: 18 }}>
         <div>
           <h2 style={{ margin: 0, fontFamily: fontDisp, fontSize: 22, fontWeight: 650 }}>Alta de empresas y WhatsApp</h2>
@@ -177,13 +177,15 @@ export default function WhatsAppOnboardingAdmin({ T, onBack }) {
       {error && <div style={{ ...card, marginBottom: 14, color: "#FCA5A5", borderColor: "rgba(248,113,113,.35)" }}>{error}</div>}
       {success && <div style={{ ...card, marginBottom: 14, color: T.accent, borderColor: T.accentB }}>{success}</div>}
 
+      {!data?.access?.root && data?.access?.companyLimit != null && <div style={{ ...card, marginBottom: 16, display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap" }}><div><strong style={{ fontSize: 13 }}>Cupos de empresas</strong><div style={{ color: T.txt3, fontSize: 11.5, marginTop: 4 }}>Cada empresa nueva consume un cupo; los usuarios internos se controlan por separado.</div></div><div style={{ color: T.accent, fontFamily: fontDisp, fontSize: 20, fontWeight: 750 }}>{data.access.companiesUsed || 0}/{data.access.companyLimit}</div></div>}
+
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(270px,1fr))", gap: 14, marginBottom: 18 }}>
         <section style={card}>
           <div style={{ display: "flex", gap: 9, alignItems: "center", marginBottom: 14 }}><Building2 size={17} color={T.accent} /><strong>1. Crear empresa</strong></div>
           <label style={label}>Nombre de la empresa</label><input style={input} value={orgForm.name} onChange={e => { const name = e.target.value; setOrgForm(p => ({ ...p, name, slug: slugify(name) })); }} placeholder="Inmobiliaria Horizonte" />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 130px", gap: 9, marginTop: 10 }}><div><label style={label}>Identificador automático</label><input style={{ ...input, opacity: .72 }} value={orgForm.slug} readOnly placeholder="se genera con el nombre" /></div><div><label style={label}>Usuarios incluidos</label><input style={input} type="number" min="1" max="1000" value={orgForm.seats} onChange={e => setOrgForm(p => ({ ...p, seats: Number(e.target.value) }))} /></div></div>
           <div style={{ color: T.txt3, fontSize: 11, lineHeight: 1.5, marginTop: 8 }}>No necesitas crear una URL. El equipo entrará por <strong style={{ color: T.txt2 }}>{TENANT_LOGIN_PATH}</strong>; al iniciar sesión, Stratos abre únicamente su empresa. Cada usuario activo consume una licencia, incluido el administrador.</div>
-          <button onClick={createOrg} disabled={busy === "org"} style={{ ...button, width: "100%", marginTop: 13 }}>{busy === "org" ? <Loader2 size={14} /> : <Plus size={14} />} Crear empresa</button>
+          <button onClick={createOrg} disabled={busy === "org" || (!data?.access?.root && data?.access?.companyLimit != null && data.access.companiesUsed >= data.access.companyLimit)} style={{ ...button, width: "100%", marginTop: 13, opacity: (!data?.access?.root && data?.access?.companyLimit != null && data.access.companiesUsed >= data.access.companyLimit) ? .5 : 1 }}>{busy === "org" ? <Loader2 size={14} /> : <Plus size={14} />} Crear empresa</button>
         </section>
 
         <section style={card}>

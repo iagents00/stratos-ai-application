@@ -7,6 +7,8 @@ const SERVICE_ROLE = Deno.env.get("SB_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABA
 const ANON = Deno.env.get("SB_ANON_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 const INFOBIP_BASE_URL = (Deno.env.get("INFOBIP_BASE_URL") ?? "https://api.infobip.com").replace(/\/$/, "");
 const INFOBIP_API_KEY = Deno.env.get("INFOBIP_API_KEY") ?? "";
+const PLATFORM_ALERT_WEBHOOK_URL = Deno.env.get("PLATFORM_ALERT_WEBHOOK_URL") ?? "";
+const PLATFORM_ALERT_WEBHOOK_SECRET = Deno.env.get("PLATFORM_ALERT_WEBHOOK_SECRET") ?? "";
 
 const VALID_ROLES = new Set(["super_admin", "admin", "director", "ceo", "asesor", "marketing", "colaborador"]);
 const VALID_STATUSES = new Set(["draft", "waiting_customer", "meta_finished", "infobip_registering", "ready_to_test", "active", "failed", "disconnected"]);
@@ -159,6 +161,39 @@ const respond = (body: unknown, status: number, origin: string | null) =>
     headers: { "content-type": "application/json", "cache-control": "no-store", ...cors(origin) },
   });
 
+async function deliverPlatformAlert(
+  admin: any,
+  eventId: string,
+  payload: Record<string, unknown>,
+) {
+  if (!PLATFORM_ALERT_WEBHOOK_URL) {
+    await admin.from("platform_admin_events").update({ notification_status: "not_configured" }).eq("id", eventId);
+    return "not_configured";
+  }
+  try {
+    const response = await fetch(PLATFORM_ALERT_WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(PLATFORM_ALERT_WEBHOOK_SECRET ? { Authorization: `Bearer ${PLATFORM_ALERT_WEBHOOK_SECRET}` } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) throw new Error(`Webhook HTTP ${response.status}`);
+    await admin.from("platform_admin_events").update({
+      notification_status: "sent", notification_attempts: 1,
+      notification_error: null, notified_at: new Date().toISOString(),
+    }).eq("id", eventId);
+    return "sent";
+  } catch (error) {
+    await admin.from("platform_admin_events").update({
+      notification_status: "failed", notification_attempts: 1,
+      notification_error: String((error as Error)?.message || error).slice(0, 500),
+    }).eq("id", eventId);
+    return "failed";
+  }
+}
+
 const slugify = (value: string) => value
   .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
   .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48);
@@ -241,18 +276,31 @@ Deno.serve(async (req) => {
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { autoRefreshToken: false, persistSession: false } });
   const callerId = authData.user.id;
   let scopeSchemaReady = true;
+  let partnerSchemaReady = true;
   let { data: platformAdmin, error: platformAdminError } = await admin.from("platform_admins")
-    .select("user_id, active, scope_organization_id").eq("user_id", callerId).eq("active", true).maybeSingle();
+    .select("user_id, active, scope_organization_id, company_limit, support_only").eq("user_id", callerId).eq("active", true).maybeSingle();
   // Despliegue compatible en dos pasos: la interfaz y las acciones de pipeline
   // pueden salir antes que la migración 244. Mientras la columna de alcance no
   // exista solo operan los platform_admins raíz ya autorizados; nunca se infiere
   // ni se concede un scope desde el cliente.
   if (platformAdminError?.code === "42703") {
-    scopeSchemaReady = false;
-    const fallback = await admin.from("platform_admins")
-      .select("user_id, active").eq("user_id", callerId).eq("active", true).maybeSingle();
-    platformAdmin = fallback.data ? { ...fallback.data, scope_organization_id: null } : null;
-    platformAdminError = fallback.error;
+    partnerSchemaReady = false;
+    const scopedFallback = await admin.from("platform_admins")
+      .select("user_id, active, scope_organization_id").eq("user_id", callerId).eq("active", true).maybeSingle();
+    if (scopedFallback.error?.code === "42703") {
+      scopeSchemaReady = false;
+      const legacyFallback = await admin.from("platform_admins")
+        .select("user_id, active").eq("user_id", callerId).eq("active", true).maybeSingle();
+      platformAdmin = legacyFallback.data
+        ? { ...legacyFallback.data, scope_organization_id: null, company_limit: null, support_only: true }
+        : null;
+      platformAdminError = legacyFallback.error;
+    } else {
+      platformAdmin = scopedFallback.data
+        ? { ...scopedFallback.data, company_limit: null, support_only: true }
+        : null;
+      platformAdminError = scopedFallback.error;
+    }
   }
   if (platformAdminError) return respond({ ok: false, error: platformAdminError.message }, 500, origin);
   if (!platformAdmin) return respond({ ok: false, error: "Acceso restringido a administradores de plataforma." }, 403, origin);
@@ -262,6 +310,8 @@ Deno.serve(async (req) => {
   // comprobación vive en servidor: ocultar opciones en React no sería control
   // de acceso y expondría clientes de otros distribuidores.
   const scopeOrganizationId = platformAdmin.scope_organization_id as string | null;
+  const isRootAdmin = !scopeOrganizationId;
+  const companyLimit = platformAdmin.company_limit == null ? null : Number(platformAdmin.company_limit);
   const organizationIsVisible = async (organizationId: string) => {
     if (!organizationId) return false;
     if (!scopeOrganizationId) return true;
@@ -281,7 +331,9 @@ Deno.serve(async (req) => {
         .select("id,name,slug,plan,seats,active,subscription_status,meta_config,created_at")
         .order("created_at", { ascending: false });
     if (scopeOrganizationId) {
-      query = query.or(`id.eq.${scopeOrganizationId},parent_organization_id.eq.${scopeOrganizationId}`);
+      // La organización del partner es el contenedor administrativo. Sus
+      // operadores trabajan únicamente con las empresas cliente que crearon.
+      query = query.eq("parent_organization_id", scopeOrganizationId);
     }
     return await query;
   };
@@ -294,21 +346,47 @@ Deno.serve(async (req) => {
     if (action === "bootstrap") {
       const orgs = await visibleOrganizations();
       if (orgs.error) throw orgs.error;
-      const visibleIds = (orgs.data ?? []).map(row => row.id);
-      const [profiles, channels, runs] = visibleIds.length ? await Promise.all([
-        admin.from("profiles").select("id,organization_id,name,role,active,phone").in("organization_id", visibleIds).order("name"),
-        admin.from("whatsapp_numero_asesor").select("id,organization_id,numero_whatsapp,asesor_id,asesor_name,waba_id,phone_number_id,estado_conexion,quality_rating,active,updated_at").in("organization_id", visibleIds).order("updated_at", { ascending: false }),
-        admin.from("whatsapp_onboarding_runs").select("*").in("organization_id", visibleIds).order("created_at", { ascending: false }).limit(300),
-      ]) : [
-        { data: [], error: null }, { data: [], error: null }, { data: [], error: null },
-      ];
-      const firstError = profiles.error || channels.error || runs.error;
+      const organizations = (orgs.data ?? []).filter(row => {
+        const meta = row.meta_config && typeof row.meta_config === "object"
+          ? row.meta_config as Record<string, unknown> : {};
+        const platform = meta.platform && typeof meta.platform === "object"
+          ? meta.platform as Record<string, unknown> : {};
+        return platform.kind !== "partner";
+      });
+      const visibleIds = organizations.map(row => row.id);
+      const [profiles, channels, runs, events, partners] = await Promise.all([
+        visibleIds.length
+          ? admin.from("profiles").select("id,organization_id,name,role,active,phone").in("organization_id", visibleIds).order("name")
+          : Promise.resolve({ data: [], error: null }),
+        visibleIds.length
+          ? admin.from("whatsapp_numero_asesor").select("id,organization_id,numero_whatsapp,asesor_id,asesor_name,waba_id,phone_number_id,estado_conexion,quality_rating,active,updated_at").in("organization_id", visibleIds).order("updated_at", { ascending: false })
+          : Promise.resolve({ data: [], error: null }),
+        visibleIds.length
+          ? admin.from("whatsapp_onboarding_runs").select("*").in("organization_id", visibleIds).order("created_at", { ascending: false }).limit(300)
+          : Promise.resolve({ data: [], error: null }),
+        isRootAdmin && partnerSchemaReady
+          ? admin.from("platform_admin_events").select("*").order("created_at", { ascending: false }).limit(100)
+          : Promise.resolve({ data: [], error: null }),
+        isRootAdmin && partnerSchemaReady && scopeSchemaReady
+          ? admin.from("platform_admins")
+            .select("user_id,active,scope_organization_id,company_limit,support_only,granted_at,profiles!platform_admins_user_id_fkey(name),organizations!platform_admins_scope_organization_id_fkey(id,name,slug,active)")
+            .not("scope_organization_id", "is", null).order("granted_at", { ascending: false })
+          : Promise.resolve({ data: [], error: null }),
+      ]);
+      const firstError = profiles.error || channels.error || runs.error || events.error || partners.error;
       if (firstError) throw firstError;
+      const scopedCompanyCount = scopeOrganizationId ? organizations.length : null;
       return respond({
         ok: true,
-        organizations: orgs.data ?? [], profiles: profiles.data ?? [],
-        channels: channels.data ?? [], runs: runs.data ?? [],
-        access: { root: !scopeOrganizationId, scopeOrganizationId },
+        organizations, profiles: profiles.data ?? [],
+        channels: channels.data ?? [], runs: runs.data ?? [], events: events.data ?? [],
+        partners: partners.data ?? [],
+        access: {
+          root: isRootAdmin, scopeOrganizationId,
+          supportOnly: platformAdmin.support_only !== false,
+          companyLimit, companiesUsed: scopedCompanyCount,
+          scopeReady: scopeSchemaReady && partnerSchemaReady,
+        },
         provider: {
           infobipConfigured: Boolean(INFOBIP_API_KEY),
           portalRegistrationReady: Boolean(INFOBIP_API_KEY),
@@ -535,12 +613,132 @@ Deno.serve(async (req) => {
       return respond({ ok: true, organization: data, pipeline: nextPipeline, preserved_stages: preserved }, 200, origin);
     }
 
+    if (action === "create_partner") {
+      if (!isRootAdmin) return respond({ ok: false, error: "Solo Stratos puede crear administradores partner." }, 403, origin);
+      if (!scopeSchemaReady || !partnerSchemaReady) {
+        return respond({ ok: false, error: "Primero debe publicarse la migración segura de partners y cupos." }, 503, origin);
+      }
+      const name = String(body.name ?? "").trim();
+      const slug = slugify(String(body.slug || name));
+      const adminName = String(body.admin_name ?? "").trim();
+      const email = String(body.email ?? "").trim().toLowerCase();
+      const companyLimitValue = Math.trunc(Number(body.company_limit ?? 0));
+      const password = String(body.password ?? "") || tempPassword();
+      if (name.length < 2 || !slug) return respond({ ok: false, error: "Escribe un nombre válido para el partner." }, 400, origin);
+      if (!adminName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return respond({ ok: false, error: "Nombre y correo válido del administrador son obligatorios." }, 400, origin);
+      }
+      if (companyLimitValue < 1 || companyLimitValue > 10000) {
+        return respond({ ok: false, error: "El cupo debe estar entre 1 y 10.000 empresas." }, 400, origin);
+      }
+      if (password.length < 12) return respond({ ok: false, error: "La contraseña debe tener al menos 12 caracteres." }, 400, origin);
+
+      const partnerMeta = {
+        platform: { kind: "partner", companyLimit: companyLimitValue },
+        onboarding: { status: "partner_ready", createdFrom: "platform_admin", createdAt: new Date().toISOString() },
+        features: { crm: false, teamAdmin: false, whatsappSignup: false, whatsappModule: false, whatsappChat: false },
+      };
+      const { data: partnerOrganization, error: partnerError } = await admin.from("organizations").insert({
+        name, slug, seats: 1, plan: "custom", active: true,
+        subscription_status: "active", meta_config: partnerMeta, parent_organization_id: null,
+      }).select("id,name,slug,active,created_at").single();
+      if (partnerError?.code === "23505") return respond({ ok: false, error: "Ya existe un partner con ese nombre o identificador." }, 409, origin);
+      if (partnerError) throw partnerError;
+
+      const { data: created, error: createError } = await admin.auth.admin.createUser({
+        email, password, email_confirm: true, user_metadata: { name: adminName },
+      });
+      if (createError) throw createError;
+      const userId = created.user?.id;
+      if (!userId) throw new Error("Auth no devolvió el id del administrador partner.");
+      const { error: profileError } = await admin.from("profiles").upsert({
+        id: userId, organization_id: partnerOrganization.id, name: adminName, role: "super_admin", active: true,
+      });
+      if (profileError) {
+        await admin.auth.admin.updateUserById(userId, { ban_duration: "876000h" }).catch(() => null);
+        throw profileError;
+      }
+      const { error: grantError } = await admin.from("platform_admins").insert({
+        user_id: userId, active: true, granted_by: callerId,
+        scope_organization_id: partnerOrganization.id,
+        company_limit: companyLimitValue, support_only: true,
+        note: `Partner: ${name}`,
+      });
+      if (grantError) throw grantError;
+
+      const eventPayload = {
+        type: "partner_created", partner_id: partnerOrganization.id,
+        partner_name: partnerOrganization.name, admin_name: adminName,
+        admin_email: email, company_limit: companyLimitValue,
+        created_by: callerId, created_at: new Date().toISOString(),
+      };
+      const { data: event } = await admin.from("platform_admin_events").insert({
+        event_type: "partner_created", actor_user_id: callerId,
+        partner_organization_id: partnerOrganization.id, payload: eventPayload,
+      }).select("id").single();
+      const notificationStatus = event?.id
+        ? await deliverPlatformAlert(admin, event.id, eventPayload)
+        : "failed";
+      return respond({
+        ok: true, partner: partnerOrganization,
+        user: { id: userId, name: adminName, email },
+        temp_password: password, company_limit: companyLimitValue,
+        notification_status: notificationStatus,
+      }, 200, origin);
+    }
+
+    if (action === "update_partner_quota") {
+      if (!isRootAdmin) return respond({ ok: false, error: "Solo Stratos puede cambiar cupos." }, 403, origin);
+      if (!partnerSchemaReady) return respond({ ok: false, error: "La gestión de cupos todavía no está habilitada." }, 503, origin);
+      const userId = String(body.user_id ?? "");
+      const nextLimit = Math.trunc(Number(body.company_limit ?? 0));
+      if (!userId || nextLimit < 1 || nextLimit > 10000) {
+        return respond({ ok: false, error: "Selecciona un partner y un cupo entre 1 y 10.000." }, 400, origin);
+      }
+      const { data: target, error: targetError } = await admin.from("platform_admins")
+        .select("user_id,scope_organization_id,company_limit").eq("user_id", userId).not("scope_organization_id", "is", null).maybeSingle();
+      if (targetError) throw targetError;
+      if (!target) return respond({ ok: false, error: "No encontré ese administrador partner." }, 404, origin);
+      const { count, error: countError } = await admin.from("organizations").select("id", { count: "exact", head: true })
+        .eq("parent_organization_id", target.scope_organization_id);
+      if (countError) throw countError;
+      if (nextLimit < (count ?? 0)) {
+        return respond({ ok: false, error: `Ese partner ya creó ${count ?? 0} empresas. El cupo no puede quedar por debajo de ese uso.` }, 409, origin);
+      }
+      const { error: updateError } = await admin.from("platform_admins").update({ company_limit: nextLimit }).eq("user_id", userId);
+      if (updateError) throw updateError;
+      const eventPayload = {
+        type: "quota_changed", partner_id: target.scope_organization_id,
+        previous_limit: target.company_limit, company_limit: nextLimit,
+        companies_used: count ?? 0, changed_by: callerId, changed_at: new Date().toISOString(),
+      };
+      const { data: event } = await admin.from("platform_admin_events").insert({
+        event_type: "quota_changed", actor_user_id: callerId,
+        partner_organization_id: target.scope_organization_id, payload: eventPayload,
+      }).select("id").single();
+      const notificationStatus = event?.id ? await deliverPlatformAlert(admin, event.id, eventPayload) : "failed";
+      return respond({ ok: true, company_limit: nextLimit, companies_used: count ?? 0, notification_status: notificationStatus }, 200, origin);
+    }
+
     if (action === "create_organization") {
       const name = String(body.name ?? "").trim();
       const slug = slugify(String(body.slug || name));
       const seats = Math.max(1, Math.min(1000, Number(body.seats ?? 30) || 30));
       if (name.length < 2) return respond({ ok: false, error: "Escribe el nombre de la empresa." }, 400, origin);
       if (!slug) return respond({ ok: false, error: "El nombre debe incluir al menos una letra o un número." }, 400, origin);
+      let companiesUsed: number | null = null;
+      if (scopeOrganizationId) {
+        if (!scopeSchemaReady || !partnerSchemaReady || companyLimit == null) {
+          return respond({ ok: false, error: "Tu cupo de empresas todavía no está configurado. Contacta a Stratos." }, 503, origin);
+        }
+        const { count, error: countError } = await admin.from("organizations")
+          .select("id", { count: "exact", head: true }).eq("parent_organization_id", scopeOrganizationId);
+        if (countError) throw countError;
+        companiesUsed = count ?? 0;
+        if (companiesUsed >= companyLimit) {
+          return respond({ ok: false, error: `Ya utilizaste tus ${companyLimit} cupos de empresa. Solicita una ampliación a Stratos.` }, 409, origin);
+        }
+      }
       const metaConfig = {
         onboarding: { status: "draft", createdFrom: "whatsapp_admin", createdAt: new Date().toISOString() },
         features: { crm: true, teamAdmin: true, whatsappSignup: true, whatsappModule: false, whatsappChat: false },
@@ -553,7 +751,27 @@ Deno.serve(async (req) => {
         .select("id,name,slug,seats,plan,active,subscription_status,meta_config,created_at").single();
       if (error?.code === "23505") return respond({ ok: false, error: "Ya existe una empresa con ese nombre o identificador." }, 409, origin);
       if (error) throw error;
-      return respond({ ok: true, organization: data }, 200, origin);
+      let notificationStatus = "not_required";
+      if (scopeOrganizationId && partnerSchemaReady) {
+        const { data: partnerOrganization } = await admin.from("organizations")
+          .select("name").eq("id", scopeOrganizationId).maybeSingle();
+        const eventPayload = {
+          type: "company_created", partner_id: scopeOrganizationId,
+          partner_name: partnerOrganization?.name || "Partner Stratos",
+          organization_id: data.id, organization_name: data.name,
+          organization_slug: data.slug, user_seats: data.seats,
+          companies_used: Number(companiesUsed || 0) + 1,
+          company_limit: companyLimit, created_by: callerId,
+          created_at: new Date().toISOString(),
+        };
+        const { data: event } = await admin.from("platform_admin_events").insert({
+          event_type: "company_created", actor_user_id: callerId,
+          partner_organization_id: scopeOrganizationId,
+          organization_id: data.id, payload: eventPayload,
+        }).select("id").single();
+        notificationStatus = event?.id ? await deliverPlatformAlert(admin, event.id, eventPayload) : "failed";
+      }
+      return respond({ ok: true, organization: data, notification_status: notificationStatus }, 200, origin);
     }
 
     if (action === "create_user") {
@@ -571,8 +789,8 @@ Deno.serve(async (req) => {
         return respond({ ok: false, error: "No tienes acceso a esa empresa." }, 403, origin);
       }
       if (!VALID_ROLES.has(role)) return respond({ ok: false, error: "Rol inválido." }, 400, origin);
-      if (platform && !scopeSchemaReady) {
-        return respond({ ok: false, error: "El alcance seguro de distribuidores todavía no está habilitado." }, 503, origin);
+      if (platform) {
+        return respond({ ok: false, error: "Los administradores partner se crean únicamente desde la sección Partners de Stratos." }, 403, origin);
       }
       if (password.length < 12) return respond({ ok: false, error: "La contraseña debe tener al menos 12 caracteres." }, 400, origin);
       const { data: org } = await admin.from("organizations").select("id,name,seats").eq("id", organizationId).eq("active", true).maybeSingle();
@@ -599,17 +817,6 @@ Deno.serve(async (req) => {
         // bloquea para que quede auditable y pueda repararse manualmente.
         await admin.auth.admin.updateUserById(userId, { ban_duration: "876000h" }).catch(() => null);
         throw profileError;
-      }
-      if (platform) {
-        const { error: grantError } = await admin.from("platform_admins").upsert({
-          user_id: userId,
-          active: true,
-          granted_by: callerId,
-          // Una alta desde la interfaz nunca crea otro operador raíz. El nuevo
-          // administrador queda limitado al portafolio donde fue creado.
-          scope_organization_id: scopeOrganizationId || organizationId,
-        });
-        if (grantError) throw grantError;
       }
       return respond({ ok: true, user: { id: userId, email, name, role, organization_id: organizationId }, temp_password: password }, 200, origin);
     }
