@@ -49,6 +49,7 @@
 | **NSG - Registrar en CRM Stratos** | `hasQ3tuAPC4ilY28` | El buscador NSG mete el prospecto elegido al CRM de Stratos. | Activo |
 | **STRATOS - Backup Diario a Drive** | `43fyfBIDcyLB0y2t` | 08:00 vuelca tablas de negocio a JSON y sube a Drive de Iván. | Activo |
 | **STRATOS - Password Recovery Email** | `hV7mADwc0RnhLkGo` | "Olvidé mi contraseña": recibe código de la Edge Function y lo manda por Gmail. Todos los tenants. | Activo |
+| **STRATOS_PlatformPartnerAlerts** | `xFww7kFQvKKYbqus` | Webhook privado del administrador de plataforma: avisa a Ángel e Iván cuando se crea un partner, una empresa de partner o cambia su cupo. La bitácora durable queda en `platform_admin_events` aunque Telegram falle. | Activo |
 | **INBOUND · Meta Directo (Gael, Carlos, Ken, Ceci)** | `aJdFcIJAsGQsNBQj` | WhatsApp Cloud API directo de Meta → `ingest_inbound_lead`. | **Latente**: prendido pero sin webhooks de Meta conectados. |
 | **Stratos · Propiedades — Sync Sheet DRIVES** | `T2JygOdNV3UQmdwX` | Sincroniza fichas técnicas de propiedades desde Google Sheet. | Inactivo |
 
