@@ -104,8 +104,21 @@ Deno.serve(async (req) => {
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { autoRefreshToken: false, persistSession: false } });
   const callerId = authData.user.id;
-  const { data: platformAdmin } = await admin.from("platform_admins")
+  let scopeSchemaReady = true;
+  let { data: platformAdmin, error: platformAdminError } = await admin.from("platform_admins")
     .select("user_id, active, scope_organization_id").eq("user_id", callerId).eq("active", true).maybeSingle();
+  // Despliegue compatible en dos pasos: la interfaz y las acciones de pipeline
+  // pueden salir antes que la migración 244. Mientras la columna de alcance no
+  // exista solo operan los platform_admins raíz ya autorizados; nunca se infiere
+  // ni se concede un scope desde el cliente.
+  if (platformAdminError?.code === "42703") {
+    scopeSchemaReady = false;
+    const fallback = await admin.from("platform_admins")
+      .select("user_id, active").eq("user_id", callerId).eq("active", true).maybeSingle();
+    platformAdmin = fallback.data ? { ...fallback.data, scope_organization_id: null } : null;
+    platformAdminError = fallback.error;
+  }
+  if (platformAdminError) return respond({ ok: false, error: platformAdminError.message }, 500, origin);
   if (!platformAdmin) return respond({ ok: false, error: "Acceso restringido a administradores de plataforma." }, 403, origin);
 
   // Un operador raíz (scope NULL) ve toda la plataforma. Un distribuidor ve
@@ -124,9 +137,13 @@ Deno.serve(async (req) => {
   };
 
   const visibleOrganizations = async () => {
-    let query = admin.from("organizations")
-      .select("id,name,slug,plan,seats,active,subscription_status,meta_config,parent_organization_id,created_at")
-      .order("created_at", { ascending: false });
+    let query = scopeSchemaReady
+      ? admin.from("organizations")
+        .select("id,name,slug,plan,seats,active,subscription_status,meta_config,parent_organization_id,created_at")
+        .order("created_at", { ascending: false })
+      : admin.from("organizations")
+        .select("id,name,slug,plan,seats,active,subscription_status,meta_config,created_at")
+        .order("created_at", { ascending: false });
     if (scopeOrganizationId) {
       query = query.or(`id.eq.${scopeOrganizationId},parent_organization_id.eq.${scopeOrganizationId}`);
     }
@@ -253,10 +270,12 @@ Deno.serve(async (req) => {
         onboarding: { status: "draft", createdFrom: "whatsapp_admin", createdAt: new Date().toISOString() },
         features: { crm: true, teamAdmin: true, whatsappSignup: true, whatsappModule: false, whatsappChat: false },
       };
-      const { data, error } = await admin.from("organizations").insert({
+      const organizationRow: Record<string, unknown> = {
         name, slug, seats, plan: "custom", active: true, subscription_status: "trial", meta_config: metaConfig,
-        parent_organization_id: scopeOrganizationId || null,
-      }).select("id,name,slug,seats,plan,active,subscription_status,meta_config,created_at").single();
+      };
+      if (scopeSchemaReady) organizationRow.parent_organization_id = scopeOrganizationId || null;
+      const { data, error } = await admin.from("organizations").insert(organizationRow)
+        .select("id,name,slug,seats,plan,active,subscription_status,meta_config,created_at").single();
       if (error) throw error;
       return respond({ ok: true, organization: data }, 200, origin);
     }
@@ -276,6 +295,9 @@ Deno.serve(async (req) => {
         return respond({ ok: false, error: "No tienes acceso a esa empresa." }, 403, origin);
       }
       if (!VALID_ROLES.has(role)) return respond({ ok: false, error: "Rol inválido." }, 400, origin);
+      if (platform && !scopeSchemaReady) {
+        return respond({ ok: false, error: "El alcance seguro de distribuidores todavía no está habilitado." }, 503, origin);
+      }
       if (password.length < 12) return respond({ ok: false, error: "La contraseña debe tener al menos 12 caracteres." }, 400, origin);
       const { data: org } = await admin.from("organizations").select("id").eq("id", organizationId).eq("active", true).maybeSingle();
       if (!org) return respond({ ok: false, error: "La empresa no existe o está inactiva." }, 404, origin);
