@@ -25,7 +25,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Phone, Check, Loader2, AlertTriangle } from "lucide-react";
-import { P, font, fontDisp } from "../../../design-system/tokens";
+import { P, fontDisp } from "../../../design-system/tokens";
 import { useAuth } from "../../../hooks/useAuth";
 import { triggerIaCall, canTriggerIaActions } from "../../../lib/iagents-actions";
 
@@ -54,16 +54,15 @@ export default function CallActionButton({
   // Normalización de teléfono igual que el botón tel: histórico.
   const rawPhone   = String(phone || "").trim();
   const phoneClean = rawPhone.replace(/[^0-9+]/g, "");
-  if (!phoneClean) return null;
 
   // Confirm de seguridad si hay Zoom agendado y el user intenta llamar.
-  const confirmIfWarn = () => {
+  const confirmIfWarn = useCallback(() => {
     if (!warnZoom) return true;
     return window.confirm(
       "Este lead tiene un Zoom agendado. " +
       "¿Seguro que quieres llamarlo ahora? La IA podría estar a punto de contactarlo."
     );
-  };
+  }, [warnZoom]);
 
   const handleIaCall = useCallback(async (e) => {
     e.preventDefault();
@@ -82,7 +81,9 @@ export default function CallActionButton({
     resetTimer.current = setTimeout(() => {
       setState("idle"); setErrMsg(null);
     }, RESULT_DISPLAY_MS);
-  }, [phoneClean, state, warnZoom]);
+  }, [phoneClean, state, confirmIfWarn]);
+
+  if (!phoneClean) return null;
 
   // ───────── Look base ─────────
   const isCompact = variant === "compact";

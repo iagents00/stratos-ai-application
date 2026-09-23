@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**186 archivos · 77.129 líneas**
+**193 archivos · 78.375 líneas**
 
 ---
 
@@ -16,10 +16,10 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | En el menú dice | Archivo | Líneas |
 |---|---|---|
-| **CRM** | `src/app/views/CRM/index.jsx` | 6656 |
+| **CRM** | `src/app/views/CRM/index.jsx` | 6677 |
 | **Mi Espacio** | _sin vista propia (redirige a otra)_ | — |
-| **Plan Semanal** | `src/app/views/PlanSemanal.jsx` | 500 |
-| **Copilot** | `src/app/views/Copilot.jsx` | 1990 |
+| **Plan Semanal** | `src/app/views/PlanSemanal.jsx` | 515 |
+| **Copilot** | `src/app/views/Copilot.jsx` | 1992 |
 | **Marketing** | `src/app/views/Marketing.jsx` | 3075 |
 | **Actividades** | `src/app/views/Marketing.jsx` | 3075 |
 | **Equipo** | `src/app/views/Marketing.jsx` | 3075 |
@@ -31,17 +31,17 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | **WhatsApp** | `src/app/views/WhatsApp.jsx` | 667 |
 | **Create** | `src/app/views/LandingPages/index.jsx` | 2022 |
 | **Comando** | `src/app/views/ComandoOps.jsx`<br>`src/app/views/ComandoDirectivo.jsx` | 327<br>1270 |
-| **Caja** | `src/app/views/Caja.jsx` | 580 |
+| **Caja** | `src/app/views/Caja.jsx` | 587 |
 | **Chat** | `src/app/views/ChatEquipo.jsx` | 569 |
 | **Proyectos** | `src/app/views/ERP.jsx` | 698 |
 | **iAgents** | `src/app/views/IACRM.jsx` | 622 |
-| **Finanzas** | `src/app/views/FinanzasAdmin.jsx` | 456 |
+| **Finanzas** | `src/app/views/FinanzasAdmin.jsx` | 443 |
 | **Stratos RH** | `src/app/views/RRHHModule.jsx` | 839 |
 | **Papelera** | `src/app/views/Trash.jsx` | 285 |
 | **Planes** | _sin vista propia (redirige a otra)_ | — |
 | **Perfil** | `src/app/views/Profile.jsx` | 1149 |
 | **Usuarios** | `src/app/features/Admin/AdminPanel.jsx` | 543 |
-| **Proceso** | `src/app/features/Admin/RailsSettings.jsx` | 377 |
+| **Proceso** | `src/app/features/Admin/RailsSettings.jsx` | 381 |
 
 ---
 
@@ -132,28 +132,30 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | Archivo | Líneas | Qué hace |
 |---|---|---|
 | `index.jsx` | 2158 | Modal de cuatro pestañas: Lista de Acción · Documentos · Plan Estratégico · Protocolo de Ventas |
+| `Rails.css` | 832 | _sin describir_ |
 | `AdminPanel.jsx` | 543 | Panel de gestión de usuarios (Super Admin y Admin). |
 | `index.jsx` | 487 | Panel de chat con Agente Stratos AI. |
 | `index.jsx` | 453 | Portal de Candidatos — Stratos People |
-| `RailsSettings.jsx` | 377 | _sin describir_ |
+| `RailsSettings.jsx` | 381 | Admin publishes the process; sellers only execute it. See docs/operacion/RIELES.md. |
 | `DocsStratos.jsx` | 262 | _sin describir_ |
+| `rails-theme.js` | 31 | _sin describir_ |
 | `RoleBadge.jsx` | 29 | Badge de rol de usuario con colores según nivel. |
 
 ### `src/app/icons/`
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `ios-icons.jsx` | 121 | Set de íconos estilo iOS para la experiencia MÓVIL. |
+| `ios-icons.jsx` | 125 | Set de íconos estilo iOS para la experiencia MÓVIL. |
 
 ### `src/app/views/`
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `index.jsx` | 6656 | Orquestador principal del módulo CRM |
-| `components.jsx` | 5872 | Todos los sub-componentes del módulo CRM |
+| `index.jsx` | 6677 | _sin describir_ |
+| `components.jsx` | 5873 | Todos los sub-componentes del módulo CRM |
 | `Marketing.jsx` | 3075 | _sin describir_ |
 | `index.jsx` | 2022 | Generador de landing pages inmobiliarias |
-| `Copilot.jsx` | 1990 | v2 (15-jul) |
+| `Copilot.jsx` | 1992 | v2 (15-jul) |
 | `ComandoDirectivo.jsx` | 1270 | _sin describir_ |
 | `index.jsx` | 1201 | Panel "Control de Zooms" — pestaña dentro de Comando Directivo (Duke). |
 | `Profile.jsx` | 1149 | vista de perfil del asesor. |
@@ -163,16 +165,16 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ERP.jsx` | 698 | _sin describir_ |
 | `WhatsApp.jsx` | 667 | _sin describir_ |
 | `IACRM.jsx` | 622 | iAgents · Equipo de Agentes IA |
-| `Caja.jsx` | 580 | _sin describir_ |
+| `Caja.jsx` | 587 | _sin describir_ |
 | `ChatEquipo.jsx` | 569 | _sin describir_ |
+| `MiDia.jsx` | 517 | Seller workspace. A result is completed only after the server acknowledges it. |
+| `PlanSemanal.jsx` | 515 | _sin describir_ |
 | `ComandoDirectivo.pdf.js` | 514 | _sin describir_ |
-| `PlanSemanal.jsx` | 500 | _sin describir_ |
 | `Resumen.jsx` | 480 | _sin describir_ |
 | `LandingPagePreview.jsx` | 476 | Pantalla de preview completa — landing pública para el cliente |
 | `CuentasCobro.jsx` | 463 | _sin describir_ |
-| `FinanzasAdmin.jsx` | 456 | _sin describir_ |
+| `FinanzasAdmin.jsx` | 443 | _sin describir_ |
 | `LeadNotesTimeline.jsx` | 438 | cronograma de notas individuales para un lead. |
-| `MiDia.jsx` | 363 | _sin describir_ |
 | `ZoomBoard.jsx` | 351 | Espacio "Control de Zooms" del Comando Directivo. Tablero enfocado SOLO en |
 | `Dash.jsx` | 344 | _sin describir_ |
 | `ComandoOps.jsx` | 327 | _sin describir_ |
@@ -187,7 +189,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `LeadVoiceCalls.jsx` | 201 | Sección con las llamadas de voz hechas por Retell AI a este lead. |
 | `catalogAdapter.js` | 197 | Puente entre el catálogo maestro y el generador de landings |
 | `Team.jsx` | 194 | vista "Asesores" |
-| `CallActionButton.jsx` | 183 | _sin describir_ |
+| `CallActionButton.jsx` | 184 | _sin describir_ |
 | `RequiresHumanButton.jsx` | 177 | _sin describir_ |
 | `DateRangeControl.jsx` | 176 | Control ÚNICO de período del Comando / CRM. Presets rápidos (Hoy, Semana, Mes, |
 | `MiDrive.jsx` | 171 | _sin describir_ |
@@ -323,11 +325,12 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `useZoomAgendados.js` | 204 | _sin describir_ |
 | `useWhatsAppInbox.js` | 178 | _sin describir_ |
 | `useCopilotInbox.js` | 125 | Bandeja/Notificaciones del módulo Copilot: monitorea la tabla tg_bot_activity |
-| `useRailsConfig.js` | 112 | _sin describir_ |
 | `useViewport.js` | 92 | Hook único para detectar tamaño de pantalla. Lo usan los componentes del |
 | `useTeam.js` | 74 | _sin describir_ |
 | `useScheduledCalls.js` | 73 | Devuelve un Map<phoneDigits, { id, phone_e164, scheduled_at }> con las |
+| `useRailsConfig.js` | 54 | Shared configuration, isolated by authenticated user + organization; refreshed on return and every minute. |
 | `useProperties.js` | 45 | _sin describir_ |
+| `useDialogFocus.js` | 44 | _sin describir_ |
 | `useAuth.js` | 30 | Hook para consumir AuthContext desde cualquier componente. |
 | `useClient.js` | 27 | Hook para consumir el contexto del cliente activo. |
 
@@ -359,12 +362,12 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `telegram.js` | 839 | Pareo del bot de Telegram con el perfil del asesor. |
-| `auth.js` | 689 | _sin describir_ |
+| `telegram.js` | 807 | Pareo del bot de Telegram con el perfil del asesor. |
+| `auth.js` | 698 | _sin describir_ |
 | `push.js` | 416 | Sistema de suscripción a notificaciones Web Push |
 | `offline-mode.js` | 351 | _sin describir_ |
+| `next-action-engine.js` | 346 | _sin describir_ |
 | `lead-storage.js` | 343 | _sin describir_ |
-| `next-action-engine.js` | 341 | _sin describir_ |
 | `whatsapp-chat.js` | 326 | _sin describir_ |
 | `utils.js` | 308 | Utilidades compartidas entre todas las vistas. |
 | `lead-save.js` | 288 | _sin describir_ |
@@ -379,14 +382,15 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `recordatorios-locales.js` | 179 | _sin describir_ |
 | `informe-doc.js` | 175 | _sin describir_ |
 | `audit.js` | 151 | Cliente del sistema de auditoría |
+| `rails-store.js` | 143 | Store scoped to one authenticated person and organization. Never publishes an unconfirmed write. |
 | `markdown.jsx` | 129 | Mini renderer Markdown → React. Pensado para las notas privadas que la IA |
 | `iagents-actions.js` | 126 | _sin describir_ |
 | `webhook-diagnostico-stratos.js` | 112 | Envía los resultados del diagnóstico Stratos AI al webhook n8n del funnel. |
-| `backup.js` | 108 | _sin describir_ |
 | `rails-config.js` | 107 | _sin describir_ |
 | `chunk-recovery.js` | 103 | _sin describir_ |
 | `llamadas.js` | 93 | Consultas y estado local de los avisos de llamada del equipo. |
-| `agenda.js` | 91 | _sin describir_ |
+| `agenda.js` | 88 | Persistencia de la lista del día (Stratos Rails) |
+| `backup.js` | 85 | _sin describir_ |
 | `lead-draft.js` | 85 | Autosave del borrador del modal "Registrar cliente" |
 | `avisos-nativos.js` | 79 | _sin describir_ |
 | `transcribir.js` | 77 | _sin describir_ |
@@ -396,7 +400,10 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `telefono.js` | 61 | _sin describir_ |
 | `recovery.js` | 58 | Recuperación de contraseña por CÓDIGO al correo de recuperación. |
 | `suggest-actions.js` | 58 | Cliente del agente IA "co-pilot" que sugiere próximas acciones |
+| `financial-data.js` | 41 | _sin describir_ |
 | `app-review-access.native.js` | 32 | _sin describir_ |
+| `service-errors.js` | 32 | _sin describir_ |
+| `copilot-profile.js` | 29 | A failed profile lookup is not evidence that Copilot is disabled. |
 | `app-review-access.js` | 12 | Implementación web: App Review no existe fuera del binario móvil. |
 
 ---
@@ -410,11 +417,12 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 |---|---|
 | ¿A qué cliente se le cobra? (ej: Duke) | `src/app/views/CuentasCobro.jsx:321` |
 | ¿Cómo funciona el Escáner IA? | `src/app/views/RRHHModule.jsx:813` |
+| ¿Cuándo lo retomas? | `src/app/views/MiDia.jsx:475` |
 | ¿Cuánto te llevó? (opcional) | `src/app/views/Marketing.jsx:2462` |
-| ¿Cuánto? | `src/app/views/Copilot.jsx:1254` |
+| ¿Cuánto? | `src/app/views/Copilot.jsx:1256` |
 | ¿De qué empresa es? | `src/app/views/Marketing.jsx:1591` |
 | ¿De qué empresa? | `src/app/views/Marketing.jsx:1735` |
-| ¿De qué es? (opcional) | `src/app/views/Copilot.jsx:1267` |
+| ¿De qué es? (opcional) | `src/app/views/Copilot.jsx:1269` |
 | ¿De qué se habla acá? (opcional) | `src/app/views/ChatEquipo.jsx:529` |
 | ¿Eliminar usuario? | `src/app/features/Admin/AdminPanel.jsx:410` |
 | ¿En qué empresa? (opcional) | `src/app/views/Marketing.jsx:2453` |
@@ -422,41 +430,42 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | ¿Por qué la Riviera Maya? | `src/app/views/LandingPages/LandingPagePreview.jsx:401` |
 | ¿Qué necesitas? (ej. Flyer promo…) * | `src/app/views/Marketing.jsx:2183` |
 | A consultar | `src/app/views/LandingPages/index.jsx:1846` |
-| Abriendo comprobante… | `src/app/views/Caja.jsx:542` |
+| Abriendo comprobante… | `src/app/views/Caja.jsx:549` |
 | Abriendo documento… | `src/app/views/CRM/components.jsx:4322` |
 | Abriendo… | `src/app/views/ChatEquipo.jsx:555` |
 | Abrir | `src/app/views/Marketing.jsx:1338` |
 | Abrir carpeta de Drive | `src/app/views/LandingPages/index.jsx:1422` |
 | Abrir carpeta en Drive | `src/app/views/Marketing.jsx:683` |
-| Abrir Discovery | `src/app/views/CRM/index.jsx:5310` |
+| Abrir Discovery | `src/app/views/CRM/index.jsx:5329` |
 | Abrir el expediente completo | `src/app/views/WhatsApp.jsx:475` |
 | Abrir el expediente completo del cliente | `src/app/views/WhatsApp.jsx:456` |
 | Abrir evidencia | `src/app/views/Marketing.jsx:2340` |
 | Abrir la ficha completa | `src/app/views/Marketing.jsx:1564` |
 | Abrir la ficha completa — acá se edita todo | `src/app/views/Marketing.jsx:1373` |
 | Abrir la ficha de la propiedad | `src/app/views/Marketing.jsx:2008` |
-| Abrir perfil | `src/app/views/CRM/index.jsx:5308` |
+| Abrir perfil | `src/app/views/CRM/index.jsx:5327` |
 | Abrirlo en Drive | `src/app/features/MetaPanel/DocsStratos.jsx:174` |
-| Acciones | `src/app/views/CRM/index.jsx:4328` |
+| Acciones | `src/app/views/CRM/index.jsx:4347` |
 | Acciones acumuladas · Asesores vs. iAgents | `src/app/views/Dash.jsx:85` |
-| Acciones de cierre IA | `src/app/views/CRM/components.jsx:5614` |
-| Activa tu Copilot AI | `src/app/views/Copilot.jsx:1948` |
+| Acciones de cierre IA | `src/app/views/CRM/components.jsx:5615` |
+| Acciones por lista | `src/app/features/Admin/RailsSettings.jsx:147` |
+| Activa tu Copilot AI | `src/app/views/Copilot.jsx:1950` |
 | Actividad del equipo IA — hoy | `src/app/views/IACRM.jsx:299` |
-| Actividad reciente | `src/app/views/CRM/index.jsx:5893` |
-| ACTIVO | `src/app/views/CRM/components.jsx:5501` |
+| Actividad reciente | `src/app/views/CRM/index.jsx:5912` |
+| ACTIVO | `src/app/views/CRM/components.jsx:5502` |
 | Activos post-Zoom | `src/app/views/ComandoDirectivo.jsx:687` |
 | Activos post-Zoom: | `src/app/views/CRM/ZoomBoard.jsx:169` |
 | Actual: | `src/app/views/Profile.jsx:429` |
 | Actualización del sistema | `src/app/components/DynIsland.jsx:408` |
 | Actualización Importante | `src/app/components/DynamicIsland.jsx:132` |
-| Actualizar | `src/app/views/Caja.jsx:303` |
+| Actualizar | `src/app/views/Caja.jsx:300` |
 | Adjuntar | `src/app/views/ChatEquipo.jsx:481` |
 | Adjuntar imagen, audio o archivo | `src/app/views/CRM/LeadWhatsAppChat.jsx:843` |
 | Adjuntar PDF, documento o audio | `src/app/views/CRM/components.jsx:1830` |
 | Agenda (opcional) | `src/app/views/LandingPages/index.jsx:1606` |
 | Agenda una llamada con | `src/app/views/LandingPages/LandingPagePreview.jsx:458` |
 | Agenda, lista de acción, documentos y plan | `src/app/App.jsx:2983` |
-| Agendar fecha | `src/app/views/CRM/index.jsx:4648` |
+| Agendar fecha | `src/app/views/CRM/index.jsx:4667` |
 | Agendar llamada | `src/app/views/LandingPages/LandingPagePreview.jsx:164` |
 | Agente Ejecutivo | `src/app/components/Chat.jsx:74` |
 | Agente Stratos | `src/app/components/Chat.jsx:60` |
@@ -465,21 +474,21 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Agregar link | `src/app/views/LandingPages/index.jsx:1936` |
 | Agregar otro | `src/app/views/Marketing.jsx:2514` |
 | Agregar propiedad | `src/app/views/Marketing.jsx:1448` |
-| Agregar tarea de prioridad… | `src/app/views/PlanSemanal.jsx:470` |
+| Agregar tarea de prioridad… | `src/app/views/PlanSemanal.jsx:485` |
 | Agregar una columna propia a la hoja | `src/app/views/Marketing.jsx:1459` |
-| Ahora no | `src/app/views/Copilot.jsx:1893` |
+| Ahora no | `src/app/views/Copilot.jsx:1895` |
 | Ajusta el rango en el paso anterior | `src/app/views/LandingPages/index.jsx:1951` |
 | ALDEA ZAMA · TULUM | `src/app/views/LandingPages/index.jsx:305` |
 | Alta intención | `src/app/views/ZoomControl/index.jsx:579` |
 | Alta intención — señal de cierre en el Zoom | `src/app/views/ZoomControl/index.jsx:692` |
 | Amenidades (separadas por coma) | `src/app/views/LandingPages/index.jsx:760` |
-| Análisis IA | `src/app/views/CRM/components.jsx:5376` |
-| Analizar | `src/app/views/CRM/index.jsx:5305` |
+| Análisis IA | `src/app/views/CRM/components.jsx:5377` |
+| Analizar | `src/app/views/CRM/index.jsx:5324` |
 | Analizar con IA → | `src/app/views/Dash.jsx:241` |
-| Anterior | `src/app/views/CRM/index.jsx:3155` |
+| Anterior | `src/app/views/CRM/index.jsx:3167` |
 | Añade tareas concretas para este cliente | `src/app/views/CRM/components.jsx:2162` |
-| Añadir | `src/app/views/CRM/components.jsx:5768` |
-| Aparecerán al inicio de su pipeline en | `src/app/views/CRM/index.jsx:6170` |
+| Añadir | `src/app/views/CRM/components.jsx:5769` |
+| Aparecerán al inicio de su pipeline en | `src/app/views/CRM/index.jsx:6191` |
 | Aplicaciones | `src/app/App.jsx:3046` |
 | Apps | `src/app/App.jsx:2221` |
 | Áreas de atención | `src/app/views/RRHHModule.jsx:786` |
@@ -491,8 +500,10 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Asignar responsable | `src/app/features/MetaPanel/index.jsx:860` |
 | Asistió (sem.) | `src/app/views/ZoomControl/Resumen.jsx:411` |
 | Atención Inmediata | `src/app/views/Dash.jsx:235` |
+| Atender | `src/app/views/MiDia.jsx:408` |
 | Aún no configuras un correo de recuperación. | `src/app/views/Profile.jsx:430` |
 | Aún no hay documentos | `src/app/features/MetaPanel/index.jsx:1646` |
+| Avance de esta lista | `src/app/views/MiDia.jsx:243` |
 | Badge | `src/app/views/LandingPages/index.jsx:662` |
 | Bajo · Medio · Alto | `src/app/views/CRM/components.jsx:3431` |
 | Buscar (⌘K) | `src/app/App.jsx:2308` |
@@ -504,58 +515,61 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Buscar en las actividades… | `src/app/views/Marketing.jsx:1782` |
 | Buscar en papelera… | `src/app/views/Trash.jsx:99` |
 | Buscar nombre o email… | `src/app/features/Admin/AdminPanel.jsx:270` |
-| Buscar por categoría, obra, persona… | `src/app/views/Caja.jsx:447` |
+| Buscar por categoría, obra, persona… | `src/app/views/Caja.jsx:454` |
 | Buscar por nombre, masterbroker o contacto… | `src/app/views/ERP.jsx:415` |
 | Buscar propiedad, ubicación, estatus, año… | `src/app/views/Marketing.jsx:1430` |
 | Buscar solicitudes… | `src/app/views/Marketing.jsx:2171` |
-| Caja | `src/app/views/Caja.jsx:295` |
+| Caja | `src/app/views/Caja.jsx:292` |
 | CALCULADORA DE RETORNO | `src/app/views/LandingPages/index.jsx:881` |
-| Calificación BANT | `src/app/views/CRM/components.jsx:5527` |
+| Calificación BANT | `src/app/views/CRM/components.jsx:5528` |
 | Cambiar | `src/app/views/LandingPages/index.jsx:1936` |
 | Cambiar cuánto gana | `src/app/views/Nomina.jsx:180` |
 | Cambiar el estatus | `src/app/views/Marketing.jsx:1575` |
 | Cambiar etapa | `src/app/views/CRM/components.jsx:277` |
 | Cambiar fecha | `src/app/features/MetaPanel/index.jsx:1113` |
 | Cambiar la etapa del lead | `src/app/views/WhatsApp.jsx:503` |
-| Cambiar orden de las tarjetas de prioridad | `src/app/views/CRM/index.jsx:2639` |
-| Cambiar posición de prioridad | `src/app/views/CRM/index.jsx:2800` |
+| Cambiar orden de las tarjetas de prioridad | `src/app/views/CRM/index.jsx:2651` |
+| Cambiar posición de prioridad | `src/app/views/CRM/index.jsx:2812` |
 | Cambiar prioridad | `src/app/features/MetaPanel/index.jsx:1319` |
 | Campañas Recientes | `src/app/views/LandingPages/index.jsx:1255` |
 | Campo requerido | `src/app/views/LandingPages/index.jsx:641` |
 | Canales | `src/app/views/ChatEquipo.jsx:303` |
 | Cancelar | `src/app/features/Admin/AdminPanel.jsx:415` |
-| Cancelar comentario | `src/app/views/Copilot.jsx:1235` |
+| Cancelar comentario | `src/app/views/Copilot.jsx:1237` |
 | CANDIDATO IDENTIFICADO | `src/app/views/RRHHModule.jsx:740` |
 | Características | `src/app/views/LandingPages/index.jsx:704` |
 | Cargando actividad… | `src/app/views/Profile.jsx:998` |
-| Cargando conversación… | `src/app/views/Copilot.jsx:1154` |
+| Cargando conversación… | `src/app/views/Copilot.jsx:1156` |
 | Cargando conversaciones… | `src/app/views/WhatsApp.jsx:263` |
-| Cargando el plan… | `src/app/views/PlanSemanal.jsx:353` |
+| Cargando el plan… | `src/app/views/PlanSemanal.jsx:368` |
+| Cargando el proceso de tu equipo… | `src/app/features/Admin/RailsSettings.jsx:41` |
 | Cargando el tablero… | `src/app/views/ComandoOps.jsx:127` |
 | Cargando equipo… | `src/app/App.jsx:2336` |
-| Cargando movimientos… | `src/app/views/Caja.jsx:454` |
+| Cargando movimientos… | `src/app/views/Caja.jsx:461` |
 | Cargando Zooms… | `src/app/views/ZoomControl/index.jsx:511` |
-| Cargando… | `src/app/views/FinanzasAdmin.jsx:318` |
+| Cargando… | `src/app/views/FinanzasAdmin.jsx:305` |
 | Cargo / Departamento | `src/app/views/RRHHModule.jsx:602` |
 | Carpeta de crudos | `src/app/views/Marketing.jsx:2032` |
 | Carpeta de Drive | `src/app/views/ERP.jsx:662` |
 | Catálogo de Propiedades | `src/app/views/LandingPages/index.jsx:1300` |
 | Catálogo de Proyectos | `src/app/views/ERP.jsx:310` |
-| Centro de Agentes IA | `src/app/views/CRM/index.jsx:5474` |
+| Centro de Agentes IA | `src/app/views/CRM/index.jsx:5493` |
 | Centro de Inteligencia | `src/app/components/DynamicIsland.jsx:81` |
 | Centro de Inteligencia — Activo | `src/app/components/DynamicIsland.jsx:102` |
 | Cerrar | `src/app/App.jsx:2899` |
 | Cerrar (Esc) | `src/app/views/ZoomControl/index.jsx:793` |
 | Cerrar detalle | `src/app/views/ZoomControl/Resumen.jsx:299` |
+| Cerrar formulario | `src/app/views/CRM/index.jsx:3265` |
 | Cerrar Mi Espacio | `src/app/features/MetaPanel/index.jsx:664` |
 | Cerrar sesión | `src/app/App.jsx:2669` |
 | Cerrar vista previa | `src/app/views/LandingPages/LandingPagePreview.jsx:202` |
 | Chats | `src/app/views/WhatsApp.jsx:633` |
 | Cierres | `src/app/views/Team.jsx:116` |
-| Click para agendar fecha/hora de la cita | `src/app/views/CRM/index.jsx:4625` |
+| Click para agendar fecha/hora de la cita | `src/app/views/CRM/index.jsx:4644` |
 | Click para editar | `src/app/features/MetaPanel/index.jsx:333` |
 | Click para escribir el número directamente | `src/app/views/CRM/components.jsx:695` |
 | Cliente | `src/app/views/CRM/ZoomBoard.jsx:290` |
+| Cliente de ejemplo | `src/app/features/Admin/RailsSettings.jsx:355` |
 | Coaching IA · Análisis | `src/app/views/CRM/components.jsx:4998` |
 | Color de acento para la tarjeta | `src/app/views/LandingPages/index.jsx:802` |
 | Color personalizado | `src/app/views/LandingPages/index.jsx:815` |
@@ -574,7 +588,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Confirmados | `src/app/views/ZoomControl/Resumen.jsx:440` |
 | Confirmar contraseña | `src/app/views/Profile.jsx:333` |
 | Confirmas y listo | `src/app/views/ConectarWhatsApp.jsx:107` |
-| Contáctame Ya | `src/app/views/CRM/index.jsx:6170` |
+| Contáctame Ya | `src/app/views/CRM/index.jsx:6191` |
 | Contarlo ahora | `src/app/views/Marketing.jsx:708` |
 | Continuar sin CV | `src/app/features/Portal/index.jsx:425` |
 | Conversión | `src/app/views/Team.jsx:116` |
@@ -583,7 +597,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Copiar | `src/app/views/InformeAvances.jsx:633` |
 | Copiar el discovery al portapapeles | `src/app/views/ZoomControl/index.jsx:821` |
 | Copiar resumen para Telegram | `src/app/views/CRM/components.jsx:4560` |
-| Copilot AI | `src/app/views/Copilot.jsx:1104` |
+| Copilot AI | `src/app/views/Copilot.jsx:1106` |
 | Corregir lo que escribiste | `src/app/views/Marketing.jsx:1853` |
 | Correo de recuperación | `src/app/views/Profile.jsx:397` |
 | Crear | `src/app/views/Marketing.jsx:915` |
@@ -594,26 +608,27 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Crear Usuario | `src/app/features/Admin/AdminPanel.jsx:533` |
 | Cuándo se registró | `src/app/views/Marketing.jsx:1823` |
 | Cuánto se le cobra | `src/app/views/CuentasCobro.jsx:323` |
-| Cuenta (Caja, Banco…) | `src/app/views/Caja.jsx:380` |
+| Cuenta (Caja, Banco…) | `src/app/views/Caja.jsx:387` |
 | Cuentas de cobro | `src/app/views/CuentasCobro.jsx:267` |
 | Datos del Cliente | `src/app/views/LandingPages/index.jsx:1554` |
-| Delegar al equipo IA | `src/app/views/CRM/components.jsx:5465` |
+| Delegar al equipo IA | `src/app/views/CRM/components.jsx:5466` |
 | Desbloqueada | `src/app/views/Marketing.jsx:666` |
 | Descarga el reporte ejecutivo como PDF | `src/app/views/ComandoDirectivo.jsx:903` |
 | Descargar el manual en Word | `src/app/features/MetaPanel/DocsStratos.jsx:169` |
 | Descargar en Word | `src/app/features/MetaPanel/DocsStratos.jsx:213` |
 | Descargar en Word para firmarla | `src/app/views/CuentasCobro.jsx:419` |
 | Descartar | `src/app/App.jsx:2593` |
-| Descartar audio | `src/app/views/Copilot.jsx:1761` |
+| Descartar audio | `src/app/views/Copilot.jsx:1763` |
 | Descartar grabación | `src/app/views/CRM/LeadWhatsAppChat.jsx:808` |
 | Describe la tarea... | `src/app/views/CRM/components.jsx:2109` |
 | Descripción | `src/app/views/IACRM.jsx:441` |
-| Descripción / detalle (opcional) | `src/app/views/Caja.jsx:393` |
+| Descripción / detalle (opcional) | `src/app/views/Caja.jsx:400` |
 | Descripción del desarrollo | `src/app/views/LandingPages/index.jsx:739` |
 | Descripción y detalles | `src/app/views/LandingPages/index.jsx:737` |
 | Desde | `src/app/views/CuentasCobro.jsx:337` |
 | Desglose por asesor | `src/app/views/ComandoDirectivo.jsx:758` |
-| Detalle mensual | `src/app/views/FinanzasAdmin.jsx:424` |
+| Después del contacto | `src/app/views/MiDia.jsx:453` |
+| Detalle mensual | `src/app/views/FinanzasAdmin.jsx:411` |
 | Detalle: estilo, textos, medidas… | `src/app/views/Marketing.jsx:2210` |
 | Detectada por tu navegador: | `src/app/views/Profile.jsx:572` |
 | Días anteriores | `src/app/views/Marketing.jsx:2745` |
@@ -625,8 +640,8 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Editar acción | `src/app/views/CRM/components.jsx:2492` |
 | Editar nota | `src/app/views/CRM/LeadNotesTimeline.jsx:380` |
 | Editar usuario | `src/app/features/Admin/AdminPanel.jsx:316` |
-| Egresos | `src/app/views/FinanzasAdmin.jsx:427` |
-| Egresos por categoría | `src/app/views/FinanzasAdmin.jsx:353` |
+| Egresos | `src/app/views/FinanzasAdmin.jsx:414` |
+| Egresos por categoría | `src/app/views/FinanzasAdmin.jsx:340` |
 | Ej: Aldea Zama, frente al mar | `src/app/views/LandingPages/index.jsx:658` |
 | Ej: Almara Residences | `src/app/views/LandingPages/index.jsx:639` |
 | Ej: by Four Seasons | `src/app/views/LandingPages/index.jsx:645` |
@@ -635,11 +650,12 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Ej. Grupo 28 | `src/app/views/ZoomControl/index.jsx:1043` |
 | Ej. María González | `src/app/features/Admin/AdminPanel.jsx:449` |
 | Ej. María Pérez | `src/app/views/CRM/LeadRelatedContacts.jsx:136` |
-| Ej. Rafael García López | `src/app/views/CRM/index.jsx:3299` |
+| Ej. Rafael García López | `src/app/views/CRM/index.jsx:3315` |
 | Ej. Ramírez Torres | `src/app/features/Portal/index.jsx:333` |
 | Ej. Sofía | `src/app/features/Portal/index.jsx:332` |
-| El bot pidió que un humano tome control | `src/app/views/CRM/components.jsx:5422` |
-| El comprobante es un PDF | `src/app/views/Caja.jsx:551` |
+| Ejemplo ilustrativo · no modifica clientes | `src/app/features/Admin/RailsSettings.jsx:352` |
+| El bot pidió que un humano tome control | `src/app/views/CRM/components.jsx:5423` |
+| El comprobante es un PDF | `src/app/views/Caja.jsx:558` |
 | El documento es un PDF | `src/app/views/CRM/components.jsx:4329` |
 | El mercado | `src/app/views/LandingPages/LandingPagePreview.jsx:400` |
 | Elegir qué columnas ver | `src/app/views/Marketing.jsx:1453` |
@@ -649,18 +665,9 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Eliminar cliente | `src/app/views/CRM/components.jsx:3859` |
 | Eliminar definitivamente | `src/app/views/Trash.jsx:197` |
 | Eliminar documento | `src/app/features/MetaPanel/index.jsx:1689` |
-| Eliminar mi cuenta | `src/app/views/Profile.jsx:164` |
-| Eliminar usuario | `src/app/features/Admin/AdminPanel.jsx:325` |
-| Email | `src/app/features/Admin/AdminPanel.jsx:455` |
-| Empleado | `src/app/views/RRHHModule.jsx:602` |
-| Empresa | `src/app/views/Marketing.jsx:2976` |
-| En Seguimiento | `src/app/views/CRM/index.jsx:2673` |
-| Enlace | `src/app/views/Marketing.jsx:1511` |
-| Enlace de la landing page | `src/app/views/LandingPages/LandingPagePreview.jsx:109` |
-| Enlaces | `src/app/views/CRM/components.jsx:4129` |
 
 
-_(444 textos más — usá `npm run buscar "texto"`)_
+_(468 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -669,6 +676,7 @@ _(444 textos más — usá `npm run buscar "texto"`)_
 Estos no tienen comentario de cabecera, así que el mapa no puede explicar qué
 hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 
+- `src/app/views/CRM/index.jsx` (6677 líneas)
 - `src/app/views/Marketing.jsx` (3075 líneas)
 - `src/landing/LandingMarketing.jsx` (1593 líneas)
 - `src/app/views/ComandoDirectivo.jsx` (1270 líneas)
@@ -677,29 +685,28 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/landing/Diagnostico.jsx` (974 líneas)
 - `src/app/views/CRM/LeadWhatsAppChat.jsx` (942 líneas)
 - `src/app/views/RRHHModule.jsx` (839 líneas)
+- `src/app/features/Admin/Rails.css` (832 líneas)
 - `src/app/views/InformeAvances.jsx` (747 líneas)
 - `src/app/views/ERP.jsx` (698 líneas)
-- `src/lib/auth.js` (689 líneas)
+- `src/lib/auth.js` (698 líneas)
 - `src/landing/OnboardingCallCenter.jsx` (686 líneas)
 - `src/app/views/WhatsApp.jsx` (667 líneas)
 - `src/app/data/catalogoProyectos.js` (611 líneas)
-- `src/app/views/Caja.jsx` (580 líneas)
+- `src/app/views/Caja.jsx` (587 líneas)
 - `src/app/views/ChatEquipo.jsx` (569 líneas)
 - `src/landing/DataDeletion.jsx` (553 líneas)
+- `src/app/views/PlanSemanal.jsx` (515 líneas)
 - `src/app/views/ComandoDirectivo.pdf.js` (514 líneas)
-- `src/app/views/PlanSemanal.jsx` (500 líneas)
 - `src/app/views/ZoomControl/Resumen.jsx` (480 líneas)
 - `src/app/views/CuentasCobro.jsx` (463 líneas)
-- `src/app/views/FinanzasAdmin.jsx` (456 líneas)
+- `src/app/views/FinanzasAdmin.jsx` (443 líneas)
 - `src/clients/gasil/config.js` (422 líneas)
-- `src/app/features/Admin/RailsSettings.jsx` (377 líneas)
-- `src/app/views/MiDia.jsx` (363 líneas)
 - `src/lib/offline-mode.js` (351 líneas)
 - `src/app/data/leads.js` (348 líneas)
+- `src/lib/next-action-engine.js` (346 líneas)
 - `src/app/views/Dash.jsx` (344 líneas)
 - `src/landing/DukeLeadRouter.jsx` (343 líneas)
 - `src/lib/lead-storage.js` (343 líneas)
-- `src/lib/next-action-engine.js` (341 líneas)
 - `src/app/views/ComandoOps.jsx` (327 líneas)
 - `src/lib/whatsapp-chat.js` (326 líneas)
 - `src/app/App.css` (321 líneas)
@@ -724,7 +731,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/whatsapp-signup.js` (196 líneas)
 - `src/lib/lead-backup.js` (192 líneas)
 - `src/lib/speech-native.js` (189 líneas)
-- `src/app/views/CRM/CallActionButton.jsx` (183 líneas)
+- `src/app/views/CRM/CallActionButton.jsx` (184 líneas)
 - `src/app/components/Chat.jsx` (182 líneas)
 - `src/clients/muebleria/config.js` (182 líneas)
 - `src/lib/recordatorios-locales.js` (179 líneas)
@@ -746,16 +753,14 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/ZoomControl/constants.js` (116 líneas)
 - `src/app/components/CopilotMark.jsx` (113 líneas)
 - `src/clients/demo/config.js` (113 líneas)
-- `src/hooks/useRailsConfig.js` (112 líneas)
-- `src/lib/backup.js` (108 líneas)
 - `src/lib/rails-config.js` (107 líneas)
 - `src/lib/chunk-recovery.js` (103 líneas)
 - `src/clients/grupo28/config.js` (100 líneas)
 - `src/app/constants/areas.js` (97 líneas)
 - `src/app/constants/pipeline.js` (93 líneas)
-- `src/lib/agenda.js` (91 líneas)
 - `src/clients/tgenius/config.js` (90 líneas)
 - `src/app/views/CRM/date-range.js` (86 líneas)
+- `src/lib/backup.js` (85 líneas)
 - `src/lib/avisos-nativos.js` (79 líneas)
 - `src/lib/transcribir.js` (77 líneas)
 - `src/contexts/ClientOrgGuard.jsx` (75 líneas)

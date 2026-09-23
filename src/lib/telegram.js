@@ -15,6 +15,7 @@
  * Migración relacionada: supabase/migrations/007_telegram_bot_asesor_mode.sql
  */
 import { supabase } from './supabase'
+import { loadCopilotProfile } from './copilot-profile.js'
 import { resolveClientFromLocation, getClientConfigByOrgId } from '../clients'
 
 // ── Puerta del chat por TENANT (white-label) ─────────────────────────────────
@@ -467,7 +468,7 @@ export async function sendCopilotMessage(rawText, options = {}) {
   // siempre. Best-effort (no bloquea la UI).
   try {
     if (r && typeof r.reply === 'string' && r.reply.trim()) {
-      await supabase.rpc('copilot_log_msg', { p_role: 'ai', p_content: r.reply });
+      await withTimeout(supabase.rpc('copilot_log_msg', { p_role: 'ai', p_content: r.reply }), 3000, 'copilot_log_msg');
     }
   } catch { /* logging best-effort, nunca romper el envío */ }
   return r;
@@ -486,13 +487,8 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     // entra al sistema de avisos, que ya sabe explicar y ofrecer qué hacer.
     if (!session?.user?.id) return { reply: null, error: 'sesion_expirada' };
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('telegram_chat_id, role, is_marketing_admin, organization_id')
-      .eq('id', session.user.id)
-      .single();
-
-    if (!profile?.telegram_chat_id) return { reply: null, error: 'not_paired' };
+    const { profile, error: profileError } = await loadCopilotProfile(supabase, session.user.id);
+    if (profileError) return { reply: null, error: profileError };
     const chatId = Number(profile.telegram_chat_id);
     // Lado MARKETING → su propio flujo/cerebro; NO pasa por las capas CRM de asesores
     // (quick commands copilot_send, callbacks proactivos, awaiting-plan). Cubre tanto al
@@ -712,40 +708,21 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     const webhookUrl = tenant.webhook
       ? tenant.webhook
       : (isMarketing ? N8N_COPILOT_WEBHOOK_MKT : N8N_COPILOT_WEBHOOK);
-    const esperaEntreIntentos = [400, 1200];
-    for (let intento = 0; intento < 3; intento++) {
-      try {
-        const ctrl = new AbortController();
-        // 40s para TODOS los cerebros (antes: 40s marketing / 15s ventas).
-        //
-        // El 29-jul Ángel escribió desde su cuenta de admin "asignale una tarea a
-        // asesor prueba para que revise el asistente mañana a las 12" y vio
-        // "El asistente IA está procesando tu solicitud, intenta de nuevo".
-        // Pero en la base quedó: "Listo. Acción de equipo creada: revise el
-        // asistente · responsable: Asesor Prueba · vence Mié 29 jul, 12:00 p.m."
-        // O sea: FUNCIONÓ, y le dijimos que no. Volvió a mandarlo → casi crea la
-        // tarea dos veces.
-        //
-        // El cerebro de ventas es más grande que el de marketing (más tools, más
-        // ruteo): darle 15s cuando a marketing le dábamos 40 no tenía ninguna
-        // razón, solo quedó así. Un aborto del cliente NO cancela el flujo: n8n
-        // sigue corriendo del lado del servidor y guarda igual.
-        const timeout = setTimeout(() => ctrl.abort(), 40000);
-        // Webhook por tenant (NSG → su flujo Claude propio); si no hay override,
-        // la ruta de siempre: marketing → cerebro mkt · resto → cerebro de ventas.
-        const res = await fetch(webhookUrl, {
-          method: 'POST',
-          signal: ctrl.signal,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: chatId,
-            text: cleanText,
-            callback_data: options.callback_data || undefined,
-            original_type: options.callback_data ? "callback" : "text"
-          })
-        });
-        clearTimeout(timeout);
-
+    // A lost response does not prove that n8n rejected the command. Sending
+    // it again can create the task or lead twice. Submit once, then let the
+    // existing history reconciliation resolve an uncertain delivery.
+    const ctrl = new AbortController();
+    const timeout = setTimeout(() => ctrl.abort(), 40000);
+    try {
+      const res = await fetch(webhookUrl, {
+        method: 'POST', signal: ctrl.signal,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId, text: cleanText,
+          callback_data: options.callback_data || undefined,
+          original_type: options.callback_data ? 'callback' : 'text',
+        }),
+      });
         if (res.ok) {
           const raw = await res.text();
           if (raw && raw.length > 2) {
@@ -769,25 +746,16 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
               }
             }
           }
-          // Respondió bien pero sin nada aprovechable en el cuerpo: el motor lo
-          // tomó igual, así que se sigue por el camino "slow" (no se reintenta).
-          break;
         }
-        if (res.status === 504) break;   // el motor lo tomó y sigue → camino "slow"
-        // 502/503 del proxy: el motor NO tomó el mensaje. Se reintenta.
-        console.warn('[Copilot] el motor no tomó el mensaje (HTTP ' + res.status + '), intento ' + (intento + 1) + ' de 3');
-      } catch (err) {
-        console.warn('[Copilot] webhook error:', err?.name || err?.message, '· intento', intento + 1, 'de 3');
-        // Abort (40s) = n8n SÍ recibió y sigue trabajando → camino "slow" (la
-        // respuesta la deja el propio flujo en el historial). NO se reintenta.
-        if (err?.name === 'AbortError') break;
-        // Un fallo de RED: el POST murió en tránsito y el motor NUNCA lo recibió.
-        // Se reintenta abajo; si se acaban los intentos, recién ahí se avisa.
+
+      if (res.status >= 400 && res.status < 500 && res.status !== 408) {
+        return { reply: null, buttons: [], error: 'no_llego' };
       }
-      // Llegar acá = este intento no entró al motor.
-      if (intento === 2) return { reply: null, buttons: [], error: 'no_llego' };
-      await new Promise((r) => setTimeout(r, esperaEntreIntentos[intento]));
-      }
+    } catch (err) {
+      console.warn('[Copilot] Entrega pendiente de confirmar:', err?.name || 'network_error');
+    } finally {
+      clearTimeout(timeout);
+    }
 
     // Fallback cuando el webhook no respondió a tiempo o dio error.
     //

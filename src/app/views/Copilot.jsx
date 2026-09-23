@@ -513,10 +513,12 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           ? "Tu mensaje no llegó al motor (falló la conexión). Mándalo de nuevo — no se guardó nada."
         : r.error === "sesion_expirada"
           ? "Tu sesión se cerró. Vuelve a entrar para seguir hablando con el asistente — lo que escribiste no se envió."
+        : r.error === "profile_unavailable"
+          ? "No pudimos consultar tu cuenta porque el servicio no respondió. Tu mensaje no se envió al asistente. Intenta de nuevo."
           : "No se pudo enviar. Intenta de nuevo.");
       // Solo "no_llego" es de verdad un problema de conexión. Una sesión vencida
       // o un rechazo del motor no significan que el asistente esté caído.
-      setAsistenteCaido(r.error === "no_llego");
+      setAsistenteCaido(r.error === "no_llego" || r.error === "profile_unavailable");
       return;
     }
 
@@ -1157,7 +1159,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
                este caso era el cartel de "Cargando conversación…" para siempre. */
             <div style={{ margin: "auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, textAlign: "center", padding: "0 24px" }}>
               <div style={{ color: T.txt2, fontSize: 13, fontFamily: font, lineHeight: 1.5 }}>
-                No se pudo traer la conversación.<br />Puede ser la conexión.
+                El servicio no respondió a tiempo.<br />Tu internet puede estar bien.
               </div>
               <button type="button"
                 onClick={() => { setErrorCarga(false); setLoading(true); reload(); }}

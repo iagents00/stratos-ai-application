@@ -45,7 +45,7 @@ const REGLAS = [
     aplica: (l) => l.st === "Contáctame Ya" || (l.isNew && ETAPAS_SIN_CONTACTO.has(l.st)),
     razon: (l) => l.diasSinTocar >= 1
       ? `Entró hace ${l.diasSinTocar} ${l.diasSinTocar === 1 ? "día" : "días"} y todavía nadie lo llamó.`
-      : "Acaba de entrar. La contactabilidad cae 100× entre el minuto 5 y el 30.",
+      : "Acaba de entrar. Haz el primer contacto mientras tiene presente su consulta.",
     pedir: () => "Preséntate y consigue una cosa: para qué quiere invertir.",
     canal: "llamada",
     eta: "ahora",
@@ -257,13 +257,14 @@ export function normalizarLead(lead, ahora = new Date()) {
     necesidad: "para qué lo quiere", fecha: "fecha del siguiente paso",
   }[k]));
 
-  const vencida = lead.nextActionAt ? new Date(lead.nextActionAt) < ahora : false;
+  const nextActionAt = lead.nextActionAt || lead.next_action_at;
+  const vencida = nextActionAt ? new Date(nextActionAt) < ahora : false;
 
   return {
     ...lead,
     diasSinTocar: dias(lead.updatedAt || lead.updated_at) ?? lead.daysInactive ?? 0,
     proximaAccionVencida: vencida,
-    diasVencida: vencida ? dias(lead.nextActionAt) : null,
+    diasVencida: vencida ? dias(nextActionAt) : null,
     bantScore: Object.values(bant).filter(Boolean).length,
     bantFaltantes: faltantes,
   };
@@ -274,7 +275,11 @@ export function normalizarLead(lead, ahora = new Date()) {
  * Una sola: la lista de siete tarjetas no admite empates.
  */
 export function proximaAccion(leadCrudo, ahora = new Date(), config = null) {
-  if (!leadCrudo || ETAPAS_CERRADAS.has(leadCrudo.st)) return null;
+  if (!leadCrudo || leadCrudo.opt_out === true || leadCrudo.deleted_at || ETAPAS_CERRADAS.has(leadCrudo.st || leadCrudo.stage)) return null;
+  // Respect the agreed follow-up day instead of immediately resurfacing a moved lead.
+  const next = leadCrudo.nextActionAt || leadCrudo.next_action_at;
+  const endOfDay = new Date(ahora); endOfDay.setHours(23, 59, 59, 999);
+  if (next && new Date(next) > endOfDay) return null;
   const lead = normalizarLead(leadCrudo, ahora);
 
   // La organización puede apagar reglas enteras y cambiarles el peso. `definir_paso`

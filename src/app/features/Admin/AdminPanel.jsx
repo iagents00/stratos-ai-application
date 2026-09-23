@@ -199,7 +199,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
             <button
               onClick={handleDownloadBackup}
               disabled={backupState.loading}
-              title="Descargar respaldo completo en JSON (perfiles, leads, auditoría)"
+              title="Exportar datos CRM accesibles en JSON. No incluye Auth, archivos ni una copia completa del sistema."
               style={{
                 flex: isMobile ? 1 : "none", justifyContent: "center", whiteSpace: "nowrap",
                 display: "flex", alignItems: "center", gap: 7, padding: "10px 18px",
@@ -212,7 +212,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
               onMouseEnter={e => { if (!backupState.loading) { e.currentTarget.style.borderColor = isLight ? T.accentB : T.borderH; e.currentTarget.style.color = T.txt; } }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = isLight ? T.borderH : T.border; e.currentTarget.style.color = isLight ? T.txt : T.txt2; }}
             >
-              <Download size={13} /> {backupState.loading ? "Generando..." : "Descargar respaldo"}
+              <Download size={13} /> {backupState.loading ? "Generando..." : "Exportar datos CRM"}
             </button>
             <button onClick={openCreate} style={{
               flex: isMobile ? 1 : "none", justifyContent: "center", whiteSpace: "nowrap",

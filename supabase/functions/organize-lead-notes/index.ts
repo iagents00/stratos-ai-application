@@ -1,3 +1,4 @@
+import { requireUser } from "../_shared/require-user.ts";
 // Stratos AI — Edge Function: organize-lead-notes (v2)
 //
 // Toma texto desordenado del asesor (SIN etiquetas, sin formato) y
@@ -171,6 +172,10 @@ Deno.serve(async (req: Request) => {
 
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "method not allowed" }), { status: 405, headers: cors });
+  }
+
+  if (!await requireUser(req)) {
+    return new Response(JSON.stringify({ error: "sesion_requerida" }), { status: 401, headers: cors });
   }
 
   try {

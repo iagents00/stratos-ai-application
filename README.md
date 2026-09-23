@@ -1,171 +1,45 @@
-# Stratos AI — Plataforma CRM + ERP Inmobiliaria
+# Stratos AI
 
-> **¿Retomando el proyecto?** Empieza por **[HANDOFF.md](HANDOFF.md)**: qué está
-> vivo, qué falta, y qué se puede tocar sin romper nada.
+Plataforma comercial multiempresa: CRM, Copilot, Ventas sobre Rieles, agenda, módulos operativos e integraciones. React 19 + Vite 8, Supabase, Vercel, n8n y Capacitor. Consultar package-lock.json para versiones exactas.
 
-Plataforma de gestión comercial para equipos de ventas inmobiliarias.
-Incluye CRM con pipeline visual, agentes IA, ERP de proyectos, finanzas y RRHH.
+**Mantenimiento y recuperación:** [Manual de operación](docs/operacion/README.md).
 
----
+| Buscar | Abrir |
+|---|---|
+| Pantallas y textos | [MAPA.md](MAPA.md) |
+| Datos, servicios e impacto de cambios | [PLANO.md](PLANO.md) |
+| Incidente o restauración | [Recuperación](docs/operacion/RECUPERACION.md) |
+| Proceso admin / vendedor | [Ventas sobre Rieles](docs/operacion/RIELES.md) |
+| Pruebas y publicación | [Entrega](docs/operacion/ENTREGA.md) |
+| Guardas históricas | [CLAUDE.md](CLAUDE.md) |
 
-## Stack
+## Desarrollo
 
-| Capa | Tecnología |
-|------|-----------|
-| Frontend | React 18 + Vite |
-| Estilos | CSS-in-JS (inline styles) — NO Tailwind |
-| Iconos | Lucide React |
-| Gráficas | Recharts |
-| Auth | Supabase Auth (EN PRODUCCIÓN) |
-| Base de datos | Supabase PostgreSQL (EN PRODUCCIÓN) |
-| Aislamiento multi-cliente | `organization_id` + RLS |
+Node 24, Git y acceso al repositorio. Desde una copia limpia:
 
----
-
-## Inicio Rápido
-
-```bash
-# Instalar dependencias
-npm install
-
-# Desarrollo
+```sh
+npm ci --no-audit --no-fund
 npm run dev
-# → http://localhost:5173         (Landing marketing)
-# → http://localhost:5173/?app    (Plataforma / CRM)
+```
 
-# Build de producción
+`http://localhost:5173` abre la web; `http://localhost:5173/?app` abre la plataforma. Una sesión demo es solo demostración. No usar datos o credenciales reales para fixtures.
+
+## Verificación
+
+```sh
+npm test
+npm run check:runtime
+npm run ops:check
+npm run verificar-rails
+npm run planos
 npm run build
-
-# Preview del build
-npm run preview
+npm run ops:doctor -- --output /tmp/stratos-incidente.json
 ```
 
-### Credenciales de demo
+El diagnóstico necesita red; las pruebas usan fixtures. /release.json identifica cada nueva compilación web. Confirmar el SHA efectivo de producción: main y Vercel pueden diferir tras una promoción.
 
-```
-Email:    demo@stratos.ai
-Password: Demo2024
-```
+## Configuración y seguridad
 
----
+Las variables VITE_ son públicas y se incluyen en el navegador; nunca usarlas para secretos. Supabase ya maneja Auth y datos de producción. El cliente mantiene un fallback público del proyecto Stratos; los secretos de servidor se administran en su proveedor. El menú por roles no reemplaza RLS ni la autorización en RPC/Edge/n8n.
 
-## Arquitectura
-
-### Dos sitios, un repositorio
-
-```
-stratoscapitalgroup.com        → LandingMarketing.jsx (sin auth)
-app.stratoscapitalgroup.com    → App.jsx (con LoginScreen interno)
-```
-
-La detección se hace en runtime en `main.jsx` via `window.location.hostname`.
-Para desarrollo local usa `?app` como query param.
-
-### Estructura de archivos
-
-```
-src/
-├── main.jsx              ← Raíz. Enruta landing vs plataforma por hostname
-├── App.jsx               ← Plataforma completa (7 200+ líneas)
-├── LandingMarketing.jsx  ← Landing pública de marketing
-├── LoginScreen.jsx       ← Pantalla de login de la plataforma
-│
-├── data/
-│   ├── leads.js          ← Datos mock del CRM (8 leads reales)
-│   └── constants.js      ← Paleta P, tipografías, STAGES del pipeline
-│
-├── lib/
-│   └── supabase.js       ← Cliente Supabase (desactivado hasta migración)
-│
-├── components/           ← Componentes reutilizables (pendiente extraer)
-│   ├── ui/               ← Pill, KPI, ScoreBar, etc.
-│   └── layout/           ← Sidebar, Topbar, DynIsland
-│
-├── views/                ← Vistas principales (pendiente extraer de App.jsx)
-│   └── (Dashboard, CRM, ERP, IACRM, AsesorCRM, Finanzas, RRHH)
-│
-├── hooks/                ← Custom hooks (useAuth, usePermissions — pendiente)
-└── utils/                ← Helpers (formatCurrency, scoreColor — pendiente)
-```
-
----
-
-## Variables de Entorno
-
-Crea `.env.local` (NO subir a Git):
-
-```bash
-VITE_APP_URL=https://app.stratoscapitalgroup.com
-VITE_SUPABASE_URL=https://xxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJxxx...
-```
-
-Ver `.env.example` como referencia.
-
----
-
-## Vistas de la Plataforma
-
-| Vista | ID | Descripción |
-|-------|----|-------------|
-| Dashboard | `d` | KPIs ejecutivos, comando directivo IA |
-| CRM | `crm` | Pipeline de ventas con 12 etapas |
-| IA CRM | `ia` | Agentes de inteligencia artificial |
-| ERP | `erp` | Gestión de proyectos inmobiliarios |
-| Asesores CRM | `acrm` | Base de datos de asesores |
-| Landing Pages | `lp` | Generador de landings |
-| Finanzas | `fin` | Módulo financiero |
-| RRHH | `rrhh` | Recursos humanos |
-
----
-
-## Pipeline CRM — 10 Etapas
-
-```
-Nuevo Registro → Primer Contacto → Seguimiento →
-Zoom Agendado → Zoom Concretado →
-Visita Agendada → Visita Concretada →
-Negociación → Cierre → Perdido
-```
-
----
-
-## Siguiente Sprint: Migración a Supabase
-
-El plan completo está en `.claude/plans/glittery-doodling-avalanche.md`.
-
-### Prioridad Alta (Auth)
-1. Crear proyecto en supabase.com
-2. `npm install @supabase/supabase-js`
-3. Activar `src/lib/supabase.js`
-4. Crear `AuthContext` + `useAuth` hook
-5. Reemplazar localStorage auth con `supabase.auth`
-
-### Prioridad Media (Admin)
-6. Panel de administración con gestión de usuarios
-7. 4 roles: super_admin, ceo, director, asesor
-8. Row Level Security (RLS) por rol
-
-### Prioridad Baja (Datos)
-9. Migrar leads mock → tabla `crm_leads` en Supabase
-10. Migrar proyectos, team, agentes IA
-
----
-
-## Deploy
-
-Ver `DEPLOYMENT.md` para guía completa de Vercel + Namecheap DNS.
-
----
-
-## Convenciones
-
-- **Estilos**: Solo inline styles. Paleta `P` en `src/data/constants.js`
-- **Iconos**: Solo Lucide React
-- **Commits**: `feat:` `fix:` `style:` `perf:` `refactor:` `docs:`
-- **NO** instalar nuevas librerías sin confirmar
-- **NO** usar Tailwind
-
----
-
-*Ver `CLAUDE.md` para instrucciones completas de desarrollo.*
+No ejecutar todas las migraciones históricas a ciegas ni desplegar funciones Supabase suponiendo que se publicaron con Vercel. Revisar el estado remoto y seguir el manual operativo.

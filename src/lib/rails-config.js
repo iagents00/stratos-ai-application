@@ -61,7 +61,7 @@ export function fusionarRails(guardada) {
     const sobre = (g.reglas && typeof g.reglas === "object" && g.reglas[r.tipo]) || {};
     const peso = Number(sobre.peso);
     reglas[r.tipo] = {
-      activa: sobre.activa !== false,                       // solo un false explícito apaga
+      activa: r.fija || sobre.activa !== false,                       // solo un false explícito apaga
       peso:   Number.isFinite(peso) ? clamp(peso, 0, 100) : r.peso,
       razon:  textoLimpio(sobre.razon),                     // null = usar el del motor
       pedir:  textoLimpio(sobre.pedir),
