@@ -15,6 +15,7 @@
  * Migración relacionada: supabase/migrations/007_telegram_bot_asesor_mode.sql
  */
 import { supabase } from './supabase'
+import { loadCopilotProfile } from './copilot-profile.js'
 import { resolveClientFromLocation, getClientConfigByOrgId } from '../clients'
 
 // ── Puerta del chat por TENANT (white-label) ─────────────────────────────────
@@ -467,7 +468,7 @@ export async function sendCopilotMessage(rawText, options = {}) {
   // siempre. Best-effort (no bloquea la UI).
   try {
     if (r && typeof r.reply === 'string' && r.reply.trim()) {
-      await supabase.rpc('copilot_log_msg', { p_role: 'ai', p_content: r.reply });
+      await withTimeout(supabase.rpc('copilot_log_msg', { p_role: 'ai', p_content: r.reply }), 3000, 'copilot_log_msg');
     }
   } catch { /* logging best-effort, nunca romper el envío */ }
   return r;
@@ -486,13 +487,8 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     // entra al sistema de avisos, que ya sabe explicar y ofrecer qué hacer.
     if (!session?.user?.id) return { reply: null, error: 'sesion_expirada' };
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('telegram_chat_id, role, is_marketing_admin, organization_id')
-      .eq('id', session.user.id)
-      .single();
-
-    if (!profile?.telegram_chat_id) return { reply: null, error: 'not_paired' };
+    const { profile, error: profileError } = await loadCopilotProfile(supabase, session.user.id);
+    if (profileError) return { reply: null, error: profileError };
     const chatId = Number(profile.telegram_chat_id);
     // Lado MARKETING → su propio flujo/cerebro; NO pasa por las capas CRM de asesores
     // (quick commands copilot_send, callbacks proactivos, awaiting-plan). Cubre tanto al

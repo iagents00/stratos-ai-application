@@ -55,7 +55,7 @@ columna, estos son los archivos que hay que revisar.
 
 | Tabla | Archivos | Dónde se usa |
 |---|---|---|
-| `profiles` | 11 | `app/views/CRM/index.jsx` · `app/views/Caja.jsx` · `app/views/ChatEquipo.jsx` _+8_ |
+| `profiles` | 12 | `app/views/CRM/index.jsx` · `app/views/Caja.jsx` · `app/views/ChatEquipo.jsx` _+9_ |
 | `leads` | 7 | `app/App.jsx` · `app/views/CRM/index.jsx` · `app/views/Caja.jsx` _+4_ |
 | `evidencia` | 6 | `app/views/CRM/components.jsx` · `app/views/Caja.jsx` · `app/views/ChatEquipo.jsx` _+3_ |
 | `team_expenses` | 4 | `app/views/Caja.jsx` · `app/views/Copilot.jsx` · `app/views/FinanzasAdmin.jsx` _+1_ |

@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v432'; // v432: diagnostica caídas del servicio sin culpar a la contraseña o al internet del usuario.
+const CACHE_VERSION = 'stratos-v433'; // v433: Copilot distingue fallos de perfil de cuentas sin activar.
 // const CACHE_VERSION = 'stratos-v424'; // v424: ficha de Google Play (textos + graficos de tienda)
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;

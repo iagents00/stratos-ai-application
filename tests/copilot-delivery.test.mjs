@@ -10,7 +10,7 @@ test('Copilot never retries an uncertain write and still accepts direct replies'
   const {getClientConfig}=await server.ssrLoadModule('/src/clients/index.js');
   const cfg=getClientConfig('nsg');
   supabase.auth.getSession=async()=>({data:{session:{user:{id:'audit-test-user'}}}});
-  supabase.from=()=>({select(){return this},eq(){return this},single:async()=>({data:{telegram_chat_id:123,role:'asesor',organization_id:cfg.tenant.organizationId}})});
+  supabase.from=()=>({select(){return this},eq(){return this},abortSignal(){return this},single:async()=>({data:{telegram_chat_id:123,role:'asesor',organization_id:cfg.tenant.organizationId}})});
   supabase.rpc=async()=>({data:null,error:null});
   const {sendCopilotMessage}=await server.ssrLoadModule('/src/lib/telegram.js');
   let attempts=0;
