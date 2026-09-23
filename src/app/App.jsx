@@ -55,6 +55,8 @@ import IAOSIsland         from "./components/IAOSIsland";
 import CopilotMark        from "./components/CopilotMark";
 import { buildIntelNotifs } from "./constants/intelNotifs";
 import { buildMktIntelNotifs, buildMktIntelPhrases } from "./constants/intelMkt";
+import { applyPipelineConfig } from "./constants/pipeline";
+import { loadWhatsAppAdmin } from "../lib/whatsapp-admin";
 import PermissionGate     from "./components/PermissionGate";
 import { IosIcon }        from "./icons/ios-icons";
 import Chat, { getResp }  from "./features/ChatPanel";
@@ -63,6 +65,7 @@ import MetaPanel,
 // AdminPanel y vistas pesadas se cargan bajo demanda con React.lazy
 // para reducir el bundle inicial de ~1.3 MB a ~400 KB.
 const AdminPanel = lazy(() => import("./features/Admin/AdminPanel"));
+const PlatformAdminConsole = lazy(() => import("./features/Admin/PlatformAdminConsole"));
 const RailsSettings = lazy(() => import("./features/Admin/RailsSettings"));
 
 /* ── Navigation & roles ── */
@@ -302,6 +305,23 @@ async function fetchAllPaged(makeQuery) {
    ════════════════════════════════════════ */
 export default function App() {
   const { user, login, logout, upgradeToOnline, bootHydrating } = useAuth();
+  const [platformConsole, setPlatformConsole] = useState({ userId: null, status: "idle", data: null });
+  useEffect(() => {
+    let active = true;
+    if (!user?.id) {
+      setPlatformConsole({ userId: null, status: "idle", data: null });
+      return () => { active = false; };
+    }
+    if (user.role !== "super_admin") {
+      setPlatformConsole({ userId: user.id, status: "denied", data: null });
+      return () => { active = false; };
+    }
+    setPlatformConsole({ userId: user.id, status: "checking", data: null });
+    loadWhatsAppAdmin()
+      .then(data => { if (active) setPlatformConsole({ userId: user.id, status: data?.access?.supportOnly === false ? "denied" : "allowed", data }); })
+      .catch(() => { if (active) setPlatformConsole({ userId: user.id, status: "denied", data: null }); });
+    return () => { active = false; };
+  }, [user?.id, user?.role]);
   // Cliente activo (Duke, Grupo 28, etc.) según hostname/path. Usado como
   // fallback para orgBrand cuando la organización del user no tiene `brand`
   // explícitamente seteado en meta_config — así cada cliente ve su propia
@@ -1679,6 +1699,7 @@ export default function App() {
   // Esto permite isolación total: Grupo 28 nunca ve contenido de Duke y viceversa.
   const [orgMetaConfig, setOrgMetaConfig] = useState(null);
   const [metaDocs, setMetaDocs] = useState([]);
+  const [, setPipelineRevision] = useState(0);
   const metaCfgLoaded = useRef(false);   // evita escribir meta_config antes de saber qué hay en DB
   useEffect(() => {
     const orgId = user?.organizationId;
@@ -1698,6 +1719,36 @@ export default function App() {
       });
     return () => { cancelled = true; };
   }, [user?.organizationId, user?._offline, user?.id]);
+
+  // Empresas creadas desde la consola comparten `/tenant`: su pipeline vive
+  // en organizations.meta_config.crm y no en un archivo de código. Al cargar
+  // la organización mezclamos únicamente ese bloque sobre la configuración
+  // base de la URL. applyPipelineConfig conserva las referencias importadas
+  // por el CRM; este pequeño revision tick hace que la vista abierta se pinte
+  // inmediatamente con las etapas de SU empresa.
+  useLayoutEffect(() => {
+    applyPipelineConfig({
+      ...clientConfig,
+      crm: { ...(clientConfig?.crm || {}), ...(orgMetaConfig?.crm || {}) },
+    });
+    setPipelineRevision(v => v + 1);
+  }, [clientConfig, orgMetaConfig?.crm]);
+
+  // Si el administrador publica el pipeline de su propia empresa, actualizamos
+  // esta sesión al instante. Los usuarios que ya tengan abierto otro navegador
+  // lo reciben al recargar, igual que cualquier cambio de configuración del tenant.
+  useEffect(() => {
+    const handlePipelineSaved = (event) => {
+      const { organizationId, pipeline } = event.detail || {};
+      if (!organizationId || organizationId !== user?.organizationId || !Array.isArray(pipeline)) return;
+      setOrgMetaConfig(prev => ({
+        ...(prev || {}),
+        crm: { ...(prev?.crm || {}), pipeline },
+      }));
+    };
+    window.addEventListener("stratos:pipeline-saved", handlePipelineSaved);
+    return () => window.removeEventListener("stratos:pipeline-saved", handlePipelineSaved);
+  }, [user?.organizationId]);
 
   // Plan/Protocolo efectivos: lo de la org va ENCIMA del default, no en lugar de él.
   //
@@ -1893,6 +1944,16 @@ export default function App() {
       );
     }
     return <LoginScreen onLogin={login} />;
+  }
+
+  // Las cuentas de soporte de plataforma no entran al shell comercial del
+  // tenant. El permiso se comprueba en la Edge Function; no depende del correo,
+  // del nombre de la ruta ni de esconder botones en React.
+  if (platformConsole.userId === user.id && platformConsole.status === "checking") {
+    return <div style={{ position: "fixed", inset: 0, background: T.bg, color: T.txt, display: "grid", placeItems: "center", fontFamily: font }}><div style={{ textAlign: "center" }}><div style={{ width: 44, height: 44, borderRadius: "50%", border: `2px solid ${T.border}`, borderTopColor: T.accent, animation: "stratosSpin .9s linear infinite", margin: "0 auto 14px" }} /><div style={{ color: T.txt2, fontSize: 12.5 }}>Abriendo centro de soporte…</div><style>{`@keyframes stratosSpin { to { transform: rotate(360deg); } }`}</style></div></div>;
+  }
+  if (platformConsole.userId === user.id && platformConsole.status === "allowed") {
+    return <Suspense fallback={null}><PlatformAdminConsole initialData={platformConsole.data} /></Suspense>;
   }
 
   /* ── Sidebar helpers ── */

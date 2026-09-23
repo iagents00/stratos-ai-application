@@ -25,6 +25,7 @@ import legacyDesignConfig  from "./legacy-design/config";
 import brasaYPiedraConfig  from "./brasa-y-piedra/config";
 import gasilConfig         from "./gasil/config";
 import demoConfig          from "./demo/config";
+import tenantConfig        from "./tenant/config";
 
 // Registry de todos los clientes conocidos
 const CLIENT_CONFIGS = {
@@ -50,6 +51,9 @@ const CLIENT_CONFIGS = {
   // vería la marca y el pipeline de un cliente real — la misma fuga que
   // encontró la auditoría del 13-ago. Se quita cuando la app esté publicada.
   demo:             demoConfig,
+  // Entrada neutral y compartida para empresas creadas desde el alta masiva.
+  // El organization_id real viene del usuario y RLS; nunca del path.
+  tenant:           tenantConfig,
 };
 
 /**
@@ -182,8 +186,8 @@ export function getClientConfigByOrgId(organizationId) {
  *   - Si el clientId actual matchea el clientId de la org del user → no redirige.
  *   - Si la org del user mapea a un clientId distinto del actual → redirige
  *     al path correcto (preserva query y hash).
- *   - Si la org del user no está en el registry (cliente desconocido) → no
- *     redirige (fallback al comportamiento actual).
+ *   - Si la org del user no está en el registry (cliente nuevo) → usa la
+ *     entrada neutral /tenant para no caer en la marca de Duke.
  *
  * @param {object} user - { organizationId: string, ... }
  * @param {string} currentClientId - resultado de matchClientFromLocation()
@@ -192,8 +196,7 @@ export function getClientConfigByOrgId(organizationId) {
  */
 export function resolveRedirectForUser(user, currentClientId, location = window.location) {
   if (!user?.organizationId) return null;
-  const targetClientId = getClientIdByOrgId(user.organizationId);
-  if (!targetClientId) return null;
+  const targetClientId = getClientIdByOrgId(user.organizationId) || "tenant";
   if (targetClientId === currentClientId) return null;
 
   // Construir el path correcto:

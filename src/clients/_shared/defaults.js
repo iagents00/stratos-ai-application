@@ -171,12 +171,14 @@ export const DEFAULT_CLIENT_CONFIG = {
   },
 
   // Integración con Meta (WhatsApp Business Platform).
-  // Se llena cuando Stratos AI quede registrado como proveedor de tecnología.
-  // El APP SECRET no va aquí: vive solo en el backend (n8n), porque este objeto
-  // termina en el bundle JS público.
+  // App ID y Configuration ID son identificadores públicos: Meta los entrega
+  // al navegador para abrir Embedded Signup. El solutionID lo asigna Infobip
+  // cuando aprueba la Partner Solution y se mantiene como variable de entorno.
+  // Ningún APP SECRET vive aquí porque este objeto termina en el bundle público.
   meta: {
-    appId:             null,  // Identificador de la app de Meta
-    configId:          null,  // Configuración de Embedded Signup
+    appId:             import.meta.env.VITE_META_APP_ID || "1068807342365225",
+    configId:          import.meta.env.VITE_META_CONFIG_ID || "1072690838839810",
+    solutionId:        import.meta.env.VITE_INFOBIP_SOLUTION_ID || null,
     // Endpoint del backend que intercambia el `code` por token y registra el
     // canal vía fn_registrar_canal_whatsapp. Ver ops/RUTEO-WHATSAPP-multicliente.md
     signupCallbackUrl: null,

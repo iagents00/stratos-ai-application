@@ -142,11 +142,11 @@ Servicios de terceros con los que habla el código.
 | `personal-n8n.suwsiw.easypanel.host` | 14 archivos |
 | `glulgyhkrqpykxmujodb.supabase.co` | 6 archivos |
 | `drive.google.com` | 3 archivos |
+| `docs.google.com` | 2 archivos |
 | `brokers.mycocay.com` | 1 archivo |
 | `brokers.simca.mx` | 1 archivo |
 | `cal.com` | 1 archivo |
 | `calendly.com` | 1 archivo |
-| `docs.google.com` | 1 archivo |
 | `getstratosai.com` | 1 archivo |
 | `ionic.io` | 1 archivo |
 | `maps.app` | 1 archivo |
@@ -161,21 +161,21 @@ casa; por eso mismo son los que más cuidado piden.
 
 | Archivo | Archivos que lo importan |
 |---|---|
-| `design-system/tokens.js` | **72** |
-| `lib/supabase.js` | **43** |
-| `hooks/useAuth.js` | **35** |
-| `hooks/useViewport.js` | **28** |
+| `design-system/tokens.js` | **76** |
+| `lib/supabase.js` | **44** |
+| `hooks/useAuth.js` | **36** |
+| `hooks/useViewport.js` | **31** |
 | `app/SharedComponents.jsx` | **21** |
+| `hooks/useClient.js` | **18** |
 | `lib/native.js` | **18** |
-| `hooks/useClient.js` | **17** |
 | `app/views/CRM/zoom-metrics.js` | **6** |
 | `app/components/Logo.jsx` | **5** |
+| `lib/whatsapp-admin.js` | **5** |
 | `app/views/CRM/date-range.js` | **5** |
 | `lib/utils.js` | **4** |
 | `lib/offline-mode.js` | **4** |
+| `app/constants/pipeline.js` | **4** |
 | `design-system/primitives.jsx` | **4** |
-| `lib/audit.js` | **4** |
-| `app/constants/labels.js` | **4** |
 
 ---
 
@@ -190,6 +190,9 @@ casa; por eso mismo son los que más cuidado piden.
 | `VITE_DIAGNOSTICO_CALCOM_URL` | `landing/Diagnostico.jsx` |
 | `VITE_DIAGNOSTICO_STRATOS_WEBHOOK_URL` | `lib/webhook-diagnostico-stratos.js` |
 | `VITE_FORM_SUBMIT_URL` | `lib/form-submit.js` |
+| `VITE_INFOBIP_SOLUTION_ID` | `clients/_shared/defaults.js` |
+| `VITE_META_APP_ID` | `clients/_shared/defaults.js` |
+| `VITE_META_CONFIG_ID` | `clients/_shared/defaults.js` |
 | `VITE_TELEGRAM_BOT_USERNAME` | `app/views/Profile.jsx` |
 
 > `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` tienen valores de respaldo

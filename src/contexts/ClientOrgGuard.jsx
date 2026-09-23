@@ -6,8 +6,8 @@
  * Reglas:
  *   - Si user.organizationId mapea a un clientId distinto del de la URL actual,
  *     redirige al path correcto preservando query y hash.
- *   - Si la org del user no está en el registry → no redirige (cliente nuevo
- *     que aún no fue agregado a src/clients/).
+ *   - Si la org del user no está en el registry → carga la entrada neutral
+ *     /tenant, evitando que una empresa nueva herede la marca de Duke.
  *   - Si no hay user → no hace nada (el LoginScreen se encarga).
  *
  * Por qué un componente separado y no lógica en AuthContext:
@@ -51,7 +51,7 @@ export function ClientOrgGuard() {
     // el usuario quedaría con pantalla en blanco. Acá el tenant se aplica en
     // memoria y el árbol re-renderea con la config correcta.
     if (isNativeApp()) {
-      const destino = getClientIdByOrgId(user.organizationId);
+      const destino = getClientIdByOrgId(user.organizationId) || "tenant";
       if (destino && destino !== clientId) setClientById(destino);
       return;
     }
