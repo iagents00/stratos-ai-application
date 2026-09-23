@@ -1157,7 +1157,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
                este caso era el cartel de "Cargando conversación…" para siempre. */
             <div style={{ margin: "auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, textAlign: "center", padding: "0 24px" }}>
               <div style={{ color: T.txt2, fontSize: 13, fontFamily: font, lineHeight: 1.5 }}>
-                No se pudo traer la conversación.<br />Puede ser la conexión.
+                El servicio no respondió a tiempo.<br />Tu internet puede estar bien.
               </div>
               <button type="button"
                 onClick={() => { setErrorCarga(false); setLoading(true); reload(); }}
