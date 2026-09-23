@@ -12,7 +12,8 @@ import { useAuth } from "../../hooks/useAuth";
 // Solo se MUESTRAN estas secciones del catálogo (control = pestaña "DRIVES DC" del Sheet).
 // Las demás propiedades quedan guardadas en la data pero ocultas en la UI (y en el bot de Telegram).
 const VISIBLE_SECCIONES = ["top-desarrollos"];
-const SECCIONES = CATALOGO_SECCIONES.filter((s) => VISIBLE_SECCIONES.includes(s.id));
+const DUKE_ORGANIZATION_ID = "00000000-0000-0000-0000-000000000001";
+const DUKE_FALLBACK_SECTIONS = CATALOGO_SECCIONES.filter((s) => VISIBLE_SECCIONES.includes(s.id));
 
 /* Color por rango de ticket */
 const ticketColor = (t, T) => {
@@ -105,7 +106,8 @@ const ERP = ({ oc, T: _T }) => {
      usuario —ventas o marketing— puede añadir; NADIE puede borrar (la política
      de DELETE no existe en la base, ni para admins). Viven en la tabla
      `catalogo_proyectos` con origen='app' y se mezclan con las del Sheet. ── */
-  const [extras, setExtras] = useState([]);
+  const [catalogRows, setCatalogRows] = useState([]);
+  const [loadedCatalogOrgId, setLoadedCatalogOrgId] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [addForm, setAddForm] = useState(ADD_EMPTY);
   const [addSaving, setAddSaving] = useState(false);
@@ -116,11 +118,14 @@ const ERP = ({ oc, T: _T }) => {
     if (!orgId) return;
     let vivo = true;
     supabase.from("catalogo_proyectos")
-      .select("id, desarrollo, ubicacion, zona, masterbroker, ticket, clasificacion, tipologia, entrega, financiamiento, entrega_como, highlights, mantenimiento, contacto, drive, maps")
-      .eq("organization_id", orgId).eq("origen", "app").eq("visible", true)
+      .select("id, seccion, seccion_nombre, desarrollo, ubicacion, zona, masterbroker, ticket, clasificacion, tipologia, entrega, financiamiento, entrega_como, highlights, mantenimiento, contacto, asesor, drive, maps, origen")
+      .eq("organization_id", orgId).eq("visible", true)
       .order("created_at", { ascending: false })
       .then(({ data, error }) => {
-        if (vivo && !error && data) setExtras(data.map(r => ({ ...r, entregaComo: r.entrega_como, _app: true })));
+        if (!vivo) return;
+        if (!error && data) setCatalogRows(data.map(r => ({ ...r, entregaComo: r.entrega_como, _app: r.origen === "app" })));
+        else setCatalogRows([]);
+        setLoadedCatalogOrgId(orgId);
       });
     return () => { vivo = false; };
   }, [orgId]);
@@ -146,11 +151,31 @@ const ERP = ({ oc, T: _T }) => {
     const { data, error } = await supabase.from("catalogo_proyectos").insert(fila).select("id").single();
     setAddSaving(false);
     if (error) { setAddError("No se pudo guardar. Revisa tu conexión y prueba de nuevo."); return; }
-    setExtras(prev => [{ ...fila, id: data?.id, _app: true }, ...prev]);
+    setCatalogRows(prev => [{ ...fila, id: data?.id, seccion_nombre: "Top Desarrollos", _app: true }, ...prev]);
+    setLoadedCatalogOrgId(orgId);
     setAddForm(ADD_EMPTY); setShowAdd(false);
   }, [addForm, orgId, addSaving]);
 
-  const [secId, setSecId] = useState(SECCIONES[0].id);
+  const activeCatalogRows = useMemo(
+    () => loadedCatalogOrgId === orgId ? catalogRows : [],
+    [catalogRows, loadedCatalogOrgId, orgId]
+  );
+
+  const sections = useMemo(() => {
+    if (activeCatalogRows.length) {
+      const grouped = new Map();
+      activeCatalogRows.forEach(row => {
+        const id = row.seccion || "catalogo";
+        if (!grouped.has(id)) grouped.set(id, { id, nombre: row.seccion_nombre || "Catálogo", items: [] });
+        grouped.get(id).items.push(row);
+      });
+      return [...grouped.values()];
+    }
+    if (loadedCatalogOrgId === orgId && orgId === DUKE_ORGANIZATION_ID) return DUKE_FALLBACK_SECTIONS;
+    return [{ id: "top-desarrollos", nombre: "Catálogo", items: [] }];
+  }, [activeCatalogRows, loadedCatalogOrgId, orgId]);
+
+  const [secId, setSecId] = useState("top-desarrollos");
   const [q, setQ] = useState("");
   const [zona, setZona] = useState("");             // zona canónica seleccionada ("" = todas)
   const [zonaLibre, setZonaLibre] = useState("");   // zona escrita a mano por el asesor
@@ -161,22 +186,18 @@ const ERP = ({ oc, T: _T }) => {
   const [view, setView] = useState("cards"); // "cards" | "table"
 
   const sec = useMemo(
-    () => SECCIONES.find((s) => s.id === secId) || SECCIONES[0],
-    [secId]
+    () => sections.find((s) => s.id === secId) || sections[0],
+    [secId, sections]
   );
-  // Las agregadas en la app van PRIMERO (recientes arriba) en la sección visible.
-  const secItems = useMemo(
-    () => (sec.id === "top-desarrollos" ? [...extras, ...sec.items] : sec.items),
-    [sec, extras]
-  );
+  const secItems = useMemo(() => sec?.items || [], [sec]);
 
   const kpis = useMemo(() => {
-    const all = [...SECCIONES.flatMap((s) => s.items), ...extras];
+    const all = sections.flatMap((s) => s.items);
     const conDrive = all.filter((i) => i.drive).length;
     const ubic = new Set(all.map((i) => canonZona(i.ubicacion)).filter(Boolean));
-    const secciones = SECCIONES.filter((s) => s.items.length).length;
+    const secciones = sections.filter((s) => s.items.length).length;
     return { total: all.length, conDrive, ubic: ubic.size, secciones };
-  }, [extras]);
+  }, [sections]);
 
   // Zonas presentes (canónicas, ordenadas por cantidad) — para los botones de filtro.
   const zonas = useMemo(() => {
@@ -312,7 +333,7 @@ const ERP = ({ oc, T: _T }) => {
                 {/* Antes decía «fuente: Google Sheet «DRIVES DUKE DEL CARIBE»»: el
                     nombre del archivo interno no le dice nada a quien lo lee, y
                     tampoco explicaba por qué acá aparecen menos que arriba. */}
-                Duke del Caribe · aquí están los que ya tienen material cargado · se actualiza solo desde su hoja
+                Catálogo privado de tu empresa · aquí están los proyectos publicados por el administrador
               </p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -327,8 +348,8 @@ const ERP = ({ oc, T: _T }) => {
           </div>
 
           {/* Section tabs (solo si hay más de una sección visible) */}
-          <div style={{ display: SECCIONES.length > 1 ? "flex" : "none", gap: 7, overflowX: "auto", paddingBottom: 4 }}>
-            {SECCIONES.map((s) => {
+          <div style={{ display: sections.length > 1 ? "flex" : "none", gap: 7, overflowX: "auto", paddingBottom: 4 }}>
+            {sections.map((s) => {
               const active = s.id === secId;
               return (
                 <button
@@ -518,13 +539,13 @@ const ERP = ({ oc, T: _T }) => {
 
         {/* Body */}
         <div style={{ padding: 18 }}>
-          {sec.items.length === 0 ? (
+          {secItems.length === 0 ? (
             <div style={{ textAlign: "center", padding: "48px 20px 40px" }}>
               <div style={{ width: 58, height: 58, borderRadius: 17, background: `${T.accent}0D`, border: `1px solid ${T.accent}1F`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
                 <FolderOpen size={25} color={T.accent} strokeWidth={1.6} style={{ opacity: 0.75 }} />
               </div>
               <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 400, fontFamily: fontDisp, color: T.txt }}>Sección sin registros todavía</p>
-              <p style={{ margin: 0, fontSize: 12.5, color: T.txt3, fontFamily: font }}>Esta pestaña existe en el Sheet pero aún no tiene desarrollos cargados.</p>
+              <p style={{ margin: 0, fontSize: 12.5, color: T.txt3, fontFamily: font }}>El administrador todavía no ha publicado el catálogo de esta empresa.</p>
             </div>
           ) : filtered.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px 20px", fontSize: 13, color: T.txt3, fontFamily: font }}>

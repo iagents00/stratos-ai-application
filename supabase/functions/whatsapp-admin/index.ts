@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import * as XLSX from "npm:xlsx@0.18.5";
 
 const SUPABASE_URL = Deno.env.get("SB_URL") ?? Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE = Deno.env.get("SB_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -9,6 +10,141 @@ const INFOBIP_API_KEY = Deno.env.get("INFOBIP_API_KEY") ?? "";
 
 const VALID_ROLES = new Set(["super_admin", "admin", "director", "ceo", "asesor", "marketing", "colaborador"]);
 const VALID_STATUSES = new Set(["draft", "waiting_customer", "meta_finished", "infobip_registering", "ready_to_test", "active", "failed", "disconnected"]);
+const MAX_CATALOG_FILE_BYTES = 15 * 1024 * 1024;
+const MAX_CATALOG_ROWS = 2500;
+const CATALOG_COLUMNS = [
+  "desarrollo", "ubicacion", "zona", "masterbroker", "ticket", "clasificacion",
+  "tipologia", "entrega", "financiamiento", "entrega_como", "highlights",
+  "mantenimiento", "contacto", "asesor", "drive", "maps",
+] as const;
+
+const HEADER_ALIASES: Record<string, typeof CATALOG_COLUMNS[number]> = {
+  desarrollo: "desarrollo", proyecto: "desarrollo", propiedad: "desarrollo", nombre: "desarrollo",
+  ubicacion: "ubicacion", location: "ubicacion", ciudad: "ubicacion",
+  zona: "zona", sector: "zona",
+  masterbroker: "masterbroker", broker: "masterbroker", desarrollador: "masterbroker",
+  ticket: "ticket", precio: "ticket", presupuesto: "ticket", rango: "ticket",
+  clasificacion: "clasificacion", categoria: "clasificacion", tipo: "clasificacion",
+  tipologia: "tipologia", recamaras: "tipologia", habitaciones: "tipologia",
+  entrega: "entrega", fechaentrega: "entrega",
+  financiamiento: "financiamiento", financiacion: "financiamiento",
+  comoseentrega: "entrega_como", entregacomo: "entrega_como", equipamiento: "entrega_como",
+  highlights: "highlights", destacados: "highlights", caracteristicas: "highlights",
+  mantenimiento: "mantenimiento", cuota: "mantenimiento",
+  contacto: "contacto", telefono: "contacto",
+  asesor: "asesor", agente: "asesor",
+  drive: "drive", carpeta: "drive", catalogo: "drive", enlace: "drive", link: "drive", documentos: "drive",
+  maps: "maps", mapa: "maps", googlemaps: "maps", localizacion: "maps",
+};
+
+const cleanText = (value: unknown, max = 500) => String(value ?? "").trim().replace(/\s+/g, " ").slice(0, max);
+const headerKey = (value: unknown) => cleanText(value, 100)
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  .toLowerCase().replace(/[^a-z0-9]+/g, "");
+const safeExternalUrl = (value: unknown) => {
+  const raw = cleanText(value, 2000);
+  if (!raw) return null;
+  try {
+    const parsed = new URL(raw);
+    return ["http:", "https:"].includes(parsed.protocol) ? parsed.toString() : null;
+  } catch { return null; }
+};
+
+const workbookDownloadUrl = (source: string) => {
+  let parsed: URL;
+  try { parsed = new URL(source); } catch { throw new Error("Pega un enlace completo que empiece por https://."); }
+  if (parsed.protocol !== "https:") throw new Error("El enlace del catálogo debe usar https://.");
+  const host = parsed.hostname.toLowerCase();
+  const googleSheet = parsed.pathname.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (host === "docs.google.com" && googleSheet) {
+    return `https://docs.google.com/spreadsheets/d/${googleSheet[1]}/export?format=xlsx`;
+  }
+  const googleDrive = parsed.pathname.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (host === "drive.google.com" && googleDrive) {
+    return `https://drive.usercontent.google.com/download?id=${googleDrive[1]}&export=download&confirm=t`;
+  }
+  const allowed = host === "1drv.ms" || host === "onedrive.live.com" || host.endsWith(".sharepoint.com")
+    || host === "drive.usercontent.google.com" || host === "docs.googleusercontent.com";
+  if (!allowed) throw new Error("Usa un enlace público de Google Sheets, Google Drive, OneDrive o SharePoint.");
+  if ((host === "onedrive.live.com" || host.endsWith(".sharepoint.com")) && !parsed.searchParams.has("download")) {
+    parsed.searchParams.set("download", "1");
+  }
+  return parsed.toString();
+};
+
+async function readCatalogWorkbook(source: string) {
+  const downloadUrl = workbookDownloadUrl(source);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+  let response: Response;
+  try { response = await fetch(downloadUrl, { redirect: "follow", signal: controller.signal }); }
+  catch (error) {
+    if ((error as Error)?.name === "AbortError") throw new Error("El enlace tardó demasiado. Comprueba que sea público.");
+    throw new Error("No se pudo descargar el catálogo. Comprueba que cualquiera con el enlace pueda verlo.");
+  } finally { clearTimeout(timeout); }
+  if (!response.ok) throw new Error(`No se pudo descargar el catálogo (HTTP ${response.status}). Comprueba que el enlace sea público.`);
+  const declaredSize = Number(response.headers.get("content-length") || 0);
+  if (declaredSize > MAX_CATALOG_FILE_BYTES) throw new Error("El archivo supera el máximo de 15 MB.");
+  const contentType = response.headers.get("content-type") || "";
+  if (contentType.includes("text/html")) throw new Error("El enlace abrió una pantalla de acceso. Comparte el archivo para cualquiera con el enlace.");
+  const bytes = await response.arrayBuffer();
+  if (bytes.byteLength > MAX_CATALOG_FILE_BYTES) throw new Error("El archivo supera el máximo de 15 MB.");
+
+  let workbook: XLSX.WorkBook;
+  try { workbook = XLSX.read(new Uint8Array(bytes), { type: "array", cellDates: true }); }
+  catch { throw new Error("El enlace no contiene un Excel válido (.xlsx o .xls)."); }
+
+  const rows: Array<Record<string, string | null>> = [];
+  const sheets: Array<{ name: string; rows: number }> = [];
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName];
+    const matrix = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: false, defval: "" }) as unknown[][];
+    let headerIndex = -1;
+    let columns = new Map<number, typeof CATALOG_COLUMNS[number]>();
+    for (let index = 0; index < Math.min(matrix.length, 25); index += 1) {
+      const candidate = new Map<number, typeof CATALOG_COLUMNS[number]>();
+      (matrix[index] || []).forEach((cell, cellIndex) => {
+        const field = HEADER_ALIASES[headerKey(cell)];
+        if (field && ![...candidate.values()].includes(field)) candidate.set(cellIndex, field);
+      });
+      if ([...candidate.values()].includes("desarrollo")) { headerIndex = index; columns = candidate; break; }
+    }
+    if (headerIndex < 0) continue;
+    let sheetRows = 0;
+    for (let rowIndex = headerIndex + 1; rowIndex < matrix.length && rows.length < MAX_CATALOG_ROWS; rowIndex += 1) {
+      const sourceRow = matrix[rowIndex] || [];
+      const row: Record<string, string | null> = {};
+      for (const field of CATALOG_COLUMNS) row[field] = null;
+      for (const [cellIndex, field] of columns) {
+        const address = XLSX.utils.encode_cell({ r: rowIndex, c: cellIndex });
+        const cell = sheet[address] as XLSX.CellObject & { l?: { Target?: string } };
+        const linked = safeExternalUrl(cell?.l?.Target);
+        const value = cleanText(sourceRow[cellIndex], field === "drive" || field === "maps" ? 2000 : 500);
+        row[field] = (field === "drive" || field === "maps") ? (linked || safeExternalUrl(value)) : (value || null);
+      }
+      const developmentColumn = [...columns.entries()].find(([, field]) => field === "desarrollo")?.[0];
+      if (!row.desarrollo || developmentColumn == null) continue;
+      if (!row.drive) {
+        const address = XLSX.utils.encode_cell({ r: rowIndex, c: developmentColumn });
+        const linked = safeExternalUrl((sheet[address] as XLSX.CellObject & { l?: { Target?: string } })?.l?.Target);
+        if (linked?.includes("drive.google") || linked?.includes("sharepoint") || linked?.includes("1drv.ms")) row.drive = linked;
+      }
+      row.seccion = slugify(sheetName) || "catalogo";
+      row.seccion_nombre = cleanText(sheetName, 120) || "Catálogo";
+      rows.push(row);
+      sheetRows += 1;
+    }
+    if (sheetRows) sheets.push({ name: cleanText(sheetName, 120), rows: sheetRows });
+    if (rows.length >= MAX_CATALOG_ROWS) break;
+  }
+  if (!rows.length) throw new Error("No encontré una columna llamada Desarrollo, Proyecto, Propiedad o Nombre en el Excel.");
+  return {
+    rows,
+    sheets,
+    withDrive: rows.filter(row => Boolean(row.drive)).length,
+    truncated: rows.length >= MAX_CATALOG_ROWS,
+  };
+}
 
 const cors = (origin: string | null) => ({
   "Access-Control-Allow-Origin": origin ?? "*",
@@ -209,6 +345,142 @@ Deno.serve(async (req) => {
       }, 200, origin);
     }
 
+    if (action === "get_catalog") {
+      const organizationId = String(body.organization_id ?? "");
+      if (!await organizationIsVisible(organizationId)) {
+        return respond({ ok: false, error: "No tienes acceso a esa empresa." }, 403, origin);
+      }
+      const [{ data: organization, error: orgError }, countResult, sampleResult] = await Promise.all([
+        admin.from("organizations").select("id,name,meta_config").eq("id", organizationId).maybeSingle(),
+        admin.from("catalogo_proyectos").select("id", { count: "exact", head: true })
+          .eq("organization_id", organizationId).eq("visible", true),
+        admin.from("catalogo_proyectos")
+          .select("desarrollo,ubicacion,ticket,drive,seccion_nombre,origen")
+          .eq("organization_id", organizationId).eq("visible", true)
+          .order("created_at", { ascending: false }).limit(12),
+      ]);
+      if (orgError || countResult.error || sampleResult.error) throw orgError || countResult.error || sampleResult.error;
+      if (!organization) return respond({ ok: false, error: "La empresa no existe." }, 404, origin);
+      const meta = organization.meta_config && typeof organization.meta_config === "object"
+        ? organization.meta_config as Record<string, unknown> : {};
+      return respond({
+        ok: true,
+        organization: { id: organization.id, name: organization.name },
+        total: countResult.count ?? 0,
+        sample: sampleResult.data ?? [],
+        catalog: meta.catalog && typeof meta.catalog === "object" ? meta.catalog : null,
+      }, 200, origin);
+    }
+
+    if (action === "preview_catalog") {
+      const organizationId = String(body.organization_id ?? "");
+      const sourceUrl = String(body.source_url ?? "").trim();
+      if (!await organizationIsVisible(organizationId)) {
+        return respond({ ok: false, error: "No tienes acceso a esa empresa." }, 403, origin);
+      }
+      if (!sourceUrl) return respond({ ok: false, error: "Pega el enlace público del Excel o Google Sheet." }, 400, origin);
+      const parsed = await readCatalogWorkbook(sourceUrl);
+      return respond({
+        ok: true,
+        summary: { total: parsed.rows.length, with_drive: parsed.withDrive, sheets: parsed.sheets, truncated: parsed.truncated },
+        sample: parsed.rows.slice(0, 12),
+      }, 200, origin);
+    }
+
+    if (action === "import_catalog") {
+      const organizationId = String(body.organization_id ?? "");
+      const sourceUrl = String(body.source_url ?? "").trim();
+      if (!await organizationIsVisible(organizationId)) {
+        return respond({ ok: false, error: "No tienes acceso a esa empresa." }, 403, origin);
+      }
+      if (!sourceUrl) return respond({ ok: false, error: "Pega el enlace público del Excel o Google Sheet." }, 400, origin);
+      const { data: organization, error: orgError } = await admin.from("organizations")
+        .select("id,name,meta_config").eq("id", organizationId).maybeSingle();
+      if (orgError) throw orgError;
+      if (!organization) return respond({ ok: false, error: "La empresa no existe." }, 404, origin);
+
+      const parsed = await readCatalogWorkbook(sourceUrl);
+      const batchOrigin = `admin:${crypto.randomUUID()}`;
+      const payload = parsed.rows.map(row => ({
+        organization_id: organizationId,
+        seccion: row.seccion,
+        seccion_nombre: row.seccion_nombre,
+        desarrollo: row.desarrollo,
+        ubicacion: row.ubicacion,
+        zona: row.zona,
+        masterbroker: row.masterbroker,
+        ticket: row.ticket,
+        clasificacion: row.clasificacion,
+        tipologia: row.tipologia,
+        entrega: row.entrega,
+        financiamiento: row.financiamiento,
+        entrega_como: row.entrega_como,
+        highlights: row.highlights,
+        mantenimiento: row.mantenimiento,
+        contacto: row.contacto,
+        asesor: row.asesor,
+        drive: row.drive,
+        maps: row.maps,
+        visible: false,
+        origen: batchOrigin,
+      }));
+
+      let activated = false;
+      try {
+        for (let index = 0; index < payload.length; index += 400) {
+          const { error } = await admin.from("catalogo_proyectos").insert(payload.slice(index, index + 400));
+          if (error) throw error;
+        }
+        const { error: activateError } = await admin.from("catalogo_proyectos")
+          .update({ visible: true }).eq("organization_id", organizationId).eq("origen", batchOrigin);
+        if (activateError) throw activateError;
+        activated = true;
+
+        // Las cargas anteriores se conservan para reversa, pero quedan ocultas.
+        // Las propiedades añadidas manualmente desde el CRM (`origen=app`) no se tocan.
+        const [hideLegacy, hideImports] = await Promise.all([
+          admin.from("catalogo_proyectos").update({ visible: false })
+            .eq("organization_id", organizationId).eq("visible", true).is("origen", null),
+          admin.from("catalogo_proyectos").update({ visible: false })
+            .eq("organization_id", organizationId).eq("visible", true)
+            .not("origen", "is", null).neq("origen", "app").neq("origen", batchOrigin),
+        ]);
+        if (hideLegacy.error || hideImports.error) throw hideLegacy.error || hideImports.error;
+
+        const meta = organization.meta_config && typeof organization.meta_config === "object"
+          ? organization.meta_config as Record<string, unknown> : {};
+        const nextMeta = {
+          ...meta,
+          catalog: {
+            sourceUrl,
+            importedAt: new Date().toISOString(),
+            importedBy: callerId,
+            origin: batchOrigin,
+            total: payload.length,
+            withDrive: parsed.withDrive,
+            sheets: parsed.sheets,
+          },
+        };
+        const { error: metaError } = await admin.from("organizations")
+          .update({ meta_config: nextMeta }).eq("id", organizationId);
+        if (metaError) throw metaError;
+      } catch (error) {
+        if (!activated) {
+          await admin.from("catalogo_proyectos").update({ visible: false })
+            .eq("organization_id", organizationId).eq("origen", batchOrigin);
+        }
+        throw error;
+      }
+
+      return respond({
+        ok: true,
+        total: payload.length,
+        with_drive: parsed.withDrive,
+        sheets: parsed.sheets,
+        origin: batchOrigin,
+      }, 200, origin);
+    }
+
     if (action === "save_pipeline") {
       const organizationId = String(body.organization_id ?? "");
       if (!await organizationIsVisible(organizationId)) {
@@ -224,30 +496,32 @@ Deno.serve(async (req) => {
       if (orgError || leadsError) throw orgError || leadsError;
       if (!organization) return respond({ ok: false, error: "La empresa no existe." }, 404, origin);
 
-      const nextNames = new Set(sanitized.pipeline.map(stage => stage.name));
-      const blocked: Record<string, number> = {};
+      const currentMeta = organization.meta_config && typeof organization.meta_config === "object"
+        ? organization.meta_config as Record<string, unknown> : {};
+      const currentCrm = currentMeta.crm && typeof currentMeta.crm === "object"
+        ? currentMeta.crm as Record<string, unknown> : {};
+      const currentPipeline = Array.isArray(currentCrm.pipeline)
+        ? currentCrm.pipeline as Array<Record<string, unknown>> : [];
+      const nextPipeline = [...sanitized.pipeline];
+      const nextNames = new Set(nextPipeline.map(stage => stage.name.toLocaleLowerCase("es")));
+      const preserved: Record<string, number> = {};
       for (const row of leadStages ?? []) {
         const stage = String(row.stage ?? "").trim();
-        if (stage && !nextNames.has(stage)) blocked[stage] = (blocked[stage] ?? 0) + 1;
+        if (stage && !nextNames.has(stage.toLocaleLowerCase("es"))) preserved[stage] = (preserved[stage] ?? 0) + 1;
       }
-      if (Object.keys(blocked).length) {
-        const detail = Object.entries(blocked).map(([name, count]) => `${name} (${count})`).join(", ");
-        return respond({
-          ok: false,
-          error: `No se guardó: hay clientes en etapas que desaparecerían: ${detail}. Conserva esos nombres o mueve primero esos clientes desde el CRM.`,
-          blocked_stages: blocked,
-        }, 409, origin);
+      for (const name of Object.keys(preserved)) {
+        const previous = currentPipeline.find(stage => String(stage.name ?? "").trim().toLocaleLowerCase("es") === name.toLocaleLowerCase("es"));
+        nextPipeline.push({ name, color: /^#[0-9A-F]{6}$/i.test(String(previous?.color ?? "")) ? String(previous?.color).toUpperCase() : "#64748B" });
+      }
+      if (nextPipeline.length > 30) {
+        return respond({ ok: false, error: "El pipeline supera 30 etapas al conservar las columnas que todavía tienen clientes. Mueve esos clientes antes de publicar." }, 409, origin);
       }
 
-      const meta = organization.meta_config && typeof organization.meta_config === "object"
-        ? organization.meta_config as Record<string, unknown> : {};
-      const crm = meta.crm && typeof meta.crm === "object"
-        ? meta.crm as Record<string, unknown> : {};
       const nextMeta = {
-        ...meta,
+        ...currentMeta,
         crm: {
-          ...crm,
-          pipeline: sanitized.pipeline,
+          ...currentCrm,
+          pipeline: nextPipeline,
           pipelineUpdatedAt: new Date().toISOString(),
           pipelineUpdatedBy: callerId,
         },
@@ -258,7 +532,7 @@ Deno.serve(async (req) => {
         .select("id,name,meta_config")
         .single();
       if (error) throw error;
-      return respond({ ok: true, organization: data, pipeline: sanitized.pipeline }, 200, origin);
+      return respond({ ok: true, organization: data, pipeline: nextPipeline, preserved_stages: preserved }, 200, origin);
     }
 
     if (action === "create_organization") {

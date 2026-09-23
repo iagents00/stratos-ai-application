@@ -45,6 +45,7 @@ const TEMPLATES = [
 
 const templateStages = (template) => template.stages.map(([name, color]) => ({ name, color }));
 const cloneStages = (stages) => (stages || []).map(stage => ({ name: stage.name, color: stage.color }));
+const stageKey = (name) => String(name || "").trim().toLocaleLowerCase("es");
 
 export default function PipelineConfiguratorAdmin({ T, onBack }) {
   const isMobile = useIsMobile();
@@ -102,6 +103,9 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
   }, [organizations, search]);
   const dirty = JSON.stringify(stages) !== JSON.stringify(baseline);
   const totalClients = Object.values(usage).reduce((sum, count) => sum + Number(count || 0), 0);
+  const occupiedMissing = Object.entries(usage).filter(([name, count]) =>
+    Number(count || 0) > 0 && !stages.some(stage => stageKey(stage.name) === stageKey(name))
+  );
 
   const input = {
     minHeight: 40, borderRadius: 10, border: `1px solid ${T.border}`,
@@ -152,10 +156,9 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
 
   const applyTemplate = (template) => {
     const draft = templateStages(template);
-    const protectedStages = baseline.filter(stage =>
-      Number(usage[stage.name] || 0) > 0
-      && !draft.some(next => next.name.toLocaleLowerCase("es") === stage.name.toLocaleLowerCase("es"))
-    );
+    const protectedStages = Object.entries(usage)
+      .filter(([name, count]) => Number(count || 0) > 0 && !draft.some(next => stageKey(next.name) === stageKey(name)))
+      .map(([name]) => baseline.find(stage => stageKey(stage.name) === stageKey(name)) || { name, color: "#64748B" });
     if (protectedStages.length > 0) {
       setMessage({ type: "warning", text: `Borrador todavía no publicado. Stratos conservó ${protectedStages.length} etapa${protectedStages.length === 1 ? "" : "s"} con clientes al final del pipeline; mueve esos clientes antes de eliminarla${protectedStages.length === 1 ? "" : "s"}.` });
     } else {
@@ -170,7 +173,11 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
       const result = await saveOrganizationPipeline(selectedId, stages);
       const saved = cloneStages(result.pipeline);
       setStages(saved); setBaseline(saved);
-      setMessage({ type: "success", text: `Pipeline publicado para ${selectedOrg?.name || "la empresa"}. Sus usuarios lo verán al recargar el CRM.` });
+      const preserved = Object.entries(result.preserved_stages || {});
+      const preservedText = preserved.length
+        ? ` Stratos conservó automáticamente ${preserved.map(([name, count]) => `“${name}” (${count})`).join(", ")} porque todavía tiene clientes.`
+        : "";
+      setMessage({ type: "success", text: `Pipeline publicado para ${selectedOrg?.name || "la empresa"}.${preservedText} Sus usuarios lo verán al recargar el CRM.` });
       setOrganizations(current => current.map(org => org.id === selectedId
         ? { ...org, meta_config: result.organization?.meta_config || org.meta_config }
         : org));
@@ -212,6 +219,15 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
           {message.type === "success" ? <CheckCircle2 size={17} /> : <AlertTriangle size={17} />}
           <span style={{ fontSize: 12.5, lineHeight: 1.5 }}>{message.text}</span>
           {message.retry && <button onClick={loadOrganizations} style={{ ...button, minHeight: 30, marginLeft: "auto", padding: "0 11px" }}>Reintentar</button>}
+        </div>
+      )}
+
+      {occupiedMissing.length > 0 && (
+        <div style={{ ...card, padding: "13px 14px", marginBottom: 14, display: "flex", gap: 10, alignItems: "flex-start", color: "#FBBF24", borderColor: "rgba(251,191,36,.35)", background: "rgba(251,191,36,.06)" }}>
+          <LockKeyhole size={17} style={{ flexShrink: 0, marginTop: 1 }} />
+          <div style={{ fontSize: 12.5, lineHeight: 1.55 }}>
+            <strong>Tu borrador no perderá clientes.</strong> Al publicar, Stratos añadirá al final {occupiedMissing.map(([name, count]) => `“${name}” (${count} cliente${Number(count) === 1 ? "" : "s"})`).join(", ")} porque todavía está en uso. Si ya no quieres esa etapa, mueve primero esos clientes desde el CRM y luego elimínala.
+          </div>
         </div>
       )}
 

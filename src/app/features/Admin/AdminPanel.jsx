@@ -8,7 +8,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
-  Search, Plus, X, User, CheckCircle2, Trash2, Download, MessageCircle, Waypoints
+  Search, Plus, X, User, CheckCircle2, Trash2, Download, MessageCircle, Waypoints, FolderOpen
 } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { useAuth } from "../../../hooks/useAuth";
@@ -19,6 +19,7 @@ import { ROLE_META, RoleBadge } from "./RoleBadge";
 import { useIsMobile } from "../../../hooks/useViewport";
 import WhatsAppOnboardingAdmin from "./WhatsAppOnboardingAdmin";
 import PipelineConfiguratorAdmin from "./PipelineConfiguratorAdmin";
+import CatalogConfiguratorAdmin from "./CatalogConfiguratorAdmin";
 
 export default function AdminPanel({ T = P, isLight: isLightProp }) {
   const { user: me } = useAuth();
@@ -70,7 +71,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
     try {
       const data = await adminGetAllUsers(me?.id);
       setUsers(Array.isArray(data) ? data : []);
-    } catch (_) {
+    } catch {
       setUsers([]);
     } finally {
       setLoadingUsers(false);
@@ -84,7 +85,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
       try {
         const data = await adminGetAllUsers(me?.id);
         if (active) setUsers(Array.isArray(data) ? data : []);
-      } catch (_) {
+      } catch {
         if (active) setUsers([]);
       } finally {
         if (active) setLoadingUsers(false);
@@ -187,6 +188,9 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
   if (section === "pipelines") {
     return <PipelineConfiguratorAdmin T={T} onBack={() => setSection("users")} />;
   }
+  if (section === "catalogs") {
+    return <CatalogConfiguratorAdmin T={T} onBack={() => setSection("users")} />;
+  }
 
   return (
     <div style={{ padding: isMobile ? "10px 0 0" : "28px 28px 0", display: "flex", flexDirection: "column", gap: isMobile ? 14 : 20, height: "100%" }}>
@@ -218,6 +222,20 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
                 }}
               >
                 <Waypoints size={13} /> Pipelines
+              </button>
+            )}
+            {isSuper && (
+              <button
+                onClick={() => setSection("catalogs")}
+                style={{
+                  flex: isMobile ? 1 : "none", justifyContent: "center", whiteSpace: "nowrap",
+                  display: "flex", alignItems: "center", gap: 7, padding: "10px 18px",
+                  borderRadius: 11, background: T.glass, border: `1px solid ${T.border}`,
+                  color: T.txt2, fontSize: 12.5, fontWeight: 600, fontFamily: font,
+                  cursor: "pointer",
+                }}
+              >
+                <FolderOpen size={13} /> Catálogos
               </button>
             )}
             {isSuper && (
@@ -336,11 +354,10 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
         <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 380px)" }}>
           {filtered.length === 0 && (
             <div style={{ padding: "48px 0", textAlign: "center" }}>
-              <p style={{ fontSize: 13, color: T.txt3 }}>No se encontraron usuarios.</p>
+              <p style={{ fontSize: 13, color: T.txt3 }}>{loadingUsers ? "Cargando usuarios…" : "No se encontraron usuarios."}</p>
             </div>
           )}
           {filtered.map((u, idx) => {
-            const m = ROLE_META[u.role] || { label: u.role, color: T.txt3 };
             const active = u.isActive !== false;
             const isMe = u.id === me?.id;
             const canEdit = canManage && (isSuper || (ROLE_META[u.role]?.level ?? 99) > (ROLE_META[me?.role]?.level ?? 0));
