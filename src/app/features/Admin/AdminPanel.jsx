@@ -8,7 +8,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
-  Search, Plus, X, User, CheckCircle2, Trash2, Download, MessageCircle
+  Search, Plus, X, User, CheckCircle2, Trash2, Download, MessageCircle, Waypoints
 } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { useAuth } from "../../../hooks/useAuth";
@@ -18,6 +18,7 @@ import { G } from "../../SharedComponents";
 import { ROLE_META, RoleBadge } from "./RoleBadge";
 import { useIsMobile } from "../../../hooks/useViewport";
 import WhatsAppOnboardingAdmin from "./WhatsAppOnboardingAdmin";
+import PipelineConfiguratorAdmin from "./PipelineConfiguratorAdmin";
 
 export default function AdminPanel({ T = P, isLight: isLightProp }) {
   const { user: me } = useAuth();
@@ -183,6 +184,9 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
   if (section === "whatsapp") {
     return <WhatsAppOnboardingAdmin T={T} onBack={() => setSection("users")} />;
   }
+  if (section === "pipelines") {
+    return <PipelineConfiguratorAdmin T={T} onBack={() => setSection("users")} />;
+  }
 
   return (
     <div style={{ padding: isMobile ? "10px 0 0" : "28px 28px 0", display: "flex", flexDirection: "column", gap: isMobile ? 14 : 20, height: "100%" }}>
@@ -202,6 +206,20 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
           /* En móvil los botones ocupan el ancho completo (antes "Nuevo Usuario"
              quedaba cortado contra el borde derecho a 360px). */
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, flexWrap: "wrap", width: isMobile ? "100%" : "auto" }}>
+            {isSuper && (
+              <button
+                onClick={() => setSection("pipelines")}
+                style={{
+                  flex: isMobile ? 1 : "none", justifyContent: "center", whiteSpace: "nowrap",
+                  display: "flex", alignItems: "center", gap: 7, padding: "10px 18px",
+                  borderRadius: 11, background: T.glass, border: `1px solid ${T.border}`,
+                  color: isLight ? T.txt2 : T.txt2, fontSize: 12.5, fontWeight: 600, fontFamily: font,
+                  cursor: "pointer",
+                }}
+              >
+                <Waypoints size={13} /> Pipelines
+              </button>
+            )}
             {isSuper && (
               <button
                 onClick={() => setSection("whatsapp")}

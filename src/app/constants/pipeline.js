@@ -44,49 +44,85 @@ const _cfg = (() => {
 //
 // Quien no declare `crm.pipelines` (Duke, NSG, Vega, Grupo 28, TGenius) queda
 // exactamente como está: un único grupo con todo, y el selector ni aparece.
-const _groups = Array.isArray(_cfg?.crm?.pipelines) && _cfg.crm.pipelines.length
-  ? _cfg.crm.pipelines.filter(g => Array.isArray(g?.stages) && g.stages.length)
-  : null;
+function resolverPipeline(cfg) {
+  const groups = Array.isArray(cfg?.crm?.pipelines) && cfg.crm.pipelines.length
+    ? cfg.crm.pipelines.filter(g => Array.isArray(g?.stages) && g.stages.length)
+    : null;
 
-const _custom = _groups
-  ? _groups.flatMap(g => g.stages)
-  : (Array.isArray(_cfg?.crm?.pipeline) && _cfg.crm.pipeline.length ? _cfg.crm.pipeline : null);
+  const custom = groups
+    ? groups.flatMap(g => g.stages)
+    : (Array.isArray(cfg?.crm?.pipeline) && cfg.crm.pipeline.length ? cfg.crm.pipeline : null);
+
+  const stages = custom ? custom.map(s => s.name) : [...DUKE_STAGES];
+  const pipelineGroups = groups
+    ? groups.map(g => ({
+        id:     g.id,
+        label:  g.label || g.id,
+        hint:   g.hint || null,
+        kpis:   Array.isArray(g.kpis) && g.kpis.length ? g.kpis : null,
+        labels: g.labels && typeof g.labels === "object" ? g.labels : null,
+        stages: g.stages.map(s => s.name),
+      }))
+    : [{ id: "todo", label: "Pipeline", hint: null, stages }];
+
+  return {
+    stages,
+    pipelineGroups,
+    hasGroups: !!groups && groups.length > 1,
+    colors: custom
+      ? Object.fromEntries(custom.map(s => [s.name, s.color]))
+      : { ...DUKE_STGC },
+    defaultStage: stages[0],
+    isCustom: !!custom,
+  };
+}
+
+const inicial = resolverPipeline(_cfg);
 
 /** Etapas del pipeline activo, en orden (izq → der en el kanban). */
-export const STAGES = _custom ? _custom.map(s => s.name) : DUKE_STAGES;
+export const STAGES = [...inicial.stages];
 
 /**
  * Tableros del cliente: `[{ id, label, stages:[nombre] }]`.
  * Siempre tiene al menos uno — quien no declare `crm.pipelines` recibe un único
  * grupo con todas sus etapas, que es como se comportaba el CRM hasta ahora.
  */
-export const PIPELINE_GROUPS = _groups
-  ? _groups.map(g => ({
-      id:     g.id,
-      label:  g.label || g.id,
-      hint:   g.hint || null,
-      // Tarjetas propias del recorrido. Sin esto, las de un tablero cuentan
-      // etapas del otro y marcan cero. Opcional: quien no las declare hereda
-      // las de `crm.kpis`.
-      kpis:   Array.isArray(g.kpis) && g.kpis.length ? g.kpis : null,
-      // Vocabulario propio del recorrido (`entity`, `entityPlural`,
-      // `priorityList`). Se mezcla sobre los `labels` del cliente, así que
-      // basta con declarar las palabras que cambian.
-      labels: g.labels && typeof g.labels === "object" ? g.labels : null,
-      stages: g.stages.map(s => s.name),
-    }))
-  : [{ id: "todo", label: "Pipeline", hint: null, stages: STAGES }];
+export const PIPELINE_GROUPS = inicial.pipelineGroups.map(g => ({ ...g, stages: [...g.stages] }));
 
 /** true si el cliente reparte sus etapas en más de un tablero. */
-export const HAS_PIPELINE_GROUPS = !!_groups && _groups.length > 1;
+export let HAS_PIPELINE_GROUPS = inicial.hasGroups;
 
 /** Mapa etapa → color. Para clientes custom se arma desde su config; Duke usa el histórico. */
-export const stgC = _custom
-  ? Object.fromEntries(_custom.map(s => [s.name, s.color]))
-  : DUKE_STGC;
+export const stgC = { ...inicial.colors };
 
 /** Etapa donde caen los registros nuevos (primera del pipeline). */
-export const DEFAULT_STAGE = STAGES[0];
+export let DEFAULT_STAGE = inicial.defaultStage;
 
 /** true si el cliente activo usa un pipeline custom (útil para apagar lógica Duke-específica). */
-export const IS_CUSTOM_PIPELINE = !!_custom;
+export let IS_CUSTOM_PIPELINE = inicial.isCustom;
+
+/**
+ * Aplica en caliente la configuración guardada en organizations.meta_config.
+ *
+ * Los tenants creados desde la consola comparten la ruta `/tenant`, por lo que
+ * su pipeline no puede quedar compilado en un archivo por empresa. App.jsx lee
+ * la configuración de la organización autenticada y llama esta función. Las
+ * colecciones se mutan conservando su referencia para que los imports ya
+ * cargados (CRM, tarjetas y selectores) vean la versión nueva en el siguiente
+ * render, sin recargar ni mezclar empresas.
+ */
+export function applyPipelineConfig(cfg) {
+  const next = resolverPipeline(cfg);
+  STAGES.splice(0, STAGES.length, ...next.stages);
+  PIPELINE_GROUPS.splice(
+    0,
+    PIPELINE_GROUPS.length,
+    ...next.pipelineGroups.map(g => ({ ...g, stages: [...g.stages] })),
+  );
+  for (const key of Object.keys(stgC)) delete stgC[key];
+  Object.assign(stgC, next.colors);
+  HAS_PIPELINE_GROUPS = next.hasGroups;
+  DEFAULT_STAGE = next.defaultStage;
+  IS_CUSTOM_PIPELINE = next.isCustom;
+  return next;
+}

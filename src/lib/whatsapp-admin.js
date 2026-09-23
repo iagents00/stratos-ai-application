@@ -24,6 +24,8 @@ async function call(action, payload = {}) {
 }
 
 export const loadWhatsAppAdmin = () => call("bootstrap");
+export const loadOrganizationPipeline = (organizationId) => call("get_pipeline", { organization_id: organizationId });
+export const saveOrganizationPipeline = (organizationId, pipeline) => call("save_pipeline", { organization_id: organizationId, pipeline });
 export const createWhatsAppOrganization = (payload) => call("create_organization", payload);
 export const createWhatsAppTenantUser = (payload) => call("create_user", payload);
 export const createWhatsAppOnboardingRun = (payload) => call("create_run", payload);

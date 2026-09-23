@@ -55,6 +55,7 @@ import IAOSIsland         from "./components/IAOSIsland";
 import CopilotMark        from "./components/CopilotMark";
 import { buildIntelNotifs } from "./constants/intelNotifs";
 import { buildMktIntelNotifs, buildMktIntelPhrases } from "./constants/intelMkt";
+import { applyPipelineConfig } from "./constants/pipeline";
 import PermissionGate     from "./components/PermissionGate";
 import { IosIcon }        from "./icons/ios-icons";
 import Chat, { getResp }  from "./features/ChatPanel";
@@ -1679,6 +1680,7 @@ export default function App() {
   // Esto permite isolación total: Grupo 28 nunca ve contenido de Duke y viceversa.
   const [orgMetaConfig, setOrgMetaConfig] = useState(null);
   const [metaDocs, setMetaDocs] = useState([]);
+  const [, setPipelineRevision] = useState(0);
   const metaCfgLoaded = useRef(false);   // evita escribir meta_config antes de saber qué hay en DB
   useEffect(() => {
     const orgId = user?.organizationId;
@@ -1698,6 +1700,20 @@ export default function App() {
       });
     return () => { cancelled = true; };
   }, [user?.organizationId, user?._offline, user?.id]);
+
+  // Empresas creadas desde la consola comparten `/tenant`: su pipeline vive
+  // en organizations.meta_config.crm y no en un archivo de código. Al cargar
+  // la organización mezclamos únicamente ese bloque sobre la configuración
+  // base de la URL. applyPipelineConfig conserva las referencias importadas
+  // por el CRM; este pequeño revision tick hace que la vista abierta se pinte
+  // inmediatamente con las etapas de SU empresa.
+  useLayoutEffect(() => {
+    applyPipelineConfig({
+      ...clientConfig,
+      crm: { ...(clientConfig?.crm || {}), ...(orgMetaConfig?.crm || {}) },
+    });
+    setPipelineRevision(v => v + 1);
+  }, [clientConfig, orgMetaConfig?.crm]);
 
   // Plan/Protocolo efectivos: lo de la org va ENCIMA del default, no en lugar de él.
   //

@@ -53,6 +53,32 @@ const senderPhone = (row: Record<string, unknown>) => normalizePhone(
   row.sender ?? row.phoneNumber ?? row.displayPhoneNumber ?? row.number ?? row.phone,
 );
 
+const sanitizePipeline = (value: unknown) => {
+  if (!Array.isArray(value)) return { error: "El pipeline debe ser una lista de etapas.", pipeline: [] };
+  if (value.length < 2 || value.length > 30) {
+    return { error: "El pipeline debe tener entre 2 y 30 etapas.", pipeline: [] };
+  }
+  const pipeline: Array<{ name: string; color: string }> = [];
+  const seen = new Set<string>();
+  for (const raw of value) {
+    if (!raw || typeof raw !== "object") return { error: "Hay una etapa inválida.", pipeline: [] };
+    const row = raw as Record<string, unknown>;
+    const name = String(row.name ?? "").trim().replace(/\s+/g, " ");
+    const color = String(row.color ?? "").trim().toUpperCase();
+    if (name.length < 2 || name.length > 48) {
+      return { error: "Cada etapa debe tener entre 2 y 48 caracteres.", pipeline: [] };
+    }
+    if (!/^#[0-9A-F]{6}$/.test(color)) {
+      return { error: `El color de “${name}” no es válido.`, pipeline: [] };
+    }
+    const key = name.toLocaleLowerCase("es");
+    if (seen.has(key)) return { error: `La etapa “${name}” está repetida.`, pipeline: [] };
+    seen.add(key);
+    pipeline.push({ name, color });
+  }
+  return { error: null, pipeline };
+};
+
 function tempPassword() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#";
   const bytes = crypto.getRandomValues(new Uint8Array(16));
@@ -79,8 +105,33 @@ Deno.serve(async (req) => {
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { autoRefreshToken: false, persistSession: false } });
   const callerId = authData.user.id;
   const { data: platformAdmin } = await admin.from("platform_admins")
-    .select("user_id, active").eq("user_id", callerId).eq("active", true).maybeSingle();
+    .select("user_id, active, scope_organization_id").eq("user_id", callerId).eq("active", true).maybeSingle();
   if (!platformAdmin) return respond({ ok: false, error: "Acceso restringido a administradores de plataforma." }, 403, origin);
+
+  // Un operador raíz (scope NULL) ve toda la plataforma. Un distribuidor ve
+  // únicamente su organización y las empresas que creó debajo de ella. La
+  // comprobación vive en servidor: ocultar opciones en React no sería control
+  // de acceso y expondría clientes de otros distribuidores.
+  const scopeOrganizationId = platformAdmin.scope_organization_id as string | null;
+  const organizationIsVisible = async (organizationId: string) => {
+    if (!organizationId) return false;
+    if (!scopeOrganizationId) return true;
+    const { data } = await admin.from("organizations").select("id")
+      .eq("id", organizationId)
+      .or(`id.eq.${scopeOrganizationId},parent_organization_id.eq.${scopeOrganizationId}`)
+      .maybeSingle();
+    return Boolean(data?.id);
+  };
+
+  const visibleOrganizations = async () => {
+    let query = admin.from("organizations")
+      .select("id,name,slug,plan,seats,active,subscription_status,meta_config,parent_organization_id,created_at")
+      .order("created_at", { ascending: false });
+    if (scopeOrganizationId) {
+      query = query.or(`id.eq.${scopeOrganizationId},parent_organization_id.eq.${scopeOrganizationId}`);
+    }
+    return await query;
+  };
 
   let body: Record<string, unknown> = {};
   try { body = await req.json(); } catch { return respond({ ok: false, error: "bad_json" }, 400, origin); }
@@ -88,24 +139,109 @@ Deno.serve(async (req) => {
 
   try {
     if (action === "bootstrap") {
-      const [orgs, profiles, channels, runs] = await Promise.all([
-        admin.from("organizations").select("id,name,slug,plan,seats,active,subscription_status,meta_config,created_at").order("created_at", { ascending: false }),
-        admin.from("profiles").select("id,organization_id,name,role,active,phone").order("name"),
-        admin.from("whatsapp_numero_asesor").select("id,organization_id,numero_whatsapp,asesor_id,asesor_name,waba_id,phone_number_id,estado_conexion,quality_rating,active,updated_at").order("updated_at", { ascending: false }),
-        admin.from("whatsapp_onboarding_runs").select("*").order("created_at", { ascending: false }).limit(300),
-      ]);
-      const firstError = orgs.error || profiles.error || channels.error || runs.error;
+      const orgs = await visibleOrganizations();
+      if (orgs.error) throw orgs.error;
+      const visibleIds = (orgs.data ?? []).map(row => row.id);
+      const [profiles, channels, runs] = visibleIds.length ? await Promise.all([
+        admin.from("profiles").select("id,organization_id,name,role,active,phone").in("organization_id", visibleIds).order("name"),
+        admin.from("whatsapp_numero_asesor").select("id,organization_id,numero_whatsapp,asesor_id,asesor_name,waba_id,phone_number_id,estado_conexion,quality_rating,active,updated_at").in("organization_id", visibleIds).order("updated_at", { ascending: false }),
+        admin.from("whatsapp_onboarding_runs").select("*").in("organization_id", visibleIds).order("created_at", { ascending: false }).limit(300),
+      ]) : [
+        { data: [], error: null }, { data: [], error: null }, { data: [], error: null },
+      ];
+      const firstError = profiles.error || channels.error || runs.error;
       if (firstError) throw firstError;
       return respond({
         ok: true,
         organizations: orgs.data ?? [], profiles: profiles.data ?? [],
         channels: channels.data ?? [], runs: runs.data ?? [],
+        access: { root: !scopeOrganizationId, scopeOrganizationId },
         provider: {
           infobipConfigured: Boolean(INFOBIP_API_KEY),
           portalRegistrationReady: Boolean(INFOBIP_API_KEY),
           embeddedSignupReady: Boolean(INFOBIP_API_KEY),
         },
       }, 200, origin);
+    }
+
+    if (action === "get_pipeline") {
+      const organizationId = String(body.organization_id ?? "");
+      if (!await organizationIsVisible(organizationId)) {
+        return respond({ ok: false, error: "No tienes acceso a esa empresa." }, 403, origin);
+      }
+      const [{ data: organization, error: orgError }, { data: leadStages, error: leadsError }] = await Promise.all([
+        admin.from("organizations").select("id,name,meta_config").eq("id", organizationId).maybeSingle(),
+        admin.from("leads").select("stage").eq("organization_id", organizationId).is("deleted_at", null).limit(5000),
+      ]);
+      if (orgError || leadsError) throw orgError || leadsError;
+      if (!organization) return respond({ ok: false, error: "La empresa no existe." }, 404, origin);
+      const usage: Record<string, number> = {};
+      for (const row of leadStages ?? []) {
+        const stage = String(row.stage ?? "").trim();
+        if (stage) usage[stage] = (usage[stage] ?? 0) + 1;
+      }
+      const meta = organization.meta_config && typeof organization.meta_config === "object"
+        ? organization.meta_config as Record<string, unknown> : {};
+      const crm = meta.crm && typeof meta.crm === "object"
+        ? meta.crm as Record<string, unknown> : {};
+      return respond({
+        ok: true,
+        organization: { id: organization.id, name: organization.name },
+        pipeline: Array.isArray(crm.pipeline) ? crm.pipeline : null,
+        usage,
+      }, 200, origin);
+    }
+
+    if (action === "save_pipeline") {
+      const organizationId = String(body.organization_id ?? "");
+      if (!await organizationIsVisible(organizationId)) {
+        return respond({ ok: false, error: "No tienes acceso a esa empresa." }, 403, origin);
+      }
+      const sanitized = sanitizePipeline(body.pipeline);
+      if (sanitized.error) return respond({ ok: false, error: sanitized.error }, 400, origin);
+
+      const [{ data: organization, error: orgError }, { data: leadStages, error: leadsError }] = await Promise.all([
+        admin.from("organizations").select("id,meta_config").eq("id", organizationId).maybeSingle(),
+        admin.from("leads").select("stage").eq("organization_id", organizationId).is("deleted_at", null).limit(5000),
+      ]);
+      if (orgError || leadsError) throw orgError || leadsError;
+      if (!organization) return respond({ ok: false, error: "La empresa no existe." }, 404, origin);
+
+      const nextNames = new Set(sanitized.pipeline.map(stage => stage.name));
+      const blocked: Record<string, number> = {};
+      for (const row of leadStages ?? []) {
+        const stage = String(row.stage ?? "").trim();
+        if (stage && !nextNames.has(stage)) blocked[stage] = (blocked[stage] ?? 0) + 1;
+      }
+      if (Object.keys(blocked).length) {
+        const detail = Object.entries(blocked).map(([name, count]) => `${name} (${count})`).join(", ");
+        return respond({
+          ok: false,
+          error: `No se guardó: hay clientes en etapas que desaparecerían: ${detail}. Conserva esos nombres o mueve primero esos clientes desde el CRM.`,
+          blocked_stages: blocked,
+        }, 409, origin);
+      }
+
+      const meta = organization.meta_config && typeof organization.meta_config === "object"
+        ? organization.meta_config as Record<string, unknown> : {};
+      const crm = meta.crm && typeof meta.crm === "object"
+        ? meta.crm as Record<string, unknown> : {};
+      const nextMeta = {
+        ...meta,
+        crm: {
+          ...crm,
+          pipeline: sanitized.pipeline,
+          pipelineUpdatedAt: new Date().toISOString(),
+          pipelineUpdatedBy: callerId,
+        },
+      };
+      const { data, error } = await admin.from("organizations")
+        .update({ meta_config: nextMeta })
+        .eq("id", organizationId)
+        .select("id,name,meta_config")
+        .single();
+      if (error) throw error;
+      return respond({ ok: true, organization: data, pipeline: sanitized.pipeline }, 200, origin);
     }
 
     if (action === "create_organization") {
@@ -119,6 +255,7 @@ Deno.serve(async (req) => {
       };
       const { data, error } = await admin.from("organizations").insert({
         name, slug, seats, plan: "custom", active: true, subscription_status: "trial", meta_config: metaConfig,
+        parent_organization_id: scopeOrganizationId || null,
       }).select("id,name,slug,seats,plan,active,subscription_status,meta_config,created_at").single();
       if (error) throw error;
       return respond({ ok: true, organization: data }, 200, origin);
@@ -134,6 +271,9 @@ Deno.serve(async (req) => {
       const password = suppliedPassword || tempPassword();
       if (!organizationId || !name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return respond({ ok: false, error: "Empresa, nombre y correo válido son obligatorios." }, 400, origin);
+      }
+      if (!await organizationIsVisible(organizationId)) {
+        return respond({ ok: false, error: "No tienes acceso a esa empresa." }, 403, origin);
       }
       if (!VALID_ROLES.has(role)) return respond({ ok: false, error: "Rol inválido." }, 400, origin);
       if (password.length < 12) return respond({ ok: false, error: "La contraseña debe tener al menos 12 caracteres." }, 400, origin);
@@ -155,7 +295,14 @@ Deno.serve(async (req) => {
         throw profileError;
       }
       if (platform) {
-        const { error: grantError } = await admin.from("platform_admins").upsert({ user_id: userId, active: true, granted_by: callerId });
+        const { error: grantError } = await admin.from("platform_admins").upsert({
+          user_id: userId,
+          active: true,
+          granted_by: callerId,
+          // Una alta desde la interfaz nunca crea otro operador raíz. El nuevo
+          // administrador queda limitado al portafolio donde fue creado.
+          scope_organization_id: scopeOrganizationId || organizationId,
+        });
         if (grantError) throw grantError;
       }
       return respond({ ok: true, user: { id: userId, email, name, role, organization_id: organizationId }, temp_password: password }, 200, origin);
@@ -167,6 +314,9 @@ Deno.serve(async (req) => {
       const phone = normalizePhone(body.phone_e164);
       const ownerType = body.owner_type === "advisor" ? "advisor" : "company";
       if (!organizationId) return respond({ ok: false, error: "Selecciona la empresa." }, 400, origin);
+      if (!await organizationIsVisible(organizationId)) {
+        return respond({ ok: false, error: "No tienes acceso a esa empresa." }, 403, origin);
+      }
       if (body.phone_e164 && !phone) return respond({ ok: false, error: "El número debe estar en formato internacional." }, 400, origin);
       if (body.registration_mode === "infobip_portal" && !phone) {
         return respond({ ok: false, error: "El registro rápido necesita el número en formato internacional." }, 400, origin);
@@ -190,6 +340,9 @@ Deno.serve(async (req) => {
       const runId = String(body.run_id ?? "");
       const { data: run } = await admin.from("whatsapp_onboarding_runs").select("*").eq("id", runId).maybeSingle();
       if (!run) return respond({ ok: false, error: "No encontré ese proceso." }, 404, origin);
+      if (!await organizationIsVisible(run.organization_id)) {
+        return respond({ ok: false, error: "No tienes acceso a esa empresa." }, 403, origin);
+      }
       const phone = normalizePhone(run.phone_e164);
       if (!phone) return respond({ ok: false, error: "Este proceso no tiene un número internacional válido." }, 400, origin);
 
@@ -269,6 +422,9 @@ Deno.serve(async (req) => {
       const runId = String(body.run_id ?? "");
       const { data: run } = await admin.from("whatsapp_onboarding_runs").select("*").eq("id", runId).maybeSingle();
       if (!run) return respond({ ok: false, error: "No encontré ese proceso." }, 404, origin);
+      if (!await organizationIsVisible(run.organization_id)) {
+        return respond({ ok: false, error: "No tienes acceso a esa empresa." }, 403, origin);
+      }
       const wabaId = String(body.waba_id ?? run.waba_id ?? "").trim();
       const phoneNumberId = String(body.phone_number_id ?? run.phone_number_id ?? "").trim() || null;
       if (!wabaId) return respond({ ok: false, error: "Meta no devolvió el WABA ID." }, 400, origin);
@@ -302,6 +458,9 @@ Deno.serve(async (req) => {
       }
       const { data: run } = await admin.from("whatsapp_onboarding_runs").select("id,organization_id,phone_e164,phone_number_id,status").eq("id", runId).maybeSingle();
       if (!run || run.status !== "ready_to_test") return respond({ ok: false, error: "El canal todavía no está listo para aprobar pruebas." }, 409, origin);
+      if (!await organizationIsVisible(run.organization_id)) {
+        return respond({ ok: false, error: "No tienes acceso a esa empresa." }, 403, origin);
+      }
       await admin.from("whatsapp_onboarding_runs").update({ status: "active", verified_at: new Date().toISOString() }).eq("id", runId);
       if (run.phone_number_id) {
         await admin.from("whatsapp_numero_asesor").update({ estado_conexion: "CONNECTED", verificado_at: new Date().toISOString(), ultimo_error: null }).eq("phone_number_id", run.phone_number_id);
@@ -320,6 +479,11 @@ Deno.serve(async (req) => {
       const runId = String(body.run_id ?? "");
       const status = String(body.status ?? "");
       if (!VALID_STATUSES.has(status)) return respond({ ok: false, error: "Estado inválido." }, 400, origin);
+      const { data: statusRun } = await admin.from("whatsapp_onboarding_runs").select("organization_id").eq("id", runId).maybeSingle();
+      if (!statusRun) return respond({ ok: false, error: "No encontré ese proceso." }, 404, origin);
+      if (!await organizationIsVisible(statusRun.organization_id)) {
+        return respond({ ok: false, error: "No tienes acceso a esa empresa." }, 403, origin);
+      }
       const { error } = await admin.from("whatsapp_onboarding_runs").update({ status }).eq("id", runId);
       if (error) throw error;
       return respond({ ok: true, status }, 200, origin);

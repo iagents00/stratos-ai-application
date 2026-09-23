@@ -161,10 +161,10 @@ casa; por eso mismo son los que más cuidado piden.
 
 | Archivo | Archivos que lo importan |
 |---|---|
-| `design-system/tokens.js` | **73** |
+| `design-system/tokens.js` | **74** |
 | `lib/supabase.js` | **44** |
 | `hooks/useAuth.js` | **35** |
-| `hooks/useViewport.js` | **28** |
+| `hooks/useViewport.js` | **29** |
 | `app/SharedComponents.jsx` | **21** |
 | `hooks/useClient.js` | **18** |
 | `lib/native.js` | **18** |
@@ -173,9 +173,9 @@ casa; por eso mismo son los que más cuidado piden.
 | `app/views/CRM/date-range.js` | **5** |
 | `lib/utils.js` | **4** |
 | `lib/offline-mode.js` | **4** |
+| `app/constants/pipeline.js` | **4** |
 | `design-system/primitives.jsx` | **4** |
 | `lib/audit.js` | **4** |
-| `app/constants/labels.js` | **4** |
 
 ---
 
