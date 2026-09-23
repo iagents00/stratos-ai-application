@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle, ArrowLeft, Building2, CheckCircle2, ChevronDown,
-  ChevronUp, Copy, GripVertical, LayoutGrid, Loader2, Plus,
+  ChevronUp, Copy, GripVertical, LayoutGrid, Loader2, LockKeyhole, Plus,
   RotateCcw, Save, Search, Sparkles, Trash2,
 } from "lucide-react";
 import { font, fontDisp } from "../../../design-system/tokens";
@@ -151,12 +151,17 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
   };
 
   const applyTemplate = (template) => {
-    if (totalClients > 0) {
-      setMessage({ type: "warning", text: "La plantilla está aplicada como borrador. Al guardar, Stratos protegerá cualquier etapa que todavía tenga clientes." });
+    const draft = templateStages(template);
+    const protectedStages = baseline.filter(stage =>
+      Number(usage[stage.name] || 0) > 0
+      && !draft.some(next => next.name.toLocaleLowerCase("es") === stage.name.toLocaleLowerCase("es"))
+    );
+    if (protectedStages.length > 0) {
+      setMessage({ type: "warning", text: `Borrador todavía no publicado. Stratos conservó ${protectedStages.length} etapa${protectedStages.length === 1 ? "" : "s"} con clientes al final del pipeline; mueve esos clientes antes de eliminarla${protectedStages.length === 1 ? "" : "s"}.` });
     } else {
-      setMessage(null);
+      setMessage({ type: "warning", text: "Plantilla aplicada como borrador. Para verla en el CRM debes pulsar “Guardar y publicar”." });
     }
-    setStages(templateStages(template));
+    setStages([...draft, ...protectedStages]);
   };
 
   const save = async () => {
@@ -165,10 +170,13 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
       const result = await saveOrganizationPipeline(selectedId, stages);
       const saved = cloneStages(result.pipeline);
       setStages(saved); setBaseline(saved);
-      setMessage({ type: "success", text: "Pipeline guardado. El equipo de esta empresa lo verá al volver a cargar el CRM." });
+      setMessage({ type: "success", text: `Pipeline publicado para ${selectedOrg?.name || "la empresa"}. Sus usuarios lo verán al recargar el CRM.` });
       setOrganizations(current => current.map(org => org.id === selectedId
         ? { ...org, meta_config: result.organization?.meta_config || org.meta_config }
         : org));
+      window.dispatchEvent(new CustomEvent("stratos:pipeline-saved", {
+        detail: { organizationId: selectedId, pipeline: saved },
+      }));
     } catch (error) {
       setMessage({ type: "error", text: error.message || "No se pudo guardar el pipeline." });
     } finally {
@@ -180,7 +188,7 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
     <div style={{ padding: isMobile ? "12px 10px 48px" : "22px 24px 60px", color: T.txt, fontFamily: font, overflowY: "auto", height: "100%", boxSizing: "border-box" }}>
       <button onClick={onBack} style={{ ...button, marginBottom: 16, background: "transparent" }}><ArrowLeft size={14} /> Usuarios</button>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap", marginBottom: 18 }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 20, display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap", marginBottom: 18, padding: "10px 0 12px", background: T.bg || "#050B14", borderBottom: dirty ? `1px solid ${T.accentB}` : "1px solid transparent" }}>
         <div>
           <h2 style={{ margin: 0, fontFamily: fontDisp, fontSize: 22, fontWeight: 650 }}>Pipelines por empresa</h2>
           <p style={{ color: T.txt3, fontSize: 12.5, margin: "6px 0 0", maxWidth: 760, lineHeight: 1.55 }}>
@@ -190,9 +198,13 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button onClick={() => setStages(cloneStages(baseline))} disabled={!dirty || saving} style={{ ...button, opacity: dirty ? 1 : .45 }}><RotateCcw size={14} /> Descartar</button>
           <button onClick={save} disabled={!dirty || saving || !selectedId} style={{ ...button, color: T.accent, borderColor: T.accentB, background: T.accentS, opacity: dirty ? 1 : .55 }}>
-            {saving ? <Loader2 size={14} className="spin" /> : <Save size={14} />} Guardar cambios
+            {saving ? <Loader2 size={14} className="spin" /> : <Save size={14} />} {dirty ? `Guardar y publicar en ${selectedOrg?.name || "empresa"}` : "Sin cambios por publicar"}
           </button>
         </div>
+      </div>
+
+      <div style={{ ...card, padding: "11px 14px", marginBottom: 14, color: T.txt2, fontSize: 11.5, lineHeight: 1.55 }}>
+        <strong style={{ color: T.txt }}>Cómo funciona:</strong> 1. Selecciona la empresa · 2. Edita nombres, colores y orden · 3. Pulsa <strong>Guardar y publicar</strong> · 4. Los usuarios de esa empresa recargan su CRM. El cambio no afecta a ningún otro white label.
       </div>
 
       {message && (
@@ -252,8 +264,8 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
                   return <div key={`${index}-${stage.name}`} draggable onDragStart={() => setDragIndex(index)} onDragOver={event => event.preventDefault()} onDrop={() => { if (dragIndex != null) moveStage(dragIndex, index); setDragIndex(null); }} style={{ display: "grid", gridTemplateColumns: "28px 42px minmax(150px,1fr) 86px 112px", minWidth: isMobile ? 530 : 0, gap: 9, alignItems: "center", border: `1px solid ${T.border}`, borderRadius: 12, padding: "9px 10px", background: dragIndex === index ? T.accentS : "transparent" }}>
                     <GripVertical size={16} color={T.txt3} style={{ cursor: "grab" }} />
                     <input aria-label={`Color de ${stage.name}`} type="color" value={stage.color} onChange={event => patchStage(index, { color: event.target.value.toUpperCase() })} style={{ width: 38, height: 34, padding: 2, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer" }} />
-                    <input value={stage.name} onChange={event => patchStage(index, { name: event.target.value })} style={{ ...input, width: "100%", padding: "0 11px" }} />
-                    <span style={{ color: count ? T.txt2 : T.txt3, fontSize: 11.5, textAlign: "right" }}>{count} cliente{count === 1 ? "" : "s"}</span>
+                    <input value={stage.name} disabled={count > 0} title={count > 0 ? "Mueve primero los clientes de esta etapa desde el CRM" : "Escribe el nombre de la etapa"} onChange={event => patchStage(index, { name: event.target.value })} style={{ ...input, width: "100%", padding: "0 11px", opacity: count > 0 ? .62 : 1, cursor: count > 0 ? "not-allowed" : "text" }} />
+                    <span title={count > 0 ? "Etapa protegida mientras tenga clientes" : "Etapa disponible para editar o borrar"} style={{ color: count ? T.txt2 : T.txt3, fontSize: 11.5, textAlign: "right", display: "inline-flex", justifyContent: "flex-end", alignItems: "center", gap: 4 }}>{count > 0 && <LockKeyhole size={11} />}{count} cliente{count === 1 ? "" : "s"}</span>
                     <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
                       <IconButton title="Subir" disabled={index === 0} onClick={() => moveStage(index, index - 1)} T={T}><ChevronUp size={13} /></IconButton>
                       <IconButton title="Bajar" disabled={index === stages.length - 1} onClick={() => moveStage(index, index + 1)} T={T}><ChevronDown size={13} /></IconButton>
@@ -269,7 +281,7 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
           <section style={{ ...card, padding: 16 }}>
             <div style={{ fontSize: 13.5, fontWeight: 650, marginBottom: 10 }}>Vista previa</div>
             <div style={{ overflowX: "auto", paddingBottom: 4 }}><div style={{ display: "flex", gap: 8, minWidth: "max-content" }}>{stages.map((stage, index) => <div key={`${stage.name}-${index}`} style={{ width: 145, border: `1px solid ${stage.color}55`, background: `${stage.color}12`, borderRadius: 12, padding: 11 }}><div style={{ display: "flex", gap: 7, alignItems: "center" }}><span style={{ width: 8, height: 8, borderRadius: 99, background: stage.color }} /><strong style={{ color: T.txt, fontSize: 11.5, maxWidth: 110, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{stage.name || "Sin nombre"}</strong></div><div style={{ color: T.txt3, fontSize: 10.5, marginTop: 10 }}>{Number(usage[stage.name] || 0)} tarjetas</div></div>)}</div></div>
-            <p style={{ color: T.txt3, fontSize: 11.5, lineHeight: 1.55, margin: "11px 0 0" }}>La primera etapa recibe los clientes nuevos. El orden de izquierda a derecha será el mismo en el CRM.</p>
+            <p style={{ color: T.txt3, fontSize: 11.5, lineHeight: 1.55, margin: "11px 0 0" }}>La primera etapa recibe los clientes nuevos. El orden de izquierda a derecha será el mismo en el CRM. Esta vista es un borrador hasta pulsar “Guardar y publicar”.</p>
           </section>
         </main>
       </div>

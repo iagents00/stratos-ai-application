@@ -1715,6 +1715,22 @@ export default function App() {
     setPipelineRevision(v => v + 1);
   }, [clientConfig, orgMetaConfig?.crm]);
 
+  // Si el administrador publica el pipeline de su propia empresa, actualizamos
+  // esta sesión al instante. Los usuarios que ya tengan abierto otro navegador
+  // lo reciben al recargar, igual que cualquier cambio de configuración del tenant.
+  useEffect(() => {
+    const handlePipelineSaved = (event) => {
+      const { organizationId, pipeline } = event.detail || {};
+      if (!organizationId || organizationId !== user?.organizationId || !Array.isArray(pipeline)) return;
+      setOrgMetaConfig(prev => ({
+        ...(prev || {}),
+        crm: { ...(prev?.crm || {}), pipeline },
+      }));
+    };
+    window.addEventListener("stratos:pipeline-saved", handlePipelineSaved);
+    return () => window.removeEventListener("stratos:pipeline-saved", handlePipelineSaved);
+  }, [user?.organizationId]);
+
   // Plan/Protocolo efectivos: lo de la org va ENCIMA del default, no en lugar de él.
   //
   // BUG que reportó Ángel con captura (27-jul): entrar a «Protocolo de Ventas»
