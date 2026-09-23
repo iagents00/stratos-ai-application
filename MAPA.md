@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**190 archivos · 77.920 líneas**
+**190 archivos · 77.921 líneas**
 
 ---
 
@@ -136,7 +136,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `index.jsx` | 487 | Panel de chat con Agente Stratos AI. |
 | `index.jsx` | 453 | Portal de Candidatos — Stratos People |
 | `RailsSettings.jsx` | 377 | _sin describir_ |
-| `PipelineConfiguratorAdmin.jsx` | 295 | _sin describir_ |
+| `PipelineConfiguratorAdmin.jsx` | 296 | _sin describir_ |
 | `DocsStratos.jsx` | 262 | _sin describir_ |
 | `WhatsAppOnboardingAdmin.jsx` | 218 | _sin describir_ |
 | `RoleBadge.jsx` | 29 | Badge de rol de usuario con colores según nivel. |
@@ -473,7 +473,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Agente Stratos | `src/app/components/Chat.jsx:60` |
 | Agrega un teléfono…  +1 555 … | `src/app/views/CRM/components.jsx:1305` |
 | Agregar | `src/app/features/MetaPanel/index.jsx:1234` |
-| Agregar etapa | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:257` |
+| Agregar etapa | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:258` |
 | Agregar link | `src/app/views/LandingPages/index.jsx:1936` |
 | Agregar otro | `src/app/views/Marketing.jsx:2514` |
 | Agregar propiedad | `src/app/views/Marketing.jsx:1448` |
@@ -508,7 +508,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Aún no configuras un correo de recuperación. | `src/app/views/Profile.jsx:430` |
 | Aún no hay documentos | `src/app/features/MetaPanel/index.jsx:1646` |
 | Badge | `src/app/views/LandingPages/index.jsx:662` |
-| Bajar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:271` |
+| Bajar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:272` |
 | Bajo · Medio · Alto | `src/app/views/CRM/components.jsx:3431` |
 | Buscar (⌘K) | `src/app/App.jsx:2340` |
 | Buscar asesor… | `src/app/views/CRM/components.jsx:3188` |
@@ -516,7 +516,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Buscar cliente o teléfono… | `src/app/views/WhatsApp.jsx:212` |
 | Buscar cliente, proyecto, liner… | `src/app/views/ZoomControl/index.jsx:494` |
 | Buscar desarrollo o zona… | `src/app/views/LandingPages/index.jsx:1398` |
-| Buscar empresa… | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:222` |
+| Buscar empresa… | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:223` |
 | Buscar en las actividades… | `src/app/views/Marketing.jsx:1782` |
 | Buscar en papelera… | `src/app/views/Trash.jsx:99` |
 | Buscar nombre o email… | `src/app/features/Admin/AdminPanel.jsx:308` |
@@ -536,7 +536,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cambiar orden de las tarjetas de prioridad | `src/app/views/CRM/index.jsx:2639` |
 | Cambiar posición de prioridad | `src/app/views/CRM/index.jsx:2800` |
 | Cambiar prioridad | `src/app/features/MetaPanel/index.jsx:1319` |
-| Cambios sin guardar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:243` |
+| Cambios sin guardar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:244` |
 | Campañas Recientes | `src/app/views/LandingPages/index.jsx:1255` |
 | Campo requerido | `src/app/views/LandingPages/index.jsx:641` |
 | Canales | `src/app/views/ChatEquipo.jsx:303` |
@@ -549,10 +549,10 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cargando conversaciones… | `src/app/views/WhatsApp.jsx:263` |
 | Cargando el plan… | `src/app/views/PlanSemanal.jsx:353` |
 | Cargando el tablero… | `src/app/views/ComandoOps.jsx:127` |
-| Cargando empresas… | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:225` |
+| Cargando empresas… | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:226` |
 | Cargando equipo… | `src/app/App.jsx:2368` |
 | Cargando movimientos… | `src/app/views/Caja.jsx:454` |
-| Cargando pipeline… | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:260` |
+| Cargando pipeline… | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:261` |
 | Cargando Zooms… | `src/app/views/ZoomControl/index.jsx:511` |
 | Cargando… | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:200` |
 | Cargo / Departamento | `src/app/views/RRHHModule.jsx:602` |
@@ -642,12 +642,12 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Detectada por tu navegador: | `src/app/views/Profile.jsx:572` |
 | Días anteriores | `src/app/views/Marketing.jsx:2745` |
 | Director | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:180` |
-| Diseñar etapas | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:256` |
+| Diseñar etapas | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:257` |
 | Distribución actual de candidatos por etapa | `src/app/views/RRHHModule.jsx:325` |
 | Documentos del Equipo | `src/app/features/MetaPanel/index.jsx:1575` |
 | Dónde | `src/app/components/DynIsland.jsx:462` |
 | Drive | `src/app/views/Marketing.jsx:2035` |
-| Duplicar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:272` |
+| Duplicar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:273` |
 | Editar | `src/app/views/CRM/LeadRelatedContacts.jsx:237` |
 | Editar acción | `src/app/views/CRM/components.jsx:2492` |
 | Editar nota | `src/app/views/CRM/LeadNotesTimeline.jsx:380` |
@@ -713,7 +713,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/whatsapp-chat.js` (326 líneas)
 - `src/app/App.css` (321 líneas)
 - `src/clients/clinica-dental/config.js` (309 líneas)
-- `src/app/features/Admin/PipelineConfiguratorAdmin.jsx` (295 líneas)
+- `src/app/features/Admin/PipelineConfiguratorAdmin.jsx` (296 líneas)
 - `src/app/views/ZoomControl/Graficas.jsx` (290 líneas)
 - `src/lib/lead-save.js` (288 líneas)
 - `src/lib/native.js` (282 líneas)

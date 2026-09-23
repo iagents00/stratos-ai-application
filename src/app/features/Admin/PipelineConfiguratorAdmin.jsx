@@ -68,7 +68,7 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
       setOrganizations(rows);
       setSelectedId(current => current || rows[0]?.id || "");
     } catch (error) {
-      setMessage({ type: "error", text: error.message || "No se pudieron cargar las empresas." });
+      setMessage({ type: "error", text: error.message || "No se pudieron cargar las empresas.", retry: true });
     } finally {
       setLoading(false);
     }
@@ -211,6 +211,7 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
         <div style={{ ...card, padding: "11px 14px", marginBottom: 14, display: "flex", gap: 9, alignItems: "flex-start", color: message.type === "success" ? T.accent : message.type === "warning" ? "#FBBF24" : "#FCA5A5", borderColor: message.type === "success" ? T.accentB : message.type === "warning" ? "rgba(251,191,36,.35)" : "rgba(248,113,113,.35)" }}>
           {message.type === "success" ? <CheckCircle2 size={17} /> : <AlertTriangle size={17} />}
           <span style={{ fontSize: 12.5, lineHeight: 1.5 }}>{message.text}</span>
+          {message.retry && <button onClick={loadOrganizations} style={{ ...button, minHeight: 30, marginLeft: "auto", padding: "0 11px" }}>Reintentar</button>}
         </div>
       )}
 
