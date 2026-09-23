@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import * as XLSX from "npm:xlsx@0.18.5";
+import { decryptCredentialRows, saveTemporaryCredential } from "../_shared/temporary-credentials.ts";
 
 const SUPABASE_URL = Deno.env.get("SB_URL") ?? Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE = Deno.env.get("SB_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -9,6 +10,7 @@ const INFOBIP_BASE_URL = (Deno.env.get("INFOBIP_BASE_URL") ?? "https://api.infob
 const INFOBIP_API_KEY = Deno.env.get("INFOBIP_API_KEY") ?? "";
 const PLATFORM_ALERT_WEBHOOK_URL = Deno.env.get("PLATFORM_ALERT_WEBHOOK_URL") ?? "";
 const PLATFORM_ALERT_WEBHOOK_SECRET = Deno.env.get("PLATFORM_ALERT_WEBHOOK_SECRET") ?? "";
+const TEMP_CREDENTIALS_KEY = Deno.env.get("TEMP_CREDENTIALS_KEY") ?? "";
 
 const VALID_ROLES = new Set(["super_admin", "admin", "director", "ceo", "asesor", "marketing", "colaborador"]);
 const VALID_STATUSES = new Set(["draft", "waiting_customer", "meta_finished", "infobip_registering", "ready_to_test", "active", "failed", "disconnected"]);
@@ -338,6 +340,18 @@ Deno.serve(async (req) => {
     return await query;
   };
 
+  const visibleTemporaryCredentialRows = async (visibleIds: string[]) => {
+    let query = admin.from("temporary_login_credentials")
+      .select("user_id,organization_id,user_name,login_email,encrypted_password,encryption_iv,key_version,created_at")
+      .order("created_at", { ascending: false });
+    if (!isRootAdmin) {
+      const allowed = [...new Set([scopeOrganizationId, ...visibleIds].filter(Boolean))] as string[];
+      if (!allowed.length) return { data: [], error: null };
+      query = query.in("organization_id", allowed);
+    }
+    return await query;
+  };
+
   let body: Record<string, unknown> = {};
   try { body = await req.json(); } catch { return respond({ ok: false, error: "bad_json" }, 400, origin); }
   const action = String(body.action ?? "bootstrap");
@@ -393,6 +407,30 @@ Deno.serve(async (req) => {
           embeddedSignupReady: Boolean(INFOBIP_API_KEY),
         },
       }, 200, origin);
+    }
+
+    if (action === "list_temporary_credentials") {
+      const orgs = await visibleOrganizations();
+      if (orgs.error) throw orgs.error;
+      const visibleIds = (orgs.data ?? []).filter(row => {
+        const meta = row.meta_config && typeof row.meta_config === "object"
+          ? row.meta_config as Record<string, unknown> : {};
+        const platform = meta.platform && typeof meta.platform === "object"
+          ? meta.platform as Record<string, unknown> : {};
+        return platform.kind !== "partner";
+      }).map(row => row.id);
+      const credentialRows = await visibleTemporaryCredentialRows(visibleIds);
+      if (credentialRows.error) throw credentialRows.error;
+      const credentials = await decryptCredentialRows(credentialRows.data ?? [], TEMP_CREDENTIALS_KEY);
+      try {
+        await admin.from("audit_log").insert({
+          actor_id: callerId,
+          entity_type: "auth",
+          action: "TEMP_CREDENTIALS_VIEWED",
+          metadata: { count: credentials.length, scope_organization_id: scopeOrganizationId, at: new Date().toISOString() },
+        });
+      } catch { /* auditoría best-effort; no bloquear soporte */ }
+      return respond({ ok: true, credentials }, 200, origin);
     }
 
     if (action === "get_pipeline") {
@@ -653,6 +691,7 @@ Deno.serve(async (req) => {
       if (!userId) throw new Error("Auth no devolvió el id del administrador partner.");
       const { error: profileError } = await admin.from("profiles").upsert({
         id: userId, organization_id: partnerOrganization.id, name: adminName, role: "super_admin", active: true,
+        recovery_email: email,
       });
       if (profileError) {
         await admin.auth.admin.updateUserById(userId, { ban_duration: "876000h" }).catch(() => null);
@@ -665,6 +704,17 @@ Deno.serve(async (req) => {
         note: `Partner: ${name}`,
       });
       if (grantError) throw grantError;
+
+      let credentialSaved = true;
+      try {
+        await saveTemporaryCredential(admin, TEMP_CREDENTIALS_KEY, {
+          user_id: userId, organization_id: partnerOrganization.id,
+          user_name: adminName, login_email: email, password, created_by: callerId,
+        });
+      } catch (error) {
+        credentialSaved = false;
+        console.error("[temporary-credentials] partner save failed:", (error as Error)?.message || error);
+      }
 
       const eventPayload = {
         type: "partner_created", partner_id: partnerOrganization.id,
@@ -683,6 +733,7 @@ Deno.serve(async (req) => {
         ok: true, partner: partnerOrganization,
         user: { id: userId, name: adminName, email },
         temp_password: password, company_limit: companyLimitValue,
+        credential_saved: credentialSaved,
         notification_status: notificationStatus,
       }, 200, origin);
     }
@@ -811,6 +862,7 @@ Deno.serve(async (req) => {
       if (!userId) throw new Error("Auth no devolvió el id del usuario.");
       const { error: profileError } = await admin.from("profiles").upsert({
         id: userId, organization_id: organizationId, name, role, active: true,
+        recovery_email: email,
       });
       if (profileError) {
         // No borrar automáticamente una identidad si falla el perfil. Se
@@ -818,7 +870,22 @@ Deno.serve(async (req) => {
         await admin.auth.admin.updateUserById(userId, { ban_duration: "876000h" }).catch(() => null);
         throw profileError;
       }
-      return respond({ ok: true, user: { id: userId, email, name, role, organization_id: organizationId }, temp_password: password }, 200, origin);
+      let credentialSaved = true;
+      try {
+        await saveTemporaryCredential(admin, TEMP_CREDENTIALS_KEY, {
+          user_id: userId, organization_id: organizationId,
+          user_name: name, login_email: email, password, created_by: callerId,
+        });
+      } catch (error) {
+        credentialSaved = false;
+        console.error("[temporary-credentials] user save failed:", (error as Error)?.message || error);
+      }
+      return respond({
+        ok: true,
+        user: { id: userId, email, name, role, organization_id: organizationId },
+        temp_password: password,
+        credential_saved: credentialSaved,
+      }, 200, origin);
     }
 
     if (action === "create_run") {

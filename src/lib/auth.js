@@ -632,6 +632,33 @@ export async function adminCreateUser({ name, email, role = 'asesor', phone = nu
 }
 
 /**
+ * Lista las credenciales iniciales que siguen vigentes en la organización del
+ * administrador. El servidor las elimina en cuanto auth.users registra un
+ * cambio de contraseña; una contraseña personal nunca aparece aquí.
+ */
+export async function adminGetTemporaryCredentials() {
+  try {
+    const { data: sesion } = await supabase.auth.getSession()
+    const token = sesion?.session?.access_token
+    if (!token) return []
+    const res = await fetch(`${SUPABASE_REST_URL}/functions/v1/admin-create-user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ action: 'list_temporary_credentials' }),
+    })
+    const out = await res.json().catch(() => ({}))
+    return res.ok && out?.ok !== false && Array.isArray(out?.credentials) ? out.credentials : []
+  } catch (e) {
+    console.warn('[Stratos] adminGetTemporaryCredentials error:', e.message)
+    return []
+  }
+}
+
+/**
  * Mandarle a alguien el correo para que se ponga una contraseña nueva.
  * Reusa el mismo camino que "olvidé mi contraseña" del login, así que no hace
  * falta ningún permiso especial ni entrar al Dashboard.

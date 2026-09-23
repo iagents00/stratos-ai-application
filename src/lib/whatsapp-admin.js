@@ -64,6 +64,7 @@ async function call(action, payload = {}) {
 }
 
 export const loadWhatsAppAdmin = () => call("bootstrap");
+export const loadTemporaryCredentials = () => call("list_temporary_credentials");
 export const createPlatformPartner = (payload) => call("create_partner", payload);
 export const updatePlatformPartnerQuota = (userId, companyLimit) => call("update_partner_quota", { user_id: userId, company_limit: companyLimit });
 export const loadOrganizationPipeline = (organizationId) => call("get_pipeline", { organization_id: organizationId });

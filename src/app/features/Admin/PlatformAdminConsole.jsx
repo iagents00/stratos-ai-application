@@ -1,13 +1,14 @@
 import { createElement, useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Activity, Building2, FolderOpen, Gauge, LayoutDashboard, LogOut,
-  Menu, MessageCircle, Plus, RefreshCw, ShieldCheck, Users, Waypoints, X,
+  Activity, Building2, Copy, Eye, EyeOff, FolderOpen, Gauge, KeyRound,
+  LayoutDashboard, LogOut, Menu, MessageCircle, Plus, RefreshCw,
+  ShieldCheck, Users, Waypoints, X,
 } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { useAuth } from "../../../hooks/useAuth";
 import { useIsMobile } from "../../../hooks/useViewport";
 import {
-  createPlatformPartner, loadWhatsAppAdmin, updatePlatformPartnerQuota,
+  createPlatformPartner, loadTemporaryCredentials, loadWhatsAppAdmin, updatePlatformPartnerQuota,
 } from "../../../lib/whatsapp-admin";
 import WhatsAppOnboardingAdmin from "./WhatsAppOnboardingAdmin";
 import PipelineConfiguratorAdmin from "./PipelineConfiguratorAdmin";
@@ -51,7 +52,7 @@ function PartnersPanel({ T, data, refresh }) {
     try {
       const result = await createPlatformPartner(form);
       setCredentials({ email: result.user.email, password: result.temp_password });
-      setMessage({ ok: true, text: `${result.partner.name} quedó limitado a ${result.company_limit} empresas. La creación quedó registrada${result.notification_status === "sent" ? " y notificada por Telegram" : "; la alerta de Telegram está pendiente de configuración"}.` });
+      setMessage({ ok: true, text: `${result.partner.name} quedó limitado a ${result.company_limit} empresas. La creación quedó registrada${result.notification_status === "sent" ? " y notificada por Telegram" : "; la alerta de Telegram está pendiente de configuración"}.${result.credential_saved === false ? " Copia la clave ahora porque no pudo guardarse en Accesos temporales." : " Su acceso quedará consultable hasta que cambie la contraseña."}` });
       setForm(EMPTY_PARTNER);
       await refresh();
     } catch (error) { setMessage({ ok: false, text: error.message || "No se pudo crear el partner." }); }
@@ -106,6 +107,45 @@ function ActivityPanel({ T, events }) {
   return <div style={{ padding: "22px 24px 60px" }}><h2 style={{ margin: 0, fontFamily: fontDisp, fontSize: 22 }}>Actividad y alertas</h2><p style={{ color: T.txt3, fontSize: 12.5 }}>Registro independiente de Telegram: ningún alta desaparece si el aviso externo falla.</p><div style={{ marginTop: 16, border: `1px solid ${T.border}`, borderRadius: 16, background: T.glass, overflow: "hidden" }}>{!events?.length ? <div style={{ padding: 24, color: T.txt3 }}>Sin eventos todavía.</div> : events.map(event => <div key={event.id} style={{ padding: "13px 16px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}><div><strong style={{ fontSize: 13 }}>{labels[event.event_type] || event.event_type}</strong><div style={{ color: T.txt3, fontSize: 11.5, marginTop: 4 }}>{event.payload?.organization_name || event.payload?.partner_name || "Stratos"} · {dateLabel(event.created_at)}</div></div><span style={{ fontSize: 11.5, color: event.notification_status === "sent" ? T.accent : "#FBBF24" }}>{event.notification_status === "sent" ? "Telegram enviado" : event.notification_status === "not_configured" ? "Telegram por configurar" : event.notification_status}</span></div>)}</div></div>;
 }
 
+function TemporaryAccessPanel({ T, credentials, organizations, partners, loading, error }) {
+  const [revealed, setRevealed] = useState(() => new Set());
+  const [copied, setCopied] = useState("");
+  const organizationName = id => organizations?.find(item => item.id === id)?.name
+    || partners?.find(item => item.scope_organization_id === id)?.organizations?.name
+    || "Administración partner";
+  const toggle = id => setRevealed(current => {
+    const next = new Set(current);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  const copy = async (credential) => {
+    await navigator.clipboard.writeText(`Usuario: ${credential.login_email}\nContraseña temporal: ${credential.temporary_password}`);
+    setCopied(credential.user_id);
+    setTimeout(() => setCopied(""), 1800);
+  };
+  return <div style={{ padding: "22px 24px 60px" }}>
+    <h2 style={{ margin: 0, fontFamily: fontDisp, fontSize: 22 }}>Accesos temporales</h2>
+    <p style={{ color: T.txt3, fontSize: 12.5, lineHeight: 1.55, maxWidth: 820 }}>
+      Aquí aparecen únicamente usuarios que todavía conservan la contraseña inicial. La contraseña está cifrada y su registro desaparece automáticamente cuando la persona la cambia o la recupera.
+    </p>
+    {error && <div style={{ marginTop: 14, padding: 13, borderRadius: 12, border: "1px solid rgba(248,113,113,.35)", color: "#FCA5A5" }}>{error}</div>}
+    <div style={{ marginTop: 16, border: `1px solid ${T.border}`, borderRadius: 16, background: T.glass, overflow: "hidden" }}>
+      {loading ? <div style={{ padding: 24, color: T.txt3 }}>Cargando accesos…</div> : !credentials?.length ? <div style={{ padding: 24, color: T.txt3 }}>No hay contraseñas temporales vigentes.</div> : credentials.map(credential => {
+        const isVisible = revealed.has(credential.user_id);
+        return <div key={credential.user_id} style={{ padding: "15px 16px", borderBottom: `1px solid ${T.border}`, display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 14, alignItems: "center" }}>
+          <div><strong style={{ fontSize: 13 }}>{credential.user_name}</strong><div style={{ color: T.txt3, fontSize: 11.5, marginTop: 4 }}>{organizationName(credential.organization_id)}</div></div>
+          <div><div style={{ color: T.txt3, fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".06em" }}>Usuario</div><code style={{ color: T.txt2, fontSize: 12 }}>{credential.login_email}</code></div>
+          <div><div style={{ color: T.txt3, fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".06em" }}>Contraseña temporal</div><code style={{ color: T.txt2, fontSize: 12 }}>{isVisible ? credential.temporary_password : "••••••••••••"}</code></div>
+          <div style={{ display: "flex", gap: 7 }}>
+            <button onClick={() => toggle(credential.user_id)} title={isVisible ? "Ocultar contraseña" : "Ver contraseña"} style={{ width: 38, height: 38, display: "grid", placeItems: "center", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.txt2, cursor: "pointer" }}>{isVisible ? <EyeOff size={15} /> : <Eye size={15} />}</button>
+            <button onClick={() => copy(credential)} title="Copiar usuario y contraseña" style={{ minWidth: 88, height: 38, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: 10, border: `1px solid ${T.accentB}`, background: T.accentS, color: T.accent, cursor: "pointer", fontWeight: 700, fontSize: 11.5 }}><Copy size={14} /> {copied === credential.user_id ? "Copiado" : "Copiar"}</button>
+          </div>
+        </div>;
+      })}
+    </div>
+  </div>;
+}
+
 export default function PlatformAdminConsole({ initialData }) {
   const { logout, user } = useAuth();
   const isMobile = useIsMobile();
@@ -115,6 +155,9 @@ export default function PlatformAdminConsole({ initialData }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState("");
+  const [temporaryCredentials, setTemporaryCredentials] = useState([]);
+  const [credentialsLoading, setCredentialsLoading] = useState(false);
+  const [credentialsError, setCredentialsError] = useState("");
   const refresh = useCallback(async () => {
     setLoading(true); setError("");
     try { setData(await loadWhatsAppAdmin()); }
@@ -123,17 +166,28 @@ export default function PlatformAdminConsole({ initialData }) {
   }, []);
   useEffect(() => { if (!initialData) refresh(); }, [initialData, refresh]);
 
+  const refreshCredentials = useCallback(async () => {
+    setCredentialsLoading(true); setCredentialsError("");
+    try {
+      const result = await loadTemporaryCredentials();
+      setTemporaryCredentials(result.credentials || []);
+    } catch (err) {
+      setCredentialsError(err.message || "No se pudieron cargar los accesos temporales.");
+    } finally { setCredentialsLoading(false); }
+  }, []);
+
   const root = data?.access?.root === true;
   const used = Number(data?.access?.companiesUsed || 0);
   const limit = data?.access?.companyLimit;
   const nav = useMemo(() => [
     ["home", "Resumen", LayoutDashboard], ["companies", "Empresas y WhatsApp", Building2],
-    ["pipelines", "Pipelines", Waypoints], ["catalogs", "Catálogos", FolderOpen],
+    ["credentials", "Accesos temporales", KeyRound], ["pipelines", "Pipelines", Waypoints], ["catalogs", "Catálogos", FolderOpen],
     ...(root ? [["partners", "Partners y cupos", Users], ["activity", "Actividad", Activity]] : []),
   ], [root]);
-  const choose = id => { setSection(id); setMenuOpen(false); };
+  const choose = id => { setSection(id); setMenuOpen(false); if (id === "credentials") refreshCredentials(); };
 
   const content = section === "companies" ? <WhatsAppOnboardingAdmin T={T} />
+    : section === "credentials" ? <TemporaryAccessPanel T={T} credentials={temporaryCredentials} organizations={data?.organizations || []} partners={data?.partners || []} loading={credentialsLoading} error={credentialsError} />
     : section === "pipelines" ? <PipelineConfiguratorAdmin T={T} onBack={() => choose("home")} />
       : section === "catalogs" ? <CatalogConfiguratorAdmin T={T} onBack={() => choose("home")} />
         : section === "partners" && root ? <PartnersPanel T={T} data={data} refresh={refresh} />

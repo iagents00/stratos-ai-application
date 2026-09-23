@@ -34,6 +34,14 @@ description: >-
 > ⚠️ NUNCA mezclar con GVINTELL. Gvintell usa ref `vfakuhpumgwsnmczzkhk` y org `c1d2e3f4-…`.
 > Son bases distintas: imposible que una acción cruce de tenant, pero hay que apuntar SIEMPRE al ref correcto.
 
+### Accesos iniciales de usuarios
+
+- La contraseña inicial solo puede conservarse en `temporary_login_credentials`, cifrada con `TEMP_CREDENTIALS_KEY`; nunca en texto plano, perfiles, logs o respuestas posteriores de bootstrap.
+- Solo una Edge Function con `service_role` puede leer esa tabla y debe volver a validar el alcance del administrador en el servidor antes de descifrar.
+- El trigger sobre `auth.users.encrypted_password` elimina la credencial temporal cuando el usuario cambia o recupera su contraseña. Una contraseña personal no se puede consultar ni reconstruir.
+- Toda alta debe guardar `profiles.recovery_email` con el correo de acceso, salvo que la persona ya haya elegido una dirección distinta.
+- Consultar accesos temporales debe generar un evento de auditoría y la interfaz debe cargarlos únicamente a petición del administrador.
+
 ### Archivos de esta skill (leé el que toque)
 
 | Archivo | Para qué |

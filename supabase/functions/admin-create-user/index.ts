@@ -11,6 +11,7 @@
 // llamar los roles de mando de esa org.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import { decryptCredentialRows, saveTemporaryCredential } from "../_shared/temporary-credentials.ts";
 
 const SUPABASE_URL =
   Deno.env.get("SB_URL") ?? Deno.env.get("SUPABASE_URL") ??
@@ -19,6 +20,7 @@ const SERVICE_ROLE =
   Deno.env.get("SB_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const ANON =
   Deno.env.get("SB_ANON_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+const TEMP_CREDENTIALS_KEY = Deno.env.get("TEMP_CREDENTIALS_KEY") ?? "";
 
 const ROLES_QUE_PUEDEN_CREAR = new Set(["super_admin", "admin"]);
 const ROLES_VALIDOS = new Set(["super_admin", "admin", "director", "ceo", "asesor", "marketing"]);
@@ -89,6 +91,24 @@ Deno.serve(async (req) => {
   let body: Record<string, unknown> = {};
   try { body = await req.json(); } catch { return json({ ok: false, error: "bad_json" }, 400, origin); }
 
+  if (String(body.action ?? "create") === "list_temporary_credentials") {
+    const { data: rows, error } = await admin.from("temporary_login_credentials")
+      .select("user_id,organization_id,user_name,login_email,encrypted_password,encryption_iv,key_version,created_at")
+      .eq("organization_id", perfil.organization_id)
+      .order("created_at", { ascending: false });
+    if (error) return json({ ok: false, error: "No pude cargar los accesos temporales." }, 500, origin);
+    const credentials = await decryptCredentialRows(rows ?? [], TEMP_CREDENTIALS_KEY);
+    try {
+      await admin.from("audit_log").insert({
+        actor_id: quien.user.id,
+        entity_type: "auth",
+        action: "TEMP_CREDENTIALS_VIEWED",
+        metadata: { count: credentials.length, organization_id: perfil.organization_id, at: new Date().toISOString() },
+      });
+    } catch { /* auditoría best-effort; no bloquear soporte */ }
+    return json({ ok: true, credentials }, 200, origin);
+  }
+
   const nombre = String(body.name ?? "").trim();
   const email = String(body.email ?? "").trim().toLowerCase();
   const rol = String(body.role ?? "asesor").trim();
@@ -126,12 +146,28 @@ Deno.serve(async (req) => {
     phone,
     active: true,
     organization_id: perfil.organization_id,
+    recovery_email: email,
   });
 
   if (ePerfil) {
     // Si el perfil falla, la cuenta suelta no sirve para nada: se limpia.
     try { await admin.auth.admin.deleteUser(nuevoId); } catch { /* best-effort */ }
     return json({ ok: false, error: `No pude crear el perfil: ${ePerfil.message}` }, 500, origin);
+  }
+
+  let credentialSaved = true;
+  try {
+    await saveTemporaryCredential(admin, TEMP_CREDENTIALS_KEY, {
+      user_id: nuevoId,
+      organization_id: perfil.organization_id,
+      user_name: nombre,
+      login_email: email,
+      password: clave,
+      created_by: quien.user.id,
+    });
+  } catch (error) {
+    credentialSaved = false;
+    console.error("[temporary-credentials] save failed:", (error as Error)?.message || error);
   }
 
   return json({
@@ -141,6 +177,7 @@ Deno.serve(async (req) => {
     name: nombre,
     role: rol,
     temp_password: clave,
+    credential_saved: credentialSaved,
     mensaje: `Listo. Pasale el correo ${email} y la clave temporal ${clave}; que la cambie al entrar.`,
   }, 200, origin);
 });

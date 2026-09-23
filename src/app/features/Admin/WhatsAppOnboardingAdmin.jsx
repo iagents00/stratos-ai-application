@@ -105,7 +105,9 @@ export default function WhatsAppOnboardingAdmin({ T, onBack }) {
     setCredentials({ email: result.user.email, password: result.temp_password });
     setUserForm(p => ({ ...EMPTY_USER, organization_id: p.organization_id }));
     return result;
-  }, "Usuario creado. La clave temporal se muestra una sola vez.");
+  }, result => result.credential_saved === false
+    ? "Usuario creado. Copia la clave ahora: no pudo guardarse en Accesos temporales."
+    : "Usuario creado. También podrás consultar este acceso hasta que la persona cambie su contraseña.");
 
   const selectedUserOrganization = organizations.find(org => org.id === userForm.organization_id);
   const selectedUserCount = userForm.organization_id

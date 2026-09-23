@@ -8,11 +8,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
-  Search, Plus, X, User, CheckCircle2, Trash2, Download, MessageCircle, Waypoints, FolderOpen
+  Search, Plus, X, User, CheckCircle2, Trash2, Download, MessageCircle,
+  Waypoints, FolderOpen, KeyRound, Eye, EyeOff, Copy
 } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { useAuth } from "../../../hooks/useAuth";
-import { adminGetAllUsers, adminCreateUser, adminUpdateUser, adminDeleteUser, adminResetPassword } from "../../../lib/auth";
+import { adminGetAllUsers, adminCreateUser, adminUpdateUser, adminDeleteUser, adminResetPassword, adminGetTemporaryCredentials } from "../../../lib/auth";
 import { downloadBackup } from "../../../lib/backup";
 import { G } from "../../SharedComponents";
 import { ROLE_META, RoleBadge } from "./RoleBadge";
@@ -38,6 +39,10 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
   // guardar Array.isArray(data) ? data : [] para defensa en profundidad.
   const [users, setUsers]           = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [temporaryCredentials, setTemporaryCredentials] = useState([]);
+  const [credentialModal, setCredentialModal] = useState(null);
+  const [credentialVisible, setCredentialVisible] = useState(false);
+  const [credentialCopied, setCredentialCopied] = useState(false);
   const [search, setSearch]         = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [modal, setModal]           = useState(null);
@@ -69,8 +74,12 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
   const refresh = useCallback(async () => {
     setLoadingUsers(true);
     try {
-      const data = await adminGetAllUsers(me?.id);
+      const [data, credentials] = await Promise.all([
+        adminGetAllUsers(me?.id),
+        adminGetTemporaryCredentials(),
+      ]);
       setUsers(Array.isArray(data) ? data : []);
+      setTemporaryCredentials(Array.isArray(credentials) ? credentials : []);
     } catch {
       setUsers([]);
     } finally {
@@ -83,8 +92,14 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
     let active = true;
     (async () => {
       try {
-        const data = await adminGetAllUsers(me?.id);
-        if (active) setUsers(Array.isArray(data) ? data : []);
+        const [data, credentials] = await Promise.all([
+          adminGetAllUsers(me?.id),
+          adminGetTemporaryCredentials(),
+        ]);
+        if (active) {
+          setUsers(Array.isArray(data) ? data : []);
+          setTemporaryCredentials(Array.isArray(credentials) ? credentials : []);
+        }
       } catch {
         if (active) setUsers([]);
       } finally {
@@ -343,7 +358,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
 
         {/* ── Table header — solo desktop (en móvil las filas son tarjetas) ── */}
         {!isMobile && (
-          <div style={{ display: "grid", gridTemplateColumns: "2.2fr 2fr 1fr 1fr 100px", gap: 0, padding: "9px 20px", borderBottom: `1px solid ${T.border}` }}>
+          <div style={{ display: "grid", gridTemplateColumns: "2.2fr 2fr 1fr 1fr 185px", gap: 0, padding: "9px 20px", borderBottom: `1px solid ${T.border}` }}>
             {["Usuario", "Email", "Rol", "Estado", "Acciones"].map((h, i) => (
               <span key={h} style={{ fontSize: 10.5, fontWeight: 500, color: T.txt3, letterSpacing: "0.08em", textTransform: "uppercase", textAlign: i === 4 ? "center" : "left" }}>{h}</span>
             ))}
@@ -364,10 +379,16 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
             const initials = (u.name || "?").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
             const avatarColors = ["#A78BFA", "#7EB8F0", "#6EE7C2", "#F59E0B", "#5DC8D9", "#E8818C"];
             const ac = avatarColors[u.id % avatarColors.length];
+            const temporaryCredential = temporaryCredentials.find(item => item.user_id === u.id);
             /* Botones de acción compartidos entre la fila desktop y la tarjeta
                móvil (mismo comportamiento, distinto layout). */
             const actionBtns = canEdit ? (
               <>
+                {temporaryCredential && (
+                  <button onClick={() => { setCredentialModal(temporaryCredential); setCredentialVisible(false); setCredentialCopied(false); }} title="Ver acceso temporal" style={{ width: 40, height: 40, borderRadius: 10, border: `1px solid ${T.accentB}`, background: T.accentS, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
+                    <KeyRound size={13} color={T.accent} />
+                  </button>
+                )}
                 <button onClick={() => openEdit(u)} title="Editar usuario" style={{ width: 40, height: 40, borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
                   onMouseEnter={e => { e.currentTarget.style.background = "rgba(126,184,240,0.1)"; e.currentTarget.style.borderColor = "rgba(126,184,240,0.35)"; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
@@ -415,7 +436,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
 
             return (
               <div key={u.id} style={{
-                display: "grid", gridTemplateColumns: "2.2fr 2fr 1fr 1fr 100px",
+                display: "grid", gridTemplateColumns: "2.2fr 2fr 1fr 1fr 185px",
                 padding: "13px 20px", borderBottom: idx < filtered.length - 1 ? `1px solid ${T.border}` : "none",
                 background: "transparent", transition: "background 0.15s", alignItems: "center",
               }}
@@ -453,6 +474,22 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
           })}
         </div>
       </G>
+
+      {credentialModal && createPortal(
+        <>
+          <div onClick={() => setCredentialModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(2,5,12,0.78)", backdropFilter: "blur(8px)", zIndex: 500 }} />
+          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: "min(470px, 92vw)", background: cardBg, border: `1px solid ${T.accentB}`, borderRadius: 20, boxShadow: isLight ? T.shadow3 : "0 32px 64px rgba(0,0,0,0.7)", padding: "26px 28px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}><div><p style={{ margin: 0, color: wTxt, fontFamily: fontDisp, fontSize: 17 }}>Acceso temporal</p><p style={{ margin: "5px 0 0", color: T.txt3, fontSize: 12 }}>{credentialModal.user_name}</p></div><button onClick={() => setCredentialModal(null)} style={{ width: 34, height: 34, borderRadius: 9, border: `1px solid ${T.border}`, background: "transparent", color: T.txt3, cursor: "pointer" }}><X size={14} /></button></div>
+            <div style={{ marginTop: 18, padding: 15, borderRadius: 12, background: T.glass, border: `1px solid ${T.border}` }}>
+              <div style={{ color: T.txt3, fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".06em" }}>Usuario</div><code style={{ color: T.txt, fontSize: 13 }}>{credentialModal.login_email}</code>
+              <div style={{ color: T.txt3, fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".06em", marginTop: 14 }}>Contraseña temporal</div><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}><code style={{ color: T.txt, fontSize: 14 }}>{credentialVisible ? credentialModal.temporary_password : "••••••••••••"}</code><button onClick={() => setCredentialVisible(value => !value)} style={{ width: 34, height: 34, borderRadius: 9, border: `1px solid ${T.border}`, background: "transparent", color: T.txt2, cursor: "pointer" }}>{credentialVisible ? <EyeOff size={14} /> : <Eye size={14} />}</button></div>
+            </div>
+            <p style={{ color: T.txt3, fontSize: 11.5, lineHeight: 1.5 }}>Este acceso desaparece automáticamente cuando la persona cambia o recupera su contraseña.</p>
+            <button onClick={async () => { await navigator.clipboard.writeText(`Usuario: ${credentialModal.login_email}\nContraseña temporal: ${credentialModal.temporary_password}`); setCredentialCopied(true); }} style={{ width: "100%", height: 42, borderRadius: 11, border: `1px solid ${T.accentB}`, background: T.accentS, color: T.accent, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}><Copy size={14} /> {credentialCopied ? "Copiado" : "Copiar usuario y contraseña"}</button>
+          </div>
+        </>,
+        document.body
+      )}
 
       {/* ── Delete confirmation ── */}
       {deleteConfirm !== null && createPortal(
