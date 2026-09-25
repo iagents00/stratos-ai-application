@@ -61,6 +61,7 @@ columna, estos son los archivos que hay que revisar.
 | `leads` | 3 | `app/views/Caja.jsx` · `app/views/FinanzasAdmin.jsx` · `app/views/WhatsApp.jsx` |
 | `expediente_items` | 2 | `app/views/CRM/LeadChatHistory.jsx` · `app/views/CRM/LeadNotesTimeline.jsx` |
 | `mkt_tasks` | 2 | `app/views/Marketing.jsx` · `app/views/PlanSemanal.jsx` |
+| `organizations` | 2 | `contexts/TenantConfigGate.jsx` · `hooks/useRailsConfig.js` |
 | `proactive_reminders` | 2 | `lib/llamadas.js` · `lib/recordatorios-locales.js` |
 | `team_actions` | 2 | `app/App.jsx` · `app/views/ProductividadTab.jsx` |
 | `catalogo_proyectos` | 1 | `app/views/ERP.jsx` |
@@ -74,7 +75,6 @@ columna, estos son los archivos que hay que revisar.
 | `mkt_pipeline_items` | 1 | `app/views/Marketing.jsx` |
 | `mkt_projects` | 1 | `app/views/Marketing.jsx` |
 | `mkt_requests` | 1 | `app/views/Marketing.jsx` |
-| `organizations` | 1 | `hooks/useRailsConfig.js` |
 | `scheduled_calls` | 1 | `hooks/useScheduledCalls.js` |
 | `voice_call_logs` | 1 | `app/views/CRM/LeadVoiceCalls.jsx` |
 | `whatsapp_messages` | 1 | `lib/whatsapp-chat.js` |
@@ -161,16 +161,16 @@ casa; por eso mismo son los que más cuidado piden.
 
 | Archivo | Archivos que lo importan |
 |---|---|
-| `design-system/tokens.js` | **76** |
-| `lib/supabase.js` | **44** |
-| `hooks/useAuth.js` | **36** |
+| `design-system/tokens.js` | **77** |
+| `lib/supabase.js` | **45** |
+| `hooks/useAuth.js` | **37** |
 | `hooks/useViewport.js` | **31** |
 | `app/SharedComponents.jsx` | **21** |
-| `hooks/useClient.js` | **18** |
+| `hooks/useClient.js` | **20** |
 | `lib/native.js` | **18** |
+| `lib/whatsapp-admin.js` | **6** |
 | `app/views/CRM/zoom-metrics.js` | **6** |
 | `app/components/Logo.jsx` | **5** |
-| `lib/whatsapp-admin.js` | **5** |
 | `app/views/CRM/date-range.js` | **5** |
 | `lib/utils.js` | **4** |
 | `lib/offline-mode.js` | **4** |
