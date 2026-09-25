@@ -2,6 +2,7 @@
  * contexts/ClientOrgGuard.jsx
  * ─────────────────────────────────────────────────────────────────────────────
  * Watcher que redirige al usuario al cliente correcto según su organización.
+ * Mientras redirige en web, no monta la interfaz del tenant equivocado.
  *
  * Reglas:
  *   - Si user.organizationId mapea a un clientId distinto del de la URL actual,
@@ -27,15 +28,19 @@ import { useClient } from "../hooks/useClient";
 import { resolveRedirectForUser, getClientIdByOrgId } from "../clients";
 import { isNativeApp } from "../lib/native";
 
-export function ClientOrgGuard() {
+export function ClientOrgGuard({ enabled = true, children = null }) {
   const { user } = useAuth();
   const { clientId, setClientById } = useClient();
   // Evita redirects múltiples si el componente re-renderea durante la
   // navegación (replace() es asíncrono en la práctica).
   const redirectedRef = useRef(false);
+  // Solo un usuario web online con organización comprobable bloquea el render.
+  const redirectUrl = enabled && !isNativeApp() && user?.organizationId && !user?._offline
+    ? resolveRedirectForUser(user, clientId, window.location)
+    : null;
 
   useEffect(() => {
-    if (redirectedRef.current) return;
+    if (!enabled || redirectedRef.current) return;
     if (!user?.organizationId) return;
 
     // El modo offline no tiene una organización verificable. La cuenta demo
@@ -56,7 +61,6 @@ export function ClientOrgGuard() {
       return;
     }
 
-    const redirectUrl = resolveRedirectForUser(user, clientId, window.location);
     if (redirectUrl) {
       redirectedRef.current = true;
       // Log informativo solo en dev — en prod no inflamos consola del usuario.
@@ -68,7 +72,7 @@ export function ClientOrgGuard() {
       }
       window.location.replace(redirectUrl);
     }
-  }, [user, clientId, setClientById]);
+  }, [enabled, user, clientId, setClientById, redirectUrl]);
 
-  return null;
+  return redirectUrl ? null : children;
 }
