@@ -41,8 +41,7 @@ begin
 end;
 $$;
 
-drop trigger if exists zz_guard_managed_company_setup on public.organizations;
-create trigger zz_guard_managed_company_setup
+create or replace trigger zz_guard_managed_company_setup
 before update on public.organizations for each row
 execute function public.fn_guard_managed_company_setup();
 
@@ -53,7 +52,48 @@ declare
   v_org public.organizations%rowtype;
   v_active integer;
   v_new_slot boolean;
+  v_actor_role text;
+  v_actor_active boolean;
+  v_actor_organization_id uuid;
+  v_changes_access boolean;
 begin
+  if tg_op = 'UPDATE' and auth.role() = 'authenticated' then
+    -- La policy profiles_update_own solo exige id = auth.uid(). Nunca debe
+    -- servir para cambiar de empresa, incluso hacia un tenant historico.
+    if new.organization_id is distinct from old.organization_id then
+      raise exception 'No puedes cambiar de empresa desde tu perfil.' using errcode = '42501';
+    end if;
+    -- Estas banderas no se editan desde AdminPanel. Solo el operador de
+    -- plataforma (service_role) puede concederlas, incluso en Duke.
+    -- view_all_leads existe en producción pero su DDL histórico no está en
+    -- este repositorio: JSONB permite cubrirlo sin exigir esa columna a 247.
+    if (to_jsonb(new)->'view_all_leads') is distinct from (to_jsonb(old)->'view_all_leads')
+       or new.crm_only is distinct from old.crm_only
+       or new.is_marketing_admin is distinct from old.is_marketing_admin
+       or new.area is distinct from old.area then
+      raise exception 'Estos permisos requieren administración de Stratos.' using errcode = '42501';
+    end if;
+    v_changes_access := new.role is distinct from old.role
+      or new.active is distinct from old.active;
+    if v_changes_access then
+      if new.id = auth.uid() then
+        raise exception 'No puedes cambiar tu propio rol o estado.' using errcode = '42501';
+      end if;
+      -- RLS deja editar a ceo/director en algunas políticas históricas.
+      -- Consultamos al actor real para exigir admin activo de la misma org.
+      select role, active, organization_id
+        into v_actor_role, v_actor_active, v_actor_organization_id
+        from public.profiles where id = auth.uid();
+      if v_actor_active is distinct from true
+         or v_actor_organization_id is distinct from old.organization_id
+         or v_actor_role not in ('admin', 'super_admin')
+         or (v_actor_role = 'admin' and old.role in ('admin', 'super_admin'))
+         or (v_actor_role = 'admin' and new.role in ('admin', 'super_admin')) then
+        raise exception 'No tienes permiso para gestionar este usuario.' using errcode = '42501';
+      end if;
+    end if;
+  end if;
+
   if new.organization_id is null then return new; end if;
   if tg_op = 'INSERT' then
     v_new_slot := new.active is true;
@@ -75,13 +115,14 @@ begin
   end if;
 
   if auth.role() = 'authenticated' and tg_op = 'UPDATE' then
-    if v_org.meta_config #>> '{features,teamAdmin}' = 'false'
-       and (new.role is distinct from old.role or new.active is distinct from old.active) then
-      raise exception 'La gestión de usuarios está desactivada para esta empresa.' using errcode = '42501';
-    end if;
-    if new.role is distinct from old.role
-       and new.role not in ('admin', 'director', 'asesor') then
-      raise exception 'Este rol requiere administración de Stratos.' using errcode = '42501';
+    if v_changes_access then
+      if v_org.meta_config #>> '{features,teamAdmin}' = 'false' then
+        raise exception 'La gestión de usuarios está desactivada para esta empresa.' using errcode = '42501';
+      end if;
+      if new.role not in ('admin', 'director', 'asesor')
+         or (v_actor_role = 'admin' and new.role = 'admin') then
+        raise exception 'Este rol requiere administración de Stratos.' using errcode = '42501';
+      end if;
     end if;
   end if;
 
@@ -96,7 +137,6 @@ begin
 end;
 $$;
 
-drop trigger if exists zz_guard_managed_company_users on public.profiles;
-create trigger zz_guard_managed_company_users
+create or replace trigger zz_guard_managed_company_users
 before insert or update on public.profiles for each row
 execute function public.fn_guard_managed_company_users();
