@@ -70,6 +70,12 @@ export const updatePlatformPartnerQuota = (userId, companyLimit) => call("update
 export const saveCompanySetup = (organizationId, updatedAt, seats, features) => call("save_company_setup", {
   organization_id: organizationId, updated_at: updatedAt, seats, features,
 });
+export const loadCompanyCajaAccess = (organizationId) => call("get_company_caja_access", {
+  organization_id: organizationId,
+});
+export const saveCompanyCajaAccess = (organizationId, updatedAt, enabled, permissions) => call("save_company_caja_access", {
+  organization_id: organizationId, updated_at: updatedAt, enabled, permissions,
+});
 export const loadOrganizationPipeline = (organizationId) => call("get_pipeline", { organization_id: organizationId });
 export const saveOrganizationPipeline = (organizationId, pipeline) => call("save_pipeline", { organization_id: organizationId, pipeline });
 export const loadOrganizationCatalog = (organizationId) => call("get_catalog", { organization_id: organizationId });

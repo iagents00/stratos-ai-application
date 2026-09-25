@@ -855,6 +855,51 @@ Deno.serve(async (req) => {
       return respond({ ok: true, organization: saved, active_users: activeUsers ?? 0, audit_saved: !audit.error }, 200, origin);
     }
 
+    if (action === "get_company_caja_access") {
+      if (!isRootAdmin) return respond({ ok: false, error: "Solo Stratos puede consultar esta matriz." }, 403, origin);
+      const organizationId = String(body.organization_id ?? "");
+      if (!/^[0-9a-f-]{36}$/i.test(organizationId)) return respond({ ok: false, error: "Empresa inválida." }, 400, origin);
+      const { data: company, error: companyError } = await admin.from("organizations")
+        .select("id,meta_config,updated_at").eq("id", organizationId).maybeSingle();
+      if (companyError) throw companyError;
+      if (!company || company.meta_config?.onboarding?.createdFrom !== "whatsapp_admin"
+          || company.meta_config?.platform?.kind === "partner") {
+        return respond({ ok: false, error: "Esta empresa conserva su configuración personalizada." }, 403, origin);
+      }
+      const [entitlement, permissions] = await Promise.all([
+        admin.from("company_module_entitlements").select("enabled,changed_at")
+          .eq("organization_id", organizationId).eq("module_key", "caja").maybeSingle(),
+        admin.from("company_module_permissions")
+          .select("principal_type,principal_id,capability,decision,changed_at")
+          .eq("organization_id", organizationId).eq("module_key", "caja")
+          .order("principal_type").order("principal_id").order("capability"),
+      ]);
+      if (entitlement.error || permissions.error) throw entitlement.error || permissions.error;
+      return respond({ ok: true, enabled: entitlement.data?.enabled === true,
+        permissions: permissions.data || [], updated_at: company.updated_at }, 200, origin);
+    }
+
+    if (action === "save_company_caja_access") {
+      if (!isRootAdmin) return respond({ ok: false, error: "Solo Stratos puede cambiar permisos." }, 403, origin);
+      const organizationId = String(body.organization_id ?? "");
+      const updatedAt = String(body.updated_at ?? "");
+      const permissions = body.permissions;
+      if (!/^[0-9a-f-]{36}$/i.test(organizationId) || !Number.isFinite(Date.parse(updatedAt))
+          || typeof body.enabled !== "boolean" || !Array.isArray(permissions)
+          || permissions.length > 5000) {
+        return respond({ ok: false, error: "Empresa, versión o matriz de permisos inválida." }, 400, origin);
+      }
+      const { data: result, error: saveError } = await admin.rpc("fn_platform_save_caja_access", {
+        p_organization_id: organizationId, p_expected_updated_at: updatedAt,
+        p_enabled: body.enabled, p_permissions: permissions, p_actor_id: callerId,
+      });
+      if (saveError?.code === "40001") {
+        return respond({ ok: false, error: "La empresa cambió. Actualiza antes de guardar." }, 409, origin);
+      }
+      if (saveError) throw saveError;
+      return respond({ ok: true, ...result }, 200, origin);
+    }
+
     if (action === "create_organization") {
       const name = String(body.name ?? "").trim();
       const slug = slugify(String(body.slug || name));

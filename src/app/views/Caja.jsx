@@ -67,6 +67,12 @@ export default function Caja({ T }) {
   // Cuentas de cobro + Informe de avances son la maquinaria de facturación de
   // NSG hacia SU cliente — un tenant común no las necesita y solo lo confunden.
   const conCobros = clientConfig?.features?.cajaCobro === true;
+  const cajaPolicy = clientConfig?.id === "tenant" ? clientConfig?.features?.cajaPolicy : null;
+  const canCreate = !cajaPolicy || cajaPolicy.create === true;
+  const canSeePayroll = !cajaPolicy || cajaPolicy.read_all === true;
+  const canEditMovement = row => !cajaPolicy || cajaPolicy.update_all === true
+    || (cajaPolicy.update_own === true && (row.persona_id === user?.id
+      || (row.persona_id == null && row.created_by === user?.id)));
 
   // ── Paleta theme-aware (tomada del `T` de App.jsx, igual que el resto del CRM).
   // isLight por LUMINANCIA del bg (robusto): antes se comparaban hexes fijos y
@@ -303,7 +309,7 @@ export default function Caja({ T }) {
             <button onClick={load} title="Actualizar" style={{ background: glass, border: `1px solid ${bd}`, borderRadius: 12, padding: "12px 14px", cursor: "pointer", color: txt2, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <RefreshCw size={16} style={loading ? { animation: "spin 1s linear infinite" } : undefined} />
             </button>
-            <button onClick={() => setShowForm(s => !s)} style={{
+            {canCreate && <button onClick={() => setShowForm(s => !s)} style={{
               background: showForm ? "transparent" : `${accent}1A`, border: `1px solid ${accent}55`,
               borderRadius: 12, padding: "12px 18px", cursor: "pointer", color: accent,
               fontSize: 13.5, fontWeight: 600, fontFamily: font,
@@ -311,7 +317,7 @@ export default function Caja({ T }) {
               flex: isMobile ? 1 : "none",
             }}>
               {showForm ? <X size={15} /> : <Plus size={15} />} {showForm ? "Cerrar" : "Nuevo movimiento"}
-            </button>
+            </button>}
           </div>
         )}
       </div>
@@ -326,7 +332,7 @@ export default function Caja({ T }) {
                     alignSelf: isMobile ? "stretch" : "flex-start", width: isMobile ? "100%" : "auto",
                     flexWrap: isMobile ? "wrap" : "nowrap" }}>
         {[{ id: "movimientos", label: isMobile ? "Movim." : "Movimientos" },
-          { id: "nomina", label: "Nómina" },
+          ...(canSeePayroll ? [{ id: "nomina", label: "Nómina" }] : []),
           ...(conCobros ? [
             { id: "cobros", label: isMobile ? "Cobros" : "Cuentas de cobro" },
             { id: "informe", label: "Informe" },
@@ -360,7 +366,7 @@ export default function Caja({ T }) {
       </div>
 
       {/* Form de registro */}
-      {showForm && (
+      {showForm && canCreate && (
         <form onSubmit={submit} style={{ ...card, padding: 18, display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ display: "flex", gap: 8 }}>
             {[["egreso", "Egreso", NEG], ["ingreso", "Ingreso", POS]].map(([id, label, color]) => (
@@ -493,7 +499,7 @@ export default function Caja({ T }) {
                   }}>
                     <Paperclip size={11} /> Ver comprobante
                   </button>
-                ) : (
+                ) : canEditMovement(r) ? (
                   // Sin soporte: se puede adjuntar la captura del pago cuando sea
                   // (los movimientos viejos se cargaron sin comprobante).
                   <label style={{
@@ -516,7 +522,7 @@ export default function Caja({ T }) {
                       }}
                     />
                   </label>
-                )}
+                ) : null}
               </div>
               <div style={{ fontSize: 15.5, fontWeight: 500, fontFamily: fontDisp, color, whiteSpace: "nowrap" }}>
                 {tipo === "ingreso" ? "+" : "−"}{fmtMoney(r.amount, r.currency)}

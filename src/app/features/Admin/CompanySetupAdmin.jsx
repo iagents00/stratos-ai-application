@@ -3,6 +3,7 @@ import { Building2, RefreshCw, Save, ShieldCheck } from "lucide-react";
 import { font, fontDisp } from "../../../design-system/tokens";
 import { MANAGED_TENANT_FEATURES, managedTenantFeatures } from "../../../clients/tenant/managed-features";
 import { saveCompanySetup } from "../../../lib/whatsapp-admin";
+import CajaPermissionsAdmin from "./CajaPermissionsAdmin";
 
 const isManagedCompany = org => org?.meta_config?.onboarding?.createdFrom === "whatsapp_admin"
   && org?.meta_config?.platform?.kind !== "partner";
@@ -62,7 +63,7 @@ export default function CompanySetupAdmin({ T, data, refresh }) {
             {MANAGED_TENANT_FEATURES.map(item => <label key={item.key} style={{ display: "flex", gap: 10, alignItems: "center", padding: "10px 12px", border: `1px solid ${T.border}`, borderRadius: 10, cursor: "pointer", color: T.txt2, fontSize: 13 }}>
               <input type="checkbox" checked={draft.features[item.key]} onChange={e => setDraft(prev => ({ ...prev, features: { ...prev.features, [item.key]: e.target.checked } }))} />{item.label}
             </label>)}
-          </div><div style={{ color: T.txt3, fontSize: 11.5, lineHeight: 1.5, marginTop: 9 }}>WhatsApp, Caja y Copilot necesitan conexión o controles adicionales; aquí no se activan por accidente. Esta selección organiza la interfaz; los permisos sobre los datos siguen aplicándose por usuario y empresa.</div></div>
+          </div><div style={{ color: T.txt3, fontSize: 11.5, lineHeight: 1.5, marginTop: 9 }}>WhatsApp y Copilot requieren configuración propia. Caja se administra en la matriz contigua. Estos tres interruptores organizan la interfaz; sus datos siguen sujetos a los permisos actuales.</div></div>
           <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
             <button onClick={save} disabled={saving || Number(draft.seats) < activeUsers} style={{ ...input, display: "inline-flex", alignItems: "center", gap: 7, cursor: "pointer", color: T.accent, borderColor: T.accentB, opacity: saving ? .6 : 1 }}><Save size={14} />{saving ? "Guardando…" : "Guardar configuración"}</button>
             <button onClick={refresh} disabled={saving} style={{ ...input, display: "inline-flex", alignItems: "center", gap: 7, cursor: "pointer" }}><RefreshCw size={14} />Actualizar</button>
@@ -71,6 +72,8 @@ export default function CompanySetupAdmin({ T, data, refresh }) {
           {success && <div role="status" style={{ color: T.accent, fontSize: 12.5 }}>{success}</div>}
           <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 12, color: T.txt3, fontSize: 11.5, lineHeight: 1.5 }}><ShieldCheck size={14} style={{ marginRight: 6, verticalAlign: "middle" }} />Cada cambio conserva quién lo hizo, cuándo y qué cupo o módulo cambió. Otras organizaciones no reciben esta configuración.</div>
         </div>}
+        {selected && <CajaPermissionsAdmin key={selected.id} T={T} organization={selected}
+          users={data?.profiles || []} refresh={refresh} />}
       </div>}
   </div>;
 }

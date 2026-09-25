@@ -26,12 +26,21 @@ export function TenantConfigGate({ children }) {
   useEffect(() => {
     if (!needsManagedConfig || loaded) return;
     let active = true;
-    supabase.from("organizations").select("id,meta_config").eq("id", organizationId).maybeSingle()
-      .then(({ data, error: readError }) => {
+    Promise.all([
+      supabase.from("organizations").select("id,meta_config").eq("id", organizationId).maybeSingle(),
+      supabase.rpc("fn_my_company_module_access"),
+    ]).then(([{ data, error: readError }, access]) => {
         if (!active) return;
         if (readError || !data) { setError("No se pudo cargar la configuración de tu empresa."); return; }
         const isManaged = data.meta_config?.onboarding?.createdFrom === "whatsapp_admin";
-        setOrganizationFeatures(organizationId, isManaged ? managedTenantFeatures(data.meta_config?.features) : {}, isManaged);
+        const cajaPolicy = !access.error && access.data?.caja ? access.data.caja : null;
+        setOrganizationFeatures(organizationId, isManaged ? {
+          ...managedTenantFeatures(data.meta_config?.features),
+          // Si la lectura de permisos falla, Caja permanece cerrada en la UI.
+          // La RLS del servidor continúa siendo la autoridad.
+          caja: cajaPolicy?.enabled === true,
+          cajaPolicy,
+        } : {}, isManaged);
       })
       .catch(() => { if (active) setError("No se pudo cargar la configuración de tu empresa."); });
     return () => { active = false; };
