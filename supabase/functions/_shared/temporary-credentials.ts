@@ -31,9 +31,9 @@ export async function encryptTemporaryPassword(password: string, secret: string)
 export async function decryptTemporaryPassword(ciphertext: string, iv: string, secret: string) {
   const key = await encryptionKey(secret);
   const plaintext = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: fromBase64(iv) },
+    { name: "AES-GCM", iv: new Uint8Array(fromBase64(iv)) },
     key,
-    fromBase64(ciphertext),
+    new Uint8Array(fromBase64(ciphertext)),
   );
   return decoder.decode(plaintext);
 }

@@ -76,15 +76,29 @@ Deno.serve(async (req) => {
 
   const { data: perfil } = await admin
     .from("profiles")
-    .select("id, role, organization_id, name")
+    .select("id, role, organization_id, name, active")
     .eq("id", quien.user.id)
     .maybeSingle();
 
-  if (!perfil?.organization_id) {
+  if (!perfil?.organization_id || perfil.active === false) {
     return json({ ok: false, error: "No encontré tu perfil." }, 403, origin);
   }
   if (!ROLES_QUE_PUEDEN_CREAR.has(String(perfil.role))) {
     return json({ ok: false, error: "Solo un administrador puede dar de alta gente." }, 403, origin);
+  }
+
+  // El modelo nuevo de licencias y módulos se aplica únicamente a empresas
+  // creadas desde la consola. No cambia las reglas de Duke ni de tenants
+  // históricos con configuración propia.
+  const { data: empresa, error: eEmpresa } = await admin.from("organizations")
+    .select("id,seats,active,meta_config").eq("id", perfil.organization_id).maybeSingle();
+  if (eEmpresa || !empresa || empresa.active === false) {
+    return json({ ok: false, error: "La empresa no está disponible." }, 403, origin);
+  }
+  const altaNueva = empresa.meta_config?.onboarding?.createdFrom === "whatsapp_admin"
+    && empresa.meta_config?.platform?.kind !== "partner";
+  if (altaNueva && empresa.meta_config?.features?.teamAdmin === false) {
+    return json({ ok: false, error: "La gestión de usuarios está desactivada para esta empresa." }, 403, origin);
   }
 
   // 2) Lo que sí viene del navegador: nombre, email y rol. Nada más.
@@ -117,6 +131,18 @@ Deno.serve(async (req) => {
   if (!nombre) return json({ ok: false, error: "Ponele el nombre." }, 400, origin);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ ok: false, error: "Ese correo no parece válido." }, 400, origin);
   if (!ROLES_VALIDOS.has(rol)) return json({ ok: false, error: "Ese rol no existe." }, 400, origin);
+  if (altaNueva && !["admin", "director", "asesor"].includes(rol)) {
+    return json({ ok: false, error: "Ese rol requiere administración de Stratos." }, 403, origin);
+  }
+  if (altaNueva) {
+    const { count, error: eCupo } = await admin.from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", perfil.organization_id).eq("active", true);
+    if (eCupo) return json({ ok: false, error: "No se pudo verificar el cupo de usuarios." }, 503, origin);
+    if ((count ?? 0) >= Number(empresa.seats || 0)) {
+      return json({ ok: false, error: `Esta empresa ya utiliza sus ${empresa.seats} licencias.` }, 409, origin);
+    }
+  }
 
   // 3) Crear la cuenta con una clave temporal.
   const clave = claveTemporal();

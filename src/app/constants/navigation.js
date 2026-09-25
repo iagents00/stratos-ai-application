@@ -230,6 +230,13 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   // el problema nunca fue el dato, era esta regla aplicándose donde no va.
   if (user.isMarketingAdmin === true && isStratosOrg(user.organizationId)
       && !MARKETING_ADMIN_MODULES.has(moduleId)) return false;
+  // Empresas nuevas: el servidor devuelve los permisos efectivos del usuario.
+  // Esta condición solo organiza el menú; RLS y RPC comprueban los datos.
+  if (moduleId === "caja" && clientConfig?.id === "tenant") {
+    const access = clientConfig?.features?.cajaPolicy;
+    return access?.enabled === true && (access.read_all === true
+      || access.read_own === true || access.create === true);
+  }
   // (1c) COLABORADOR de área: su espacio es cerrado y se resuelve acá completo,
   // sin caer al permiso por rol de más abajo (MODULE_ROLES no lo lista en casi
   // nada a propósito: lo que no está en AREA_MEMBER_MODULES, no lo ve).

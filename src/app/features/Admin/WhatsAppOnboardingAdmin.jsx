@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { font, fontDisp } from "../../../design-system/tokens";
 import { useClient } from "../../../hooks/useClient";
+import { MANAGED_TENANT_FEATURES, managedTenantFeatures } from "../../../clients/tenant/managed-features";
 import {
   approveWhatsAppTests, completeWhatsAppSignup, createWhatsAppOnboardingRun,
   createWhatsAppOrganization, createWhatsAppTenantUser, loadWhatsAppAdmin,
@@ -23,7 +24,7 @@ const STATUS = {
   disconnected: ["Desconectado", "#94A3B8"],
 };
 
-const EMPTY_ORG = { name: "", slug: "", seats: 30 };
+const EMPTY_ORG = { name: "", slug: "", seats: 30, features: managedTenantFeatures() };
 const EMPTY_USER = { organization_id: "", name: "", email: "", role: "admin" };
 const EMPTY_CHANNEL = { organization_id: "", advisor_id: "", owner_type: "company", owner_name: "", phone_e164: "" };
 const INFOBIP_SENDERS_URL = "https://portal.infobip.com/channels-and-numbers/channels/whatsapp/senders";
@@ -93,7 +94,7 @@ export default function WhatsAppOnboardingAdmin({ T, onBack }) {
   };
 
   const createOrg = () => runAction("org", async () => {
-    const result = await createWhatsAppOrganization({ ...orgForm, slug: orgForm.slug || slugify(orgForm.name) });
+    const result = await createWhatsAppOrganization({ ...orgForm, features: data?.access?.root ? orgForm.features : undefined, slug: orgForm.slug || slugify(orgForm.name) });
     setOrgForm(EMPTY_ORG);
     setUserForm(p => ({ ...p, organization_id: result.organization.id }));
     setChannelForm(p => ({ ...p, organization_id: result.organization.id }));
@@ -186,6 +187,7 @@ export default function WhatsAppOnboardingAdmin({ T, onBack }) {
           <div style={{ display: "flex", gap: 9, alignItems: "center", marginBottom: 14 }}><Building2 size={17} color={T.accent} /><strong>1. Crear empresa</strong></div>
           <label style={label}>Nombre de la empresa</label><input style={input} value={orgForm.name} onChange={e => { const name = e.target.value; setOrgForm(p => ({ ...p, name, slug: slugify(name) })); }} placeholder="Inmobiliaria Horizonte" />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 130px", gap: 9, marginTop: 10 }}><div><label style={label}>Identificador automático</label><input style={{ ...input, opacity: .72 }} value={orgForm.slug} readOnly placeholder="se genera con el nombre" /></div><div><label style={label}>Usuarios incluidos</label><input style={input} type="number" min="1" max="1000" value={orgForm.seats} onChange={e => setOrgForm(p => ({ ...p, seats: Number(e.target.value) }))} /></div></div>
+          {data?.access?.root && <div style={{ marginTop: 12 }}><div style={label}>Módulos iniciales</div>{MANAGED_TENANT_FEATURES.map(item => <label key={item.key} style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 7, fontSize: 12.5, color: T.txt2 }}><input type="checkbox" checked={orgForm.features[item.key]} onChange={e => setOrgForm(p => ({ ...p, features: { ...p.features, [item.key]: e.target.checked } }))} />{item.label}</label>)}<div style={{ color: T.txt3, fontSize: 11, marginTop: 8 }}>CRM incluido. WhatsApp, Caja y Copilot se preparan aparte.</div></div>}
           <div style={{ color: T.txt3, fontSize: 11, lineHeight: 1.5, marginTop: 8 }}>No necesitas crear una URL. El equipo entrará por <strong style={{ color: T.txt2 }}>{TENANT_LOGIN_PATH}</strong>; al iniciar sesión, Stratos abre únicamente su empresa. Cada usuario activo consume una licencia, incluido el administrador.</div>
           <button onClick={createOrg} disabled={busy === "org" || (!data?.access?.root && data?.access?.companyLimit != null && data.access.companiesUsed >= data.access.companyLimit)} style={{ ...button, width: "100%", marginTop: 13, opacity: (!data?.access?.root && data?.access?.companyLimit != null && data.access.companiesUsed >= data.access.companyLimit) ? .5 : 1 }}>{busy === "org" ? <Loader2 size={14} /> : <Plus size={14} />} Crear empresa</button>
         </section>
