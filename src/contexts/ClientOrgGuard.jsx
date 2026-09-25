@@ -1,9 +1,26 @@
 /**
  * contexts/ClientOrgGuard.jsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Redirige al usuario al cliente de su organización. Como envuelve la app,
- * impide montarla con la configuración de otro tenant durante la navegación.
- * Las rutas públicas quedan fuera del guard mediante enabled=false.
+ * Watcher que redirige al usuario al cliente correcto según su organización.
+ * Mientras redirige en web, no monta la interfaz del tenant equivocado.
+ *
+ * Reglas:
+ *   - Si user.organizationId mapea a un clientId distinto del de la URL actual,
+ *     redirige al path correcto preservando query y hash.
+ *   - Si la org del user no está en el registry → carga la entrada neutral
+ *     /tenant, evitando que una empresa nueva herede la marca de Duke.
+ *   - Si no hay user → no hace nada (el LoginScreen se encarga).
+ *
+ * Por qué un componente separado y no lógica en AuthContext:
+ *   El AuthContext maneja muchos edge cases (hidratación, demo, F5, refresh).
+ *   Meter el redirect ahí adentro lo vuelve frágil. Como componente aparte
+ *   tiene una sola responsabilidad y es fácil de remover si en el futuro
+ *   decidimos otra estrategia (modal de "¿querés cambiar de cliente?", etc.).
+ *
+ * Por qué replace() y no href:
+ *   replace() no agrega entry al history → el botón "atrás" del navegador no
+ *   trae al usuario de vuelta al cliente equivocado.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useEffect, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
@@ -14,40 +31,48 @@ import { isNativeApp } from "../lib/native";
 export function ClientOrgGuard({ enabled = true, children = null }) {
   const { user } = useAuth();
   const { clientId, setClientById } = useClient();
-  // Evita redirects múltiples si el componente re-renderea antes de navegar.
+  // Evita redirects múltiples si el componente re-renderea durante la
+  // navegación (replace() es asíncrono en la práctica).
   const redirectedRef = useRef(false);
-  const native = isNativeApp();
-  // El perfil offline viene de un respaldo local: solo usamos su org para
-  // escoger ruta cuando ya está registrada. Una org desconocida conserva
-  // el comportamiento offline anterior hasta volver a autenticarla.
-  const canRoute = !!user?.organizationId &&
-    (!user?._offline || !!getClientIdByOrgId(user.organizationId));
-  const redirectUrl = enabled && !native && canRoute
+  // Solo un usuario web online con organización comprobable bloquea el render.
+  const redirectUrl = enabled && !isNativeApp() && user?.organizationId && !user?._offline
     ? resolveRedirectForUser(user, clientId, window.location)
     : null;
 
   useEffect(() => {
-    if (!enabled || redirectedRef.current || !canRoute) return;
+    if (!enabled || redirectedRef.current) return;
+    if (!user?.organizationId) return;
 
-    // La app nativa vive en capacitor://localhost: no navega a /nsg.
-    // Conservamos el fallback neutral /tenant para orgs desconocidas online.
-    if (native) {
+    // El modo offline no tiene una organización verificable. La cuenta demo
+    // clásica tampoco trae organizationId y ya salió por el guard de arriba.
+    // La cuenta de App Review SÍ trae la org ficticia de Inmobiliaria Aurora:
+    // debe recorrer el mismo mapeo que una cuenta real para que Apple nunca
+    // caiga en la configuración por defecto de un cliente productivo.
+    if (user?._offline) return;
+
+    // APP NATIVA: es UN binario para todos los clientes, servido desde
+    // capacitor://localhost. No hay path que cambiar, y un location.replace()
+    // a capacitor://localhost/grupo28 daría 404 (no hay servidor que rutee):
+    // el usuario quedaría con pantalla en blanco. Acá el tenant se aplica en
+    // memoria y el árbol re-renderea con la config correcta.
+    if (isNativeApp()) {
       const destino = getClientIdByOrgId(user.organizationId) || "tenant";
-      if (destino !== clientId) setClientById(destino);
+      if (destino && destino !== clientId) setClientById(destino);
       return;
     }
 
-    if (!redirectUrl) return;
-    redirectedRef.current = true;
-    if (import.meta.env.DEV) {
-      console.info(
-        `[Stratos] Redirect: org ${user.organizationId} pertenece a otro cliente. ` +
-        `Cambiando ${window.location.pathname} → ${new URL(redirectUrl).pathname}`
-      );
+    if (redirectUrl) {
+      redirectedRef.current = true;
+      // Log informativo solo en dev — en prod no inflamos consola del usuario.
+      if (import.meta.env.DEV) {
+        console.info(
+          `[Stratos] Redirect: org ${user.organizationId} pertenece a otro cliente. ` +
+          `Cambiando ${window.location.pathname} → ${new URL(redirectUrl).pathname}`
+        );
+      }
+      window.location.replace(redirectUrl);
     }
-    window.location.replace(redirectUrl);
-  }, [enabled, user, clientId, setClientById, native, canRoute, redirectUrl]);
+  }, [enabled, user, clientId, setClientById, redirectUrl]);
 
-  // No montar App, UpdatePill ni sus hooks con la config de otro tenant.
   return redirectUrl ? null : children;
 }

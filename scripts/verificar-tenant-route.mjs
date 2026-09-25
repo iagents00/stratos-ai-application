@@ -20,7 +20,8 @@ try {
     { name: "NSG en raíz", path: "/", org: nsgOrg, redirect: `${origin}/nsg`, visible: false },
     { name: "Duke en raíz", path: "/", org: dukeOrg, redirect: null, visible: true },
     { name: "NSG en /nsg", path: "/nsg", org: nsgOrg, redirect: null, visible: true },
-    { name: "NSG offline conocido en raíz", path: "/", org: nsgOrg, offline: true, redirect: `${origin}/nsg`, visible: false },
+    { name: "NSG offline conserva interfaz actual", path: "/", org: nsgOrg, offline: true, redirect: `${origin}/nsg`, visible: true },
+    { name: "App nativa conserva enrutamiento propio", path: "/", org: nsgOrg, native: true, redirect: `${origin}/nsg`, visible: true },
     { name: "Org nueva en raíz", path: "/", org: "99999999-9999-9999-9999-999999999999", redirect: `${origin}/tenant`, visible: false },
     { name: "Offline org nueva sin ruta verificable", path: "/", org: "99999999-9999-9999-9999-999999999999", offline: true, redirect: `${origin}/tenant`, visible: true },
     { name: "Ruta pública", path: "/politica-de-privacidad", org: nsgOrg, enabled: false, redirect: `${origin}/nsg/politica-de-privacidad`, visible: true },
@@ -28,7 +29,7 @@ try {
 
   for (const test of cases) {
     const location = { origin, hostname: "app.stratoscapitalgroup.com", pathname: test.path, search: "", hash: "" };
-    globalThis.window = { location };
+    globalThis.window = { location, ...(test.native ? { Capacitor: { isNativePlatform: () => true } } : {}) };
     const clientId = matchClientFromLocation(location);
     const user = { id: "prueba", organizationId: test.org, ...(test.offline ? { _offline: true } : {}) };
     assert.equal(resolveRedirectForUser(user, clientId, location), test.redirect, `${test.name}: ruta`);
