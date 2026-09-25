@@ -1,0 +1,24 @@
+name: Vigilar versión de producción
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
+
+permissions:
+  contents: read
+  deployments: read
+
+jobs:
+  comprobar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Comparar dominio y último deployment Production exitoso
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/check-production-deployment.mjs
