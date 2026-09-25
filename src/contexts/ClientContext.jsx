@@ -34,16 +34,24 @@ export function ClientProvider({ config, children }) {
   // siempre arranca en capacitor://localhost — así que el tenant se aplica en
   // memoria después del login, a partir de user.organizationId.
   const [configNativa, setConfigNativa] = useState(null);
-  const activa = (isNativeApp() ? configNativa : null) || config;
+  const [organizationFeatures, setOrganizationFeaturesState] = useState(null);
+  const base = (isNativeApp() ? configNativa : null) || config;
+  const activa = useMemo(() => base?.id === "tenant" && organizationFeatures
+    ? { ...base, features: { ...base.features, ...organizationFeatures.features } }
+    : base, [base, organizationFeatures]);
 
   const setClientById = useCallback((clientId) => {
     if (!isNativeApp() || !clientId) return;   // en web manda la URL
     setConfigNativa(getClientConfig(clientId));
   }, []);
 
+  const setOrganizationFeatures = useCallback((organizationId, features, managed = false) => {
+    setOrganizationFeaturesState({ organizationId, features, managed });
+  }, []);
+
   const value = useMemo(
-    () => crearValorCliente(activa, setClientById),
-    [activa, setClientById],
+    () => crearValorCliente(activa, setClientById, setOrganizationFeatures, organizationFeatures?.organizationId || null, organizationFeatures?.managed || false),
+    [activa, setClientById, setOrganizationFeatures, organizationFeatures?.organizationId],
   );
 
   return (

@@ -34,6 +34,7 @@ const server = await createServer({
 
 const nav = await server.ssrLoadModule("/src/app/constants/navigation.js");
 const clients = await server.ssrLoadModule("/src/clients/index.js");
+const managed = await server.ssrLoadModule("/src/clients/tenant/managed-features.js");
 
 // Glifos: los mapas no se exportan → se leen del archivo (solo las CLAVES).
 const iconsSrc = readFileSync(join(root, "src/app/icons/ios-icons.jsx"), "utf8");
@@ -105,6 +106,29 @@ for (const clientId of tenants) {
     }
 
     console.log(`  ${role}: inicial=${inicial || "∅"} · ve ${visibles.length} módulos: ${visibles.map((i) => i.id).join(", ")}`);
+  }
+}
+
+// La empresa neutral es la única que toma módulos desde la base. Las 8
+// combinaciones administrables deben conservar CRM y respetar cada interruptor.
+if (!soloTenant || soloTenant === "tenant") {
+  const base = clients.getClientConfig("tenant");
+  const ignored = managed.managedTenantFeatures({ crm: false, whatsappModule: true, caja: true });
+  if ("crm" in ignored || "whatsappModule" in ignored || "caja" in ignored) {
+    fail("tenant/config: una selección no administrable se filtró a la configuración");
+  }
+  const user = { role: "admin", organizationId: "org-nueva", crmOnly: false, isMarketingAdmin: false, isDemo: false };
+  for (let mask = 0; mask < 8; mask++) {
+    const features = managed.managedTenantFeatures({
+      teamAdmin: Boolean(mask & 1), mktModule: Boolean(mask & 2), comandoDirectivo: Boolean(mask & 4),
+    });
+    const cfg = { ...base, features: { ...base.features, ...features } };
+    if (!nav.canAccessModule("c", user, cfg)) fail(`tenant/config ${mask}: CRM base inaccesible`);
+    for (const [key, moduleId] of [["teamAdmin", "admin"], ["mktModule", "mkt"], ["comandoDirectivo", "d"]]) {
+      if (nav.canAccessModule(moduleId, user, cfg) !== features[key]) {
+        fail(`tenant/config ${mask}: ${key} no respeta su selección`);
+      }
+    }
   }
 }
 

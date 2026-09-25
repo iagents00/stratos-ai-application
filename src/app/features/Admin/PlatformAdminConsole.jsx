@@ -13,6 +13,7 @@ import {
 import WhatsAppOnboardingAdmin from "./WhatsAppOnboardingAdmin";
 import PipelineConfiguratorAdmin from "./PipelineConfiguratorAdmin";
 import CatalogConfiguratorAdmin from "./CatalogConfiguratorAdmin";
+import CompanySetupAdmin from "./CompanySetupAdmin";
 
 const EMPTY_PARTNER = { name: "", admin_name: "", email: "", company_limit: 100 };
 
@@ -182,7 +183,7 @@ export default function PlatformAdminConsole({ initialData }) {
   const nav = useMemo(() => [
     ["home", "Resumen", LayoutDashboard], ["companies", "Empresas y WhatsApp", Building2],
     ["credentials", "Accesos temporales", KeyRound], ["pipelines", "Pipelines", Waypoints], ["catalogs", "Catálogos", FolderOpen],
-    ...(root ? [["partners", "Partners y cupos", Users], ["activity", "Actividad", Activity]] : []),
+    ...(root ? [["setup", "Módulos y licencias", ShieldCheck], ["partners", "Partners y cupos", Users], ["activity", "Actividad", Activity]] : []),
   ], [root]);
   const choose = id => { setSection(id); setMenuOpen(false); if (id === "credentials") refreshCredentials(); };
 
@@ -190,6 +191,7 @@ export default function PlatformAdminConsole({ initialData }) {
     : section === "credentials" ? <TemporaryAccessPanel T={T} credentials={temporaryCredentials} organizations={data?.organizations || []} partners={data?.partners || []} loading={credentialsLoading} error={credentialsError} />
     : section === "pipelines" ? <PipelineConfiguratorAdmin T={T} onBack={() => choose("home")} />
       : section === "catalogs" ? <CatalogConfiguratorAdmin T={T} onBack={() => choose("home")} />
+        : section === "setup" && root ? <CompanySetupAdmin T={T} data={data} refresh={refresh} />
         : section === "partners" && root ? <PartnersPanel T={T} data={data} refresh={refresh} />
           : section === "activity" && root ? <ActivityPanel T={T} events={data?.events || []} />
             : <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: 18 }}>

@@ -67,6 +67,9 @@ export const loadWhatsAppAdmin = () => call("bootstrap");
 export const loadTemporaryCredentials = () => call("list_temporary_credentials");
 export const createPlatformPartner = (payload) => call("create_partner", payload);
 export const updatePlatformPartnerQuota = (userId, companyLimit) => call("update_partner_quota", { user_id: userId, company_limit: companyLimit });
+export const saveCompanySetup = (organizationId, updatedAt, seats, features) => call("save_company_setup", {
+  organization_id: organizationId, updated_at: updatedAt, seats, features,
+});
 export const loadOrganizationPipeline = (organizationId) => call("get_pipeline", { organization_id: organizationId });
 export const saveOrganizationPipeline = (organizationId, pipeline) => call("save_pipeline", { organization_id: organizationId, pipeline });
 export const loadOrganizationCatalog = (organizationId) => call("get_catalog", { organization_id: organizationId });

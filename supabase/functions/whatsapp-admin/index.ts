@@ -14,6 +14,10 @@ const TEMP_CREDENTIALS_KEY = Deno.env.get("TEMP_CREDENTIALS_KEY") ?? "";
 
 const VALID_ROLES = new Set(["super_admin", "admin", "director", "ceo", "asesor", "marketing", "colaborador"]);
 const VALID_STATUSES = new Set(["draft", "waiting_customer", "meta_finished", "infobip_registering", "ready_to_test", "active", "failed", "disconnected"]);
+// Solo módulos cuyo acceso ya se resuelve para un tenant neutral en navigation.js.
+// WhatsApp, Caja y Copilot requieren alta técnica/controles propios; no se
+// habilitan con un interruptor administrativo genérico.
+const MANAGED_TENANT_FEATURES = ["teamAdmin", "mktModule", "comandoDirectivo"] as const;
 const MAX_CATALOG_FILE_BYTES = 15 * 1024 * 1024;
 const MAX_CATALOG_ROWS = 2500;
 const CATALOG_COLUMNS = [
@@ -306,6 +310,14 @@ Deno.serve(async (req) => {
   }
   if (platformAdminError) return respond({ ok: false, error: platformAdminError.message }, 500, origin);
   if (!platformAdmin) return respond({ ok: false, error: "Acceso restringido a administradores de plataforma." }, 403, origin);
+  const { data: callerProfile, error: callerProfileError } = await admin.from("profiles")
+    .select("id,active").eq("id", callerId).maybeSingle();
+  if (callerProfileError) return respond({ ok: false, error: "No se pudo verificar el estado del operador." }, 503, origin);
+  // Algunas cuentas raíz antiguas no tienen perfil CRM; platform_admins sigue
+  // siendo su autorización. Una baja explícita de perfil sí revoca acceso.
+  if (callerProfile?.active === false) {
+    return respond({ ok: false, error: "El acceso del operador está desactivado." }, 403, origin);
+  }
 
   // Un operador raíz (scope NULL) ve toda la plataforma. Un distribuidor ve
   // únicamente su organización y las empresas que creó debajo de ella. La
@@ -327,10 +339,10 @@ Deno.serve(async (req) => {
   const visibleOrganizations = async () => {
     let query = scopeSchemaReady
       ? admin.from("organizations")
-        .select("id,name,slug,plan,seats,active,subscription_status,meta_config,parent_organization_id,created_at")
+        .select("id,name,slug,plan,seats,active,subscription_status,meta_config,parent_organization_id,created_at,updated_at")
         .order("created_at", { ascending: false })
       : admin.from("organizations")
-        .select("id,name,slug,plan,seats,active,subscription_status,meta_config,created_at")
+        .select("id,name,slug,plan,seats,active,subscription_status,meta_config,created_at,updated_at")
         .order("created_at", { ascending: false });
     if (scopeOrganizationId) {
       // La organización del partner es el contenedor administrativo. Sus
@@ -771,12 +783,98 @@ Deno.serve(async (req) => {
       return respond({ ok: true, company_limit: nextLimit, companies_used: count ?? 0, notification_status: notificationStatus }, 200, origin);
     }
 
+    if (action === "save_company_setup") {
+      if (!isRootAdmin) return respond({ ok: false, error: "Solo Stratos puede cambiar módulos y licencias." }, 403, origin);
+      const organizationId = String(body.organization_id ?? "");
+      const expectedUpdatedAt = String(body.updated_at ?? "");
+      const requestedSeats = Number(body.seats);
+      const inputFeatures = body.features;
+      if (!organizationId || !expectedUpdatedAt || !Number.isInteger(requestedSeats) || requestedSeats < 1 || requestedSeats > 1000) {
+        return respond({ ok: false, error: "Empresa, versión y licencias entre 1 y 1.000 son obligatorias." }, 400, origin);
+      }
+      if (!inputFeatures || typeof inputFeatures !== "object" || Array.isArray(inputFeatures)) {
+        return respond({ ok: false, error: "Selecciona los módulos de la empresa." }, 400, origin);
+      }
+      const features = inputFeatures as Record<string, unknown>;
+      if (Object.keys(features).some(key => !MANAGED_TENANT_FEATURES.includes(key as typeof MANAGED_TENANT_FEATURES[number]))
+          || MANAGED_TENANT_FEATURES.some(key => typeof features[key] !== "boolean")) {
+        return respond({ ok: false, error: "La selección contiene un módulo no administrable." }, 400, origin);
+      }
+      const { data: company, error: companyError } = await admin.from("organizations")
+        .select("id,name,seats,meta_config,updated_at,parent_organization_id")
+        .eq("id", organizationId).maybeSingle();
+      if (companyError) throw companyError;
+      const meta = company?.meta_config && typeof company.meta_config === "object" && !Array.isArray(company.meta_config)
+        ? company.meta_config as Record<string, unknown> : null;
+      const onboarding = meta?.onboarding && typeof meta.onboarding === "object"
+        ? meta.onboarding as Record<string, unknown> : null;
+      const platform = meta?.platform && typeof meta.platform === "object"
+        ? meta.platform as Record<string, unknown> : null;
+      // Las configuraciones históricas de Duke y demás clientes viven en código.
+      // Nunca migrarlas implícitamente desde esta pantalla.
+      if (!company || onboarding?.createdFrom !== "whatsapp_admin" || platform?.kind === "partner") {
+        return respond({ ok: false, error: "Esta empresa usa configuración personalizada. No se modifica desde aquí." }, 403, origin);
+      }
+      if (company.updated_at !== expectedUpdatedAt) {
+        return respond({ ok: false, error: "La empresa cambió desde que abriste la pantalla. Actualiza antes de guardar." }, 409, origin);
+      }
+      const { count: activeUsers, error: countError } = await admin.from("profiles")
+        .select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("active", true);
+      if (countError) throw countError;
+      if (requestedSeats < (activeUsers ?? 0)) {
+        return respond({ ok: false, error: `Hay ${activeUsers} usuarios activos; no puedes bajar las licencias por debajo de ese número.` }, 409, origin);
+      }
+      const managedMeta = meta as Record<string, unknown>;
+      const previousFeatures = managedMeta.features && typeof managedMeta.features === "object" && !Array.isArray(managedMeta.features)
+        ? managedMeta.features as Record<string, unknown> : {};
+      const nextFeatures = { ...previousFeatures, ...features };
+      const previousHistory = Array.isArray(managedMeta.setup_history) ? managedMeta.setup_history : [];
+      const nextMeta = {
+        ...managedMeta,
+        features: nextFeatures,
+        setup_history: [...previousHistory.slice(-19), {
+          at: new Date().toISOString(), actor_user_id: callerId,
+          seats_before: company.seats, seats_after: requestedSeats,
+          modules_before: Object.fromEntries(MANAGED_TENANT_FEATURES.map(key => [key, previousFeatures[key] === true])),
+          modules_after: features,
+        }],
+      };
+      const { data: saved, error: saveError } = await admin.from("organizations")
+        .update({ seats: requestedSeats, meta_config: nextMeta, updated_at: new Date().toISOString() })
+        .eq("id", organizationId).eq("updated_at", expectedUpdatedAt)
+        .select("id,name,seats,meta_config,updated_at").maybeSingle();
+      if (saveError) throw saveError;
+      if (!saved) return respond({ ok: false, error: "Otra edición cambió la empresa. Actualiza y vuelve a intentarlo." }, 409, origin);
+      const audit = await admin.from("audit_log").insert({
+        actor_id: callerId, organization_id: organizationId, entity_type: "organization",
+        entity_id: organizationId, action: "COMPANY_SETUP_UPDATED",
+        changed_fields: { seats: { before: company.seats, after: requestedSeats }, modules: { before: previousFeatures, after: nextFeatures } },
+        metadata: { source: "platform_admin" },
+      });
+      if (audit.error) console.error("[company-setup] audit save failed:", audit.error.message);
+      return respond({ ok: true, organization: saved, active_users: activeUsers ?? 0, audit_saved: !audit.error }, 200, origin);
+    }
+
     if (action === "create_organization") {
       const name = String(body.name ?? "").trim();
       const slug = slugify(String(body.slug || name));
       const seats = Math.max(1, Math.min(1000, Number(body.seats ?? 30) || 30));
       if (name.length < 2) return respond({ ok: false, error: "Escribe el nombre de la empresa." }, 400, origin);
       if (!slug) return respond({ ok: false, error: "El nombre debe incluir al menos una letra o un número." }, 400, origin);
+      const defaultFeatures = { teamAdmin: true, mktModule: false, comandoDirectivo: false };
+      let managedFeatures = defaultFeatures;
+      if (isRootAdmin && body.features !== undefined) {
+        const input = body.features;
+        if (!input || typeof input !== "object" || Array.isArray(input)) {
+          return respond({ ok: false, error: "Selección de módulos inválida." }, 400, origin);
+        }
+        const requested = input as Record<string, unknown>;
+        if (Object.keys(requested).some(key => !MANAGED_TENANT_FEATURES.includes(key as typeof MANAGED_TENANT_FEATURES[number]))
+            || MANAGED_TENANT_FEATURES.some(key => typeof requested[key] !== "boolean")) {
+          return respond({ ok: false, error: "La selección contiene un módulo no administrable." }, 400, origin);
+        }
+        managedFeatures = requested as typeof defaultFeatures;
+      }
       let companiesUsed: number | null = null;
       if (scopeOrganizationId) {
         if (!scopeSchemaReady || !partnerSchemaReady || companyLimit == null) {
@@ -792,7 +890,7 @@ Deno.serve(async (req) => {
       }
       const metaConfig = {
         onboarding: { status: "draft", createdFrom: "whatsapp_admin", createdAt: new Date().toISOString() },
-        features: { crm: true, teamAdmin: true, whatsappSignup: true, whatsappModule: false, whatsappChat: false },
+        features: { crm: true, ...managedFeatures, whatsappSignup: true, whatsappModule: false, whatsappChat: false },
       };
       const organizationRow: Record<string, unknown> = {
         name, slug, seats, plan: "custom", active: true, subscription_status: "trial", meta_config: metaConfig,
@@ -844,8 +942,13 @@ Deno.serve(async (req) => {
         return respond({ ok: false, error: "Los administradores partner se crean únicamente desde la sección Partners de Stratos." }, 403, origin);
       }
       if (password.length < 12) return respond({ ok: false, error: "La contraseña debe tener al menos 12 caracteres." }, 400, origin);
-      const { data: org } = await admin.from("organizations").select("id,name,seats").eq("id", organizationId).eq("active", true).maybeSingle();
+      const { data: org } = await admin.from("organizations").select("id,name,seats,meta_config").eq("id", organizationId).eq("active", true).maybeSingle();
       if (!org) return respond({ ok: false, error: "La empresa no existe o está inactiva." }, 404, origin);
+      if (org.meta_config?.onboarding?.createdFrom === "whatsapp_admin"
+          && org.meta_config?.platform?.kind !== "partner"
+          && !["admin", "director", "asesor"].includes(role)) {
+        return respond({ ok: false, error: "Ese rol requiere administración de Stratos." }, 403, origin);
+      }
       const { count: activeUsers, error: countError } = await admin.from("profiles")
         .select("id", { count: "exact", head: true })
         .eq("organization_id", organizationId)

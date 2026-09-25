@@ -20,6 +20,7 @@ import { createRoot } from "react-dom/client";
 import { AuthProvider }   from "./contexts/AuthContext";
 import { ClientProvider } from "./contexts/ClientContext";
 import { ClientOrgGuard } from "./contexts/ClientOrgGuard";
+import { TenantConfigGate } from "./contexts/TenantConfigGate";
 import { resolveClientFromLocation, matchClientFromLocation } from "./clients";
 import ErrorBoundary   from "./components/ErrorBoundary.jsx";
 import UpdatePill      from "./components/UpdatePill.jsx";
@@ -361,7 +362,7 @@ createRoot(document.getElementById("root")).render(
                       : isOnboardingCC
                         ? <OnboardingCallCenter />
                       : isApp
-                        ? <App />
+                        ? <TenantConfigGate><App /></TenantConfigGate>
                         : <LandingMarketing appUrl={APP_URL} />
             }
           </Suspense>
