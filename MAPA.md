@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**195 archivos · 78.647 líneas**
+**195 archivos · 78.649 líneas**
 
 ---
 
@@ -141,7 +141,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `WhatsAppOnboardingAdmin.jsx` | 237 | _sin describir_ |
 | `PlatformAdminConsole.jsx` | 223 | _sin describir_ |
 | `CatalogConfiguratorAdmin.jsx` | 158 | _sin describir_ |
-| `CompanySetupAdmin.jsx` | 75 | _sin describir_ |
+| `CompanySetupAdmin.jsx` | 77 | _sin describir_ |
 | `RoleBadge.jsx` | 29 | Badge de rol de usuario con colores según nivel. |
 
 ### `src/app/icons/`
@@ -605,7 +605,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Conectando… | `src/app/views/ConectarWhatsApp.jsx:122` |
 | Conectar mi WhatsApp | `src/app/views/ConectarWhatsApp.jsx:123` |
 | Configuración | `src/app/App.jsx:3143` |
-| Configuración de empresas nuevas | `src/app/features/Admin/CompanySetupAdmin.jsx:47` |
+| Configuración de empresas nuevas | `src/app/features/Admin/CompanySetupAdmin.jsx:49` |
 | Confirmados | `src/app/views/ZoomControl/Resumen.jsx:440` |
 | Confirmar contraseña | `src/app/views/Profile.jsx:333` |
 | Confirmas y listo | `src/app/views/ConectarWhatsApp.jsx:107` |
@@ -776,8 +776,8 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/CRM/date-range.js` (86 líneas)
 - `src/lib/whatsapp-admin.js` (85 líneas)
 - `src/lib/avisos-nativos.js` (79 líneas)
+- `src/app/features/Admin/CompanySetupAdmin.jsx` (77 líneas)
 - `src/lib/transcribir.js` (77 líneas)
-- `src/app/features/Admin/CompanySetupAdmin.jsx` (75 líneas)
 - `src/contexts/ClientOrgGuard.jsx` (75 líneas)
 - `src/hooks/useTeam.js` (74 líneas)
 - `src/lib/ringer.js` (72 líneas)

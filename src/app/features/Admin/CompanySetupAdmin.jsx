@@ -38,7 +38,9 @@ export default function CompanySetupAdmin({ T, data, refresh }) {
       setSuccess(result.audit_saved === false
         ? "Configuración guardada. El historial de auditoría no pudo registrarse; revisa el servidor."
         : "Módulos y licencias guardados. La empresa verá la nueva configuración al actualizar su sesión.");
-      await refresh();
+      if (!await refresh()) {
+        setSuccess("Configuración guardada, pero no se pudo actualizar la pantalla. Pulsa Actualizar antes de editarla otra vez.");
+      }
     } catch (err) { setError(err.message || "No se pudo guardar la empresa."); }
     finally { setSaving(false); }
   };

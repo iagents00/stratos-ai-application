@@ -161,8 +161,8 @@ export default function PlatformAdminConsole({ initialData }) {
   const [credentialsError, setCredentialsError] = useState("");
   const refresh = useCallback(async () => {
     setLoading(true); setError("");
-    try { setData(await loadWhatsAppAdmin()); }
-    catch (err) { setError(err.message || "No se pudo cargar la consola."); }
+    try { setData(await loadWhatsAppAdmin()); return true; }
+    catch (err) { setError(err.message || "No se pudo cargar la consola."); return false; }
     finally { setLoading(false); }
   }, []);
   useEffect(() => { if (!initialData) refresh(); }, [initialData, refresh]);
