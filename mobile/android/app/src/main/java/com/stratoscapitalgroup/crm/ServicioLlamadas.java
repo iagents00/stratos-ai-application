@@ -122,10 +122,9 @@ public class ServicioLlamadas extends MessagingService {
                 // atravesar el modo silencioso y sonar como un telefono.
                 .setCategory(NotificationCompat.CATEGORY_CALL)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                // `true` = mostrar la pantalla completa AUNQUE el telefono este
-                // desbloqueado. Sin eso, con el telefono en la mano solo saldria
-                // el cartel de arriba, que es justo lo que se quiere evitar.
-                .setFullScreenIntent(destino, true)
+                // El aviso abre la llamada cuando la persona lo toca. No usamos
+                // pantalla completa: Google Play reserva ese permiso para apps
+                // cuyo propósito principal es llamar o funcionar como alarma.
                 .setContentIntent(destino)
                 // SE PUEDE DESCARTAR. Antes estaba marcada como fija para que
                 // no se fuera de un manotazo mientras sonaba, y el efecto era el
