@@ -13,6 +13,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { mergeClientConfig } from "./_shared/defaults";
+import dentalConfig from "./clinica-dental-demo/config";
 import dukeConfig    from "./duke/config";
 import grupo28Config from "./grupo28/config";
 import tgeniusConfig from "./tgenius/config";
@@ -29,6 +30,7 @@ import tenantConfig        from "./tenant/config";
 
 // Registry de todos los clientes conocidos
 const CLIENT_CONFIGS = {
+  "clinica-dental-demo": dentalConfig,
   duke:            dukeConfig,
   grupo28:         grupo28Config,
   tgenius:         tgeniusConfig,
@@ -72,6 +74,8 @@ export function matchClientFromLocation(location = window.location) {
   const hostname = (location.hostname || "").toLowerCase();
   const pathname = location.pathname || "";
   const params   = new URLSearchParams(location.search || "");
+
+  if (/^\/demo-dental\/?$/.test(pathname)) return "clinica-dental-demo";
 
   // 0. Dominio propio declarado (white-label con su propio dominio).
   //    Máxima prioridad: si un cliente lista este hostname EXACTO en su config

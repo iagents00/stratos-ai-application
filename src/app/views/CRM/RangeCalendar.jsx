@@ -54,9 +54,9 @@ const palette = (isLight) => isLight ? {
   mint:      "#6EE7C2",
   txtMonth:  "#F1F5F9",
   txtDay:    "#CBD5E1",
-  txtOut:    "#46505E",
+  txtOut:    "#8B99AE",
   txtFut:    "#333C49",
-  txtMute:   "#5C6B7D",
+  txtMute:   "#AEBAC8",
   bandBg:    "rgba(110,231,194,0.16)",
   inRange:   "#EAF2F7",
   hoverBg:   "rgba(255,255,255,0.07)",
@@ -71,7 +71,7 @@ const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const addMonths = (d, n) => new Date(d.getFullYear(), d.getMonth() + n, 1);
 const ymd = (d) => dateInputValue(d);
 
-export default function RangeCalendar({ isLight = false, fromStr, toStr, onPick, onApply }) {
+export default function RangeCalendar({ isLight = false, fromStr, toStr, onPick, onApply, allowFuture = false }) {
   const C = palette(isLight);
   const today = startOfDay(new Date());
   const fromD = parseDateInput(fromStr);
@@ -124,7 +124,7 @@ export default function RangeCalendar({ isLight = false, fromStr, toStr, onPick,
     border: `1px solid ${C.navBorder}`, color: C.navColor,
   };
 
-  const canGoNext = viewMonth.getFullYear() < today.getFullYear() ||
+  const canGoNext = allowFuture || viewMonth.getFullYear() < today.getFullYear() ||
     (viewMonth.getFullYear() === today.getFullYear() && viewMonth.getMonth() < today.getMonth());
 
   return (
@@ -133,6 +133,7 @@ export default function RangeCalendar({ isLight = false, fromStr, toStr, onPick,
       background: C.panelBg,
       border: `1px solid ${C.panelBorder}`,
       boxShadow: C.panelShadow,
+      width: "min(330px, calc(100vw - 56px))", boxSizing: "border-box",
       maxWidth: 330,
     }}>
       {/* Navegación de mes */}
@@ -170,7 +171,7 @@ export default function RangeCalendar({ isLight = false, fromStr, toStr, onPick,
       >
         {days.map((day, i) => {
           const inMonth = day.getMonth() === viewMonth.getMonth();
-          const isFuture = day > today;
+          const isFuture = !allowFuture && day > today;
           const ds = ymd(day);
           const isStart = rangeStart && ds === ymd(rangeStart);
           const isEnd = rangeEnd && ds === ymd(rangeEnd);

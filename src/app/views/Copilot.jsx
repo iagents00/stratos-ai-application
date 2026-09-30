@@ -17,6 +17,7 @@ import { createPortal } from "react-dom";
 import { Send, Sparkles, RefreshCw, Mic, Square, X, ChevronDown, ChevronUp, ChevronLeft, Bot, BookOpen, Play, Pause, Bell, Camera, Paperclip } from "lucide-react";
 import { P, LP, font, fontDisp, chatType } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
+import CopilotCapabilities from "../components/CopilotCapabilities";
 import CopilotMark from "../components/CopilotMark";
 import { useClient } from "../../hooks/useClient";
 import { useAuth } from "../../hooks/useAuth";
@@ -129,6 +130,13 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   //
   // Este estado se enciende SOLO cuando el asistente esta realmente inalcanzable.
   const [asistenteCaido, setAsistenteCaido] = useState(false);
+  const [capabilitiesOpen, setCapabilitiesOpen] = useState(false);
+  useEffect(() => {
+    if (!capabilitiesOpen) return;
+    const close = e => { if (e.key === "Escape") setCapabilitiesOpen(false); };
+    document.addEventListener("keydown", close);
+    return () => document.removeEventListener("keydown", close);
+  }, [capabilitiesOpen]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [attaching, setAttaching] = useState(false);  // subiendo evidencia (solo marketing)
   const [commenting, setCommenting] = useState(null);  // {taskId, fromName} — líder comentando una evidencia
@@ -1114,6 +1122,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
               }} />{asistenteCaido ? "Sin conexión con el asistente" : "En línea"}
           </div>
         </div>
+        {!isMarketing && !puedeCajaFoto && <button type="button" aria-label="Qué puede hacer el Copilot" title="Qué puede hacer" aria-expanded={capabilitiesOpen} onClick={() => setCapabilitiesOpen(o => !o)} style={{ width: 36, height: 36, borderRadius: 8, background: "transparent", border: "none", color: T.accent, cursor: "pointer" }}><BookOpen size={18} /></button>}
         <button type="button" onClick={reload} title="Refrescar"
           style={{ width: 30, height: 30, borderRadius: 8, background: "transparent", border: "none", color: T.txt3, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <RefreshCw size={14} strokeWidth={2} />
@@ -1123,6 +1132,8 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           {showSuggestions ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
       </div>
+
+      {capabilitiesOpen && createPortal(<><div onClick={() => setCapabilitiesOpen(false)} style={{position:"fixed",inset:0,zIndex:100001,background:"rgba(0,0,0,.25)"}} /><CopilotCapabilities T={T} isLight={isLight} onClose={() => setCapabilitiesOpen(false)} onPrefill={prompt => {setInput(prompt);setCapabilitiesOpen(false);inputRef.current?.focus();}} /></>, document.body)}
 
       {/* ── Banner "Activar notificaciones" (push) ── */}
       <NotifBanner T={T} isLight={isLight} />

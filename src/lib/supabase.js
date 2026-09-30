@@ -1,3 +1,4 @@
+import { isDentalProfile } from "../dental-demo/profile-data";
 import { createClient } from '@supabase/supabase-js'
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -39,11 +40,13 @@ export const supabase = createClient(
   supabaseUrl,
   supabaseKey,
   {
+    // Dental demo cannot reuse a production session or send database requests.
+    ...(isDentalProfile() ? { global: { fetch: async () => new Response(JSON.stringify({message:"Perfil dental demo: acceso productivo deshabilitado"}), {status:403,headers:{"content-type":"application/json"}}) } } : {}),
     auth: {
       // Mantener la sesión viva: refrescar access token automáticamente
       // antes de que expire (con el refresh token de larga duración).
-      autoRefreshToken:   true,
-      persistSession:     true,
+      autoRefreshToken:   !isDentalProfile(),
+      persistSession:     !isDentalProfile(),
       detectSessionInUrl: false,
       // FLOW IMPLICIT — el adecuado para signInWithPassword. PKCE estaba
       // configurado antes y rompía el persist: PKCE es un flow OAuth

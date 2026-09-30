@@ -6,6 +6,17 @@
 Plataforma de gestión comercial para equipos de ventas inmobiliarias.
 Incluye CRM con pipeline visual, agentes IA, ERP de proyectos, finanzas y RRHH.
 
+## Identidad y publicación
+
+Carpeta: `/Users/ivanrodriguezruelas/stratos-ai-application`.
+Proyecto de Vercel: `stratos-ai-application`.
+Sitio: https://stratos-ai-application.vercel.app/.
+
+Ejecutar `npm run check:project` antes de publicar. También se ejecuta antes de
+iniciar desarrollo y compilar. La validación compara la identidad del paquete,
+los enlaces locales de Vercel y las variables de proyecto disponibles con
+`project-identity.json`, y bloquea destinos incorrectos.
+
 ---
 
 ## Stack

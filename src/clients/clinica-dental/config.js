@@ -27,12 +27,14 @@
 
 const clinicaDentalConfig = {
   id:        "clinica-dental",
+  liveHuli: true,
+  demoOnly: false,
   name:      "Clínica Dental",
   legalName: "Clínica Dental",
   tagline:   "Pacientes, agenda y tratamientos en un solo lugar",
 
   // El CRM acá no es un CRM: es la lista de pacientes de la clínica.
-  navLabels: { c: "Pacientes" },
+  navLabels: { c: "Pacientes", mi_espacio: "Agenda", perfil: "Mi clínica" },
 
   brand: {
     logoText: "Clínica Dental",

@@ -1,0 +1,290 @@
+{
+  "checkedAt": "2026-09-27T07:44:17.526Z",
+  "scope": "Read-only API checks; no appointment or patient writes",
+  "passed": 44,
+  "failed": 0,
+  "results": [
+    {
+      "host": "https://getstratosai.com",
+      "name": "Authenticated Huli metadata",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Private responses are not cached",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Server-generated request correlation ID",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Live patients",
+      "pass": true,
+      "status": 200,
+      "detail": {
+        "count": 1
+      }
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Patient fields minimized",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Live appointments",
+      "pass": true,
+      "status": 200,
+      "detail": {
+        "count": 0
+      }
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Live availability",
+      "pass": true,
+      "status": 200,
+      "detail": {
+        "count": 0
+      }
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "No session denied",
+      "pass": true,
+      "status": 401
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Forged session denied",
+      "pass": true,
+      "status": 401
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Legacy cookie cannot bypass tenant login",
+      "pass": true,
+      "status": 401
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Cross-origin request denied",
+      "pass": true,
+      "status": 403
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Foreign professional denied",
+      "pass": true,
+      "status": 403
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Foreign clinic denied",
+      "pass": true,
+      "status": 403
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Invalid date denied",
+      "pass": true,
+      "status": 400
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Invalid patient offset denied",
+      "pass": true,
+      "status": 400
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Oversized search denied",
+      "pass": true,
+      "status": 400
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Unknown read action denied",
+      "pass": true,
+      "status": 400
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Oversized body denied",
+      "pass": true,
+      "status": 413
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Malformed JSON denied",
+      "pass": true,
+      "status": 400
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Array body denied",
+      "pass": true,
+      "status": 400
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Multibyte oversized body denied",
+      "pass": true,
+      "status": 413
+    },
+    {
+      "host": "https://getstratosai.com",
+      "name": "Unsupported method denied",
+      "pass": true,
+      "status": 405
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Authenticated Huli metadata",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Private responses are not cached",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Server-generated request correlation ID",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Live patients",
+      "pass": true,
+      "status": 200,
+      "detail": {
+        "count": 1
+      }
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Patient fields minimized",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Live appointments",
+      "pass": true,
+      "status": 200,
+      "detail": {
+        "count": 0
+      }
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Live availability",
+      "pass": true,
+      "status": 200,
+      "detail": {
+        "count": 0
+      }
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "No session denied",
+      "pass": true,
+      "status": 401
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Forged session denied",
+      "pass": true,
+      "status": 401
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Legacy cookie cannot bypass tenant login",
+      "pass": true,
+      "status": 401
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Cross-origin request denied",
+      "pass": true,
+      "status": 403
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Foreign professional denied",
+      "pass": true,
+      "status": 403
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Foreign clinic denied",
+      "pass": true,
+      "status": 403
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Invalid date denied",
+      "pass": true,
+      "status": 400
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Invalid patient offset denied",
+      "pass": true,
+      "status": 400
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Oversized search denied",
+      "pass": true,
+      "status": 400
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Unknown read action denied",
+      "pass": true,
+      "status": 400
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Oversized body denied",
+      "pass": true,
+      "status": 413
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Malformed JSON denied",
+      "pass": true,
+      "status": 400
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Array body denied",
+      "pass": true,
+      "status": 400
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Multibyte oversized body denied",
+      "pass": true,
+      "status": 413
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "name": "Unsupported method denied",
+      "pass": true,
+      "status": 405
+    }
+  ]
+}

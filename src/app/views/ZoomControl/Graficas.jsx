@@ -24,7 +24,10 @@ import {
   Tooltip, PieChart, Pie, Cell, LabelList,
 } from "recharts";
 import { font, fontDisp } from "../../../design-system/tokens";
-import { monthRange, inRange, addDays, ymd, weekRange, DOW, MON } from "./dates";
+import { monthRange, inRange } from "./dates";
+import { buildMetricBuckets } from "../CRM/command-metrics.js";
+import { dateRangeLabel, toTimestamp, timestampInRange } from "../CRM/date-range.js";
+import { advisorDisplayGroup } from "../CRM/zoom-metrics.js";
 
 // Resultados del Zoom — orden FIJO del stack (nunca se recicla ni reordena).
 // "En agenda" agrupa Agendado+Confirmado (aún no ocurre el Zoom).
@@ -33,12 +36,13 @@ const RESULTADOS = [
   { key: "noshow",    label: "No show",    color: "#EA580C", match: (e) => e === "No show" },
   { key: "reagendado", label: "Reagendado", color: "#F59E0B", match: (e) => e === "Reagendado" },
   { key: "cancelado", label: "Cancelado",  color: "#64748B", match: (e) => e === "Cancelado" },
+  { key: "unknown", label: "Sin clasificar", color: "#78716C", match: () => false },
   { key: "agenda",    label: "En agenda",  color: "#3B82F6", match: (e) => e === "Agendado" || e === "Confirmado" },
 ];
 
 function clasifica(row) {
   for (const rdo of RESULTADOS) if (rdo.match(row.estatus)) return rdo.key;
-  return "agenda";
+  return "unknown";
 }
 
 // ── Tooltip común, con la misma voz visual del resto del Comando ────────────
@@ -107,36 +111,27 @@ function LegendChips({ T, items }) {
   );
 }
 
-export default function GraficasZooms({ rows = [], T, isLight }) {
-  const accent = T.accent;
+export default function GraficasZooms({ rows = [], T, isLight, dateRange = null }) {
   const gridStroke = isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)";
   const axisTick = { fill: T.txt2, fontSize: 12, fontFamily: fontDisp, fontWeight: 500 };
   // Gap de 2px entre segmentos apilados = trazo del color de la superficie.
   const surface = isLight ? "#FFFFFF" : "#0B1220";
 
   const mo = monthRange();
-  const mesRows = useMemo(() => rows.filter(r => inRange(r.fecha_zoom, mo.start, mo.end)), [rows, mo.start, mo.end]);
+  const mesRows = useMemo(() => dateRange ? rows : rows.filter(r => inRange(r.fecha_zoom, mo.start, mo.end)), [rows, mo.start, mo.end, dateRange]);
 
-  // 1) Tendencia semanal — últimas 8 semanas (L-D), stack por resultado.
+  const periodLabel = dateRange ? dateRangeLabel(dateRange) : mo.label;
   const semanas = useMemo(() => {
-    const { monday } = weekRange();
-    const out = [];
-    for (let i = 7; i >= 0; i--) {
-      const start = addDays(monday, -7 * i);
-      const startKey = ymd(start);
-      const endKey = ymd(addDays(start, 6));
-      const delRango = rows.filter(r => r.fecha_zoom && r.fecha_zoom >= startKey && r.fecha_zoom <= endKey);
-      const fila = {
-        label: `${start.getDate()} ${MON[start.getMonth()]}`,
-        tooltipLabel: `Semana del ${DOW[1]} ${start.getDate()} ${MON[start.getMonth()]}`,
-        asistio: 0, noshow: 0, reagendado: 0, cancelado: 0, agenda: 0,
-        esActual: i === 0,
-      };
-      for (const r of delRango) fila[clasifica(r)]++;
-      out.push(fila);
-    }
-    return out;
-  }, [rows]);
+    const granularity = !dateRange || dateRange.fromTs === null || dateRange.toTs - dateRange.fromTs > 180 * 86400000 ? "month" : "week";
+    return buildMetricBuckets(granularity, dateRange, rows.map(r => r.fecha_zoom)).map(bucket => {
+      const counts = Object.fromEntries(RESULTADOS.map(r => [r.key, 0]));
+      for (const row of rows) {
+        const includes = bucket.undated ? toTimestamp(row.fecha_zoom) === null : timestampInRange(row.fecha_zoom, { fromTs: bucket.startTs, toTs: bucket.endTs });
+        if (includes) counts[clasifica(row)]++;
+      }
+      return { ...bucket, ...counts };
+    });
+  }, [rows, dateRange]);
 
   // 2) Distribución por estatus (mes) — dona.
   const porEstatus = useMemo(() => {
@@ -150,29 +145,28 @@ export default function GraficasZooms({ rows = [], T, isLight }) {
   const porPersona = (campo) => {
     const map = new Map();
     for (const r of mesRows) {
-      const n = (r[campo] || "").trim();
-      if (!n) continue;
+      const n = advisorDisplayGroup(r[campo]);
       map.set(n, (map.get(n) || 0) + 1);
     }
-    return [...map.entries()]
+    const sorted = [...map.entries()]
       .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 8);
+      .sort((a, b) => b.value - a.value);
+    return sorted.length > 8 ? [...sorted.slice(0, 8), { name: "Otros", value: sorted.slice(8).reduce((sum, row) => sum + row.value, 0) }] : sorted;
   };
-  const porLiner = useMemo(() => porPersona("liner"), [mesRows]);
-  const porPresentador = useMemo(() => porPersona("presentador_principal"), [mesRows]);
+  const porLiner = porPersona("liner");
+  const porPresentador = porPersona("presentador_principal");
 
   const sinDatosMes = totalMes === 0;
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))", gap: 12 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 330px), 1fr))", gap: 12 }}>
       {/* 1) Tendencia semanal */}
-      <ChartCard T={T} isLight={isLight} title="Tendencia semanal" subtitle="Últimas 8 semanas (lunes a domingo) · resultado de cada Zoom">
+      <ChartCard T={T} isLight={isLight} title="Evolución de la agenda" subtitle={dateRange ? periodLabel : "Todo el histórico"}>
         <div style={{ width: "100%", height: 230 }}>
           <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
             <BarChart data={semanas} margin={{ top: 6, right: 6, bottom: 0, left: -18 }} barCategoryGap="28%">
               <CartesianGrid strokeDasharray="3 5" stroke={gridStroke} vertical={false} />
-              <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: gridStroke }} interval={0} />
+              <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: gridStroke }} interval="preserveStartEnd" />
               <YAxis allowDecimals={false} tick={axisTick} tickLine={false} axisLine={false} width={34} />
               <Tooltip
                 cursor={{ fill: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)" }}
@@ -199,10 +193,10 @@ export default function GraficasZooms({ rows = [], T, isLight }) {
       </ChartCard>
 
       {/* 2) Dona por estatus del mes */}
-      <ChartCard T={T} isLight={isLight} title={`Resultado del mes · ${mo.label}`} subtitle="Cómo terminaron los Zooms del mes">
+      <ChartCard T={T} isLight={isLight} title={`Resultados · ${periodLabel}`} subtitle="Estatus actual de las citas del rango">
         {sinDatosMes ? (
           <div style={{ height: 230, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12.5, color: T.txt3, fontFamily: font }}>
-            Sin Zooms este mes todavía.
+            Sin Zooms en este rango.
           </div>
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -242,12 +236,12 @@ export default function GraficasZooms({ rows = [], T, isLight }) {
       </ChartCard>
 
       {/* 3) Por Liner (mes) — magnitud en un solo tono */}
-      <ChartCard T={T} isLight={isLight} title={`Zooms por Liner · ${mo.label}`} subtitle="Quién agenda más este mes">
+      <ChartCard T={T} isLight={isLight} title={`Zooms por Liner · ${periodLabel}`} subtitle="Citas del rango por responsable de agenda">
         <PersonBars data={porLiner} color="#3B82F6" T={T} isLight={isLight} gridStroke={gridStroke} axisTick={axisTick} />
       </ChartCard>
 
       {/* 4) Por Presentador (mes) */}
-      <ChartCard T={T} isLight={isLight} title={`Zooms por Presentador · ${mo.label}`} subtitle="Quién corre más Zooms este mes">
+      <ChartCard T={T} isLight={isLight} title={`Zooms por Presentador · ${periodLabel}`} subtitle="Citas asignadas al presentador principal">
         <PersonBars data={porPresentador} color="#10B981" T={T} isLight={isLight} gridStroke={gridStroke} axisTick={axisTick} />
       </ChartCard>
     </div>
@@ -260,7 +254,7 @@ function PersonBars({ data, color, T, isLight, gridStroke, axisTick }) {
   if (!data.length) {
     return (
       <div style={{ height: 230, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12.5, color: T.txt3, fontFamily: "inherit" }}>
-        Sin Zooms este mes todavía.
+        Sin Zooms en este rango.
       </div>
     );
   }

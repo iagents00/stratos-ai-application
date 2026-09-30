@@ -30,8 +30,7 @@ export default function IAOSIsland({ leadsData = [], isLight, idx, brandLabel = 
   const inact     = leadsData.filter(l => !l.nextActionDate && !l.next_action_date && !l.nextAction).length;
   const totalPipe = (leadsData.reduce((s, l) => s + (Number(l.presupuesto) || Number(l.budget) || 0), 0) / 1e6).toFixed(1);
 
-  // Forma corta del brand para el indicador chico (primer token o "Duke" como fallback).
-  // Ej: "Duke del Caribe" → "Duke" · "Grupo 28" → "Grupo 28".
+  // Forma corta de la marca para el indicador compacto.
   const shortBrand = brandLabel.split(" ")[0] || "Duke";
 
   // Pipelines custom (Legacy, Vega, NSG…): sin dinero-en-pipeline ni la palabra

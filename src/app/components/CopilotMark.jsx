@@ -1,14 +1,14 @@
 /**
  * app/components/CopilotMark.jsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Marca animada de "Copilot AI" — un TRIÁNGULO de puntas redondeadas con la
+ * Marca animada de "Copilot AI" — un anillo hexagonal de esquinas redondeadas con la
  * PALETA DE MARCA STRATOS (verde menta → emerald → teal).
  *
  * MOVIMIENTO: gira fluido y en su lugar, con la misma técnica y ritmo que el
  * "átomo" del header (DynIsland.jsx):
  *   • Un ENVOLTORIO HTML (`.cp-rotor`) rota con `transform` — un span HTML gira
  *     siempre sobre el centro exacto de su caja (pivote fijo, sin "bailar").
- *     El centroide del triángulo cae en (24,24) = centro de la caja → estable.
+ *     El centro del hexágono cae en (24,24) = centro de la caja → estable.
  *   • Solo `transform: rotate` (compositado por GPU = fluido, sin repintar cada
  *     frame). NADA de `stroke-dashoffset`/"cometa": esa animación de PINTADO era
  *     lo que se veía "turbio"/con recortes.
@@ -71,7 +71,7 @@ export default function CopilotMark({ size = 24, animated = true, isLight = fals
       }}
     >
       {/* Rotor HTML: gira estable sobre su centro (pivote = centro de la caja =
-          centroide del triángulo). Solo transform → fluido, sin recortes.
+          centro del hexágono). Solo transform → fluido, sin recortes.
           data-brand-motion lo mantiene vivo en móvil (whitelist mobile-perf). */}
       <span
         className="cp-rotor"

@@ -84,3 +84,68 @@ Verifica:
 - ✅ Trigger de auditoría en `profiles` funciona (hace un UPDATE de prueba y verifica que se registró en `audit_log`).
 
 Si algún check falla, te dice qué migración falta correr.
+
+---
+
+## `cecilia-baileys-bridge.mjs`
+
+Puente temporal para Cecilia cuando Meta todavia no entrega eventos Cloud API
+del numero `+52 1 984 254 0664`. Escucha WhatsApp como dispositivo
+vinculado y manda cada mensaje entrante individual al webhook directo de n8n con
+payload compatible con Meta Cloud API:
+
+```bash
+npm run wa:cecilia-bridge
+```
+
+Primero escanea el QR desde WhatsApp Business de Cecilia:
+`Menu > Dispositivos vinculados > Vincular dispositivo`.
+Si WhatsApp ofrece vincular con codigo/número en vez de QR, el script tambien
+escribe un codigo de vinculacion en `.wa-sessions/cecilia-bridge.events.log`.
+
+Prueba sin tocar n8n/CRM:
+
+```bash
+npm run wa:cecilia-bridge -- --dry-run --simulate
+```
+
+Variables opcionales:
+
+```bash
+CECILIA_BRIDGE_WEBHOOK_URL=https://personal-n8n.suwsiw.easypanel.host/webhook/meta-directo-leads
+CECILIA_BRIDGE_DISPLAY_PHONE_NUMBER="+52 1 984 254 0664"
+CECILIA_BRIDGE_PHONE_NUMBER_ID=1139531549240830
+CECILIA_BRIDGE_WABA_ID=1900999323921319
+CECILIA_BRIDGE_PAIRING_CODE=1
+CECILIA_BRIDGE_PAIRING_PHONE_NUMBER=5219842540664
+CECILIA_BRIDGE_SESSION_DIR=.wa-sessions
+CECILIA_BRIDGE_EVENT_LOG_FILE=.wa-sessions/cecilia-bridge.events.log
+CECILIA_BRIDGE_QR_PNG_FILE=.wa-sessions/cecilia-latest-qr.png
+CECILIA_BRIDGE_PRINT_QR_TERMINAL=1
+```
+
+Notas:
+- Es un puente operativo temporal, no reemplaza coexistence oficial de Meta.
+- No versionar `.wa-sessions/`; contiene la sesion vinculada.
+- Ignora grupos, estados y mensajes salientes; solo procesa mensajes entrantes
+  individuales.
+- Si Baileys falla por cambios de WhatsApp Web, queda el fallback anterior:
+  `npm run wa:cecilia-bridge:webjs`.
+
+### Servicio local macOS
+
+Para dejarlo vivo fuera de la terminal:
+
+```bash
+cp ops/com.stratos.cecilia-bridge.plist ~/Library/LaunchAgents/
+launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.stratos.cecilia-bridge.plist
+launchctl kickstart -k "gui/$(id -u)/com.stratos.cecilia-bridge"
+```
+
+Logs:
+
+```bash
+tail -f .wa-sessions/cecilia-bridge.launchd.log
+tail -f .wa-sessions/cecilia-bridge.launchd.err.log
+tail -f .wa-sessions/cecilia-bridge.events.log
+```

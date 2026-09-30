@@ -18,7 +18,8 @@
  * `by` del evento de etapa), así no se pierde con las reasignaciones.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { normalizeStage } from "../../../design-system/tokens";
+import { normalizeStage } from "../../../design-system/tokens.js";
+import { toTimestamp } from "./date-range.js";
 
 // Etapas que implican "el Zoom ya se realizó".
 export const ZOOM_DONE_STAGES = new Set([
@@ -33,11 +34,11 @@ const ZOOM_SCHEDULED_STAGES = new Set([ZOOM_SCHEDULED_STAGE, "Reactivar Zoom"]);
 // "Entró al funnel de Zoom" = se agendó un Zoom (etapa Zoom Agendado) O ya hizo
 // el Zoom (etapa posterior). Clave para el conteo de AGENDADOS del embudo: si un
 // lead hizo el Zoom, necesariamente fue agendado, aunque ese paso no se haya
-// marcado. Así "agendados" SIEMPRE es ≥ "realizados" y el embudo tiene sentido.
+// marcado. En el histórico completo, agendados es ≥ realizados. En un período las fechas pueden diferir.
 export const ZOOM_FUNNEL_ENTRY_STAGES = new Set([...ZOOM_SCHEDULED_STAGES, ...ZOOM_DONE_STAGES]);
 
 // Hitos posteriores al Zoom (funnel Realizado → Recorrido → Cierre).
-export const RECORRIDO_STAGES = new Set(["Visita Agendada"]);              // visita/recorrido dado
+export const RECORRIDO_STAGES = new Set(["Visita Agendada"]);              // agenda de visita, no visita completada
 export const CIERRE_STAGES    = new Set(["Apartó", "Cierre", "Postventa"]); // milestone de cierre
 
 // Etapas "activas post-Zoom" (cliente que ya hizo el Zoom y sigue activo en el
@@ -49,7 +50,7 @@ export const ACTIVE_POST_ZOOM_STAGES = new Set([
 
 // Crédito por defecto cuando no hay autor ni dueño (evita divergencias de conteo
 // entre paneles: unos descartaban el evento y otros lo contaban bajo "—").
-const NO_OWNER = "—";
+const NO_OWNER = "Sin asignar";
 
 // Cuentas de prueba / sistema / inactivas que NO deben aparecer en los tableros
 // de métricas del Comando (ni como filas ni en los totales). Se comparan
@@ -76,7 +77,8 @@ export function isHiddenAdvisor(name) {
 // para no ensuciar la tabla con nombres de ex-asesores / cuentas de prueba.
 export const INACTIVE_ADVISOR_GROUP = "Cuentas inactivas";
 export function advisorDisplayGroup(name) {
-  return isHiddenAdvisor(name) ? INACTIVE_ADVISOR_GROUP : name;
+  const normalized = String(name || "").trim().replace(/\s+/g, " ");
+  return isHiddenAdvisor(normalized) ? INACTIVE_ADVISOR_GROUP : (normalized && normalized !== "—" ? normalized : NO_OWNER);
 }
 
 // Extrae la etapa destino de un evento "Etapa: X → Y", normalizada al nombre
@@ -93,11 +95,11 @@ function targetStage(action) {
  * Hito de un lead respecto a un conjunto de etapas: el PRIMER evento de historial
  * que lo llevó a una etapa de `stageSet`, con su autor (`by` = quién lo movió) y
  * fecha. Si no hay evento pero la etapa ACTUAL ya está en el set, se infiere
- * (`inferred:true`) y se acredita al dueño actual con la fecha de creación.
+ * (`inferred:true`) y se acredita al dueño actual sin inventar una fecha.
  * Devuelve { by, at, to, inferred } o null. Base común de toda la métrica de Zoom.
  */
 export function milestoneOf(lead, stageSet) {
-  const hist = Array.isArray(lead.actionHistory) ? lead.actionHistory : [];
+  const hist = Array.isArray(lead.actionHistory) ? lead.actionHistory : (Array.isArray(lead.action_history) ? lead.action_history : []);
   // OJO: el historial se guarda con lo MÁS RECIENTE arriba (el CRM hace
   // prepend de eventos nuevos), así que NO basta tomar el primer match del
   // array — ese es el último movimiento, no el hito original. Nos quedamos
@@ -113,19 +115,19 @@ export function milestoneOf(lead, stageSet) {
     if (!t || !stageSet.has(t)) continue;
     const at = e.completed_at || e.doneAt || e.done_at || e.created_at || null;
     const hit = {
-      by: e.by || lead.asesor || NO_OWNER,
+      by: String(e.by || "").trim() || String(lead.asesor || "").trim() || NO_OWNER,
       at,
       to: t,
       inferred: false,
       confidence: "confirmed",
     };
-    const ts = at ? new Date(at).getTime() : NaN;
-    if (Number.isFinite(ts)) {
+    const ts = toTimestamp(at);
+    if (ts !== null) {
       if (ts < earliestTs) { earliestTs = ts; earliest = hit; }
     } else {
       // Sin fecha parseable: respaldo. Con prepend, el último match del
       // recorrido es el más antiguo del historial.
-      undated = hit;
+      undated = { ...hit, at: null };
     }
   }
   if (earliest || undated) return earliest || undated;
@@ -147,7 +149,7 @@ export function milestoneOf(lead, stageSet) {
 // cualquier otra etapa esos campos son recordatorios genéricos — p.ej. la
 // llamada de rescate a +5 min que el flujo de entrada setea en TODOS los leads
 // nuevos, o la fecha de una visita — y NO deben tocar la métrica de Zooms.
-const ZOOM_CITA_STAGES = new Set(["Zoom Agendado", "Reactivar Zoom", "Zoom Concretado"]);
+const ZOOM_CITA_STAGES = new Set(["Zoom Agendado", "Reactivar Zoom"]);
 
 /**
  * { scheduled, done } de un lead: hito de "Zoom agendado" y de "Zoom realizado"
@@ -169,7 +171,8 @@ export function zoomEventsOf(lead) {
     const apptAt = ZOOM_CITA_STAGES.has(current)
       ? (lead.selected_time || lead.next_action_at || null)
       : null;
-    if (apptAt) {
+    // A later reschedule/follow-up must not rewrite the first recorded milestone.
+    if (!stageScheduled.at && toTimestamp(apptAt) !== null) {
       scheduled = { ...stageScheduled, at: apptAt, inferred: false, confidence: "appointment" };
     }
   }
@@ -181,7 +184,7 @@ export function zoomEventsOf(lead) {
 }
 
 // Hito de "entró al funnel de Zoom" (agendado o ya realizado). Úsalo para el
-// conteo de AGENDADOS del embudo, para que sea siempre ≥ realizados.
+// conteo de AGENDADOS del embudo, para recuperar agendas implícitas en el histórico completo.
 export function funnelEntryOf(lead) {
   const { scheduled, done } = zoomEventsOf(lead);
   return scheduled || (done ? { ...done, inferred: true, confidence: "inferred_schedule" } : null);
@@ -197,10 +200,10 @@ export function funnelEntryOf(lead) {
 export function zoomMovements(leadsData) {
   const out = [];
   for (const l of leadsData) {
-    const { scheduled, done } = zoomEventsOf(l);
+    const scheduled = funnelEntryOf(l);
+    const { done } = zoomEventsOf(l);
     if (scheduled) out.push({ lead: l, kind: "scheduled", by: scheduled.by, at: scheduled.at, inferred: scheduled.inferred });
     if (done)      out.push({ lead: l, kind: "done",      by: done.by,      at: done.at,      inferred: done.inferred });
   }
   return out;
 }
-

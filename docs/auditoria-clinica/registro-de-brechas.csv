@@ -1,0 +1,27 @@
+id,control,estado,responsable,evidencia_para_cierre
+TEC-01,Autenticación y tenant fijo,Verificado en gateway,Equipo técnico,Pruebas locales y servidor; revisar por separado RLS completa y otros módulos
+TEC-02,Minimización de datos Huli,Verificado en gateway,Equipo técnico,Payloads limitados y sin secretos en compilación
+TEC-03,Trazabilidad de solicitudes,Desplegado y eventos verificados; conservación pendiente,Equipo técnico,Header de correlación y logs observados; falta retención permisos exportación y custodia
+TEC-04,Bitácora clínica persistente,Pendiente,Proveedor de expediente,Autores firmas versiones y acceso restringido demostrados
+TEC-05,Cuentas individuales y roles,Pendiente,Dirección y equipo técnico,Matriz aprobada y pruebas por rol sin compartir administrador
+TEC-06,Credenciales y MFA,Pendiente,Administrador de la clínica,Rotación de credenciales compartidas y evaluación de MFA y recuperación
+TEC-07,Respaldo y recuperación,Pendiente,Proveedor y dirección,Restauración real con datos ficticios y objetivos RPO/RTO aprobados
+TEC-08,App instalada y reconexión,Pendiente,QA,Modelo iOS versión build y pruebas de sesión red cierre y enlace Huli
+TEC-09,Monitoreo y limitación de abuso,Pendiente,Equipo técnico,Configuración y pruebas de alertas y límites sin exponer datos clínicos
+TEC-10,Evaluación de seguridad integral,Pendiente,Equipo técnico y revisor,Revisión RLS y dependencias pruebas de acceso entre organizaciones y hallazgos cerrados
+TEC-11,Accesibilidad y dispositivos,Pendiente,QA,Pruebas de teclado lector de pantalla móvil y estados de error
+CLI-01,Identidad real de clínica y responsables,Pendiente,Propietario,Razón social domicilio servicios nombre y cédulas verificados
+CLI-02,Profesional y sede dental en Huli,Pendiente para uso real,Dirección clínica,Configuración efectiva y permisos; la cuenta piloto informa Radiología
+CLI-03,Expediente odontológico completo,Pendiente,Responsable sanitario,Historia odontogramas periodontogramas evolución estudios planes y firmas revisados
+CLI-04,Consentimientos clínicos,Pendiente,Responsable sanitario,Documentos específicos y proceso de información y firma aplicable
+CLI-05,Conservación y exportación,Pendiente,Dirección y proveedor,Política según obligaciones aplicables y exportación legible probada
+PRI-01,Aviso de privacidad de la clínica,Pendiente,Responsable de privacidad,Texto final con identidad domicilio finalidad datos derechos y mecanismos efectivos
+PRI-02,Base jurídica y consentimiento de datos,Pendiente,Responsable de privacidad,Proceso documentado con evidencia y excepciones justificadas cuando correspondan
+PRI-03,Contratos y proveedores,Pendiente,Dirección y asesoría,Contratos tratamiento subencargados alojamiento transferencias incidentes y salida
+PRI-04,ARCO y supresión,Pendiente,Responsable de privacidad,Canal operativo y ejercicio probado respetando conservación legal
+SAN-01,Avisos y autorizaciones sanitarias,Pendiente,Propietario y responsable sanitario,Acuses verificables y revisión del alcance de servicios
+SAN-02,Instalaciones esterilización y RPBI,No inspeccionado,Responsable sanitario,Verificación física registros y documentación aplicable
+SAN-03,Radiología si se ofrece,Pendiente determinar alcance,Responsable sanitario,Equipos instalaciones personal y autorizaciones pertinentes
+COM-01,Publicidad sanitaria,Pendiente,Dirección y asesoría,Trámite aplicable y afirmaciones revisadas; no prometer certificación inexistente
+IA-01,IA médica,Fuera del alcance actual,Dirección clínica y responsable regulatorio,Evaluación de finalidad clasificación y validación antes de habilitar diagnóstico
+GOB-01,Aprobación de liberación,Pendiente,Dirección responsable sanitario y privacidad,Acta fechada con alcance y evidencia sin brechas críticas abiertas

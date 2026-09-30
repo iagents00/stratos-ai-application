@@ -22,7 +22,16 @@
     "build:app": "vite build --mode app",
     "verificar:appstore-ios": "node scripts/verificar-appstore-ios.mjs",
     "salud": "node scripts/salud.mjs",
-    "check:project": "node scripts/check-project-boundary.mjs"
+    "check:project": "node scripts/check-project-boundary.mjs",
+    "wa:cecilia-bridge": "node scripts/cecilia-baileys-bridge.mjs",
+    "wa:cecilia-bridge:webjs": "node scripts/cecilia-whatsapp-web-bridge.mjs",
+    "predev": "npm run check:project",
+    "postbuild": "node scripts/write-release-manifest.mjs",
+    "check:runtime": "node scripts/check-runtime-references.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "release:check": "node scripts/check-production-source.mjs",
+    "deploy:production": "npm run release:check && vercel deploy --prod --skip-domain --yes",
+    "release:promote": "node scripts/promote-production.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",
@@ -43,6 +52,11 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
-    "vite": "^8.0.1"
+    "vite": "^8.0.1",
+    "@whiskeysockets/baileys": "^7.0.0-rc14",
+    "pino": "^10.3.1",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.34.7"
   }
 }

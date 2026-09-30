@@ -1,5 +1,7 @@
 # 🎨 DESIGN SYSTEM — Stratos AI v10
 
+> **Logo definitivo:** las dos imágenes seleccionadas por el usuario están documentadas en [public/branding/LOGO-DEFINITIVO.md](public/branding/LOGO-DEFINITIVO.md). Esta referencia prevalece sobre las referencias anteriores del símbolo. El resto de este documento describe el sistema existente.
+
 ## 📋 Índice
 1. [Sistema de Colores](#sistema-de-colores)
 2. [Tipografías](#tipografías)

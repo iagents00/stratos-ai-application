@@ -1,0 +1,23 @@
+.stratos-mobile-account{display:none}
+.mobile-account-trigger{position:relative;display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:0;background:transparent;cursor:pointer}
+.mobile-account-dot{position:absolute;top:8px;right:8px;width:6px;height:6px;border-radius:50%}
+.mobile-account-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.22)}
+.mobile-account-panel{position:absolute;top:calc(52px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px)));left:0;right:0;width:100%;max-height:calc(100dvh - 76px - var(--safe-area-inset-top, env(safe-area-inset-top, 0px)));overflow-y:auto;box-sizing:border-box;padding:20px 24px 24px;border-radius:0;border-bottom:1px solid color-mix(in srgb,currentColor 10%,transparent);font-family:"SF Pro Text",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.mobile-account-heading{display:flex;align-items:center;gap:12px;padding:0 0 20px;margin-bottom:8px;border-bottom:1px solid color-mix(in srgb,currentColor 8%,transparent)}
+.mobile-account-avatar{display:grid;place-items:center;flex-shrink:0;width:38px;height:38px;border-radius:50%;background:transparent;color:inherit;font-size:17px;font-weight:600}
+.mobile-account-identity{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.mobile-account-identity strong{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mobile-account-identity>span{font-size:12px;opacity:.75}
+.mobile-account-close{display:grid;place-items:center;width:44px;height:44px;flex-shrink:0;border:0;border-radius:0;background:transparent;color:inherit;cursor:pointer}
+.mobile-account-row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:14px 0;box-sizing:border-box;border:0;border-radius:10px;background:transparent;color:inherit;text-decoration:none;text-align:left;font:inherit;font-size:14px;font-weight:400;cursor:pointer}
+.mobile-account-row>svg{flex-shrink:0}.mobile-account-row>span:first-of-type{flex:1}.mobile-account-chevron{opacity:.3}
+.mobile-account-detail{font-size:12px;font-variant-numeric:tabular-nums;color:var(--account-accent)}
+.mobile-account-row:hover,.mobile-account-close:hover{background:color-mix(in srgb,currentColor 6%,transparent)}
+.mobile-account-row:active,.mobile-account-trigger:active{opacity:.7}
+.mobile-account-row:focus-visible,.mobile-account-close:focus-visible,.mobile-account-trigger:focus-visible{outline:2px solid var(--account-accent);outline-offset:2px}
+.mobile-account-separator{height:1px;margin:12px 0;background:color-mix(in srgb,currentColor 12%,transparent)}
+.mobile-account-logout{color:inherit;opacity:.75}
+@media(max-width:768px){
+  .stratos-mobile-account{display:block}
+  .stratos-header-right>button,.stratos-header-right>a,.stratos-header-right>.stratos-header-divider,.stratos-header-bell>button{display:none!important}
+}

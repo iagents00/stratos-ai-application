@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-09-27T07:43:14.618Z",
+  "matchingRows": 38,
+  "parsedEvents": 38,
+  "example": {
+    "event": "clinical_gateway_request",
+    "schemaVersion": 1,
+    "hasRequestId": true,
+    "status": 405,
+    "hasActor": false
+  },
+  "retentionVerified": false,
+  "immutableStorageVerified": false
+}

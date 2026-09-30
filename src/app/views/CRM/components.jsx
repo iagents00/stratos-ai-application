@@ -5139,6 +5139,8 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
    ANALYSIS DRAWER — Análisis IA contextual sobre Pipeline
 ═══════════════════════════════════════════ */
 const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => {
+  const { get: getScheduledCall } = useScheduledCalls();
+  const scheduledCallNM = getScheduledCall(lead);
   const isMobile = useIsMobile();
   const [analysisCopied, setAnalysisCopied] = useState(false);
   const [expedienteItems, setExpedienteItems] = useState(() => {

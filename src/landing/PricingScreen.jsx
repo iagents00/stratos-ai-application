@@ -1,8 +1,9 @@
 /**
- * PricingScreen — Planes y pagos para Stratos AI
+ * PricingScreen - Planes y pagos para Stratos AI
  * Reutilizable: puede montarse en App o LandingMarketing.
  */
-import { useState } from "react";
+import { createElement, useState } from "react";
+import { buildSalesMessage, buildWhatsAppUrl } from "../lib/whatsapp-sales.js";
 import { useClient } from "../hooks/useClient";
 import { Check, X, ChevronRight, Shield, Zap, Building2, Users, BarChart3, Brain, Phone, MessageCircle, Mail, ArrowLeft } from "lucide-react";
 
@@ -42,7 +43,7 @@ const plans = [
     ctaText: "Comenzar gratis 14 días",
     highlight: false,
     features: [
-      { text: "CRM personal — hasta 50 clientes", inc: true },
+      { text: "CRM personal, hasta 50 clientes", inc: true },
       { text: "Pipeline con 10 etapas", inc: true },
       { text: "1 asesor incluido", inc: true },
       { text: "Landing pages (5/mes)", inc: true },
@@ -68,7 +69,7 @@ const plans = [
     highlight: true,
     badge: "Más popular",
     features: [
-      { text: "CRM completo — clientes ilimitados", inc: true },
+      { text: "CRM completo, clientes ilimitados", inc: true },
       { text: "Pipeline con 10 etapas", inc: true },
       { text: "Hasta 10 asesores", inc: true },
       { text: "Landing pages ilimitadas", inc: true },
@@ -93,11 +94,11 @@ const plans = [
     ctaText: "Hablar con ventas",
     highlight: false,
     features: [
-      { text: "CRM completo — clientes ilimitados", inc: true },
+      { text: "CRM completo, clientes ilimitados", inc: true },
       { text: "Pipeline personalizable", inc: true },
       { text: "Asesores ilimitados", inc: true },
       { text: "Landing pages ilimitadas + white-label", inc: true },
-      { text: "Chat IA — modelo propio", inc: true },
+      { text: "Chat IA con modelo propio", inc: true },
       { text: "Dashboard ejecutivo CEO", inc: true },
       { text: "Soporte dedicado 24/7", inc: true },
       { text: "Agentes IA ilimitados", inc: true },
@@ -188,7 +189,7 @@ function PlanCard({ plan, billing, onSelect }) {
 
         {billing === "yearly" && savings > 0 && (
           <p style={{ fontSize: 10, color: P.emerald, fontFamily: font, marginBottom: 0 }}>
-            Ahorras {savings}% vs. mensual — facturado anualmente
+            Ahorras {savings}% vs. mensual, facturado anualmente
           </p>
         )}
         {!price && (
@@ -344,11 +345,17 @@ export default function PricingScreen({ onBack, embedded = false }) {
   const [billing, setBilling] = useState("yearly");
   const [checkoutPlan, setCheckoutPlan] = useState(null);
   const [openFaq, setOpenFaq] = useState(null);
+  const enterpriseWhatsAppUrl = buildWhatsAppUrl(buildSalesMessage({
+    intent: "Quiero cotizar un plan Enterprise adaptado a mi equipo.",
+    product: "Plan Stratos AI Enterprise",
+    details: ["Me interesan usuarios adicionales, integraciones y una propuesta personalizada."],
+    source: "Pantalla de planes",
+  }));
 
 
   const handleSelect = (plan) => {
     if (plan.monthlyPrice === null) {
-      alert("Contáctanos en ventas@stratoscapitalgroup.com para un plan Enterprise a medida.");
+      window.open(enterpriseWhatsAppUrl, "_blank", "noopener,noreferrer");
       return;
     }
     setCheckoutPlan(plan);
@@ -438,9 +445,9 @@ export default function PricingScreen({ onBack, embedded = false }) {
             { icon: X, text: "Sin contratos de permanencia" },
             { icon: BarChart3, text: "Datos 100% en México / LATAM" },
             { icon: Phone, text: "Soporte en español" },
-          ].map(({ icon: I, text }) => (
+          ].map(({ icon, text }) => (
             <div key={text} style={{ display: "flex", alignItems: "center", gap: 7 }}>
-              <I size={13} color={P.accent} />
+              {createElement(icon, { size: 13, color: P.accent })}
               <span style={{ fontSize: 12, color: P.txt2, fontFamily: font }}>{text}</span>
             </div>
           ))}
@@ -515,25 +522,18 @@ export default function PricingScreen({ onBack, embedded = false }) {
           </h2>
           <p style={{ fontSize: 14, color: P.txt2, marginBottom: 28, lineHeight: 1.7 }}>
             Para agencias grandes, franquicias o integraciones custom, habla con nuestro equipo.<br />
-            Respuesta garantizada en menos de 2 horas hábiles.
+            Te atenderemos directamente por WhatsApp, sin formularios previos.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <button style={{
+            <a href={enterpriseWhatsAppUrl} target="_blank" rel="noopener noreferrer" aria-label="Cotizar un plan personalizado por WhatsApp" style={{
               padding: "13px 28px", borderRadius: 11, border: "none", cursor: "pointer",
               background: `linear-gradient(135deg, ${P.accent}, #3BC9A8)`, color: "#04080F",
               fontSize: 13, fontWeight: 700, fontFamily: fontD,
-              boxShadow: `0 4px 20px ${P.accent}30`,
+              boxShadow: `0 4px 20px ${P.accent}30`, textDecoration: "none",
+              display: "inline-flex", alignItems: "center", gap: 7,
             }}>
-              Hablar con ventas
-            </button>
-            <button style={{
-              padding: "13px 28px", borderRadius: 11, border: `1px solid ${P.border}`, cursor: "pointer",
-              background: "rgba(255,255,255,0.04)", color: P.txt,
-              fontSize: 13, fontWeight: 500, fontFamily: font,
-              display: "flex", alignItems: "center", gap: 7,
-            }}>
-              <MessageCircle size={14} /> Chat en vivo
-            </button>
+              <MessageCircle size={14} /> Cotizar por WhatsApp
+            </a>
           </div>
         </div>
       </div>

@@ -98,7 +98,8 @@ const PREMIUM_ICON_OVERRIDES = {
 };
 
 export function IosIcon({ name, filled = false, size = 24, color = "currentColor", style, title, ...rest }) {
-  const g = PREMIUM_ICON_OVERRIDES[name] || G[name] || G.menu;
+  const iconName = name === "mi_espacio" ? "plan" : name;
+  const g = PREMIUM_ICON_OVERRIDES[iconName] || G[iconName] || G.menu;
   const inner = filled ? g.s : g.o;
   return (
     <svg

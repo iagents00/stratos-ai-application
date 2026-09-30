@@ -2442,7 +2442,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
             {metricsTabEnabled && (
               <button
-                onClick={() => (comandoDirectivoEnabled ? onOpenComando() : setShowMetrics(v => !v))}
+                onClick={() => {
+                  if (comandoDirectivoEnabled && onOpenComando) onOpenComando();
+                  else setShowMetrics(v => !v);
+                }}
                 title={comandoDirectivoEnabled
                   ? "Ir al Comando Directivo (indicadores por asesor)"
                   : (showMetrics ? "Volver al CRM" : "Ver indicadores de asesores")}
@@ -2624,7 +2627,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     <span style={{
                       fontSize: 12, color: T.txt2, fontFamily: font, fontWeight: 500,
                     }}>
-                      <span style={{ color: T.accent, fontWeight: 500 }}>{priorityLeads.length}</span> cliente{priorityLeads.length !== 1 ? "s" : ""} esperando acción
+                      <span style={{ color: T.accent, fontWeight: 500 }}>{priorityLeads.length}</span> {priorityLeads.length === 1 ? L.entity : L.entityPlural} esperando acción
                     </span>
                   </>
                 )}
@@ -3511,7 +3514,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   <div style={{ gridColumn: "1 / -1", position: "relative" }}>
                     <label style={{ ...labelStyle, justifyContent: "space-between" }}>
                       <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <DollarSign size={9} color={T.txt3} /> Presupuesto
+                        <DollarSign size={9} color={T.txt3} /> {clientConfig.demoOnly ? "Presupuesto del tratamiento" : "Presupuesto"}
                       </span>
                       {hasParsed && (
                         <span style={{ fontSize: 10.5, fontWeight: 500, color: accentStrong, fontFamily: fontDisp, letterSpacing: "-0.005em", textTransform: "none" }}>
@@ -3608,7 +3611,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               {/* Proyecto de interés — full width para dar espacio */}
               <div style={{ gridColumn: "1 / -1" }}>
                 <label style={labelStyle}>
-                  <Building2 size={9} color={T.txt3} /> Proyecto de interés
+                  <Building2 size={9} color={T.txt3} /> {clientConfig.demoOnly ? "Tratamiento de interés" : "Proyecto de interés"}
                 </label>
                 <ClickDropdown
                   value={newLead.p || ""}

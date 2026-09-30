@@ -26,16 +26,16 @@ export function dateInputValue(date) {
 }
 
 export function parseDateInput(value) {
-  if (!value) return null;
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const [year, month, day] = value.split("-").map(Number);
   if (!year || !month || !day) return null;
-  return new Date(year, month - 1, day);
+  const date = new Date(year, month - 1, day);
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day ? date : null;
 }
 
-export function resolveDateRange(preset = "month", customFrom = "", customTo = "") {
+export function resolveDateRange(preset = "month", customFrom = "", customTo = "", now = new Date()) {
   if (preset === "all") return { from: null, to: null, fromTs: null, toTs: null };
 
-  const now = new Date();
   let from = startOfDay(now);
   let to = endExclusive(now);
 
@@ -54,7 +54,10 @@ export function resolveDateRange(preset = "month", customFrom = "", customTo = "
     const parsedTo = parseDateInput(customTo);
     if (parsedFrom) from = startOfDay(parsedFrom);
     if (parsedTo) to = endExclusive(parsedTo);
-    if (from.getTime() >= to.getTime()) to = endExclusive(from);
+    if (parsedFrom && parsedTo && parsedFrom > parsedTo) {
+      from = startOfDay(parsedTo);
+      to = endExclusive(parsedFrom);
+    }
   }
 
   return { from, to, fromTs: from.getTime(), toTs: to.getTime() };
@@ -70,9 +73,17 @@ export function dateRangeLabel(range) {
 
 export function timestampInRange(value, range) {
   if (!range || range.fromTs === null) return true;
-  if (!value) return false;
-  const timestamp = new Date(value).getTime();
-  return !Number.isNaN(timestamp) && timestamp >= range.fromTs && timestamp < range.toTs;
+  const timestamp = toTimestamp(value);
+  return timestamp !== null && timestamp >= range.fromTs && timestamp < range.toTs;
+}
+
+// PostgreSQL DATE is a local calendar day, not UTC midnight.
+export function toTimestamp(value) {
+  if (value == null || value === "") return null;
+  const date = typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? parseDateInput(value) : new Date(value);
+  const timestamp = date?.getTime();
+  return Number.isFinite(timestamp) ? timestamp : null;
 }
 
 export function createDefaultDateFilter() {

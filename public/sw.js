@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v426'; // v426: alta rápida de WhatsApp abre directamente Remitentes de Infobip y permite reanudar/verificar el proceso.
+const CACHE_VERSION = 'stratos-v427'; // v426: alta rápida de WhatsApp abre directamente Remitentes de Infobip y permite reanudar/verificar el proceso.
 // const CACHE_VERSION = 'stratos-v424'; // v424: ficha de Google Play (textos + graficos de tienda)
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;

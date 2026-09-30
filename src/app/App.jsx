@@ -1,3 +1,6 @@
+import HuliWorkspace from "../dental-demo/TenantHuliWorkspace.jsx";
+import { DENTAL_DEMO_LEADS } from "../dental-demo/profile-data";
+import { readAllRows } from "../lib/read-all-rows.js";
 /**
  * app/App.jsx — Shell principal de Stratos AI
  * ─────────────────────────────────────────────────────────────────────────────
@@ -51,6 +54,7 @@ import { font, fontDisp } from "../design-system/tokens";
 /* ── Feature components ── */
 import { StratosAtomHex } from "./components/Logo";
 import DynIsland          from "./components/DynIsland";
+import MobileHeaderMenu from "./components/MobileHeaderMenu";
 import IAOSIsland         from "./components/IAOSIsland";
 import CopilotMark        from "./components/CopilotMark";
 import { buildIntelNotifs } from "./constants/intelNotifs";
@@ -69,7 +73,7 @@ const PlatformAdminConsole = lazy(() => import("./features/Admin/PlatformAdminCo
 const RailsSettings = lazy(() => import("./features/Admin/RailsSettings"));
 
 /* ── Navigation & roles ── */
-import { nav, MODULE_ROLES, MOBILE_PRIMARY_NAV, canAccessModule } from "./constants/navigation";
+import { nav, MODULE_ROLES, MOBILE_PRIMARY_NAV, canAccessModule, isMarketingUser } from "./constants/navigation";
 
 // Vistas que NO se persisten entre F5: son flujos efímeros (entrar a Planes
 // desde una promo, abrir admin desde un settings click). El F5 te regresa
@@ -283,22 +287,7 @@ const LP = {
  * Para que la paginación sea estable, la query debe incluir un orden determinista
  * (ideal: un campo único como `id` de desempate).
  */
-async function fetchAllPaged(makeQuery) {
-  const PAGE = 1000;
-  let all = [];
-  let from = 0;
-  // Tope de seguridad anti-loop (50 páginas = 50k filas) por si el backend
-  // devolviera siempre PAGE filas; en la práctica corta en cuanto baja de PAGE.
-  for (let guard = 0; guard < 50; guard++) {
-    const { data, error } = await makeQuery().range(from, from + PAGE - 1);
-    if (error) return { data: all, error };
-    const batch = data || [];
-    all = all.concat(batch);
-    if (batch.length < PAGE) break; // última página
-    from += PAGE;
-  }
-  return { data: all, error: null };
-}
+const fetchAllPaged = readAllRows;
 
 /* ════════════════════════════════════════
    MAIN APP
@@ -328,6 +317,7 @@ export default function App() {
   // marca sin depender de checks hardcoded.
   const { config: clientConfig } = useClient();
   const isAsesorRole     = !["super_admin","admin","director","ceo"].includes(user?.role);
+  const marketingMode    = isMarketingUser(user);
   // Telefono de soporte del tenant para mostrar como atajo en el header.
   // Si el cliente no define support.phoneLabel ni support.whatsapp, el boton
   // no se renderiza (cero impacto visual para clientes sin numero).
@@ -376,6 +366,7 @@ export default function App() {
   const prevViewRef = useRef(isAsesorRole ? "c" : "d");
   useEffect(() => { if (v !== "copilot" && v !== "wa") prevViewRef.current = v; }, [v]);
   const backToPrevView = useCallback(() => setV(prevViewRef.current || (isAsesorRole ? "c" : "d")), [isAsesorRole]);
+
 
   // Persistir vista cuando cambia para que el próximo F5 te deje donde estabas.
   // Skip vistas efímeras (planes/admin) — esas son flujos que no queremos
@@ -765,9 +756,9 @@ export default function App() {
   // Ahora el permiso lo pide un solo lugar, en orden, en el efecto de abajo.
   useEffect(() => {
     if (!user || !isNativeApp()) return;
-    return addNotificationTapListener(() => setV("wa"));
+    return addNotificationTapListener(() => setV(canAccessModule("wa", user, clientConfig) ? "wa" : resolveInitialView(user, clientConfig)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, user?.role, user?.organizationId, user?.email, user?.name, clientConfig]);
 
   // ── EL PERMISO SE PIDE AL ABRIR LA APP, COMO CUALQUIER OTRA ──────────────
   //
@@ -892,7 +883,7 @@ export default function App() {
         try {
           // Si la notificación pide abrir una vista específica, navegar a ella
           if (data.view && typeof setV === 'function') {
-            setV(data.view);
+            setV(canAccessModule(data.view, user, clientConfig) ? data.view : resolveInitialView(user, clientConfig));
           }
           // Enfocar la ventana
           if (typeof window !== 'undefined') window.focus();
@@ -920,7 +911,7 @@ export default function App() {
       return cleanup;
     } catch { /* noop */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, user?.role, user?.organizationId, user?.email, user?.name, clientConfig]);
 
   /* ── Theme ── */
   const [theme, setThemeState] = useState(() => {
@@ -1043,6 +1034,7 @@ export default function App() {
 
   /* ── Leads data — shared between Dash & CRM ── */
   const [leadsData, setLeadsData]       = useState([]);
+  const [leadsLoadError, setLeadsLoadError] = useState(null);
   const [leadsLoading, setLeadsLoading] = useState(true);
   // Score del asesor = promedio del SCORE de su cartera visible (0-100). Se
   // muestra como badge junto a la flecha del Copilot (estilo el "180" de
@@ -1167,6 +1159,8 @@ export default function App() {
   }, [leadsCacheKey]);
 
   const fetchLeads = useCallback(async ({ silent = false } = {}) => {
+    setLeadsLoadError(null);
+    setLeadsRefreshing(true);
     // Si NO es silent y hay cache, pintamos cache primero y dejamos
     // leadsLoading=false (UX: leads aparecen al instante en F5/login).
     // El fetch a la red continúa y reemplaza con datos frescos al volver.
@@ -1185,6 +1179,7 @@ export default function App() {
         const offlineLeads = await getOfflineLeads(user);
         setLeadsData(normalizeLeads(offlineLeads));
       } catch (e) {
+        setLeadsLoadError(e?.message || 'No se pudo cargar la cartera.');
         console.warn('[Stratos] Error cargando leads offline:', e);
         if (!cached) setLeadsData([]);
       }
@@ -1203,6 +1198,7 @@ export default function App() {
         .order('created_at', { ascending: false })
         .order('id', { ascending: false }) // desempate estable en el borde de página
     );
+    setLeadsLoadError(error?.message || null);
     if (!error) {
       setLeadsData(normalizeLeads(data));
       writeLeadsCache(data);
@@ -1223,7 +1219,7 @@ export default function App() {
     // Marketing (Alex admin o rol marketing): NO se cargan leads de ventas. Así el
     // header y todo lo que deriva de leadsData quedan vacíos/apagados para ellos.
     if (!canAccessModule("c", user, clientConfig)) { setLeadsData([]); setLeadsLoading(false); return; }
-    if (user.id === 'demo-user-local') {
+    if (user.id === 'demo-user-local' || user.isDemo) {
       // Demo: los leads no tienen `created_at` (solo `fechaIngreso` formateado).
       // Para que el Comando Directivo y AdvisorMetrics muestren métricas reales
       // y no ceros, sintetizamos un `created_at` distribuido en los últimos
@@ -1252,8 +1248,9 @@ export default function App() {
       };
       const now = Date.now();
       const spreadMs = 60 * 24 * 60 * 60 * 1000;
-      const denom = Math.max(1, leads.length - 1);
-      setLeadsData(leads.map((l, i) => ({
+      const demoLeads = clientConfig.liveHuli ? [] : clientConfig.demoOnly ? DENTAL_DEMO_LEADS : leads;
+      const denom = Math.max(1, demoLeads.length - 1);
+      setLeadsData(demoLeads.map((l, i) => ({
         ...l,
         seguimientos: l.seguimientos ?? 0,
         created_at:   l.created_at
@@ -1355,7 +1352,7 @@ export default function App() {
   const [trashedLeads, setTrashedLeads] = useState([]);
 
   const refreshTrash = useCallback(async () => {
-    if (!user || user.id === 'demo-user-local') return;
+    if (!user || (user.id === 'demo-user-local' || user.isDemo)) return;
     // Paginado por la misma razón que el fetch activo: la papelera puede superar
     // las 1000 filas con el tiempo y PostgREST las truncaría.
     const { data, error } = await fetchAllPaged(() =>
@@ -1370,7 +1367,7 @@ export default function App() {
 
   // Cargar papelera al montar y cuando cambia user
   useEffect(() => {
-    if (!user || user.id === 'demo-user-local' || user._offline) return;
+    if (!user || (user.id === 'demo-user-local' || user.isDemo) || user._offline) return;
     refreshTrash();
   }, [user, refreshTrash]);
 
@@ -1438,7 +1435,7 @@ export default function App() {
   // Pausa cuando la pestaña está en background (document.hidden) para no
   // gastar CPU/red sin beneficio; al volver al foreground reanuda inmediato.
   useEffect(() => {
-    if (!user || user.id === 'demo-user-local') return;
+    if (!user || (user.id === 'demo-user-local' || user.isDemo)) return;
     const tick = () => setPendingSync(getPendingSyncCount());
     let t = null;
     const start = () => { if (t == null) { tick(); t = setInterval(tick, 5000); } };
@@ -1486,7 +1483,7 @@ export default function App() {
   const runAutoRecovery = useCallback(async () => {
     if (autoRecoveryRunning.current) return;
     if (!user) return;
-    if (user.id === 'demo-user-local') return;
+    if ((user.id === 'demo-user-local' || user.isDemo)) return;
 
     const hasPending = getPendingSyncCount() > 0;
     if (!user._offline && !hasPending) return;   // nada que hacer
@@ -1528,7 +1525,7 @@ export default function App() {
   // Ciclo periódico cada 60 s
   useEffect(() => {
     if (!user) return;
-    if (user.id === 'demo-user-local') return;
+    if ((user.id === 'demo-user-local' || user.isDemo)) return;
     const t = setInterval(runAutoRecovery, 60_000);
     // Disparo inmediato a los 8 s del montaje (margen tras el timeout de auth)
     const initial = setTimeout(runAutoRecovery, 8_000);
@@ -1672,17 +1669,20 @@ export default function App() {
       id: l.id, text: l.nextAction, lead: l.n,
       asesor: (l.asesor || '').split(' ')[0], date: l.nextActionDate,
       done: false, priority: l.hot ? 'urgente' : l.daysInactive >= 7 ? 'alto' : 'normal',
-      assignee: l.asesor, assigneeType: 'human',
+      assignee: l.asesor, assigneeType: 'human', agendaCategory: 'profesional',
     }));
     setMetaActions(derived);
     supabase.from("team_actions").select("*").order("created_at", { ascending: false })
       .then(({ data, error }) => {
         if (error || !data) return;
         const mapped = data.map(r => ({
-          id: r.id, text: r.text, lead: r.category || 'General', asesor: r.asesor_name || '',
+          id: r.id, text: r.text,
+          lead: r.category && !['personal','profesional'].includes(String(r.category).toLowerCase()) ? r.category : (String(r.category).toLowerCase() === 'personal' ? 'Personal' : 'Profesional'),
+          agendaCategory: String(r.agenda_scope || r.category || '').toLowerCase() === 'personal' ? 'personal' : 'profesional',
+          asesor: r.asesor_name || '',
           date: r.due_at ? new Date(r.due_at).toLocaleString('es-MX', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '',
           done: r.done, priority: r.priority || 'normal', assignee: r.asesor_name || '',
-          assigneeType: r.assignee_type || 'human', due_at: r.due_at, _persisted: true,
+          assigneeType: r.assignee_type || 'human', due_at: r.due_at, status: r.status || 'pending', _persisted: true,
         }));
         const ids = new Set(mapped.map(m => m.id));
         setMetaActions(prev => [...mapped, ...prev.filter(a => !a._persisted && !ids.has(a.id))]);
@@ -1703,7 +1703,7 @@ export default function App() {
   const metaCfgLoaded = useRef(false);   // evita escribir meta_config antes de saber qué hay en DB
   useEffect(() => {
     const orgId = user?.organizationId;
-    if (!orgId || user?._offline || user?.id === 'demo-user-local') return;
+    if (!orgId || user?._offline || (user?.id === 'demo-user-local' || user?.isDemo)) return;
     let cancelled = false;
     supabase
       .from('organizations')
@@ -1820,7 +1820,7 @@ export default function App() {
       return;
     }
     const orgId = user?.organizationId;
-    if (!orgId || user?._offline || user?.id === 'demo-user-local') return;
+    if (!orgId || user?._offline || (user?.id === 'demo-user-local' || user?.isDemo)) return;
     // Solo escribimos meta_config completo si YA sabemos que en DB estaba NULL;
     // si el fetch inicial no ha vuelto, escribir {documents} pisaría plan/protocol.
     if (!metaCfgLoaded.current) return;
@@ -1964,7 +1964,13 @@ export default function App() {
   // Solo acciones de equipo REALES (team_actions persistidas). Las derivadas de leads
   // (la "próxima acción" de cada lead) nunca se marcan hechas → inflaban el total y
   // dejaban el % pegado en 1. Estas SÍ se completan (checkbox o el coach del bot por Telegram).
-  const realActions = metaActions.filter(a => a._persisted);
+  const realActions = metaActions.filter(a => {
+    if (!a._persisted) return false;
+    if (!marketingMode) return true;
+    const owner = String(a.assignee || a.asesor || "").trim().toLowerCase();
+    const self = String(user?.name || user?.email || "").trim().toLowerCase();
+    return owner && owner !== "todos" && owner !== "equipo" && owner === self;
+  });
   const actDone     = realActions.filter(a => a.done).length;   // completadas
   const actTotal    = realActions.length;                       // total de acciones de equipo reales
   const pc          = Math.max(1, Math.min(100, actTotal ? Math.round((actDone / actTotal) * 100) : 1));   // % de avance
@@ -1972,8 +1978,6 @@ export default function App() {
   // Sidebar: TODOS los módulos accesibles (rol + org). Se muestran los 5
   // primeros en la barra; el resto vive en un modal centrado "Aplicaciones".
   const accessibleAll = nav.filter(n =>
-    n.id !== "wa"
-    &&
     (!n.adminOnly || ["super_admin","admin"].includes(user?.role))
     && canAccessModule(n.id, user, clientConfig)
   );
@@ -2355,16 +2359,18 @@ export default function App() {
                     ? clientConfig.brand.appWordmark
                     : <>Stratos<span style={{ marginLeft:3, fontWeight:400, color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.30)", letterSpacing:"0.01em" }}>AI</span></>}
                 </p>
-                {hasCRM && <IAOSIsland leadsData={leadsData} isLight={isLight} idx={iaosIdx} brandLabel={orgBrand} onOpen={() => setIntelOpenTick(t => t + 1)} />}
+                {(clientConfig.liveHuli || clientConfig.demoOnly) && <span style={{fontSize:11,color:T.accent}}>Huli · Clínica dental</span>}
+                {hasCRM && !clientConfig.liveHuli && !clientConfig.demoOnly && <IAOSIsland leadsData={leadsData} isLight={isLight} idx={iaosIdx} brandLabel={orgBrand} onOpen={() => setIntelOpenTick(t => t + 1)} />}
                 {!hasCRM && esMkt && mktIntel && <IAOSIsland isLight={isLight} idx={iaosIdx} brandLabel={orgBrand} phrases={buildMktIntelPhrases(mktIntel, orgBrand)} onOpen={() => setIntelOpenTick(t => t + 1)} />}
               </div>
               {/* CENTER */}
               <div className="stratos-header-center" style={{ position:"absolute", left:"50%", transform:"translateX(-50%)" }}>
-                {hasCRM && <DynIsland onExpand={openPriorityLead} onOpenLead={openLeadExpediente} notifications={notifs} theme={theme} beamIdx={iaosIdx} openSignal={intelOpenTick} />}
+                {hasCRM && !clientConfig.liveHuli && !clientConfig.demoOnly && <DynIsland onExpand={openPriorityLead} onOpenLead={openLeadExpediente} notifications={notifs} theme={theme} beamIdx={iaosIdx} openSignal={intelOpenTick} />}
                 {!hasCRM && esMkt && mktIntel && <DynIsland notifications={buildMktIntelNotifs(mktIntel)} theme={theme} beamIdx={iaosIdx} openSignal={intelOpenTick} />}
               </div>
               {/* RIGHT */}
               <div className="stratos-header-right" style={{ display:"flex", alignItems:"center", gap:4 }}>
+                <MobileHeaderMenu user={user} T={T} isLight={isLight} unread={totalNotifUnread} pendingSync={pendingSync} onNotifications={() => setBellOpen(true)} onSearch={openHeaderSearch} onProfile={() => setV("perfil")} onTheme={() => setTheme(isLight ? "dark" : "light")} onLogout={onLogout} supportPhoneHref={supportPhoneHref} supportPhoneLabel={supportPhoneLabel} />
                 {clientConfig?.features?.crm !== false && (
                 <button className="stratos-header-search" title="Buscar (⌘K)" onClick={openHeaderSearch} style={iBtnBase} onMouseEnter={onIco} onMouseLeave={offIco} onMouseDown={dnIco} onMouseUp={upIco}>
                   <IosIcon name="search" size={16} color={icoRest} />
@@ -2419,7 +2425,7 @@ export default function App() {
                    o cola residual), la campana muestra un badge ámbar con la
                    cuenta y abre un dropdown con acciones. Para el resto de
                    usuarios sigue siendo solo el icono. */}
-                <div ref={bellRef} style={{ position:"relative" }}>
+                <div ref={bellRef} className="stratos-header-bell" style={{ position:"relative" }}>
                   <button
                     title={
                       totalNotifUnread > 0
@@ -2698,7 +2704,7 @@ export default function App() {
                 <button type="button"
                   className="stratos-userpill"
                   onClick={() => setV("perfil")}
-                  title="Mi perfil — conectar Telegram"
+                  title={clientConfig.liveHuli ? "Perfil de la clínica" : "Mi perfil — conectar Telegram"}
                   aria-current={v === "perfil" ? "page" : undefined}
                   style={{
                     display:"flex", alignItems:"center", gap:8, padding:"0 8px 0 3px",
@@ -2722,7 +2728,7 @@ export default function App() {
                       {user?.name?.split(" ")[0] || "Usuario"}
                     </span>
                     <span style={{ fontSize:10.5, fontWeight:400, fontFamily:font, letterSpacing:"0.02em", lineHeight:1.1, color: user?.isDemo ? T.amber : (isLight ? T.txt3 : "rgba(255,255,255,0.30)"), whiteSpace:"nowrap" }}>
-                      {user?.isDemo ? "Demo" : (user?.role || "Miembro")}
+                      {user?.isClinicalSession ? "Clínica" : user?.isDemo ? "Demo" : (user?.role || "Miembro")}
                     </span>
                   </div>
                 </button>
@@ -2742,7 +2748,7 @@ export default function App() {
 
         {/* CONTENT */}
         <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
-          <div key={v} className="stratos-content-area" style={{ flex:1, padding: (v === "wa" || v === "copilot") ? 0 : "18px 22px", overflowY: (v === "wa" || v === "copilot") ? "hidden" : "auto", animation:"fadeIn 0.28s ease", display:"flex", flexDirection:"column" }}>
+          <div key={v} className="stratos-content-area" style={{ flex:1, padding: (v === "wa" || v === "copilot" || v === "mi_espacio") ? 0 : "18px 22px", overflowY: (v === "wa" || v === "copilot" || v === "mi_espacio") ? "hidden" : "auto", animation:"fadeIn 0.28s ease", display:"flex", flexDirection:"column" }}>
             {user?.role && !canAccessModule(v, user, clientConfig)
               ? <PermissionGate moduleId={v}
                   onGoBack={() => setV(user?.role === "colaborador" ? "plan" : ((user?.isMarketingAdmin || user?.role === "marketing") ? "mkt_reporte" : "c"))}
@@ -2759,11 +2765,11 @@ export default function App() {
                   {v === "d"      && (clientConfig?.features?.comandoOps
                     ? <ComandoOps T={T} accent={clientConfig?.brand?.accent} />
                     : clientConfig?.features?.comandoDirectivo
-                      ? <ComandoDirectivo leadsData={leadsData} T={T} theme={theme} />
+                      ? <ComandoDirectivo leadsData={leadsData} T={T} theme={theme} loading={leadsLoading || leadsRefreshing} loadError={leadsLoadError} onRetry={() => fetchLeads()} />
                       : <Dash oc={oc} leadsData={leadsData} T={T} />)}
-                  {v === "c"      && <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} isRefreshing={leadsRefreshing} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} autoOpenNewLead={crmNewLeadTick} onNewLeadHandled={() => setCrmNewLeadTick(0)} onOpenComando={() => setV("d")} />}
+                  {v === "c"      && (clientConfig.liveHuli ? <HuliWorkspace view="patients" /> : <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} isRefreshing={leadsRefreshing} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} autoOpenNewLead={crmNewLeadTick} onNewLeadHandled={() => setCrmNewLeadTick(0)} onOpenComando={() => setV("d")} />)}
                   {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} openExpediente={openLeadExpediente} onBack={backToPrevView} chatCount={waInbox.conversations?.length || 0} />}
-                  {v === "copilot" && canAccessModule("copilot", user, clientConfig) && <Copilot T={T} isLight={isLight} theme={theme} onBack={backToPrevView} score={asesorScore} />}
+                  {v === "copilot" && canAccessModule("copilot", user, clientConfig) && (clientConfig.liveHuli ? <HuliWorkspace view="copilot" /> : <Copilot T={T} isLight={isLight} theme={theme} onBack={backToPrevView} score={asesorScore} />)}
                   {(v === "mkt" || v === "mkt_reporte" || v === "mkt_equipo" || v === "mkt_dia" || v === "mkt_marcas" || v === "mkt_pipe" || v === "mkt_sol") && canAccessModule(v, user, clientConfig) && (
                     <Marketing T={T}
                       initialTab={{ mkt_reporte: "reporte", mkt_equipo: "equipo", mkt_dia: "dia", mkt_marcas: "marcas", mkt_pipe: "pipeline", mkt_sol: "solicitudes" }[v]}
@@ -2777,6 +2783,7 @@ export default function App() {
                   {v === "ia"     && <IACRM oc={oc} T={T} theme={theme} />}
                   {v === "e"      && <ERP oc={oc} T={T} />}
                   {v === "a"      && <Team oc={oc} T={T} leadsData={leadsData} />}
+                  {v === "mi_espacio" && clientConfig.liveHuli && <HuliWorkspace view="agenda" />}
                   {v === "lp"     && <LandingPages T={T} />}
                   {v === "fa"     && <FinanzasAdmin T={T} />}
                   {v === "caja"   && canAccessModule("caja", user, clientConfig) && <Caja T={T} />}
@@ -2795,7 +2802,7 @@ export default function App() {
                       <PricingScreen embedded onBack={() => setV(isAsesorRole ? "c" : "d")} />
                     </div>
                   )}
-                  {v === "perfil" && <Profile theme={theme} T={T} />}
+                  {v === "perfil" && (clientConfig.liveHuli ? <HuliWorkspace view="profile" /> : <Profile theme={theme} T={T} />)}
                   {v === "admin"  && canAccessModule("admin", user, clientConfig) && <AdminPanel T={T} isLight={isLight} />}
                   {v === "rails"  && canAccessModule("rails", user, clientConfig) && <RailsSettings T={T} isLight={isLight} />}
                 </Suspense>
@@ -3101,8 +3108,8 @@ export default function App() {
       {/* ══ MODAL "Aplicaciones" (desktop) — grid centrado con TODAS las apps ══ */}
       {sidebarMore && createPortal(
         <>
-          <div onClick={() => setSidebarMore(false)} style={{ position:"fixed", inset:0, zIndex:700, background: isLight ? "rgba(15,23,42,0.35)" : "rgba(2,4,9,0.68)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", animation:"fadeIn 0.18s ease both" }} />
-          <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", zIndex:701, width:"min(90vw, 560px)", borderRadius:26, padding:"22px 22px 24px", background: isLight ? "#FFFFFF" : "#0A0F1C", border: isLight ? "1px solid rgba(15,23,42,0.10)" : "1px solid rgba(255,255,255,0.10)", boxShadow: isLight ? "0 30px 80px rgba(15,23,42,0.22), 0 0 1px 1px rgba(15,23,42,0.05)" : "inset 0 1px 0 rgba(190,245,225,0.08), inset 0 -1px 0 rgba(0,0,0,0.4), 0 30px 90px rgba(0,0,0,0.72)", animation:"modalIn 0.24s cubic-bezier(0.16,1,0.3,1) both" }}>
+          <div onClick={() => setSidebarMore(false)} style={{ position:"fixed", inset:0, zIndex:760, background: isLight ? "rgba(15,23,42,0.30)" : "rgba(2,4,9,0.68)", backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)", animation:"fadeIn 0.18s ease both" }} />
+          <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", zIndex:761, width:"min(90vw, 560px)", maxHeight:"min(78vh, 720px)", overflowY:"auto", borderRadius:26, padding:"22px 22px 24px", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))" : "linear-gradient(180deg, rgba(18,24,32,0.94), rgba(7,10,15,0.96))", backdropFilter:"blur(34px) saturate(190%)", WebkitBackdropFilter:"blur(34px) saturate(190%)", border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(190,245,225,0.10)", boxShadow: isLight ? "0 34px 90px rgba(15,23,42,0.30)" : "inset 0 1px 0 rgba(190,245,225,0.10), inset 0 -1px 0 rgba(0,0,0,0.48), 0 34px 100px rgba(0,0,0,0.78)", animation:"modalIn 0.24s cubic-bezier(0.16,1,0.3,1) both" }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18 }}>
               <span style={{ fontSize:15, fontWeight:600, fontFamily:fontDisp, letterSpacing:"-0.02em", color: isLight ? T.txt : "#FFFFFF" }}>Aplicaciones</span>
               <button onClick={() => setSidebarMore(false)} aria-label="Cerrar" style={{ width:30, height:30, borderRadius:10, border:"none", cursor:"pointer", background: isLight ? "#F1F5F9" : "rgba(255,255,255,0.06)", display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -3163,8 +3170,7 @@ export default function App() {
 
       {/* ══ META PANEL ══ */}
       <MetaPanel
-        open={metaOpen}
-        onClose={() => setMetaOpen(false)}
+        open={metaOpen && v !== "mi_espacio"}
         user={user}
         metaTab={metaTab}
         setMetaTab={setMetaTab}

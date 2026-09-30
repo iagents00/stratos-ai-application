@@ -138,7 +138,7 @@ function drawMastheader(ctx, meta) {
   // (con el char-spacing del badge calculaba mal el ancho y se salía de la hoja).
   doc.setFont("helvetica", "normal"); doc.setFontSize(9);
   if (typeof doc.setCharSpace === "function") doc.setCharSpace(0);
-  const sub1 = `Pipeline en vivo: ${meta.totalLeadsPipeline} leads  -  ${meta.asesoresCount} asesores activos en el rango`;
+  const sub1 = `Pipeline en vivo: ${meta.totalLeadsPipeline} leads  -  ${meta.asesoresCount} grupos en el desglose`;
   const sub2 = `Rango analizado: ${meta.periodSpan}`;
   text(doc, sub1, mL, y + 3.2,       { size: 9, color: C.ink2 });
   text(doc, sub2, mL, y + 3.2 + 4.4, { size: 9, color: C.ink2 });
@@ -215,9 +215,9 @@ function drawIndicatorBars(ctx, indicators) {
     doc.setFillColor(...C.line2);
     doc.roundedRect(barX, midY - 1.4, barW, 2.8, 1.4, 1.4, "F");
     // relleno
-    const w = Math.max(2, ((Number(ind.value) || 0) / maxVal) * barW);
+    const w = Math.max(0, ((Number(ind.value) || 0) / maxVal) * barW);
     doc.setFillColor(...accent);
-    doc.roundedRect(barX, midY - 1.4, w, 2.8, 1.4, 1.4, "F");
+    if (w > 0) doc.roundedRect(barX, midY - 1.4, w, 2.8, Math.min(1.4, w / 2), 1.4, "F");
     text(doc, String(ind.value), mL + contentW, midY + 1, { size: 9.6, style: "bold", color: C.ink, align: "right" });
     doc.setDrawColor(...C.line2); doc.setLineWidth(0.2);
     doc.line(mL, cy + rowH, mL + contentW, cy + rowH);
@@ -453,7 +453,7 @@ export function buildZoomResumenPdf(JsPDF, model) {
   ];
 
   // 1) KPIs de hoy.
-  sectionTitle(ctx, "Zooms de hoy");
+  sectionTitle(ctx, model.cardsTitle || "Zooms de hoy");
   drawCards(ctx, model.cardsHoy || []);
 
   // 2) Semana actual L-D.

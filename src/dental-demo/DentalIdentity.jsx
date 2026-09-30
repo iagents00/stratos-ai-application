@@ -1,0 +1,4 @@
+import { DENTAL_DEMO_USER } from './profile-data';
+export default function DentalIdentity({ T }) {
+  return <section style={{color:T.txt,padding:24,maxWidth:720}}><h1 style={{fontWeight:550,fontSize:26}}>Perfil de clínica dental</h1><p style={{color:T.accent}}>Stratos AI · Clínica Dental · Demo</p><dl style={{display:'grid',gridTemplateColumns:'130px 1fr',gap:18,fontSize:14}}><dt>Usuario</dt><dd style={{margin:0}}>{DENTAL_DEMO_USER.name}</dd><dt>Tipo de perfil</dt><dd style={{margin:0}}>Administrador de demostración</dd><dt>Módulos</dt><dd style={{margin:0}}>Pacientes, agenda dental y Copilot</dd><dt>Huli</dt><dd style={{margin:0}}>Conector preparado. Acceso real pendiente de vincular la clínica.</dd></dl><p style={{color:T.txt3,lineHeight:1.7,fontSize:13}}>Perfil local de demo, independiente de los usuarios productivos. Todos los datos son ficticios; esta sesión no tiene permisos sobre expedientes reales.</p></section>;
+}

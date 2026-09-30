@@ -21,10 +21,12 @@ import { useMemo, useState } from "react";
 import { FileDown, CalendarRange, Flame, X } from "lucide-react";
 import { font, fontDisp } from "../../../design-system/tokens";
 import { G } from "../../SharedComponents";
+import { dateRangeLabel } from "../CRM/date-range.js";
+import { advisorDisplayGroup } from "../CRM/zoom-metrics.js";
 import { useClient } from "../../../hooks/useClient";
 import { LINERS, PRESENTADORES, ESTATUS_ASISTIO, estatusColor } from "./constants";
 import { todayStr, addDays, weekRange, quincenaRange, monthRange, inRange, ymd, DOW, MON } from "./dates";
-import { savePdfDoc, isNativeApp } from "../../../lib/native";
+import { savePdfDoc } from "../../../lib/native";
 
 // Conteo por estatus de un subconjunto de Zooms. `total` incluye TODOS los
 // estatus (igual que "Total Zooms hoy" del sheet).
@@ -43,10 +45,10 @@ function countsOf(rows) {
 // Personas de la tabla: catálogo primero (aparecen aunque vayan en cero, como
 // en el sheet) + cualquier nombre extra tecleado a mano en los registros.
 function peopleList(catalog, rows, field) {
-  const extra = [...new Set(rows.map(r => (r[field] || "").trim()).filter(Boolean))]
+  const extra = [...new Set(rows.map(r => advisorDisplayGroup(r[field])).filter(Boolean))]
     .filter(n => !catalog.includes(n))
     .sort((a, b) => a.localeCompare(b, "es"));
-  return [...catalog, ...extra];
+  return [...new Set([...catalog.map(advisorDisplayGroup), ...extra])];
 }
 
 const ESTATUS_COLS = [
@@ -58,9 +60,10 @@ const ESTATUS_COLS = [
   { key: "cancelados",  label: "Canc." },
 ];
 
-export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null }) {
+export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null, dateRange = null }) {
   const { config: clientConfig } = useClient();
-  const [linerScope, setLinerScope] = useState("hoy"); // hoy | semana
+  const [linerScope, setLinerScope] = useState(dateRange ? "rango" : "hoy"); // hoy | semana
+  const [pdfError, setPdfError] = useState("");
   const [pdfBusy, setPdfBusy] = useState(false);
   // Día seleccionado en la semana / próximos 7 — despliega la lista de sus
   // Zooms debajo de la tira (las tarjetas SON botones, no solo tarjetas).
@@ -75,7 +78,8 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
   const semanaRows = useMemo(() => rows.filter(r => inRange(r.fecha_zoom, wk.start, wk.end)), [rows, wk.start, wk.end]);
   const qnaRows    = useMemo(() => rows.filter(r => inRange(r.fecha_zoom, qna.start, qna.end)), [rows, qna.start, qna.end]);
   const mesRows    = useMemo(() => rows.filter(r => inRange(r.fecha_zoom, mo.start, mo.end)), [rows, mo.start, mo.end]);
-  const kpisHoy    = useMemo(() => countsOf(hoyRows), [hoyRows]);
+  const kpisHoy = useMemo(() => countsOf(dateRange ? rows : hoyRows), [rows, hoyRows, dateRange]);
+  const scopeLabel = dateRange ? "en el rango" : "hoy";
 
   // Semana L-D: 7 días con sus conteos.
   const semanaDias = useMemo(() => {
@@ -95,21 +99,22 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
 
   // Por Liner (hoy | semana | mes) y por Presentador (principal — quien corre el Zoom).
   const porLiner = useMemo(() => {
-    const scope = linerScope === "hoy" ? hoyRows
+    const scope = linerScope === "rango" ? rows : linerScope === "hoy" ? hoyRows
       : linerScope === "semana" ? semanaRows
       : linerScope === "qna" ? qnaRows
       : mesRows;
     return peopleList(LINERS, rows, "liner")
-      .map(name => ({ name, ...countsOf(scope.filter(r => (r.liner || "").trim() === name)) }));
+      .map(name => ({ name, ...countsOf(scope.filter(r => advisorDisplayGroup(r.liner) === name)) }));
   }, [linerScope, hoyRows, semanaRows, qnaRows, mesRows, rows]);
 
   const porPresentador = useMemo(() => {
     return peopleList(PRESENTADORES, rows, "presentador_principal")
       .map(name => {
-        const mine = (list) => list.filter(r => (r.presentador_principal || "").trim() === name);
+        const mine = (list) => list.filter(r => advisorDisplayGroup(r.presentador_principal) === name);
         const week = mine(semanaRows);
         return {
           name,
+          rango: mine(rows).length,
           hoy: mine(hoyRows).length,
           semana: week.length,
           mes: mine(mesRows).length,
@@ -130,7 +135,9 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
 
   // ── Export PDF (para los socios) ──────────────────────────────────────────
   const handlePdf = async () => {
+    if (pdfBusy) return;
     setPdfBusy(true);
+    setPdfError("");
     try {
       const [{ default: JsPDF }, { buildZoomResumenPdf }] = await Promise.all([
         import("jspdf"),
@@ -142,22 +149,23 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
       const semanaCounts = countsOf(semanaRows);
       const linerTable = (scope) =>
         peopleList(LINERS, rows, "liner")
-          .map(name => ({ name, ...countsOf(scope.filter(r => (r.liner || "").trim() === name)) }))
+          .map(name => ({ name, ...countsOf(scope.filter(r => advisorDisplayGroup(r.liner) === name)) }))
           .map(r => [r.name, r.total, r.confirmados, r.asistieron, r.noShow, r.reagendados, r.cancelados]);
       const model = {
         meta: {
           clientName: clientConfig?.legalName || clientConfig?.name || "Stratos",
           stamp, hhmm,
           subtitle1: `Hoy (${stamp}): ${kpisHoy.total} Zooms  -  Semana: ${semanaCounts.total}  -  ${qna.label}: ${countsOf(qnaRows).total}  -  Mes (${mo.label}): ${countsOf(mesRows).total}`,
-          subtitle2: `Fecha de revisión: ${stamp} ${hhmm}`,
+          subtitle2: dateRange ? `Rango global: ${dateRangeLabel(dateRange)}; subperiodos dentro de ese rango.` : `Fecha de revisión: ${stamp} ${hhmm}`,
         },
+        cardsTitle: dateRange ? "Zooms del rango seleccionado" : "Zooms de hoy",
         cardsHoy: [
-          { label: "Zooms hoy",   value: String(kpisHoy.total),       sub: "agendados para hoy", color: "#3B82F6" },
-          { label: "Confirmados", value: String(kpisHoy.confirmados), sub: "hoy",                color: "#0EA5E9" },
-          { label: "Asistieron",  value: String(kpisHoy.asistieron),  sub: "hoy",                color: "#10B981" },
-          { label: "No show",     value: String(kpisHoy.noShow),      sub: "hoy",                color: "#EA580C" },
-          { label: "Reagendados", value: String(kpisHoy.reagendados), sub: "hoy",                color: "#F59E0B" },
-          { label: "Cancelados",  value: String(kpisHoy.cancelados),  sub: "hoy",                color: "#64748B" },
+          { label: "Zooms " + scopeLabel,   value: String(kpisHoy.total),       sub: scopeLabel, color: "#3B82F6" },
+          { label: "Confirmados", value: String(kpisHoy.confirmados), sub: scopeLabel,                color: "#0EA5E9" },
+          { label: "Asistieron",  value: String(kpisHoy.asistieron),  sub: scopeLabel,                color: "#10B981" },
+          { label: "No show",     value: String(kpisHoy.noShow),      sub: scopeLabel,                color: "#EA580C" },
+          { label: "Reagendados", value: String(kpisHoy.reagendados), sub: scopeLabel,                color: "#F59E0B" },
+          { label: "Cancelados",  value: String(kpisHoy.cancelados),  sub: scopeLabel,                color: "#64748B" },
         ],
         semana: {
           title: `Semana actual (lunes a domingo) - ${semanaCounts.total} Zooms`,
@@ -165,14 +173,14 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
           rows: semanaDias.map(d => [d.longLabel + (d.isToday ? "  (hoy)" : ""), d.total, d.confirmados, d.asistieron, d.noShow, d.reagendados, d.cancelados]),
           totals: ["Total semana", semanaCounts.total, semanaCounts.confirmados, semanaCounts.asistieron, semanaCounts.noShow, semanaCounts.reagendados, semanaCounts.cancelados],
         },
-        linerHoy:    { title: "Por Liner - hoy",    headers: ["Liner", "Zooms", "Conf.", "Asistió", "No show", "Reag.", "Canc."], rows: linerTable(hoyRows) },
+        linerHoy:    { title: "Por Liner - " + scopeLabel,    headers: ["Liner", "Zooms", "Conf.", "Asistió", "No show", "Reag.", "Canc."], rows: linerTable(dateRange ? rows : hoyRows) },
         linerSemana: { title: "Por Liner - semana", headers: ["Liner", "Zooms", "Conf.", "Asistió", "No show", "Reag.", "Canc."], rows: linerTable(semanaRows) },
         linerQuincena: { title: `Por Liner - quincena (${qna.label})`, headers: ["Liner", "Zooms", "Conf.", "Asistió", "No show", "Reag.", "Canc."], rows: linerTable(qnaRows) },
         linerMes:    { title: `Por Liner - mes (${mo.label})`, headers: ["Liner", "Zooms", "Conf.", "Asistió", "No show", "Reag.", "Canc."], rows: linerTable(mesRows) },
         presentadores: {
           title: "Por Presentador",
-          headers: ["Presentador", "Zooms hoy", "Zooms semana", "Zooms mes", "Asistieron (semana)"],
-          rows: porPresentador.map(p => [p.name, p.hoy, p.semana, p.mes, p.asistioSemana]),
+          headers: ["Presentador", dateRange ? "Zooms rango" : "Zooms hoy", "Zooms semana", "Zooms mes", "Asistieron (semana)"],
+          rows: porPresentador.map(p => [p.name, dateRange ? p.rango : p.hoy, p.semana, p.mes, p.asistioSemana]),
         },
         proximos7: {
           title: "Próximos 7 días",
@@ -187,7 +195,7 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
     } catch (err) {
       console.warn("[Control de Zooms] PDF del resumen falló:", err);
       // En la app el botón quedaría "muerto" en silencio: avisar.
-      if (isNativeApp()) window.alert("No se pudo generar el PDF en la app. Prueba de nuevo.");
+      setPdfError("No se pudo generar el PDF. Intenta nuevamente.");
     }
     setPdfBusy(false);
   };
@@ -228,10 +236,12 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
         </button>
       </div>
 
+      {pdfError && <p role="alert" style={{ color: T.rose }}>{pdfError}</p>}
+      {dateRange && <p style={{ color: T.txt2, fontSize: 12, fontFamily: font }}>Rango: {dateRangeLabel(dateRange)}. Hoy, semana, quincena y mes muestran sólo su intersección con este rango.</p>}
       {/* 1) KPIs de HOY por estatus */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 8, marginBottom: 16 }}>
         {[
-          { label: "Zooms hoy",   value: kpisHoy.total,       color: "#3B82F6" },
+          { label: "Zooms " + scopeLabel,   value: kpisHoy.total,       color: "#3B82F6" },
           { label: "Confirmados", value: kpisHoy.confirmados, color: "#0EA5E9" },
           { label: "Asistieron",  value: kpisHoy.asistieron,  color: "#10B981" },
           { label: "No show",     value: kpisHoy.noShow,      color: "#EA580C" },
@@ -345,13 +355,13 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
       </div>
 
       {/* 3+4+5) Tablas: por Liner (toggle hoy/semana), por Presentador, próximos 7 */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: 12 }}>
         {/* Por Liner */}
         <div style={{ borderRadius: 12, border: `1px solid ${rowBorder}`, overflow: "hidden" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "10px 12px", background: headerBg }}>
             <span style={{ fontSize: 13.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Por Liner</span>
             <div style={{ display: "inline-flex", gap: 3, padding: 2, borderRadius: 8, border: `1px solid ${rowBorder}` }}>
-              {[{ id: "hoy", l: "Hoy" }, { id: "semana", l: "Semana" }, { id: "qna", l: "Qna." }, { id: "mes", l: "Mes" }].map(s => {
+              {[...(dateRange ? [{ id: "rango", l: "Rango" }] : []), { id: "hoy", l: "Hoy" }, { id: "semana", l: "Semana" }, { id: "qna", l: "Qna." }, { id: "mes", l: "Mes" }].map(s => {
                 const active = linerScope === s.id;
                 return (
                   <button key={s.id} onClick={() => setLinerScope(s.id)} style={{
@@ -373,7 +383,7 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
                 </tr>
               </thead>
               <tbody>
-                {porLiner.map((r, i) => (
+                {porLiner.map((r) => (
                   <tr key={r.name} style={{ borderTop: `1px solid ${rowBorder}`, opacity: r.total === 0 ? 0.55 : 1 }}>
                     <td style={{ ...miniTd(T, "left"), fontWeight: 400, color: T.txt }}>{r.name}</td>
                     {ESTATUS_COLS.map(c => <td key={c.key} style={miniTd(T)}>{r[c.key]}</td>)}
@@ -405,7 +415,7 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
               <thead>
                 <tr>
                   <th style={miniTh(T, "left")}>Presentador</th>
-                  <th style={miniTh(T)}>Hoy</th>
+                  <th style={miniTh(T)}>{dateRange ? "Rango" : "Hoy"}</th>
                   <th style={miniTh(T)}>Semana</th>
                   <th style={miniTh(T)}>Mes</th>
                   <th style={miniTh(T)}>Asistió (sem.)</th>
@@ -413,9 +423,9 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null 
               </thead>
               <tbody>
                 {porPresentador.map(p => (
-                  <tr key={p.name} style={{ borderTop: `1px solid ${rowBorder}`, opacity: p.mes === 0 && p.hoy === 0 ? 0.55 : 1 }}>
+                  <tr key={p.name} style={{ borderTop: `1px solid ${rowBorder}`, opacity: p.rango === 0 ? 0.55 : 1 }}>
                     <td style={{ ...miniTd(T, "left"), fontWeight: 400, color: T.txt }}>{p.name}</td>
-                    <td style={miniTd(T)}>{p.hoy}</td>
+                    <td style={miniTd(T)}>{dateRange ? p.rango : p.hoy}</td>
                     <td style={miniTd(T)}>{p.semana}</td>
                     <td style={miniTd(T)}>{p.mes}</td>
                     <td style={{ ...miniTd(T), color: "#10B981", fontWeight: 500 }}>{p.asistioSemana}</td>

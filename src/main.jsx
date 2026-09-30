@@ -28,6 +28,8 @@ import { isNativeApp } from "./lib/native";
 
 // Code-splitting: solo se carga el bundle de la experiencia que el usuario
 // realmente abrió. Antes este import era estático y arrastraba todo a 922KB.
+const DentalDemo = lazy(() => import("./dental-demo/DentalProfileRouter.jsx"));
+const isDentalDemo = /^\/(?:demo-dental|clinica-dental-demo)(?:\/|$)/.test(window.location.pathname) || ["clinica-dental-demo"].includes(new URLSearchParams(window.location.search).get("client"));
 const App              = lazy(() => import("./app/App.jsx"));
 const LandingMarketing = lazy(() => import("./landing/LandingMarketing.jsx"));
 const PrivacyPolicy    = lazy(() => import("./landing/PrivacyPolicy.jsx"));
@@ -194,7 +196,7 @@ const isLanding = !esAppNativa && !isExplicitClient && (
   || (hostname === "127.0.0.1" && !params.has("app"))
 );
 
-const isApp = esAppNativa || (!isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isManualMkt && !isManualNSG && !isManualLegacy && !isManualBrasa && !isManualGasil && !isManualMuebleria && !isDiagnostico && !isDukeLeadRouter && !isOnboardingCC && !isPublicLanding && !isLanding);
+const isApp = esAppNativa || (!isDentalDemo && !isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isManualMkt && !isManualNSG && !isManualLegacy && !isManualBrasa && !isManualGasil && !isManualMuebleria && !isDiagnostico && !isDukeLeadRouter && !isOnboardingCC && !isPublicLanding && !isLanding);
 
 // URL de la plataforma — usada por la landing para el CTA principal
 const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app");
@@ -204,7 +206,7 @@ const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app
 // Componentes específicos del CRM pueden leer más config via useClient().
 try {
   if (clientConfig?.name) {
-    document.title = isApp
+    document.title = location.pathname.startsWith("/clinica-dental") && !location.pathname.startsWith("/clinica-dental-demo") ? "Stratos AI · Clínica dental" : isDentalDemo ? "Stratos AI · Demo dental" : isApp
       ? `${clientConfig.name} — Plataforma`
       : clientConfig.name;
   }
@@ -309,7 +311,7 @@ createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BootSignal />
     <ErrorBoundary>
-      <ClientProvider config={clientConfig}>
+      {isDentalDemo ? <Suspense fallback={<p>Cargando demo dental…</p>}><DentalDemo /></Suspense> : <ClientProvider config={clientConfig}>
         <AuthProvider>
           {/* Watcher: si el user logueado pertenece a otra org, redirige al
               path correcto. Solo activo cuando isApp=true porque las páginas
@@ -366,7 +368,7 @@ createRoot(document.getElementById("root")).render(
             }
           </Suspense>
         </AuthProvider>
-      </ClientProvider>
+      </ClientProvider>}
     </ErrorBoundary>
   </StrictMode>
 );

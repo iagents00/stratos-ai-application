@@ -129,11 +129,14 @@ export default function MetaPanel({
   canEdit,           // true solo si el role del usuario es super_admin o admin.
   savingConfig,      // bool — true cuando hay un cambio pendiente de guardar en DB.
   user,              // usuario actual (org id) — para persistir acciones manuales en team_actions.
+  agendaOnly = false,
+  marketingMode = false,
 }) {
   // ── Persistencia de acciones MANUALES en Supabase (tabla team_actions) ──
   // Las derivadas de leads se siembran en App.jsx (efímeras, se regeneran). Las que el usuario
   // crea acá SÍ se guardan, con fecha/hora límite OBLIGATORIA (la usa el coach de Telegram).
   const [metaNewDate, setMetaNewDate] = useState("");
+  const [metaNewNote, setMetaNewNote] = useState("");
   const [metaNewCategory, setMetaNewCategory] = useState("profesional");
   const [metaNewAssignee, setMetaNewAssignee] = useState("");
   const [agendaView, setAgendaView] = useState("mine");
@@ -162,6 +165,9 @@ export default function MetaPanel({
   // Sin equipo cargado, la única opción segura es uno mismo.
   const teamMemberOptions = teamMembers.length ? teamMembers : (_selfName ? [_selfName] : []);
   const creatingForTeam = _isManager && agendaView === "team";
+  useEffect(() => {
+    if (marketingMode && metaTab === "protocolo") setMetaTab("acciones");
+  }, [marketingMode, metaTab, setMetaTab]);
   // Persistimos si hay un usuario REAL logueado. NO exigimos conocer el org en el front:
   // team_actions tiene DEFAULT organization_id = current_organization_id() (la DB lo pone desde el
   // JWT) y RLS lo valida, así que guarda bien aunque user.organizationId no esté cargado en la sesión.
@@ -175,7 +181,7 @@ export default function MetaPanel({
       .then(({ data, error }) => {
         if (cancelled || error || !data) { if (error) console.warn('[Stratos] team_actions load:', error.message); return; }
         const mapped = data.map(r => ({
-          id: r.id, text: r.text,
+          id: r.id, text: r.text, note: r.nota || '',
           lead: r.category && !['personal','profesional'].includes(String(r.category).toLowerCase()) ? r.category : agendaCategoryMeta(r.category).label,
           agendaCategory: normalizeAgendaCategory(r.agenda_scope || r.category),
           asesor: r.asesor_name || '',
@@ -200,6 +206,7 @@ export default function MetaPanel({
   useEffect(() => {
     if (!open || !_online) return;
     let cancelled = false;
+    if (marketingMode) return;
     supabase.rpc('fn_org_team_members').then(({ data, error }) => {
       if (cancelled || error || !data) { if (error) console.warn('[Stratos] team members load:', error.message); return; }
       setTeamMembers(data.map(m => m.name).filter(Boolean));
@@ -221,8 +228,10 @@ export default function MetaPanel({
     const _selfId = creatingForTeam ? null : (user?.id || null);
     const assigneeName = creatingForTeam ? metaNewAssignee : _selfName;
     const category = normalizeAgendaCategory(metaNewCategory);
+    const note = metaNewNote.trim();
     const base = {
       text: txt,
+      note,
       lead: agendaCategoryMeta(category).label,
       agendaCategory: category,
       asesor_id: _selfId,
@@ -235,10 +244,10 @@ export default function MetaPanel({
       due_at: dueIso,
       status: 'pending',
     };
-    setMetaNewText(''); setMetaNewDate('');
+    setMetaNewText(''); setMetaNewNote(''); setMetaNewDate('');
     if (_online) {
       const { data, error } = await supabase.from('team_actions')
-        .insert({ text: txt, due_at: dueIso, priority: 'normal', category, asesor_id: _selfId, asesor_name: assigneeName })   // org lo pone el trigger team_actions_force_org
+        .insert({ text: txt, nota: note || null, due_at: dueIso, priority: 'normal', category, asesor_id: _selfId, asesor_name: assigneeName })   // org lo pone el trigger team_actions_force_org
         .select('id').single();
       if (!error && data) {
         if (assigneeName) {
@@ -254,6 +263,16 @@ export default function MetaPanel({
   };
   const persistDone = (a, done) => { if (a._persisted && _online) supabase.from('team_actions').update({ done, status: done ? 'done' : 'pending', completed_at: done ? new Date().toISOString() : null, last_response_at: done ? new Date().toISOString() : null }).eq('id', a.id).then(({ error }) => { if (error) console.warn('[Stratos] team_action done:', error.message); }); };
   const persistDelete = (a) => { if (a._persisted && _online) supabase.from('team_actions').delete().eq('id', a.id).then(({ error }) => { if (error) console.warn('[Stratos] team_action delete:', error.message); }); };
+  const persistActionPatch = (a, patch) => {
+    setMetaActions(p => p.map(x => x.id === a.id ? { ...x, ...patch } : x));
+    if (!a._persisted || !_online) return;
+    const dbPatch = {};
+    if (Object.prototype.hasOwnProperty.call(patch, 'text')) dbPatch.text = patch.text;
+    if (Object.prototype.hasOwnProperty.call(patch, 'note')) dbPatch.nota = patch.note || null;
+    if (Object.keys(dbPatch).length === 0) return;
+    supabase.from('team_actions').update(dbPatch).eq('id', a.id)
+      .then(({ error }) => { if (error) console.warn('[Stratos AI] team_action update:', error.message); });
+  };
 
   // ── Documentos del equipo (links) — persisten vía setMetaDocs (App.jsx → meta_config.documents)
   const [docUrl, setDocUrl] = useState("");
@@ -342,7 +361,13 @@ export default function MetaPanel({
     );
   };
 
-  const tabs = [
+  const tabs = marketingMode ? [
+    { id:"acciones",  label:"Agenda" },
+    { id:"docs",      label:"Documentos" },
+    { id:"plan",      label:"Plan Estratégico" },
+  ] : agendaOnly ? [
+    { id:"acciones",  label:"Agenda" },
+  ] : [
     { id:"acciones",  label:"Agenda" },
     { id:"docs",      label:"Documentos" },
     { id:"plan",      label:"Plan Estratégico" },
@@ -527,12 +552,64 @@ export default function MetaPanel({
     setMetaNewDate("");
     setDuePickerOpen(null);
   };
-  const agendaActions = (_isManager && agendaView === "team")
-    ? metaActions
-    : metaActions.filter(_isOwnAction);
+  const marketingDemoActions = marketingMode ? [
+    {
+      id: `demo-marketing-${user?.id || "user"}-1`,
+      text: "DEMO · Revisar campañas activas y anotar ajustes de copy",
+      note: "Ejemplo: agrega aqui cambios de anuncio, presupuesto o audiencia si hace falta.",
+      lead: "Profesional",
+      agendaCategory: "profesional",
+      asesor: _selfName,
+      date: "Demo · sin fecha",
+      done: false,
+      priority: "normal",
+      assignee: _selfName,
+      assigneeType: "human",
+      status: "pending",
+      _demo: true,
+    },
+    {
+      id: `demo-marketing-${user?.id || "user"}-2`,
+      text: "DEMO · Subir creativos finales a la carpeta de Marketing",
+      note: "",
+      lead: "Profesional",
+      agendaCategory: "profesional",
+      asesor: _selfName,
+      date: "Demo · sin fecha",
+      done: false,
+      priority: "normal",
+      assignee: _selfName,
+      assigneeType: "human",
+      status: "pending",
+      _demo: true,
+    },
+    {
+      id: `demo-marketing-${user?.id || "user"}-3`,
+      text: "DEMO · Reportar resultados del dia en el titulo de la actividad",
+      note: "La descripcion es opcional; normalmente basta con el titulo.",
+      lead: "Profesional",
+      agendaCategory: "profesional",
+      asesor: _selfName,
+      date: "Demo · sin fecha",
+      done: false,
+      priority: "normal",
+      assignee: _selfName,
+      assigneeType: "human",
+      status: "pending",
+      _demo: true,
+    },
+  ] : [];
+  const ownMarketingActions = metaActions.filter(a => {
+    if (a._demo) return true;
+    const owner = _nameKey(_actionOwner(a));
+    return owner && owner !== "todos" && owner !== "equipo" && owner === _nameKey(_selfName);
+  });
+  const agendaActions = marketingMode
+    ? (ownMarketingActions.length ? ownMarketingActions : marketingDemoActions)
+    : ((_isManager && agendaView === "team") ? metaActions : metaActions.filter(_isOwnAction));
   const pendingAgendaActions = agendaActions.filter(a => !a.done);
   const completedAgendaActions = agendaActions.filter(a => a.done);
-  const ownPendingCount = metaActions.filter(a => !a.done && _isOwnAction(a)).length;
+  const ownPendingCount = (marketingMode ? agendaActions : metaActions.filter(_isOwnAction)).filter(a => !a.done).length;
   const teamPendingCount = metaActions.filter(a => !a.done).length;
   const chevron  = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='${isLight ? "%235C6B82" : "%238B99AE"}' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>")`;
   const panelBg  = isLight
@@ -597,6 +674,10 @@ export default function MetaPanel({
     .mp-select:hover{border-color:var(--mp-borderH)!important}
     .mp-input{transition:border-color .16s ease,box-shadow .16s ease,background-color .16s ease}
     .mp-input::placeholder{color:var(--mp-txt3);opacity:1}
+    .mp-title-input::placeholder{color:var(--mp-txt3);opacity:1}
+    .mp-title-input:focus{box-shadow:0 2px 0 var(--mp-ringSoft)}
+    .mp-note-details>summary::-webkit-details-marker,details>summary::-webkit-details-marker{display:none}
+    .mp-note-details>summary:hover{color:var(--mp-txt2)!important}
     .mp-datechip{transition:transform .14s ease,background .16s ease,border-color .16s ease,box-shadow .16s ease,color .16s ease}
     .mp-datechip:hover{transform:translateY(-1px);border-color:var(--mp-lineS)!important;box-shadow:var(--mp-rowShadow)}
     .mp-datechip:active{transform:translateY(0) scale(.98)}
@@ -667,6 +748,11 @@ export default function MetaPanel({
               background:T.glass, color:T.txt2, cursor:"pointer",
               display:"flex", alignItems:"center", justifyContent:"center",
             }}><X size={18} strokeWidth={2} /></button>)}
+            <div aria-hidden="true" style={{
+              order: 0, justifySelf:"end", flexShrink:0,
+              width:isMobile ? 0 : 38, height:isMobile ? 0 : 38,
+              display: isMobile ? "none" : "block",
+            }} />
           </div>
         </div>
 
@@ -828,6 +914,42 @@ export default function MetaPanel({
                       }}
                     />
                   </label>
+                  <details style={{ marginTop:6 }}>
+                    <summary style={{
+                      cursor:"pointer",
+                      listStyle:"none",
+                      color:T.txt3,
+                      fontSize:11.5,
+                      fontFamily:font,
+                      padding:"4px 47px 2px",
+                      userSelect:"none",
+                    }}>
+                      Descripcion opcional
+                    </summary>
+                    <textarea
+                      className="mp-input"
+                      value={metaNewNote}
+                      onChange={e => setMetaNewNote(e.target.value)}
+                      placeholder="Solo si hace falta agregar contexto breve."
+                      rows={2}
+                      style={{
+                        width:"calc(100% - 47px)",
+                        margin:"4px 0 0 47px",
+                        resize:"vertical",
+                        minHeight:42,
+                        maxHeight:96,
+                        border:"none",
+                        outline:"none",
+                        borderRadius:14,
+                        padding:"10px 12px",
+                        background:isLight ? "rgba(15,23,42,0.035)" : "rgba(255,255,255,0.045)",
+                        color:T.txt2,
+                        fontSize:12.5,
+                        fontFamily:font,
+                        lineHeight:1.4,
+                      }}
+                    />
+                  </details>
                   <div style={{
                     display:"flex", alignItems:"center", gap:8, flexWrap:"wrap",
                     marginTop:12, paddingTop:12,
@@ -896,7 +1018,8 @@ export default function MetaPanel({
                 <div style={{
                   position:"relative",
                   zIndex: duePickerOpen ? 90 : 1,
-                  overflow:"visible", display:"flex", flexDirection:"column", justifyContent:"space-between",
+                  overflow:"visible",
+                  display:"flex", flexDirection:"column", justifyContent:"space-between",
                   minHeight:118,
                   padding:12,
                   borderRadius:R.card,
@@ -939,8 +1062,8 @@ export default function MetaPanel({
                     </button>
                   </div>
                   <div style={{
-                    display:"grid", gridTemplateColumns:"1fr 1fr", alignItems:"center", gap:10,
-                    padding:"14px 2px 2px",
+                    display:"flex", alignItems:"center", justifyContent:"space-between", gap:10, flexWrap:"wrap",
+                    padding:"10px 8px 0",
                   }}>
                     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:7, flexWrap:"wrap" }}>
                       {[
@@ -1300,11 +1423,95 @@ export default function MetaPanel({
                   />
                 );
                 const titleEl = (
-                  <E val={a.text} onSave={v => setMetaActions(p => p.map(x => x.id===a.id ? {...x,text:v} : x))}
-                    style={{ ...TY.body, color:T.txt, lineHeight:1.35 }} />
+                  <input
+                    className="mp-title-input"
+                    key={`${a.id}-title-${a.text}`}
+                    defaultValue={a.text}
+                    onBlur={e => {
+                      const value = e.currentTarget.value.trim();
+                      if (value && value !== a.text) persistActionPatch(a, { text:value });
+                      if (!value) e.currentTarget.value = a.text;
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        e.currentTarget.blur();
+                      }
+                    }}
+                    aria-label="Titulo de la actividad"
+                    style={{
+                      width:"100%",
+                      border:"none",
+                      outline:"none",
+                      background:"transparent",
+                      color:T.txt,
+                      fontSize:isMobile ? 16.5 : 17.5,
+                      fontWeight:450,
+                      fontFamily:font,
+                      lineHeight:1.35,
+                      letterSpacing:"-0.014em",
+                      padding:"2px 0",
+                    }}
+                  />
+                );
+                const noteEl = (
+                  <details className="mp-note-details" open={!!a.note && !a._demo} style={{ marginTop:4 }}>
+                    <summary style={{
+                      cursor:"pointer",
+                      listStyle:"none",
+                      color:a.note ? T.txt3 : (isLight ? "rgba(92,107,130,0.58)" : "rgba(139,153,174,0.58)"),
+                      fontSize:11.2,
+                      fontFamily:font,
+                      userSelect:"none",
+                      width:"fit-content",
+                    }}>
+                      {a.note ? "Descripcion" : "Agregar descripcion opcional"}
+                    </summary>
+                    <textarea
+                      className="mp-input"
+                      key={`${a.id}-note-${a.note || ""}`}
+                      defaultValue={a.note || ""}
+                      placeholder="Detalle breve si hace falta."
+                      rows={2}
+                      onBlur={e => {
+                        const value = e.currentTarget.value.trim();
+                        if (value !== (a.note || "")) persistActionPatch(a, { note:value });
+                      }}
+                      style={{
+                        width:"100%",
+                        resize:"vertical",
+                        minHeight:42,
+                        maxHeight:120,
+                        marginTop:7,
+                        border:`1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.08)"}`,
+                        outline:"none",
+                        borderRadius:12,
+                        padding:"9px 11px",
+                        background:isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.035)",
+                        color:T.txt2,
+                        fontSize:12.5,
+                        fontFamily:font,
+                        lineHeight:1.45,
+                      }}
+                    />
+                  </details>
                 );
                 const metaEl = (
                   <div style={{ display:"flex", alignItems:"center", gap:7, flexWrap:"wrap" }}>
+                    {a._demo && (
+                      <span style={{
+                        display:"inline-flex", alignItems:"center",
+                        padding:"4px 9px", borderRadius:99,
+                        background:isLight ? "rgba(217,119,6,0.09)" : "rgba(245,158,11,0.12)",
+                        border:`1px solid ${isLight ? "rgba(217,119,6,0.20)" : "rgba(245,158,11,0.24)"}`,
+                        color:isLight ? "#B45309" : "#FBBF24",
+                        fontSize:10.8,
+                        fontWeight:600,
+                        fontFamily:fontDisp,
+                        letterSpacing:"0.02em",
+                        textTransform:"uppercase",
+                      }}>Demo</span>
+                    )}
                     {categoryChip}
                     <E val={a.lead}   onSave={v => setMetaActions(p => p.map(x => x.id===a.id?{...x,lead:v}:x))}   style={{ fontSize:12.5, color:T.txt3, fontFamily:font }} />
                     <span style={{ fontSize:11, color:T.txt3, opacity:0.4 }}>·</span>
@@ -1477,7 +1684,7 @@ export default function MetaPanel({
                       <>
                         {/* Fila 1 — título a ancho completo (flush-left) + check a la derecha */}
                         <div style={{ display:"flex", alignItems:"flex-start", gap:12 }}>
-                          <div style={{ flex:1, minWidth:0 }}>{titleEl}</div>
+                          <div style={{ flex:1, minWidth:0 }}>{titleEl}{noteEl}</div>
                           <div style={{ flexShrink:0, marginTop:1 }}>{checkBtn}</div>
                         </div>
                         {/* Fila 2 — contexto, flush-left */}
@@ -1486,7 +1693,7 @@ export default function MetaPanel({
                         <div style={{ marginTop:13, display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
                           <div style={{ flex:"1 1 210px", minWidth:0 }}>{dateEl}</div>
                           <div style={{ flexShrink:0 }}>{prioBtn}</div>
-                          {assigneeSel}{iagentBtn}
+                          {!marketingMode && assigneeSel}{!marketingMode && iagentBtn}
                           <div style={{ marginLeft:"auto" }}>{delBtn}</div>
                         </div>
                       </>
@@ -1499,11 +1706,11 @@ export default function MetaPanel({
                         <div style={{ display:"flex", alignItems:"center", gap:14 }}>
                           {checkBtn}
                           <div style={{ flex:"1 1 360px", minWidth:0 }}>
-                            <div style={{ marginBottom:7 }}>{titleEl}</div>
+                            <div style={{ marginBottom:7 }}>{titleEl}{noteEl}</div>
                             <div style={{ display:"flex", alignItems:"center", gap:9, flexWrap:"wrap" }}>
                               {metaEl}
-                              {assigneeSel}
-                              {iagentBtn}
+                              {!marketingMode && assigneeSel}
+                              {!marketingMode && iagentBtn}
                             </div>
                           </div>
                           <div className="mp-actions" style={{ display:"flex", alignItems:"center", gap:12, flexShrink:0, justifyContent:"flex-end" }}>
