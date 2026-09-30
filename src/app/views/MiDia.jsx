@@ -1,516 +1,154 @@
-/** Seller workspace. A result is completed only after the server acknowledges it. */
-import { useState, useMemo, useEffect, useRef, useId } from "react";
-import {
-  Phone,
-  MessageCircle,
-  Check,
-  CalendarClock,
-  Plus,
-  LayoutGrid,
-  ChevronDown,
-  ArrowRight,
-  CheckCircle2,
-  LockKeyhole,
-} from "lucide-react";
-import { P, LP } from "../../design-system/tokens";
-import { listaDelDia, proximaAccion } from "../../lib/next-action-engine";
-import { hrefDelCanal } from "../../lib/telefono";
-import { agendaDeHoy, marcarAccion } from "../../lib/agenda";
-import { useAuth } from "../../hooks/useAuth";
-import "../features/Admin/Rails.css";
-import { railsTheme } from "../features/Admin/rails-theme";
-// Matches CURRENT_DATE in the existing agenda RPC (UTC); see the day-boundary limitation in the runbook.
-const defaultPersistence = { read: agendaDeHoy, write: marcarAccion };
-const dayKey = () => new Date().toISOString().slice(0, 10);
-export default function MiDia(props) {
-  const { user } = useAuth();
-  const [day, setDay] = useState(dayKey);
+import { useState, useMemo, useEffect, useRef, useId } from 'react';
+import { Phone, MessageCircle, CalendarClock, Plus, LayoutGrid, Check } from 'lucide-react';
+import { P, LP } from '../../design-system/tokens';
+import { listaDelDia, diaRails } from '../../lib/next-action-engine';
+import { hrefDelCanal } from '../../lib/telefono';
+import { agendaDeHoy, resolverAccion, fechaParaMover, zonaRails } from '../../lib/agenda';
+import { prepararGestion, resumenAgenda } from '../../lib/rails-gestion';
+import './MiDia.css';
+
+const agendaDemo = new Map(); // Solo datos de ejemplo; se reinicia al recargar.
+const RESULTADOS = { contactado: 'Contactado', sin_respuesta: 'Sin respuesta', reprogramado: 'Reprogramado' };
+const estadoDe = resultado => ({ contactado: 'hecho', sin_respuesta: 'saltado', reprogramado: 'movido' })[resultado];
+
+export function Gestion({ accion, resultado, onCancelar, onGuardar, onRevisarFicha }) {
+  // Conserva la versión que el asesor estaba revisando, aunque llegue un sondeo.
+  const [base] = useState(accion);
+  const [detalle, setDetalle] = useState('');
+  const [siguiente, setSiguiente] = useState('');
+  const [fecha, setFecha] = useState('');
+  const [canal, setCanal] = useState(accion.canal);
+  const [error, setError] = useState('');
+  const [guardando, setGuardando] = useState(false);
+  const envio = useRef(null), bloqueo = useRef(false), campo = useRef(null);
+  const id = useId();
+  useEffect(() => { campo.current?.focus(); }, []);
+  async function guardar(e) {
+    e.preventDefault();
+    if (bloqueo.current) return;
+    if (!envio.current) {
+      try { envio.current = prepararGestion({ id: crypto.randomUUID(), resultado, detalle, siguiente, fecha, canal }); }
+      catch (e) { setError(e.message); return; }
+    }
+    bloqueo.current = true; setGuardando(true); setError('');
+    try { await onGuardar(base, envio.current); }
+    catch (e) { if (e.definitivo) envio.current = null; setError(e.message || 'No pudimos confirmar el guardado. Reintenta; la tarjeta sigue pendiente.'); }
+    finally { bloqueo.current = false; setGuardando(false); }
+  }
+  const incierto = !!envio.current;
+  return <form onSubmit={guardar} className="rails-gestion" aria-label={`Registrar gestión de ${accion.nombre}`}>
+    <h4>{RESULTADOS[resultado]} · resultado y siguiente paso</h4>
+    <fieldset disabled={guardando || incierto}>
+      <label htmlFor={`${id}-detalle`}>{resultado === 'reprogramado' ? 'Motivo para reprogramar' : 'Qué ocurrió'}</label>
+      <textarea ref={campo} id={`${id}-detalle`} value={detalle} onChange={e => setDetalle(e.target.value)} required minLength={3} maxLength={2000} rows={2} />
+      <label htmlFor={`${id}-canal`}>Canal de la gestión</label>
+      <select id={`${id}-canal`} value={canal} onChange={e => setCanal(e.target.value)}>
+        <option value="llamada">Llamada</option><option value="whatsapp">WhatsApp</option><option value="zoom">Zoom</option><option value="otro">Otro</option>
+      </select>
+      <label htmlFor={`${id}-paso`}>Qué harás después</label>
+      <input id={`${id}-paso`} value={siguiente} onChange={e => setSiguiente(e.target.value)} required minLength={3} maxLength={1000} placeholder="Por ejemplo: revisar la propuesta con el cliente" />
+      <label htmlFor={`${id}-fecha`}>Fecha y hora · {zonaRails()}</label>
+      <input type="datetime-local" id={`${id}-fecha`} value={fecha} onChange={e => setFecha(e.target.value)} required />
+      <div className="rails-botones">
+        {[1,3,7].map((dias,i) => <button type="button" key={dias} onClick={() => setFecha(fechaParaMover(dias).local.replace(' ','T'))}>{['Mañana a las 9','En 3 días','En una semana'][i]}</button>)}
+      </div>
+    </fieldset>
+    {error && <p role="alert" className="rails-error">{error}{incierto && ' El reintento conserva los datos enviados para evitar duplicar la gestión.'}</p>}
+    <div className="rails-botones">
+      <button className="rails-primary" disabled={guardando} type="submit">{guardando ? 'Guardando…' : incierto ? 'Reintentar el mismo guardado' : 'Guardar resultado y siguiente paso'}</button>
+      {!incierto && <button disabled={guardando} type="button" onClick={onCancelar}>Cancelar</button>}
+      {incierto && <button disabled={guardando} type="button" onClick={onRevisarFicha || onCancelar}>{onRevisarFicha ? "Cerrar y revisar la ficha" : "Cerrar formulario"}</button>}
+    </div>
+  </form>;
+}
+
+function Tarjeta({ accion, indice, total, bloqueada, onGuardar, onVerCliente }) {
+  const [resultado, setResultado] = useState(null);
+  const registrar = useRef(null);
+  const enlace = hrefDelCanal(accion.canal, accion.telefono); // Las instrucciones del coach nunca se envían al cliente.
+  const Icono = accion.canal === 'whatsapp' ? MessageCircle : Phone;
+  return <article className="rails-tarjeta" aria-label={accion.nombre}>
+    <p className="rails-contexto">{indice} de {total} · {accion.canal === 'whatsapp' ? 'WhatsApp' : 'Llamada'} · {accion.eta}</p>
+    <h3>{accion.nombre}</h3>
+    <p>{accion.razon}</p>
+    <p className="rails-pedir">{accion.pedir}</p>
+    <p className="rails-contexto">{accion.contexto?.join(' · ')}</p>
+    {resultado ? <Gestion accion={accion} resultado={resultado} onGuardar={onGuardar} onRevisarFicha={onVerCliente ? () => { setResultado(null); onVerCliente(accion.leadId); } : undefined} onCancelar={() => { setResultado(null); requestAnimationFrame(() => registrar.current?.focus()); }} />
+      : <div className="rails-botones">
+        {enlace && <a href={enlace.href} {...(enlace.externo ? { target: '_blank', rel: 'noreferrer' } : {})}><Icono size={16} />{accion.canal === 'whatsapp' ? 'Abrir WhatsApp' : 'Llamar'}</a>}
+        {!enlace && <span className="rails-contexto">Sin teléfono registrado</span>}
+        <button ref={registrar} disabled={bloqueada} onClick={() => setResultado('contactado')}><Check size={16} />Registrar contacto</button>
+        <button disabled={bloqueada} onClick={() => setResultado('sin_respuesta')}>No contestó</button>
+        <button disabled={bloqueada} onClick={() => setResultado('reprogramado')}><CalendarClock size={16} />Reprogramar</button>
+        {onVerCliente && <button onClick={() => onVerCliente(accion.leadId)}>Ver ficha</button>}
+      </div>}
+  </article>;
+}
+
+function Jornada({ sessionKey, actorId, leads, config, ahora, demo, offline, vistaPrevia, recienRegistrado, onNuevoCliente, onVerCRM, onVerCliente, onGuardada }) {
+  const [agenda, setAgenda] = useState(() => ({ cargada: demo, cerradas: demo ? agendaDemo.get(sessionKey) || {} : {}, error: '' }));
+  const [intento, setIntento] = useState(0);
+  const [orden, setOrden] = useState([]);
+  const [aviso, setAviso] = useState('');
+  const encabezado = useRef(null);
   useEffect(() => {
-    const timer = setInterval(() => setDay(dayKey()), 30000);
-    return () => clearInterval(timer);
+    if (demo || offline) return;
+    let vivo = true;
+    agendaDeHoy().then(cerradas => { if (vivo) setAgenda({ cerradas, cargada: true, error: '' }); })
+      .catch(e => { if (vivo) setAgenda(prev => ({ ...prev, error: e.message || 'No se pudo leer la agenda.' })); });
+    return () => { vivo = false; };
+  }, [demo, offline, intento]);
+  const lista = useMemo(() => listaDelDia(leads, { config, ahora, cerradas: agenda.cerradas, orden }), [leads, config, ahora, agenda.cerradas, orden]);
+  const ids = lista.visibles.map(a => a.leadId);
+  if (ids.join('|') !== orden.join('|')) setOrden(ids);
+  const [configAnterior, setConfigAnterior] = useState(config);
+  if (configAnterior !== config) { setConfigAnterior(config); setOrden([]); }
+  const [ultimoNuevo, setUltimoNuevo] = useState(recienRegistrado);
+  if (ultimoNuevo !== recienRegistrado) { setUltimoNuevo(recienRegistrado); if (recienRegistrado) setOrden([recienRegistrado, ...orden.filter(id => id !== recienRegistrado)]); }
+  const cuenta = resumenAgenda(agenda.cerradas, actorId);
+  const bloqueada = offline || !agenda.cargada || !!agenda.error;
+  async function guardar(accion, gestion) {
+    if (bloqueada) throw new Error('Recarga la agenda antes de registrar una gestión.');
+    const data = demo ? { lead: { id: accion.leadId, next_action: gestion.siguiente, next_action_at: gestion.fecha, next_action_date: gestion.fecha, updated_at: new Date().toISOString() } }
+      : await resolverAccion(accion, gestion);
+    onGuardada?.(data.lead);
+    if (demo) agendaDemo.set(sessionKey, { ...agendaDemo.get(sessionKey), [accion.leadId]: { estado: estadoDe(gestion.resultado), asesor_id: actorId, completado_at: new Date().toISOString() } });
+    setAgenda(prev => ({ ...prev, cerradas: { ...prev.cerradas, [accion.leadId]: { estado: estadoDe(gestion.resultado), asesor_id: actorId, completado_at: new Date().toISOString() } } }));
+    setAviso(`${RESULTADOS[gestion.resultado]}: ${accion.nombre}. Siguiente paso: ${new Date(gestion.fecha).toLocaleString('es-MX')}.${demo ? ' Simulación local.' : ' Guardado.'}`);
+    requestAnimationFrame(() => encabezado.current?.focus());
+  }
+  return <>
+    <header>
+      <h2 ref={encabezado} tabIndex={-1}>Mi día</h2>
+      <p>{lista.total} {lista.total === 1 ? 'cliente pendiente' : 'clientes pendientes'} · {lista.visibles.length} en este bloque</p>
+      <p className="rails-contexto">Hoy: {cuenta.hecho || 0} con contacto · {cuenta.saltado || 0} sin respuesta · {cuenta.movido || 0} con nueva fecha</p>
+      <div className="rails-botones">
+        <button className="rails-primary" onClick={onNuevoCliente}><Plus size={16} />Nuevo cliente</button>
+        <button onClick={onVerCRM}><LayoutGrid size={16} />Ver el CRM completo</button>
+      </div>
+    </header>
+    {vistaPrevia && <p className="rails-aviso"><strong>Vista previa.</strong> Este enlace muestra Rails sin cambiar la configuración de tu equipo.{!demo && " Las gestiones que registres sí se guardan en las fichas reales."}</p>}
+    {demo && <p className="rails-aviso">Demo con datos de ejemplo. Las gestiones se simulan en esta sesión; al recargar se reinician.</p>}
+    {offline && <p role="alert" className="rails-error">Sin conexión. Puedes revisar la lista; reconecta para confirmar las gestiones.</p>}
+    {agenda.error && <div role="alert" className="rails-error"><p>No pudimos comprobar las gestiones de hoy. {agenda.error}</p><button onClick={() => setIntento(i => i+1)}>Reintentar lectura</button></div>}
+    {!agenda.cargada && !agenda.error && !offline && <p role="status">Comprobando la agenda de hoy…</p>}
+    <p role="status" className="rails-confirmacion">{aviso}</p>
+    {lista.visibles.map((accion,i) => <Tarjeta key={accion.leadId} accion={accion} indice={i+1} total={lista.visibles.length} bloqueada={bloqueada} onGuardar={guardar} onVerCliente={onVerCliente} />)}
+    {lista.total > lista.visibles.length && <p className="rails-aviso">{lista.total - lista.visibles.length === 1 ? "Queda 1 cliente" : `Quedan ${lista.total - lista.visibles.length} clientes`} después de este bloque. Al guardar una gestión, aparece el siguiente pendiente.</p>}
+    {agenda.cargada && !lista.total && <p className="rails-aviso">No hay acciones pendientes en la cartera cargada para este momento. Los próximos pasos aparecerán cuando corresponda su fecha. Puedes revisar las citas y el resto de la cartera en el CRM.</p>}
+  </>;
+}
+
+export default function MiDia({ T: t, theme = 'dark', scope = 'demo', ...props }) {
+  const [ahora, setAhora] = useState(() => new Date());
+  useEffect(() => {
+    const actualizar = () => setAhora(new Date());
+    const timer = setInterval(actualizar, 30000);
+    window.addEventListener('focus', actualizar);
+    return () => { clearInterval(timer); window.removeEventListener('focus', actualizar); };
   }, []);
-  return (
-    <Lista
-      key={`${user?.id}:${user?.organizationId}:${day}`}
-      {...props}
-      demo={!!user?.isDemo || user?.id === "demo-user-local"}
-    />
-  );
-}
-function Lista({
-  leads = [],
-  T: palette,
-  theme = "dark",
-  config,
-  recienRegistrado,
-  onNuevoCliente,
-  onVerCRM,
-  onMover,
-  onAbrirCliente,
-  demo,
-  persistence = defaultPersistence,
-}) {
-  const T = palette || (theme === "light" ? LP : P);
-  const [closed, setClosed] = useState({});
-  const [activeId, setActiveId] = useState(null);
-  const workspace = useRef(null);
-  const focusAfterResult = useRef(false);
-  const [history, setHistory] = useState({ loading: true, error: "" });
-  const [notice, setNotice] = useState("");
-  const [batch, setBatch] = useState([]);
-  const [version, setVersion] = useState(config);
-  const [lastNew, setLastNew] = useState(recienRegistrado);
-  const all = useMemo(
-    () => listaDelDia(leads, { max: Number.MAX_SAFE_INTEGER, config }).visibles,
-    [leads, config],
-  );
-  const remaining = all.filter((a) => !closed[a.leadId]);
-  const limit = config?.maxTarjetas || 7;
-  const load = async () => {
-    setHistory({ loading: true, error: "" });
-    try {
-      const saved = demo ? {} : await persistence.read();
-      setClosed((prev) => ({ ...saved, ...prev }));
-      setHistory({ loading: false, error: "" });
-    } catch {
-      setHistory({
-        loading: false,
-        error:
-          "No pudimos verificar los resultados de hoy. Reintenta antes de registrar otro resultado.",
-      });
-    }
-  };
-  useEffect(() => {
-    let alive = true;
-    (demo ? Promise.resolve({}) : persistence.read())
-      .then((saved) => {
-        if (alive) {
-          setClosed(saved);
-          setHistory({ loading: false, error: "" });
-        }
-      })
-      .catch(() => {
-        if (alive)
-          setHistory({
-            loading: false,
-            error:
-              "No pudimos verificar los resultados de hoy. Reintenta antes de registrar otro resultado.",
-          });
-      });
-    return () => {
-      alive = false;
-    };
-  }, [demo, persistence]);
-  // Stable membership; time/refresh never reshuffles existing work. Safety always wins:
-  // disappeared, opted-out, closed or future-scheduled leads are removed immediately.
-  const byId = new Map(all.map((a) => [a.leadId, a]));
-  if (
-    !history.loading &&
-    !history.error &&
-    (version !== config || (!batch.length && remaining.length))
-  ) {
-    setVersion(config);
-    setBatch(remaining.slice(0, limit).map((a) => a.leadId));
-  }
-  if (recienRegistrado && recienRegistrado !== lastNew) {
-    setLastNew(recienRegistrado);
-    if (byId.has(recienRegistrado))
-      setBatch((ids) =>
-        [
-          recienRegistrado,
-          ...ids.filter((id) => id !== recienRegistrado),
-        ].slice(0, limit),
-      );
-  }
-  const visible = batch
-    .map((id) => byId.get(id))
-    .filter((a) => a && !closed[a.leadId]);
-  const outside = remaining.filter((a) => !batch.includes(a.leadId));
-  const completed = Object.values(closed).filter((v) => v === "hecho").length;
-  const moved = Object.values(closed).filter((v) => v === "movido").length;
-  const unanswered = Object.values(closed).filter(
-    (v) => v === "saltado",
-  ).length;
-  const activeActionId = visible.some((a) => a.leadId === activeId)
-    ? activeId
-    : visible[0]?.leadId;
-  const batchDone = batch.filter((id) => closed[id]).length;
-  const batchTotal = batchDone + visible.length;
-  useEffect(() => {
-    if (!focusAfterResult.current) return;
-    focusAfterResult.current = false;
-    workspace.current?.querySelector("[data-rails-current]")?.focus();
-  }, [closed, batch, activeId]);
-  const finish = async (action, state, details = null) => {
-    // Recheck latest props before a write; a stale contact must never be worked.
-    const lead = leads.find((l) => l.id === action.leadId);
-    if (!lead || !proximaAccion(lead, new Date(), config))
-      throw new Error(
-        "Este cliente cambió. Consulta su ficha antes de continuar.",
-      );
-    if (!demo && !(await persistence.write(action, state, details)))
-      throw new Error(
-        "No se confirmó el resultado. Tu acción sigue pendiente; revisa la conexión y reintenta.",
-      );
-    focusAfterResult.current = true;
-    setClosed((prev) => ({ ...prev, [action.leadId]: state }));
-    setNotice(
-      demo
-        ? "Resultado simulado. No se guardó en una cuenta real."
-        : state === "hecho"
-          ? "Resultado guardado."
-          : state === "saltado"
-            ? "Sin respuesta registrado. El cliente se volverá a evaluar en la lista del próximo día."
-            : "Nueva fecha y resultado guardados.",
-    );
-  };
-  return (
-    <section
-      ref={workspace}
-      className="rails-day"
-      style={railsTheme(T)}
-      aria-label="Mi Día · Ventas sobre Rieles"
-    >
-      <header className="rails-day-header">
-        <div>
-          <h2>Mi Día</h2>
-          <p className="rails-muted">
-            Un cliente a la vez. Un siguiente paso claro.
-          </p>
-        </div>
-        <div className="rails-actions rails-toolbar">
-          <button className="rails-button" onClick={onNuevoCliente}>
-            <Plus size={17} aria-hidden="true" /> Nuevo cliente
-          </button>
-          <button className="rails-button" onClick={onVerCRM}>
-            <LayoutGrid size={17} aria-hidden="true" /> Todos mis clientes
-          </button>
-        </div>
-      </header>
-      <div className="rails-day-summary">
-        <dl className="rails-counts" aria-label="Resultados de hoy">
-          {[
-            [remaining.length, "Pendientes"],
-            [completed, "Realizados"],
-            [moved, "Reprogramados"],
-            [unanswered, "Sin respuesta"],
-          ].map(([value, label]) => (
-            <div key={label}>
-              <dt>{label}</dt>
-              <dd>{history.loading || history.error ? "—" : value}</dd>
-            </div>
-          ))}
-        </dl>
-        <p className="rails-admin-note">
-          <LockKeyhole size={14} aria-hidden="true" /> Tu administrador mantiene
-          las reglas. Tú decides el resultado de cada contacto.
-        </p>
-      </div>
-      {demo && (
-        <p className="rails-notice">
-          Demostración · los resultados no se guardan.
-        </p>
-      )}
-      {history.loading && (
-        <div className="rails-loading" role="status">
-          <p>Verificando tus resultados…</p>
-          <div aria-hidden="true" className="rails-skeleton" />
-          <div aria-hidden="true" className="rails-skeleton" />
-        </div>
-      )}
-      {history.error && (
-        <div role="alert" className="rails-notice rails-error">
-          <p>{history.error}</p>
-          <button className="rails-button" onClick={load}>
-            Reintentar
-          </button>
-        </div>
-      )}
-      {notice && (
-        <p role="status" className="rails-notice">
-          {notice}
-        </p>
-      )}
-      {!history.loading && !history.error && (
-        <>
-          {batchTotal > 0 && (
-            <div className="rails-list-heading">
-              <h3>Tu lista de hoy</h3>
-              <span>
-                {batchDone} de {batchTotal} resueltas
-              </span>
-              <progress
-                aria-label="Avance de esta lista"
-                max={batchTotal}
-                value={batchDone}
-              />
-            </div>
-          )}
-          <div className="rails-worklist">
-            {visible.map((action) => (
-              <Tarjeta
-                key={action.leadId}
-                action={action}
-                index={batch.indexOf(action.leadId) + 1}
-                count={batch.length}
-                expanded={activeActionId === action.leadId}
-                select={() => {
-                  focusAfterResult.current = true;
-                  setActiveId(action.leadId);
-                }}
-                finish={finish}
-                move={onMover}
-                open={onAbrirCliente}
-                demo={demo}
-                report={setNotice}
-              />
-            ))}
-          </div>
-          {!visible.length && (
-            <div className="rails-empty">
-              <CheckCircle2 size={32} aria-hidden="true" />
-              <h3 tabIndex={-1} data-rails-current>
-                {outside.length
-                  ? "Esta lista está resuelta"
-                  : "Sin acciones pendientes para hoy"}
-              </h3>
-              <p className="rails-muted">
-                {outside.length
-                  ? `Todavía hay ${outside.length} clientes por atender. Continúa con la siguiente lista cuando estés listo.`
-                  : "Las acciones con fecha futura aparecerán cuando corresponda. Puedes consultar tu cartera en Todos mis clientes."}
-              </p>
-              {outside.length > 0 && (
-                <button
-                  className="rails-button rails-primary"
-                  onClick={() => {
-                    focusAfterResult.current = true;
-                    setBatch(remaining.slice(0, limit).map((a) => a.leadId));
-                  }}
-                >
-                  Abrir siguiente lista ({Math.min(outside.length, limit)}){" "}
-                  <ArrowRight size={17} aria-hidden="true" />
-                </button>
-              )}
-            </div>
-          )}
-          {visible.length > 0 && outside.length > 0 && (
-            <p className="rails-queue-note">
-              {outside.length} acciones adicionales. Al terminar, podrás abrir
-              la siguiente lista.
-            </p>
-          )}
-        </>
-      )}
-    </section>
-  );
-}
-function Tarjeta({
-  action,
-  index,
-  count,
-  expanded,
-  select,
-  finish,
-  move,
-  open,
-  demo,
-  report,
-}) {
-  const cardId = useId();
-  const [busy, setBusy] = useState(false);
-  const inFlight = useRef(false);
-  const [error, setError] = useState("");
-  const [moving, setMoving] = useState(false);
-  // Guidance is an internal instruction, never prefilled as a message to the customer.
-  const contact = hrefDelCanal(action.canal, action.telefono);
-  const run = async (state, days) => {
-    if (inFlight.current) return;
-    inFlight.current = true;
-    setBusy(true);
-    setError("");
-    try {
-      if (days) {
-        const result = await move?.(action, days);
-        if (!result?.ok)
-          throw new Error(
-            result?.error ||
-              "No se confirmó la nueva fecha. El cliente sigue pendiente.",
-          );
-        // Date is durable independently of agenda; report partial success honestly.
-        try {
-          await finish(action, "movido", `Retomar: ${result.fecha}`);
-        } catch {
-          throw new Error(
-            "La nueva fecha quedó guardada, pero no se confirmó el resultado del día. Revisa la ficha; no vuelvas a moverlo para corregir el historial.",
-          );
-        }
-      } else
-        await finish(
-          action,
-          state,
-          state === "saltado" ? "No contestó" : "Acción realizada",
-        );
-    } catch (e) {
-      setError(e.message);
-      report(e.message);
-    } finally {
-      inFlight.current = false;
-      setBusy(false);
-    }
-  };
-  return (
-    <article
-      className={`rails-client ${expanded ? "is-current" : ""}`}
-      aria-busy={busy}
-      aria-labelledby={`${cardId}-name`}
-    >
-      {expanded ? (
-        <div className="rails-client-heading">
-          <span
-            className="rails-step"
-            aria-label={`Acción ${index} de ${count}`}
-          >
-            {index}
-          </span>
-          <div>
-            <h3 id={`${cardId}-name`} tabIndex={-1} data-rails-current>
-              {action.nombre}
-            </h3>
-            <p className="rails-client-meta">
-              {action.etapa} ·{" "}
-              {action.canal === "whatsapp" ? "WhatsApp" : "Llamada"}
-            </p>
-          </div>
-          <span className="rails-current-label">En foco</span>
-        </div>
-      ) : (
-        <button
-          className="rails-client-row"
-          aria-expanded={false}
-          aria-controls={`${cardId}-body`}
-          onClick={select}
-        >
-          <span
-            className="rails-step"
-            aria-label={`Acción ${index} de ${count}`}
-          >
-            {index}
-          </span>
-          <span className="rails-row-copy">
-            <span id={`${cardId}-name`} className="rails-row-name">
-              {action.nombre}
-            </span>
-            <span className="rails-client-meta">
-              {action.etapa} ·{" "}
-              {action.canal === "whatsapp" ? "WhatsApp" : "Llamada"}
-            </span>
-          </span>
-          <span className="rails-row-action">Atender</span>
-          <ChevronDown size={18} aria-hidden="true" />
-        </button>
-      )}
-      <div
-        id={`${cardId}-body`}
-        hidden={!expanded}
-        className="rails-client-body"
-      >
-        <p className="rails-reason">{action.razon}</p>
-        <div className="rails-objective">
-          <h4>Qué conseguir</h4>
-          <p>{action.pedir}</p>
-        </div>
-        {!contact && (
-          <p className="rails-muted">
-            Falta un teléfono válido. Abre la ficha para completarlo.
-          </p>
-        )}
-        <div className="rails-actions rails-contact-actions">
-          {contact && !demo && (
-            <a
-              className="rails-button rails-primary"
-              href={contact.href}
-              {...(contact.externo
-                ? { target: "_blank", rel: "noreferrer" }
-                : {})}
-            >
-              {action.canal === "whatsapp" ? (
-                <MessageCircle size={17} aria-hidden="true" />
-              ) : (
-                <Phone size={17} aria-hidden="true" />
-              )}
-              {action.canal === "whatsapp" ? "Abrir WhatsApp" : "Llamar"}
-            </a>
-          )}
-          <button
-            className={`rails-button ${!contact ? "rails-primary" : "rails-quiet"}`}
-            onClick={() => open?.(action.leadId)}
-          >
-            {!contact ? "Completar teléfono" : "Ver ficha y siguiente paso"}
-            <ArrowRight size={16} aria-hidden="true" />
-          </button>
-        </div>
-        <fieldset disabled={busy} className="rails-results">
-          <legend>Después del contacto</legend>
-          <div className="rails-actions">
-            <button className="rails-button" onClick={() => run("hecho")}>
-              <Check size={17} aria-hidden="true" /> Realizado
-            </button>
-            <button className="rails-button" onClick={() => run("saltado")}>
-              No contestó
-            </button>
-            <button
-              className="rails-button"
-              aria-expanded={moving}
-              aria-controls={`${cardId}-reschedule`}
-              onClick={() => setMoving(!moving)}
-            >
-              <CalendarClock size={17} aria-hidden="true" /> Reprogramar
-            </button>
-          </div>
-          <div
-            id={`${cardId}-reschedule`}
-            hidden={!moving}
-            className="rails-reschedule"
-          >
-            <p>¿Cuándo lo retomas?</p>
-            <p className="rails-muted">
-              Se guardará a las 9:00, hora de este dispositivo. Para otra hora,
-              abre la ficha.
-            </p>
-            <div className="rails-actions">
-              {[
-                [1, "Mañana"],
-                [3, "En 3 días"],
-                [7, "En una semana"],
-              ].map(([days, label]) => (
-                <button
-                  className="rails-button"
-                  key={days}
-                  onClick={() => run("movido", days)}
-                >
-                  {label}
-                </button>
-              ))}
-              <button
-                className="rails-button rails-quiet"
-                onClick={() => setMoving(false)}
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </fieldset>
-        {busy && (
-          <p role="status" className="rails-saving">
-            Guardando resultado…
-          </p>
-        )}
-        {error && (
-          <p role="alert" className="rails-notice rails-error">
-            {error}
-          </p>
-        )}
-      </div>
-    </article>
-  );
+  const T = t || (theme === 'light' ? LP : P);
+  return <section className={`stratos-rails ${theme === 'light' ? 'rails-light' : ''}`} style={{ '--rails-text': T.txt, '--rails-secondary': theme === 'light' ? '#4b5563' : '#aebaca', '--rails-border': T.border, '--rails-surface': theme === 'light' ? '#fff' : '#141c28', '--rails-accent': theme === 'light' ? '#087252' : '#6ee7c2', '--rails-field': theme === 'light' ? '#fff' : '#0d1420' }}>
+    <Jornada key={`${scope}:${diaRails(ahora)}`} sessionKey={`${scope}:${diaRails(ahora)}`} {...props} ahora={ahora} />
+  </section>;
 }

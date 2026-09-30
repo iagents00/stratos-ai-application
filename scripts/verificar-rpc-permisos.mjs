@@ -17,7 +17,7 @@
  *            dice cuáles están cerradas para la app o abiertas a anónimos.
  *
  * Si agregás una llamada nueva a `supabase.rpc(...)`, este chequeo falla hasta
- * que la registres en la migración 241 y le des el `grant execute`. Es a
+ * que la registres en una migración incremental y le des el `grant execute`. Es a
  * propósito: es exactamente el paso que se olvidó.
  *
  *   npm run verificar-rpc
@@ -60,9 +60,13 @@ if (!migRegistro) {
   process.exit(1);
 }
 
-const sql = readFileSync(join(DIR_MIG, migRegistro), "utf8");
-const bloque = sql.slice(sql.indexOf("insert into public.front_rpc_registry"));
-const registradas = new Set([...bloque.matchAll(/^\s*\('([a-z0-9_]+)'/gim)].map((m) => m[1]));
+const registradas = new Set();
+for (const archivo of readdirSync(DIR_MIG).filter(f => f.endsWith(".sql"))) {
+  const sql = readFileSync(join(DIR_MIG, archivo), "utf8");
+  for (const bloque of sql.matchAll(/insert into public\.front_rpc_registry[^;]+;/gi)) {
+    for (const fila of bloque[0].matchAll(/^\s*\('([a-z0-9_]+)'/gim)) registradas.add(fila[1]);
+  }
+}
 
 if (registradas.size === 0) {
   console.error(`  ✗ No pude leer ninguna RPC del registro en ${migRegistro}.`);

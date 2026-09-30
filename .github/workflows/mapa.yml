@@ -66,6 +66,12 @@ jobs:
       - name: La configuración de Rails tiene que llegar al motor
         run: node scripts/verificar-rails.mjs
 
+      - name: Rails conserva permisos, compromisos y reintentos
+        run: npm run probar-rails
+
+      - name: Las RPC del frontend deben estar registradas
+        run: npm run verificar-rpc
+
       # El repo ya decía "español neutro mexicano" y nadie lo revisaba: se habían
       # colado 33 textos en voseo, incluido el botón de registrar un cliente.
       - name: La interfaz habla mexicano neutro

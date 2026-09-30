@@ -32,7 +32,6 @@ import { useIsMobile } from "../../../hooks/useViewport";
 import { useClient } from "../../../hooks/useClient";
 import { vistaPreviaRails } from "../../../lib/rails-store";
 import { useRailsConfig } from "../../../hooks/useRailsConfig";
-import { fechaParaMover } from "../../../lib/agenda";
 // Stratos Rails — la lista del día. Detrás de features.procesoGuiado.
 import MiDia from "../MiDia";
 import { useTeam } from "../../../hooks/useTeam";
@@ -399,34 +398,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     setActionDraft({ a: lead.nextAction || "", d: lead.nextActionDate || "" });
     setEditingActionId(lead.id);
   };
-  // Mover un cliente desde Mi Día = agendarlo de verdad. Escribe la próxima
-  // acción en su ficha con la misma forma que el pipeline (texto + fecha larga +
-  // el instante real en next_action_at), así el motor de Rails lo vuelve a
-  // ofrecer ese día y el expediente registra el compromiso. Sin esto, "Mover"
-  // solo hacía desaparecer la tarjeta y el cliente quedaba sin dueño de su
-  // futuro — justo el problema que Rails viene a resolver.
-  const moverLead = async (accion, dias) => {
-    const lead = leadsDataRef.current.find(l => l.id === accion?.leadId);
-    if (!lead || lead.opt_out || lead.deleted_at) return { ok: false, error: "El cliente ya no está disponible para contacto." };
-    const { iso, local } = fechaParaMover(dias);
-    const legible = formatFechaLarga(local.replace(" ", "T")) || local;
-    const nextAction = (lead.nextAction || "").trim() || accion.pedir || "Retomar contacto";
-    if (user?.id !== 'demo-user-local' && !user?.isDemo) {
-      if (!user?.organizationId || user?._offline) return { ok: false, error: "Conéctate para confirmar la nueva fecha." };
-      try {
-        const { data, error } = await supabase.from('leads')
-          .update({ next_action: nextAction, next_action_date: local, next_action_at: iso })
-          .eq('id', lead.id).eq('organization_id', user.organizationId)
-          .select('id').abortSignal(AbortSignal.timeout(10000)).maybeSingle();
-        if (error || !data) return { ok: false, error: "No se confirmó la nueva fecha. Revisa la conexión o tus permisos." };
-      } catch { return { ok: false, error: "No se confirmó la nueva fecha. Revisa la ficha antes de reintentar." }; }
-    }
-    // Publish only confirmed fields; leave other edits intact.
-    const patch = { nextAction, nextActionDate: legible, next_action_date: local, next_action_at: iso, nextActionAt: iso };
-    leadsDataRef.current = leadsDataRef.current.map(l => l.id === lead.id ? { ...l, ...patch } : l);
-    setLeadsData(rows => rows.map(l => l.id === lead.id ? { ...l, ...patch } : l));
-    showToast(`Nueva fecha guardada: ${legible}`, "success");
-    return { ok: true, fecha: legible };
+  // Rails ya guardó el resultado y el próximo paso en una transacción.
+  const sincronizarGestionRails = (row) => {
+    setLeadsData(prev => prev.map(l => l.id === row.id ? {
+      ...l, ...row, n: row.name ?? l.n, st: row.stage ?? l.st,
+      nextAction: row.next_action, nextActionDate: formatFechaLarga(row.next_action_at) || row.next_action_date,
+      isNew: row.is_new ?? l.isNew,
+      actionHistory: row.action_history ?? l.actionHistory,
+    } : l));
   };
 
   const saveInlineAction = (lead) => {
@@ -2334,10 +2313,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // sección más. Mientras haya acciones del día, el asesor tiene exactamente
   // dos opciones — trabajarlas o registrar un cliente.
   //
-  // El CRM se OCULTA, no se desmonta: el modal de alta vive en un portal más
-  // abajo de este mismo componente, y desmontar el árbol se lo llevaría por
-  // delante. Además así el estado del pipeline (filtros, orden, scroll) sigue
-  // intacto cuando el asesor entra y sale.
+  // El pipeline se monta al abrir el CRM completo; filtros y selección siguen
+  // en este componente. Los portales de alta y expediente permanecen disponibles.
   // Interruptor de vista previa: ?rails=1 lo prende SOLO para quien tenga esa
   // URL, ?rails=0 lo apaga. Existe porque prender la bandera del cliente le
   // reordena la pantalla a todo el equipo de golpe, y nadie debería tomar esa
@@ -2366,17 +2343,25 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       {railsActivo && (
         <MiDia
           config={railsCfg}
-          leads={visibleLeads}
+          vistaPrevia={railsPreview === true}
+          leads={isAdminRole || user?.id === "demo-user-local" ? visibleLeads : visibleLeads.filter(l => (l.asesor ?? l.asesor_name) === user?.name)}
           T={T}
           theme={theme}
           recienRegistrado={leadRecienRegistrado}
-          onMover={moverLead}
-          onAbrirCliente={(id) => { const lead = leadsDataRef.current.find(l => l.id === id); if (lead) setSelectedLead(lead); }}
+          scope={`${user?.id}:${user?.organizationId}`}
+          actorId={user?.id}
+          demo={user?.id === "demo-user-local"}
+          offline={!!user?._offline}
+          onGuardada={sincronizarGestionRails}
+          onVerCliente={id => setNotesLead(leadsDataRef.current.find(l => l.id === id))}
           onNuevoCliente={() => setAddingLead(true)}
           onVerCRM={() => setVerCRMCompleto(true)}
         />
       )}
 
+      {!railsActivo && verCRMCompleto && (railsPreview ?? (puedeRails && railsCfg.activo)) && (
+        <button onClick={() => setVerCRMCompleto(false)} style={{ alignSelf: "flex-start", minHeight: 44, padding: "10px 16px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surface, color: T.txt, cursor: "pointer" }}>Volver a Mi día</button>
+      )}
       <div style={{
         display: railsActivo ? "none" : "flex",
         flexDirection: "column", gap: 18,
@@ -3542,7 +3527,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     {/* Trigger button — muestra valor seleccionado o placeholder */}
                     <button
                       type="button"
-                      onClick={() => setBudgetMenuOpen(v => !v)}
+                      aria-label="Presupuesto" onClick={() => setBudgetMenuOpen(v => !v)}
                       style={{
                         width: "100%", padding: "10px 13px",
                         borderRadius: 10,

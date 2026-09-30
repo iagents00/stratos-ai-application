@@ -1,142 +1,50 @@
-/** Store scoped to one authenticated person and organization. Never publishes an unconfirmed write. */
-import { fusionarRails, compactarRails } from "./rails-config";
-export const puedeConfigurarRails = (user) =>
-  ["admin", "super_admin"].includes(user?.role);
-export function vistaPreviaRails(user, search = "") {
-  if (!puedeConfigurarRails(user)) return null;
-  const value = new URLSearchParams(search).get("rails");
-  return value === "1" ? true : value === "0" ? false : null;
-}
-const same = (a, b) =>
-  JSON.stringify(compactarRails(fusionarRails(a))) ===
-  JSON.stringify(compactarRails(fusionarRails(b)));
-export function crearRailsStore(client, scope) {
-  let snap = {
-    cfg: fusionarRails(null),
-    cargada: false,
-    cargando: false,
-    error: null,
-    guardando: false,
-  };
-  let pending;
-  let generation = 0;
-  const listeners = new Set();
-  const publish = (patch) => {
-    snap = { ...snap, ...patch };
-    listeners.forEach((fn) => fn());
-  };
-  const read = () =>
-    client
-      .from("organizations")
-      .select("meta_config")
-      .eq("id", scope.organizationId)
-      .abortSignal(AbortSignal.timeout(10000))
-      .maybeSingle();
-  const load = () => {
-    if (pending) return pending;
-    if (snap.guardando) return Promise.resolve();
-    const epoch = generation;
-    publish({ cargando: true });
-    pending = (async () => {
-      try {
-        const { data, error } = await read();
-        if (epoch !== generation) return;
-        if (error || !data)
-          throw new Error(
-            "El servicio de Stratos no respondió. Tu internet puede estar bien; reintenta en unos minutos.",
-          );
-        // Preserve identity unless configuration really changed (seller list stays stable).
-        publish({
-          cfg: same(snap.cfg, data.meta_config?.rails)
-            ? snap.cfg
-            : fusionarRails(data.meta_config?.rails),
-          cargada: true,
-          error: null,
-        });
-      } catch (e) {
-        if (epoch === generation) publish({ error: e.message });
-      } finally {
-        publish({ cargando: false });
-        pending = null;
-      }
-    })();
-    return pending;
-  };
+import { crearRailsStoreLegacy } from './rails-store-legacy';
+export { puedeConfigurarRails, vistaPreviaRails } from './rails-store-legacy';
+import { fusionarRails, compactarRails } from './rails-config';
+
+/** Una instantánea por sesión/organización. Las respuestas tardías nunca cruzan de cuenta. */
+export function crearRailsStore(client, legacyScope) {
+  if (legacyScope) return crearRailsStoreLegacy(client, legacyScope);
+  const { leer, escribir } = client;
+  const estados = new Map(), pendientes = new Map(), oyentes = new Set();
+  function get(scope) {
+    if (!estados.has(scope)) estados.set(scope, { cfg: fusionarRails(null), raw: null, cargada: false, error: null, guardando: false });
+    return estados.get(scope);
+  }
+  function publicar(scope, parche) {
+    estados.set(scope, { ...get(scope), ...parche });
+    oyentes.forEach(fn => fn());
+  }
   return {
-    getSnapshot: () => snap,
-    subscribe: (fn) => {
-      listeners.add(fn);
-      return () => listeners.delete(fn);
+    get,
+    subscribe(fn) { oyentes.add(fn); return () => oyentes.delete(fn); },
+    async cargar(scope, orgId, force = false) {
+      if (pendientes.has(scope)) return pendientes.get(scope);
+      if (get(scope).guardando || (get(scope).cargada && !force)) return;
+      const peticion = (async () => {
+        try {
+          const raw = await leer(orgId);
+          publicar(scope, { cfg: fusionarRails(raw), raw: raw ?? null, orgId, cargada: true, error: null });
+        } catch (e) {
+          publicar(scope, { cargada: true, error: e.message || 'No se pudo leer el proceso.' });
+        } finally { pendientes.delete(scope); }
+      })();
+      pendientes.set(scope, peticion);
+      return peticion;
     },
-    load,
-    async save(next, expected = snap.cfg) {
-      if (
-        !puedeConfigurarRails(scope) ||
-        !scope.id ||
-        !scope.organizationId ||
-        scope._offline ||
-        scope.isDemo ||
-        scope.id === "demo-user-local"
-      )
-        return {
-          ok: false,
-          error: "Solo un administrador conectado puede publicar el proceso.",
-        };
-      if (snap.guardando)
-        return { ok: false, error: "Espera a que termine el guardado actual." };
-      if (!snap.cargada || snap.error)
-        return {
-          ok: false,
-          error: "Primero vuelve a cargar la configuración vigente.",
-        };
-      generation++;
-      publish({ guardando: true });
+    async guardar(scope, cfg, { demo = false, offline = false } = {}) {
+      const previo = get(scope);
+      if (offline) return { ok: false, error: 'Sin conexión. Tus cambios siguen aquí; vuelve a guardar al reconectar.' };
+      if (previo.guardando || pendientes.has(scope)) return { ok: false, error: 'Espera a que termine la operación anterior.' };
+      if (!demo && (!previo.cargada || previo.error)) return { ok: false, error: 'Recarga la configuración antes de guardar.' };
+      publicar(scope, { guardando: true });
       try {
-        const { data, error } = await read();
-        if (error || !data)
-          throw new Error(
-            "No se pudo verificar la configuración. Tus cambios siguen en el borrador.",
-          );
-        if (!same(expected, data.meta_config?.rails))
-          throw new Error(
-            "Otro administrador cambió el proceso. Recarga la configuración antes de publicar.",
-          );
-        const meta = {
-          ...(data.meta_config || {}),
-          rails: compactarRails(fusionarRails(next)),
-        };
-        let query = client
-          .from("organizations")
-          .update({ meta_config: meta })
-          .eq("id", scope.organizationId);
-        // Compare-and-swap: preserves concurrently edited plan/brand/protocol AND other admin changes.
-        query =
-          data.meta_config == null
-            ? query.is("meta_config", null)
-            : query.eq("meta_config", JSON.stringify(data.meta_config));
-        const saved = await query
-          .select("meta_config")
-          .abortSignal(AbortSignal.timeout(10000))
-          .maybeSingle();
-        if (saved.error || !saved.data)
-          throw new Error(
-            "No se confirmó el guardado: revisa permisos o recarga si otra persona cambió la configuración.",
-          );
-        publish({
-          cfg: fusionarRails(saved.data.meta_config?.rails),
-          cargada: true,
-          error: null,
-        });
-        return { ok: true };
+        const raw = demo ? compactarRails(fusionarRails(cfg)) : await escribir(compactarRails(fusionarRails(cfg)), previo.raw, previo.orgId);
+        publicar(scope, { cfg: fusionarRails(raw), raw, cargada: true, error: null });
+        return { ok: true, local: demo };
       } catch (e) {
-        return {
-          ok: false,
-          error:
-            e.message || "No se confirmó el guardado. Conservamos tu borrador.",
-        };
-      } finally {
-        publish({ guardando: false });
-      }
+        return { ok: false, error: e.message || 'No se pudo guardar. Conservamos tus cambios para reintentar.' };
+      } finally { publicar(scope, { guardando: false }); }
     },
   };
 }

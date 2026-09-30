@@ -1,0 +1,14 @@
+[
+  {
+    "archivo": "src/app/views/CRM/index.jsx",
+    "erroresBase": 37,
+    "erroresActuales": 37,
+    "diagnosticosNuevos": []
+  },
+  {
+    "archivo": "src/app/views/ComandoDirectivo.jsx",
+    "erroresBase": 3,
+    "erroresActuales": 3,
+    "diagnosticosNuevos": []
+  }
+]

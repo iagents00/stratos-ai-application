@@ -1,0 +1,137 @@
+
+> stratos-ai@0.0.0 prebuild
+> node tools/check_mobile_perf.mjs && node tools/check_plan_semanal.mjs
+
+✓ guardián anti-crash iPhone: defensas intactas
+
+35 ok · 0 fallando
+
+> stratos-ai@0.0.0 build
+> vite build
+
+vite v8.3.0 building client environment for production...
+transforming...
+✓ 2690 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                  36.48 kB │ gzip:  12.42 kB
+dist/assets/encoderWorker.min-DpsJ02BN.js       385.09 kB
+dist/assets/index-Ch9isFEM.css                    5.41 kB │ gzip:   1.44 kB
+dist/assets/App-D0fV12e-.css                      8.23 kB │ gzip:   2.44 kB
+dist/assets/encoderWorker.min-DI6SYX8t.js         0.06 kB │ gzip:   0.08 kB
+dist/assets/check-9xrYSPty.js                     0.12 kB │ gzip:   0.14 kB
+dist/assets/chevron-down-CFTNChzj.js              0.12 kB │ gzip:   0.14 kB
+dist/assets/chevron-right-CnoSkNqb.js             0.13 kB │ gzip:   0.14 kB
+dist/assets/square-BW1qcyoX.js                    0.14 kB │ gzip:   0.15 kB
+dist/assets/x-DCK-ooYk.js                         0.15 kB │ gzip:   0.15 kB
+dist/assets/arrow-left-CwNyvF-l.js                0.16 kB │ gzip:   0.16 kB
+dist/assets/arrow-right-CdwMg9P1.js               0.16 kB │ gzip:   0.16 kB
+dist/assets/clock-BN0BKg7v.js                     0.16 kB │ gzip:   0.16 kB
+dist/assets/ComandoDirectivo.pdf-Cly63eCI.js      0.17 kB │ gzip:   0.15 kB
+dist/assets/circle-check-DB_16_Ql.js              0.17 kB │ gzip:   0.16 kB
+dist/assets/play-am45QoB1.js                      0.19 kB │ gzip:   0.17 kB
+dist/assets/smartphone-CRBPJGiB.js                0.19 kB │ gzip:   0.18 kB
+dist/assets/lock-Bi9NHyjg.js                      0.20 kB │ gzip:   0.19 kB
+dist/assets/mail-UaGtoKg6.js                      0.21 kB │ gzip:   0.20 kB
+dist/assets/briefcase-DNLc2IGV.js                 0.22 kB │ gzip:   0.19 kB
+dist/assets/log-in-3pEn4JeM.js                    0.23 kB │ gzip:   0.18 kB
+dist/assets/message-square-BO7PE7HX.js            0.23 kB │ gzip:   0.20 kB
+dist/assets/paperclip-C8u1lyc3.js                 0.23 kB │ gzip:   0.19 kB
+dist/assets/activity-DgEJEcKT.js                  0.23 kB │ gzip:   0.19 kB
+dist/assets/mic-ZUDeuaFt.js                       0.23 kB │ gzip:   0.20 kB
+dist/assets/message-circle-BXjIloMP.js            0.24 kB │ gzip:   0.21 kB
+dist/assets/globe-BUJYpZiT.js                     0.24 kB │ gzip:   0.19 kB
+dist/assets/database-CfEv7tNO.js                  0.24 kB │ gzip:   0.20 kB
+dist/assets/banknote-BUEzs8i6.js                  0.24 kB │ gzip:   0.20 kB
+dist/assets/circle-question-mark-BsrJWrAE.js      0.24 kB │ gzip:   0.20 kB
+dist/assets/circle-alert-DL0Fdtge.js              0.25 kB │ gzip:   0.18 kB
+dist/assets/triangle-alert-DrmjrBnc.js            0.26 kB │ gzip:   0.21 kB
+dist/assets/workflow-BSdt1hLU.js                  0.26 kB │ gzip:   0.20 kB
+dist/assets/wallet-CmwwPeYc.js                    0.28 kB │ gzip:   0.20 kB
+dist/assets/bell-gxlzeZcV.js                      0.29 kB │ gzip:   0.23 kB
+dist/assets/send-G1eL0T--.js                      0.29 kB │ gzip:   0.23 kB
+dist/assets/users-Cj08rJWI.js                     0.30 kB │ gzip:   0.22 kB
+dist/assets/shield-check-C30foivs.js              0.32 kB │ gzip:   0.24 kB
+dist/assets/refresh-cw-CFHZEnII.js                0.32 kB │ gzip:   0.22 kB
+dist/assets/phone-BIxWWGWm.js                     0.32 kB │ gzip:   0.23 kB
+dist/assets/bot-CBfMs3JU.js                       0.32 kB │ gzip:   0.22 kB
+dist/assets/trash-2-JKV_NAdK.js                   0.32 kB │ gzip:   0.21 kB
+dist/assets/camera-CmGSMTMt.js                    0.33 kB │ gzip:   0.25 kB
+dist/assets/download-CuNKybKd.js                  0.33 kB │ gzip:   0.24 kB
+dist/assets/stethoscope-DJFIhRBv.js               0.34 kB │ gzip:   0.23 kB
+dist/assets/message-square-text-CmJJkxgM.js       0.34 kB │ gzip:   0.24 kB
+dist/assets/folder-kanban-D-qBtBsj.js             0.34 kB │ gzip:   0.24 kB
+dist/assets/panels-top-left-CHN_Wi-S.js           0.35 kB │ gzip:   0.26 kB
+dist/assets/messages-square-5VkF3VQB.js           0.36 kB │ gzip:   0.25 kB
+dist/assets/building-2-BuM35gPR.js                0.38 kB │ gzip:   0.24 kB
+dist/assets/zap-CG2XwgAm.js                       0.38 kB │ gzip:   0.27 kB
+dist/assets/file-text-DCC9w4tZ.js                 0.38 kB │ gzip:   0.25 kB
+dist/assets/search-BMzoEvYY.js                    0.40 kB │ gzip:   0.28 kB
+dist/assets/clipboard-list-DbOi1y3I.js            0.41 kB │ gzip:   0.26 kB
+dist/assets/layers-D8Y444Gx.js                    0.42 kB │ gzip:   0.24 kB
+dist/assets/atom-BXa9aVed.js                      0.43 kB │ gzip:   0.27 kB
+dist/assets/shield-BS_3lvO0.js                    0.47 kB │ gzip:   0.30 kB
+dist/assets/sun-C8CjUpVy.js                       0.47 kB │ gzip:   0.25 kB
+dist/assets/calendar-days-CypQOWzx.js             0.49 kB │ gzip:   0.26 kB
+dist/assets/target-B876Qhrx.js                    0.59 kB │ gzip:   0.33 kB
+dist/assets/cpu-CDbXsS69.js                       0.64 kB │ gzip:   0.28 kB
+dist/assets/rolldown-runtime-hePW80VL.js          0.71 kB │ gzip:   0.42 kB
+dist/assets/sparkles-TIKXUWih.js                  0.90 kB │ gzip:   0.42 kB
+dist/assets/palette-CW6yIedR.js                   1.40 kB │ gzip:   0.63 kB
+dist/assets/createLucideIcon-DWyZ2zsL.js          1.42 kB │ gzip:   0.79 kB
+dist/assets/PublicLanding-D8-Hdt1h.js             1.79 kB │ gzip:   1.00 kB
+dist/assets/organize-notes-leNA70oY.js            3.32 kB │ gzip:   1.59 kB
+dist/assets/MiDrive-GEmJIpul.js                   4.97 kB │ gzip:   2.27 kB
+dist/assets/SharedComponents-Ck_AY7ez.js          6.13 kB │ gzip:   2.44 kB
+dist/assets/Team-Da1BJRFG.js                      6.83 kB │ gzip:   2.48 kB
+dist/assets/Trash-nWIGeWi6.js                     7.85 kB │ gzip:   2.66 kB
+dist/assets/recorder.min-DFHVThtk.js              8.05 kB │ gzip:   2.50 kB
+dist/assets/intelFeatures-BA8ZgYEa.js             9.22 kB │ gzip:   3.49 kB
+dist/assets/ManualMuebleria-CAaaZC-K.js           9.53 kB │ gzip:   3.81 kB
+dist/assets/ComandoOps-CE3K_PEJ.js                9.54 kB │ gzip:   2.97 kB
+dist/assets/ManualBrasa-kzwHzokH.js              10.00 kB │ gzip:   3.84 kB
+dist/assets/ManualLegacy-DDifvTr8.js             10.38 kB │ gzip:   4.07 kB
+dist/assets/DukeLeadRouter-B-xhsFxQ.js           10.96 kB │ gzip:   2.83 kB
+dist/assets/RailsSettings-Dia71HPE.js            12.05 kB │ gzip:   4.13 kB
+dist/assets/ManualGasil-DTGIabAm.js              13.19 kB │ gzip:   5.14 kB
+dist/assets/ManualNSG-CudCKlGR.js                13.70 kB │ gzip:   5.43 kB
+dist/assets/PlanSemanal-BaaP59R3.js              13.83 kB │ gzip:   4.97 kB
+dist/assets/WhatsApp-9rIeYYaE.js                 15.44 kB │ gzip:   4.73 kB
+dist/assets/ChatEquipo-RukA-mQF.js               17.75 kB │ gzip:   5.79 kB
+dist/assets/FinanzasAdmin-B1Rb_cZe.js            18.15 kB │ gzip:   5.36 kB
+dist/assets/DataDeletion-CCzAtmQq.js             19.87 kB │ gzip:   5.65 kB
+dist/assets/PricingScreen-Ch5Ruag8.js            20.44 kB │ gzip:   5.88 kB
+dist/assets/AdminPanel-CfHUH2PW.js               25.91 kB │ gzip:   6.68 kB
+dist/assets/ERP-CwDMqFLH.js                      26.13 kB │ gzip:   7.63 kB
+dist/assets/purify.es-7fJ1DZ6H.js                26.92 kB │ gzip:  10.69 kB
+dist/assets/DeliveryHubCRM-CgBbmwk_.js           28.69 kB │ gzip:   8.38 kB
+dist/assets/catalogAdapter-Fr3CgwRY.js           29.47 kB │ gzip:   8.69 kB
+dist/assets/IACRM-B2-F8vON.js                    31.11 kB │ gzip:   8.37 kB
+dist/assets/OnboardingCallCenter-dLwiZuoW.js     32.88 kB │ gzip:  10.70 kB
+dist/assets/Profile-CkawO4aS.js                  34.75 kB │ gzip:   9.35 kB
+dist/assets/ManualMarketing-Cps54_4P.js          40.26 kB │ gzip:  12.93 kB
+dist/assets/RRHHModule-BGm27NOE.js               48.08 kB │ gzip:  10.84 kB
+dist/assets/Diagnostico-B6AlqlQh.js              48.14 kB │ gzip:  14.62 kB
+dist/assets/Copilot-BeL8XCMm.js                  48.19 kB │ gzip:  14.93 kB
+dist/assets/LandingMarketing-CAWCqEcA.js         56.33 kB │ gzip:  14.09 kB
+dist/assets/Caja-BIAB6Swz.js                     61.05 kB │ gzip:  17.16 kB
+dist/assets/PrivacyPolicy-D73AfRJS.js            63.56 kB │ gzip:  16.45 kB
+dist/assets/ManualCRM-B0Tx8fqz.js                67.60 kB │ gzip:  22.54 kB
+dist/assets/LandingPages-C0rbEHKQ.js             74.87 kB │ gzip:  17.46 kB
+dist/assets/Marketing-yBHtuusO.js               102.21 kB │ gzip:  25.35 kB
+dist/assets/catalogoProyectos-D9iVUptG.js       142.90 kB │ gzip:  37.55 kB
+dist/assets/index.es-DbNfFGxb.js                151.29 kB │ gzip:  48.87 kB
+dist/assets/html2canvas-Dn6bw578.js             199.49 kB │ gzip:  46.77 kB
+dist/assets/CartesianChart-Bs9WTnH0.js          268.45 kB │ gzip:  83.69 kB
+dist/assets/jspdf.es.min-DEX3oinu.js            399.66 kB │ gzip: 129.78 kB
+dist/assets/index-DGLtS_tw.js                   500.00 kB │ gzip: 146.46 kB
+dist/assets/App-CivJt7Nm.js                   1,092.45 kB │ gzip: 280.41 kB
+
+[INEFFECTIVE_DYNAMIC_IMPORT] src/app/views/ComandoDirectivo.pdf.js is dynamically imported by src/app/views/ZoomControl/Resumen.jsx but also statically imported by src/app/views/ComandoDirectivo.jsx, dynamic import will not move module into another chunk.
+
+[plugin builtin:vite-reporter]
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 697ms

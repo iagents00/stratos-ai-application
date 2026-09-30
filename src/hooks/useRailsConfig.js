@@ -1,53 +1,39 @@
-/** Shared configuration, isolated by authenticated user + organization; refreshed on return and every minute. */
-import { useSyncExternalStore, useEffect, useMemo } from "react";
-import { supabase } from "../lib/supabase";
-import { useAuth } from "./useAuth";
-import { crearRailsStore, puedeConfigurarRails } from "../lib/rails-store";
-let currentKey;
-let currentStore;
+import { useSyncExternalStore, useCallback, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from './useAuth';
+import { crearRailsStore } from '../lib/rails-store';
+
+const store = crearRailsStore({
+  async leer(orgId) {
+    const { data, error } = await supabase.from('organizations').select('meta_config').eq('id', orgId).single();
+    if (error) throw error;
+    return data?.meta_config?.rails ?? null;
+  },
+  async escribir(cfg, esperada, orgId) {
+    const { data, error } = await supabase.rpc('rails_guardar_config', { p_config: cfg, p_esperada: esperada, p_organization: orgId });
+    if (error) throw error;
+    return data;
+  },
+});
+
 export function useRailsConfig() {
   const { user } = useAuth();
-  const key = `${user?.id || ""}:${user?.organizationId || ""}:${user?.role || ""}:${!!user?._offline}`;
-  const sinBase =
-    !user?.organizationId ||
-    user?._offline ||
-    user?.isDemo ||
-    user?.id === "demo-user-local";
-  const store = useMemo(() => {
-    if (currentKey !== key) {
-      currentKey = key;
-      currentStore = crearRailsStore(supabase, user || {});
-    }
-    return currentStore;
-    // key contains every scope field the store uses; exclude volatile profile identity.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
-  const snap = useSyncExternalStore(
-    store.subscribe,
-    store.getSnapshot,
-    store.getSnapshot,
-  );
+  const orgId = user?.organizationId;
+  const demo = user?.id === 'demo-user-local';
+  const offline = !demo && (!orgId || !!user?._offline);
+  const scope = `${user?.id || 'sin-sesion'}:${orgId || 'sin-org'}:${demo ? 'demo' : offline ? 'offline' : 'online'}`;
+  const snapshot = useCallback(() => store.get(scope), [scope]);
+  const snap = useSyncExternalStore(store.subscribe, snapshot, snapshot);
+  const recargar = useCallback(() => {
+    if (!offline && !demo) return store.cargar(scope, orgId, true);
+  }, [scope, orgId, offline, demo]);
   useEffect(() => {
-    if (sinBase) return;
-    store.load();
-    const refresh = () => {
-      if (!document.hidden) store.load();
-    };
-    window.addEventListener("focus", refresh);
-    document.addEventListener("visibilitychange", refresh);
-    const timer = setInterval(refresh, 60000);
-    return () => {
-      clearInterval(timer);
-      window.removeEventListener("focus", refresh);
-      document.removeEventListener("visibilitychange", refresh);
-    };
-  }, [store, sinBase]);
-  return {
-    ...snap,
-    cargando: !sinBase && !snap.cargada && !snap.error,
-    guardar: store.save,
-    recargar: store.load,
-    puedeGuardar: !sinBase && puedeConfigurarRails(user),
-    sinBase,
-  };
+    if (!offline && !demo) store.cargar(scope, orgId);
+    window.addEventListener('focus', recargar);
+    return () => window.removeEventListener('focus', recargar);
+  }, [scope, orgId, offline, demo, recargar]);
+  const guardar = useCallback(cfg => store.guardar(scope, cfg, { demo, offline }), [scope, demo, offline]);
+  return { cfg: snap.cfg, cargando: !demo && !offline && !snap.cargada,
+    guardando: snap.guardando, error: snap.error, guardar, recargar, scope,
+    puedeGuardar: !offline, demo };
 }
