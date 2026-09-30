@@ -15,7 +15,10 @@ ext {
     // los márgenes del WebView de forma nativa (adjustMarginsForEdgeToEdge
     // en capacitor.config.json) — se valida con dispositivos reales en la
     // prueba cerrada de Play antes de tocar producción.
-    targetSdkVersion = hasProperty('playStore') ? 36 : 34
+    // `hasProperty` sin receptor se evaluaba sobre el script y no veía
+    // `-PplayStore`, por lo que el AAB terminaba apuntando a API 34 aunque el
+    // workflow indicara lo contrario. La propiedad pertenece al proyecto raíz.
+    targetSdkVersion = rootProject.hasProperty('playStore') ? 36 : 34
     androidxActivityVersion = '1.11.0'
     androidxAppCompatVersion = '1.7.1'
     androidxCoordinatorLayoutVersion = '1.3.0'
