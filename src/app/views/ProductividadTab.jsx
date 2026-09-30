@@ -109,7 +109,7 @@ export default function ProductividadTab({ T, isLight, dateFilter = null }) {
           Indicadores · Productividad
         </h2>
         <p style={{ margin: "4px 0 0", fontSize: 12.5, color: T.txt3, fontFamily: font }}>
-          Acciones por fecha programada (o creación si no tienen fecha). El avance es completadas / total del rango. Tocá una fila para ver el detalle.
+          Acciones por fecha programada (o creación si no tienen fecha). El avance es completadas / total del rango. Toca una fila para ver el detalle.
         </p>
       </div>
 

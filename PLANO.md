@@ -58,12 +58,12 @@ columna, estos son los archivos que hay que revisar.
 | `profiles` | 12 | `app/views/CRM/index.jsx` · `app/views/Caja.jsx` · `app/views/ChatEquipo.jsx` _+9_ |
 | `leads` | 7 | `app/App.jsx` · `app/views/CRM/index.jsx` · `app/views/Caja.jsx` _+4_ |
 | `evidencia` | 6 | `app/views/CRM/components.jsx` · `app/views/Caja.jsx` · `app/views/ChatEquipo.jsx` _+3_ |
+| `organizations` | 4 | `app/App.jsx` · `contexts/TenantConfigGate.jsx` · `hooks/useRailsConfig.js` _+1_ |
 | `team_expenses` | 4 | `app/views/Caja.jsx` · `app/views/Copilot.jsx` · `app/views/FinanzasAdmin.jsx` _+1_ |
 | `proactive_reminders` | 3 | `lib/llamadas.js` · `lib/recordatorios-locales.js` · `lib/telegram.js` |
 | `team_actions` | 3 | `app/App.jsx` · `app/features/MetaPanel/index.jsx` · `app/views/ProductividadTab.jsx` |
 | `expediente_items` | 2 | `app/views/CRM/LeadChatHistory.jsx` · `app/views/CRM/LeadNotesTimeline.jsx` |
 | `mkt_tasks` | 2 | `app/views/Marketing.jsx` · `app/views/PlanSemanal.jsx` |
-| `organizations` | 2 | `app/App.jsx` · `lib/rails-store.js` |
 | `audit_log` | 1 | `lib/audit.js` |
 | `catalogo_proyectos` | 1 | `app/views/ERP.jsx` |
 | `device_tokens` | 1 | `lib/push-native.js` |
@@ -126,6 +126,7 @@ error no está en el frontend.
 | `fn_informe_notas_listar` | `app/views/InformeAvances.jsx` |
 | `fn_llamada_en_curso` | `app/App.jsx` |
 | `fn_mkt_intel` | `app/App.jsx` |
+| `fn_my_company_module_access` | `contexts/TenantConfigGate.jsx` |
 | `fn_org_copilot_responder` | `lib/telegram.js` |
 | `fn_org_team_members` | `app/features/MetaPanel/index.jsx` |
 | `fn_set_my_recovery_email` | `app/views/Profile.jsx` |
@@ -143,8 +144,10 @@ error no está en el frontend.
 | `mkt_attach_evidence_to` | `app/views/Copilot.jsx` |
 | `mkt_comment_evidence` | `app/views/Copilot.jsx` |
 | `mkt_evidence_candidates` | `app/views/Copilot.jsx` |
-| `rails_agenda_hoy` | `lib/agenda.js` |
+| `rails_agenda_del_dia` | `lib/agenda.js` |
+| `rails_guardar_config` | `hooks/useRailsConfig.js` |
 | `rails_marcar_accion` | `lib/agenda.js` |
+| `rails_resolver_accion` | `lib/agenda.js` |
 | `request_telegram_pairing_code` | `lib/telegram.js` |
 | `resolve_portfolio_link` | `app/views/LandingPages/PublicLanding.jsx` |
 
@@ -160,6 +163,7 @@ Servicios de terceros con los que habla el código.
 | `glulgyhkrqpykxmujodb.supabase.co` | 6 archivos |
 | `drive.google.com` | 3 archivos |
 | `docs.google.com` | 2 archivos |
+| `app.hulipractice.com` | 1 archivo |
 | `brokers.mycocay.com` | 1 archivo |
 | `brokers.simca.mx` | 1 archivo |
 | `cal.com` | 1 archivo |
@@ -167,7 +171,6 @@ Servicios de terceros con los que habla el código.
 | `getstratosai.com` | 1 archivo |
 | `ionic.io` | 1 archivo |
 | `maps.app` | 1 archivo |
-| `meet.google.com` | 1 archivo |
 
 ---
 
@@ -178,21 +181,21 @@ casa; por eso mismo son los que más cuidado piden.
 
 | Archivo | Archivos que lo importan |
 |---|---|
-| `design-system/tokens.js` | **77** |
-| `lib/supabase.js` | **45** |
+| `design-system/tokens.js` | **80** |
+| `lib/supabase.js` | **44** |
 | `hooks/useAuth.js` | **37** |
-| `hooks/useViewport.js` | **31** |
-| `app/SharedComponents.jsx` | **21** |
+| `hooks/useViewport.js` | **30** |
 | `hooks/useClient.js` | **20** |
+| `app/SharedComponents.jsx` | **20** |
 | `lib/native.js` | **18** |
-| `lib/whatsapp-admin.js` | **6** |
-| `app/views/CRM/zoom-metrics.js` | **6** |
+| `app/views/CRM/date-range.js` | **13** |
+| `app/views/CRM/zoom-metrics.js` | **9** |
+| `lib/whatsapp-admin.js` | **7** |
 | `app/components/Logo.jsx` | **5** |
-| `app/views/CRM/date-range.js` | **5** |
+| `app/views/CRM/command-metrics.js` | **5** |
 | `lib/utils.js` | **4** |
 | `lib/offline-mode.js` | **4** |
 | `app/constants/pipeline.js` | **4** |
-| `design-system/primitives.jsx` | **4** |
 
 ---
 

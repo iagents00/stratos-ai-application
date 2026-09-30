@@ -5,7 +5,7 @@ export const zonaRails = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 /** Los fallos son visibles: una agenda desconocida no equivale a una agenda vacía. */
 export async function agendaDeHoy() {
-  const { data, error } = await supabase.rpc("rails_agenda_del_dia", { p_timezone: zonaRails() });
+  const { data, error } = await supabase.rpc("rails_agenda_del_dia", { p_timezone: zonaRails() }).abortSignal(AbortSignal.timeout(10000));
   if (error) throw error;
   return Object.fromEntries((data || []).filter(f => f.lead_id && f.estado !== "pendiente")
     .map(f => [f.lead_id, { estado: f.estado, completado_at: f.completado_at, asesor_id: f.asesor_id }]));
@@ -17,7 +17,7 @@ export async function resolverAccion(accion, gestion) {
     p_tipo: accion.tipo, p_razon: accion.razon,
     p_resultado: gestion.resultado, p_detalle: gestion.detalle, p_canal: gestion.canal,
     p_siguiente: gestion.siguiente, p_siguiente_at: gestion.fecha, p_timezone: zonaRails(),
-  });
+  }).abortSignal(AbortSignal.timeout(10000));
   if (error) throw Object.assign(new Error(error.message || "No pudimos confirmar el guardado."), { definitivo: rechazoDefinitivoRails(error) });
   if (!data?.lead?.id) throw new Error("El servidor no confirmó el guardado. Reintenta la misma gestión.");
   return data;

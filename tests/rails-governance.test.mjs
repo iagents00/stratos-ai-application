@@ -162,7 +162,7 @@ test("opt-out, deletion and future promises always override contact recommendati
       { ...lead, st: "Prospecto", next_action_at: "2026-09-10T12:00:00Z" },
       now,
     ).tipo,
-    "lead_caliente",
+    "promesa_vencida",
   );
 });
 test("agenda read failure is visible; failed writes are not acknowledged", async () => {
@@ -185,7 +185,7 @@ test("agenda read failure is visible; failed writes are not acknowledged", async
         error: null,
       }),
     });
-    assert.deepEqual(await agendaDeHoy(), { a: "hecho" });
+    assert.deepEqual(await agendaDeHoy(), { a: { estado: "hecho", completado_at: undefined, asesor_id: undefined } });
     assert.equal(await marcarAccion({ leadId: "a" }, "hecho"), true);
   } finally {
     supabase.rpc = old;

@@ -42,7 +42,7 @@ try {
   await db.exec(
     readFileSync(
       new URL(
-        "../../supabase/migrations/243_rails_gobierno_y_agenda_segura.sql",
+        "../../supabase/migrations/249_rails_gobierno_y_agenda_segura.sql",
         import.meta.url,
       ),
       "utf8",

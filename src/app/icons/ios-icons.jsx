@@ -75,6 +75,10 @@ const PREMIUM_ICON_OVERRIDES = {
   // ── MÓDULOS DEL MOLDE EQUIPO (ago-2026): sin glifo propio caían al fallback
   //    "menu" (los 4 cuadrados) y en Aplicaciones se veían tres módulos con el
   //    mismo ícono (captura de Ángel en Brasa, 11-ago).
+  mi_espacio: { // diana: tu espacio, tu foco
+    s: "<circle cx=\"256\" cy=\"256\" r=\"180\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"36\"/><circle cx=\"256\" cy=\"256\" r=\"104\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"32\" opacity=\"0.75\"/><circle cx=\"256\" cy=\"256\" r=\"36\" fill=\"currentColor\"/>",
+    o: "<circle cx=\"256\" cy=\"256\" r=\"180\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\"/><circle cx=\"256\" cy=\"256\" r=\"104\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"26\" opacity=\"0.75\"/><circle cx=\"256\" cy=\"256\" r=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"24\"/>",
+  },
   miespacio: { // diana: tu espacio, tu foco
     s: "<circle cx=\"256\" cy=\"256\" r=\"180\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"36\"/><circle cx=\"256\" cy=\"256\" r=\"104\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"32\" opacity=\"0.75\"/><circle cx=\"256\" cy=\"256\" r=\"36\" fill=\"currentColor\"/>",
     o: "<circle cx=\"256\" cy=\"256\" r=\"180\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"30\"/><circle cx=\"256\" cy=\"256\" r=\"104\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"26\" opacity=\"0.75\"/><circle cx=\"256\" cy=\"256\" r=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"24\"/>",

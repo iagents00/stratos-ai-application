@@ -65,7 +65,7 @@
         "src/lib/next-action-engine.js",
         "src/app/views/MiDia.jsx",
         "src/lib/agenda.js",
-        "supabase/migrations/243_rails_gobierno_y_agenda_segura.sql"
+        "supabase/migrations/249_rails_gobierno_y_agenda_segura.sql"
       ],
       "dependsOn": [
         "auth",

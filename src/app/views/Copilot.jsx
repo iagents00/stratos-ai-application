@@ -17,6 +17,7 @@ import { createPortal } from "react-dom";
 import { Send, Sparkles, RefreshCw, Mic, Square, X, ChevronDown, ChevronUp, ChevronLeft, Bot, BookOpen, Play, Pause, Bell, Camera, Paperclip } from "lucide-react";
 import { P, LP, font, fontDisp, chatType } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
+import { demoCopilotReply } from "../../lib/copilot-demo";
 import CopilotCapabilities from "../components/CopilotCapabilities";
 import CopilotMark from "../components/CopilotMark";
 import { useClient } from "../../hooks/useClient";
@@ -96,13 +97,13 @@ export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp
   // el chat — jamás la vieja pantalla "Conecta tu Telegram para activar", que
   // parecía un muro. (`ConnectPrompt` queda en el archivo por si algún tenant
   // futuro con pairing manual lo necesita, pero no se muestra por defecto.)
-  return <Chat T={T} isLight={isLight} botUsername={botUsername} onUnpaired={onUnpaired} onBack={onBack} score={score} isMarketing={isMarketing} puedeCajaFoto={puedeCajaFoto} orgId={orgId} />;
+  return <Chat T={T} isLight={isLight} botUsername={botUsername} onUnpaired={onUnpaired} onBack={onBack} score={score} isMarketing={isMarketing} puedeCajaFoto={puedeCajaFoto} orgId={orgId} isDemo={!!user?.isDemo} />;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* Chat — layout WhatsApp: header fino, mensajes expansivos, composer compacto */
 /* ─────────────────────────────────────────────────────────────────────────── */
-function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing, puedeCajaFoto, orgId }) {
+function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing, puedeCajaFoto, orgId, isDemo }) {
   // La flecha "‹ volver" solo tiene sentido donde el header/bottom-nav se ocultan
   // (modo inmersivo en celular) o en la app nativa. En DESKTOP WEB el sidebar
   // siempre está a la vista → la flecha sobra (pedido de Ángel 24-jul). En iPhone/
@@ -228,6 +229,11 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   const ESPERA_MAX_MS = 12000;
 
   const reload = useCallback(async (opts = {}) => {
+    if (isDemo) {
+      setLoading(false);
+      setMessages(prev => prev.length ? prev : [{id:"ai-demo-welcome",role:"ai",content:"Demostración del Copilot. Explora la guía y ejemplos; no se consultan ni modifican datos reales.",occurred_at:new Date().toISOString()}]);
+      return;
+    }
     let venció = false;
     const reloj = new Promise((resolve) => {
       setTimeout(() => { venció = true; resolve(null); }, ESPERA_MAX_MS);
@@ -239,7 +245,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       r = await Promise.race([getCopilotActivity(50), reloj]);
     } catch (_) { r = null; }
     if (!mountedRef.current) return;
-    if (venció || !r) {
+    if (venció || !r || r.error) {
       // El aviso se muestra SOLO si no hay nada en pantalla: un refresco que
       // falla no debe tapar la conversación que el usuario ya está leyendo.
       setErrorCarga(true);
@@ -282,11 +288,12 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       return merged.map(([m]) => m);
     });
     setLoading(false);
-  }, []);
+  }, [isDemo]);
 
   useEffect(() => {
     mountedRef.current = true;
     reload();
+    if (isDemo) return () => { mountedRef.current = false; };
     // Sincronización entre dispositivos: si hablaste con el Copilot en el celular
     // y ahora mirás la PC (o volvés a la pestaña), refrescamos para traer lo último.
     // Función NOMBRADA + removeEventListener en cleanup (regla de performance).
@@ -336,7 +343,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       try { recorderRef.current?.cancel(); } catch { /* noop */ }
       try { recognitionRef.current?.stop(); } catch { /* noop */ }
     };
-  }, [reload]);
+  }, [reload, isDemo]);
 
   useEffect(() => { sendingRef.current = sending; }, [sending]);
   useEffect(() => { eligiendoTareaRef.current = !!pendingEvidence; }, [pendingEvidence]);
@@ -360,6 +367,12 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     const text = (rawText ?? "").trim();
     if (!text && !options.callback_data) return;
     if (sending) return;
+    if (isDemo) {
+      setInput("");
+      const at = new Date().toISOString();
+      setMessages(prev => [...prev,{id:`tmp-demo-${Date.now()}`,role:"user",content:text,occurred_at:at},{id:`ai-demo-${Date.now()}`,role:"ai",content:demoCopilotReply(text),occurred_at:at}]);
+      return;
+    }
     const cb = options.callback_data || "";
 
     // ── La persona dice qué es la captura de pago que acaba de mandar ──
@@ -1121,7 +1134,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
                 width: 6, height: 6, borderRadius: "50%",
                 background: asistenteCaido ? T.txt3 : T.accent,
                 boxShadow: asistenteCaido ? "none" : `0 0 6px ${T.accent}`,
-              }} />{asistenteCaido ? "Sin conexión con el asistente" : "En línea"}
+              }} />{isDemo ? "Demostración" : asistenteCaido ? "Sin conexión con el asistente" : "En línea"}
           </div>
         </div>
         {!isMarketing && !puedeCajaFoto && <button type="button" aria-label="Qué puede hacer el Copilot" title="Qué puede hacer" aria-expanded={capabilitiesOpen} onClick={() => setCapabilitiesOpen(o => !o)} style={{ width: 36, height: 36, borderRadius: 8, background: "transparent", border: "none", color: T.accent, cursor: "pointer" }}><BookOpen size={18} /></button>}
@@ -1138,7 +1151,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       {capabilitiesOpen && createPortal(<><div onClick={() => setCapabilitiesOpen(false)} style={{position:"fixed",inset:0,zIndex:100001,background:"rgba(0,0,0,.25)"}} /><CopilotCapabilities T={T} isLight={isLight} onClose={() => setCapabilitiesOpen(false)} onPrefill={prompt => {setInput(prompt);setCapabilitiesOpen(false);inputRef.current?.focus();}} /></>, document.body)}
 
       {/* ── Banner "Activar notificaciones" (push) ── */}
-      <NotifBanner T={T} isLight={isLight} />
+      {!isDemo && <NotifBanner T={T} isLight={isLight} />}
 
       {/* ── Sugerencias colapsables ── */}
       {showSuggestions && (
@@ -1296,7 +1309,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         {/* Adjuntar: evidencia de tarea (marketing) o captura de un pago (tenants
             con copilotGastoFoto, hoy NSG). Es el mismo botón; cambia a dónde va
             la imagen. Si el tenant no tiene ninguno de los dos, ni se renderiza. */}
-        {(isMarketing || puedeCajaFoto || (!isMarketing && !puedeCajaFoto)) && (
+        {!isDemo && (isMarketing || puedeCajaFoto || (!isMarketing && !puedeCajaFoto)) && (
           <>
             <button type="button"
               title={(isMarketing || !puedeCajaFoto) ? "Adjuntar foto o video de evidencia" : "Mandar la captura de un pago"}
@@ -1313,7 +1326,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           </>
         )}
         {/* Botón micrófono */}
-        <button type="button" onClick={recording ? finishRecording : startRecording} disabled={sending}
+        <button type="button" onClick={recording ? finishRecording : startRecording} disabled={sending || isDemo} title={isDemo ? "Voz disponible en tu cuenta" : "Dictar mensaje"}
           style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, border: "none", background: "transparent", color: recording ? "#EF4444" : T.txt3, cursor: sending ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Mic size={18} strokeWidth={2} />
         </button>

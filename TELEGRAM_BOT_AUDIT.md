@@ -29,7 +29,7 @@ El dispatcher principal llama a `public.bot_nlu_dispatch_gvintell`, que enruta:
 
 ## Catalogo de proyectos
 
-El catalogo queda versionado como migracion en `supabase/migrations/091_catalogo_proyectos_telegram.sql`.
+El catalogo queda versionado como migracion en `docs/recovery/legacy-sql/091_catalogo_proyectos_telegram.sql`.
 
 Permite consultar por:
 

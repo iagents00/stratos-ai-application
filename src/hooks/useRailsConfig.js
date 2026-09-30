@@ -5,12 +5,12 @@ import { crearRailsStore } from '../lib/rails-store';
 
 const store = crearRailsStore({
   async leer(orgId) {
-    const { data, error } = await supabase.from('organizations').select('meta_config').eq('id', orgId).single();
+    const { data, error } = await supabase.from('organizations').select('meta_config').eq('id', orgId).abortSignal(AbortSignal.timeout(10000)).single();
     if (error) throw error;
     return data?.meta_config?.rails ?? null;
   },
   async escribir(cfg, esperada, orgId) {
-    const { data, error } = await supabase.rpc('rails_guardar_config', { p_config: cfg, p_esperada: esperada, p_organization: orgId });
+    const { data, error } = await supabase.rpc('rails_guardar_config', { p_config: cfg, p_esperada: esperada, p_organization: orgId }).abortSignal(AbortSignal.timeout(10000));
     if (error) throw error;
     return data;
   },
@@ -29,8 +29,11 @@ export function useRailsConfig() {
   }, [scope, orgId, offline, demo]);
   useEffect(() => {
     if (!offline && !demo) store.cargar(scope, orgId);
-    window.addEventListener('focus', recargar);
-    return () => window.removeEventListener('focus', recargar);
+    const refresh = () => { if (!document.hidden) recargar(); };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    const timer = setInterval(refresh, 60000);
+    return () => { clearInterval(timer); window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', refresh); };
   }, [scope, orgId, offline, demo, recargar]);
   const guardar = useCallback(cfg => store.guardar(scope, cfg, { demo, offline }), [scope, demo, offline]);
   return { cfg: snap.cfg, cargando: !demo && !offline && !snap.cargada,

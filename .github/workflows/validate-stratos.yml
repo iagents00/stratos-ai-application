@@ -28,5 +28,12 @@ jobs:
       - run: npm run check:project
       - run: npm run check:runtime
       - run: npm run test
+      - run: npm run probar-rails
+      - run: npm run test:rails-db
+      - run: node scripts/check-tenant-modules.mjs
+      - run: node scripts/verificar-tenant-route.mjs
+      - run: npm run verificar-docs
+      - run: npm run verificar-rpc
+      - run: npm run ops:check
       - run: npm run verificar-migraciones
       - run: npm run build

@@ -39,7 +39,8 @@
     "ops:backup-check": "node scripts/ops/verify-backup.mjs",
     "test:rails-db": "node tests/sql/rails-security.mjs",
     "ops:inventory": "node scripts/ops/generate-system-index.mjs",
-    "probar-rails": "node scripts/probar-rails.mjs"
+    "probar-rails": "node scripts/probar-rails.mjs",
+    "prebuild:app": "npm run check:project && node tools/check_mobile_perf.mjs && node tools/check_plan_semanal.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",

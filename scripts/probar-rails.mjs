@@ -116,7 +116,7 @@ try {
     GRANT USAGE ON SCHEMA auth TO authenticated; GRANT SELECT ON profiles, leads TO authenticated;
   `);
   await db.exec(readFileSync(new URL('../ops/rails/fixture-triggers-fecha.sql',import.meta.url),'utf8'));
-  const migration=readFileSync(new URL('../supabase/migrations/258_rails_circuito_confirmado.sql',import.meta.url),'utf8');
+  const migration=readFileSync(new URL('../supabase/migrations/260_rails_circuito_confirmado.sql',import.meta.url),'utf8');
   await test('migración 245 ejecutable e idempotente', async () => { await db.exec(migration); await db.exec(migration); });
   const org=randomUUID(), otroOrg=randomUUID(), asesor=randomUUID(), admin=randomUUID(), otro=randomUUID(), lid=randomUUID();
   await db.query(`INSERT INTO organizations VALUES ($1,'{"brand":"intacta"}'),($2,'{}')`,[org,otroOrg]);
