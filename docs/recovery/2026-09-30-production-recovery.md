@@ -16,7 +16,7 @@ La configuración por organización inicia apagada. La producción ya tenía rai
 
 ## Base de datos y clínica
 
-Se completaron en stratos-prod los límites de empresas nuevas (247), permisos restrictivos de Caja (248) y registro de la consulta autenticada (261), sin cambiar fichas, asesores ni habilitar módulos históricos. La consulta autenticada de permisos devuelve HTTP 200. Rails ya estaba instalado; no se volvió a aplicar su migración. Huli pasó 44 comprobaciones reales antes de recuperar el frontend, sin escribir pacientes ni citas.
+Se completaron en stratos-prod los límites de empresas nuevas (247), permisos restrictivos de Caja (248) y registro de la consulta autenticada (261), sin cambiar fichas, asesores ni habilitar módulos históricos. La consulta autenticada de permisos devuelve HTTP 200. Se actualizó whatsapp-admin al mismo código reconciliado de GitHub, después de comparar la versión activa con main y verificar el contenido preparado. Rails ya estaba instalado; no se volvió a aplicar su migración. Huli pasó 44 comprobaciones reales antes de recuperar el frontend, sin escribir pacientes ni citas.
 
 ## Prevención y publicación
 
