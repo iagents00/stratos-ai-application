@@ -277,13 +277,14 @@ Deno.serve(async (req: Request) => {
     }
 
     // ── Selección de proveedor ─────────────────────────────────────────────
-    // Prioridad 1: Gemini Flash (gratis, 1500 req/día, 1 M tokens contexto)
-    // Prioridad 2: Anthropic Claude (pagado, fallback si Gemini no configurado)
+    // Prioridad 1: Gemini Flash; modelo configurable mediante GEMINI_MODEL.
+    // Prioridad 2: Anthropic Claude si Gemini no está configurado.
     const geminiKey    = Deno.env.get("GEMINI_API_KEY");
+    const geminiModel = Deno.env.get("GEMINI_MODEL") || "gemini-3.8-flash";
     const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!geminiKey && !anthropicKey) {
       return new Response(
-        JSON.stringify({ error: "No hay API key configurada. Define GEMINI_API_KEY (gratis) o ANTHROPIC_API_KEY." }),
+        JSON.stringify({ error: "No hay API key configurada. Define GEMINI_API_KEY o ANTHROPIC_API_KEY." }),
         { status: 500, headers: cors },
       );
     }
@@ -329,9 +330,9 @@ ${Array.isArray(tasks) && tasks.length > 0
     let tokensUsed = 0;
 
     if (useGemini) {
-      // Gemini 2.5 Flash — gratis hasta 1500 req/día
+      // Gemini Flash — proveedor y cuota del proyecto.
       const r = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`,
         {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -392,7 +393,7 @@ ${Array.isArray(tasks) && tasks.length > 0
       suggestions: parsed.suggestions || [],
       summary_one_line: parsed.summary_one_line || "",
       tokens_used: tokensUsed,
-      provider: useGemini ? "gemini-2.5-flash" : "claude-sonnet-4-5",
+      provider: useGemini ? geminiModel : "claude-sonnet-4-5",
     }), { status: 200, headers: cors });
   } catch (e) {
     return new Response(JSON.stringify({ error: "unexpected", detail: String(e) }), { status: 500, headers: cors });

@@ -16,7 +16,7 @@ La configuración por organización inicia apagada. La producción ya tenía rai
 
 ## Base de datos y clínica
 
-Se completaron en stratos-prod los límites de empresas nuevas (247), permisos restrictivos de Caja (248) y registro de la consulta autenticada (261), sin cambiar fichas, asesores ni habilitar módulos históricos. La consulta autenticada de permisos devuelve HTTP 200. Se actualizó whatsapp-admin al mismo código reconciliado de GitHub, después de comparar la versión activa con main y verificar el contenido preparado. Rails ya estaba instalado; no se volvió a aplicar su migración. Huli pasó 44 comprobaciones reales antes de recuperar el frontend, sin escribir pacientes ni citas.
+Se completaron en stratos-prod los límites de empresas nuevas (247), permisos restrictivos de Caja (248) y registro de la consulta autenticada (261), sin cambiar fichas, asesores ni habilitar módulos históricos. La consulta autenticada de permisos devuelve HTTP 200. Se actualizaron whatsapp-admin y admin-create-user al código reconciliado y transcribir-voz para exigir una sesión real. Se prepararon organize-lead-notes y suggest-next-actions, ausentes en producción. Una prueba real detectó que Gemini 2.5 Flash ya no estaba disponible para este proyecto; se sustituyó por Gemini 3.8 Flash con opción GEMINI_MODEL, conforme a https://ai.google.dev/gemini-api/docs/deprecations y https://ai.google.dev/gemini-api/docs/generate-content/latest-model. Los códigos publicados se comparan con la fuente y las comprobaciones de IA usan datos ficticios. Rails ya estaba instalado; no se volvió a aplicar su migración. Huli pasó 44 comprobaciones reales antes de recuperar el frontend, sin escribir pacientes ni citas.
 
 ## Prevención y publicación
 

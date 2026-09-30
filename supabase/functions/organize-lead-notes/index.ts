@@ -186,10 +186,11 @@ Deno.serve(async (req: Request) => {
 
     // ── Selección de proveedor ─────────────────────────────────────────────
     const geminiKey    = Deno.env.get("GEMINI_API_KEY");
+    const geminiModel = Deno.env.get("GEMINI_MODEL") || "gemini-3.8-flash";
     const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!geminiKey && !anthropicKey) {
       return new Response(
-        JSON.stringify({ error: "No hay API key configurada. Define GEMINI_API_KEY (gratis) o ANTHROPIC_API_KEY." }),
+        JSON.stringify({ error: "No hay API key configurada. Define GEMINI_API_KEY o ANTHROPIC_API_KEY." }),
         { status: 500, headers: cors },
       );
     }
@@ -210,7 +211,7 @@ Deno.serve(async (req: Request) => {
 
     if (useGemini) {
       const r = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`,
         {
           method: "POST",
           headers: { "content-type": "application/json" },
