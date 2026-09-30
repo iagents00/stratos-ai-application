@@ -314,15 +314,14 @@ createRoot(document.getElementById("root")).render(
     <ErrorBoundary>
       {isDentalDemo ? <Suspense fallback={<p>Cargando demo dental…</p>}><DentalDemo /></Suspense> : <ClientProvider config={clientConfig}>
         <AuthProvider>
-          {/* Watcher: si el user logueado pertenece a otra org, redirige al
-              path correcto. Solo activo cuando isApp=true porque las páginas
-              públicas (privacy, deletion, etc.) no necesitan este guardrail. */}
-          {isApp && <ClientOrgGuard />}
-          {/* Aviso de versión nueva. Se pinta SOLO dentro de la app nativa y
+          {/* Bloquea la interfaz del tenant equivocado durante la redirección.
+              Las páginas públicas pasan sin cambios. */}
+          <ClientOrgGuard enabled={isApp}>
+            {/* Aviso de versión nueva. Se pinta SOLO dentro de la app nativa y
               solo cuando el servidor sirve un bundle distinto al que corre.
               Nunca recarga solo: la recarga la toca el usuario (ver #594). */}
-          {isApp && <UpdatePill />}
-          <Suspense fallback={null}>
+            {isApp && <UpdatePill />}
+            <Suspense fallback={null}>
             {isPublicLanding
               ? <PublicLanding />
               : isPrivacy
@@ -367,7 +366,8 @@ createRoot(document.getElementById("root")).render(
                         ? <TenantConfigGate><App /></TenantConfigGate>
                         : <LandingMarketing appUrl={APP_URL} />
             }
-          </Suspense>
+            </Suspense>
+          </ClientOrgGuard>
         </AuthProvider>
       </ClientProvider>}
     </ErrorBoundary>
