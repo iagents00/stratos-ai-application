@@ -60,6 +60,8 @@ VITE_ se publica al navegador. Las demás necesitan clasificación y custodia de
 | FORM_NOTIFY_FROM | [supabase/functions/form-submit/index.ts](../../supabase/functions/form-submit/index.ts) |
 | FORM_NOTIFY_TO | [supabase/functions/form-submit/index.ts](../../supabase/functions/form-submit/index.ts) |
 | GEMINI_API_KEY | [supabase/functions/organize-lead-notes/index.ts](../../supabase/functions/organize-lead-notes/index.ts), [supabase/functions/suggest-next-actions/index.ts](../../supabase/functions/suggest-next-actions/index.ts) |
+| GEMINI_FALLBACK_MODEL | [supabase/functions/organize-lead-notes/index.ts](../../supabase/functions/organize-lead-notes/index.ts), [supabase/functions/suggest-next-actions/index.ts](../../supabase/functions/suggest-next-actions/index.ts) |
+| GEMINI_MODEL | [supabase/functions/organize-lead-notes/index.ts](../../supabase/functions/organize-lead-notes/index.ts), [supabase/functions/suggest-next-actions/index.ts](../../supabase/functions/suggest-next-actions/index.ts) |
 | HULI_CONNECTIONS_JSON | [supabase/functions/huli-copilot/index.ts](../../supabase/functions/huli-copilot/index.ts) |
 | INFOBIP_API_KEY | [supabase/functions/whatsapp-admin/index.ts](../../supabase/functions/whatsapp-admin/index.ts) |
 | INFOBIP_BASE_URL | [supabase/functions/whatsapp-admin/index.ts](../../supabase/functions/whatsapp-admin/index.ts) |

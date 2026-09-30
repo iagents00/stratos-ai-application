@@ -246,6 +246,27 @@ EJEMPLO DE OUTPUT:
   "summary_one_line": "Cliente con interés alto pero falta confirmar Authority. Validar antes de propuesta."
 }`;
 
+// Un segundo modelo resuelve saturación temporal sin repetir escrituras del CRM.
+async function fetchGemini(key: string, model: string, payload: unknown) {
+  const models = [...new Set([model, Deno.env.get("GEMINI_FALLBACK_MODEL") || "gemini-3.5-flash-lite"])];
+  for (const [index, candidate] of models.entries()) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${candidate}:generateContent`,
+        { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": key },
+          body: JSON.stringify(payload), signal: AbortSignal.timeout(18000) },
+      );
+      if (response.ok || ![404, 429, 500, 502, 503, 504].includes(response.status) || index === models.length - 1) {
+        return { response, model: candidate };
+      }
+      await response.body?.cancel();
+    } catch (error) {
+      if (index === models.length - 1) throw error;
+    }
+  }
+  throw new Error("No se obtuvo respuesta del proveedor de IA");
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
@@ -280,7 +301,7 @@ Deno.serve(async (req: Request) => {
     // Prioridad 1: Gemini Flash; modelo configurable mediante GEMINI_MODEL.
     // Prioridad 2: Anthropic Claude si Gemini no está configurado.
     const geminiKey    = Deno.env.get("GEMINI_API_KEY");
-    const geminiModel = Deno.env.get("GEMINI_MODEL") || "gemini-3.8-flash";
+    let geminiModel = Deno.env.get("GEMINI_MODEL") || "gemini-3.8-flash";
     const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!geminiKey && !anthropicKey) {
       return new Response(
@@ -331,22 +352,13 @@ ${Array.isArray(tasks) && tasks.length > 0
 
     if (useGemini) {
       // Gemini Flash — proveedor y cuota del proyecto.
-      const r = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`,
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-            contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-            generationConfig: {
-              temperature: 0.4,
-              maxOutputTokens: 1500,
-              responseMimeType: "application/json",
-            },
-          }),
-        },
-      );
+      const generated = await fetchGemini(geminiKey, geminiModel, {
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+        generationConfig: { temperature: 0.4, maxOutputTokens: 1500, responseMimeType: "application/json" },
+      });
+      const r = generated.response;
+      geminiModel = generated.model;
       if (!r.ok) {
         const errBody = await r.text();
         return new Response(JSON.stringify({ error: "gemini_error", detail: errBody }), { status: 500, headers: cors });
