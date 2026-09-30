@@ -22,12 +22,15 @@
  */
 import { DEFAULT_CLIENT_CONFIG } from "./defaults";
 
-export function crearValorCliente(cfg, setClientById = () => {}) {
+export function crearValorCliente(cfg, setClientById = () => {}, setOrganizationFeatures = () => {}, organizationFeaturesOrgId = null, organizationManaged = false) {
   const activa = cfg || DEFAULT_CLIENT_CONFIG;
   return {
     config: activa,
     clientId: activa.id || "default",
     setClientById,
+    setOrganizationFeatures,
+    organizationFeaturesOrgId,
+    organizationManaged,
     // Si el módulo no aparece en features, asumimos habilitado (compat con
     // código existente que no consulta features). Solo cuando el dev marca
     // explícitamente `false` apagamos el módulo.

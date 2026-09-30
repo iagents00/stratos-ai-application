@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { useAuth } from "../../../hooks/useAuth";
+import { useClient } from "../../../hooks/useClient";
 import { adminGetAllUsers, adminCreateUser, adminUpdateUser, adminDeleteUser, adminResetPassword, adminGetTemporaryCredentials } from "../../../lib/auth";
 import { downloadBackup } from "../../../lib/backup";
 import { G } from "../../SharedComponents";
@@ -24,6 +25,7 @@ import CatalogConfiguratorAdmin from "./CatalogConfiguratorAdmin";
 
 export default function AdminPanel({ T = P, isLight: isLightProp }) {
   const { user: me } = useAuth();
+  const { organizationManaged } = useClient();
   const isMobile = useIsMobile();
   // Tema activo: recibe la paleta `T` (P oscuro / LP claro) del shell, igual que
   // el resto de las vistas. En claro los nombres/textos usan T.txt (antes eran
@@ -49,6 +51,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [form, setForm]             = useState({});
   const [formErr, setFormErr]       = useState("");
+  const [actionError, setActionError] = useState("");
   const [formOk, setFormOk]         = useState("");
   const [backupState, setBackupState] = useState({ loading: false, msg: "", isError: false });
   const [section, setSection] = useState("users");
@@ -166,13 +169,17 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
   };
 
   const handleDelete = async (id) => {
+    setActionError("");
     const { error } = await adminDeleteUser(id, me?.id);
-    if (error) return;
+    if (error) { setActionError(error); return; }
     setDeleteConfirm(null); await refresh();
   };
 
   const handleToggleActive = async (u) => {
-    await adminUpdateUser(u.id, { active: !u.isActive }); await refresh();
+    setActionError("");
+    const { error } = await adminUpdateUser(u.id, { active: !u.isActive });
+    if (error) { setActionError(error); return; }
+    await refresh();
   };
 
   const filtered = users.filter(u => {
@@ -187,7 +194,8 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
   })).filter(s => s.count > 0);
 
   const availableRoles = Object.entries(ROLE_META)
-    .filter(([key]) => isSuper || ROLE_META[key].level > (ROLE_META[me?.role]?.level ?? 99))
+    .filter(([key]) => (!organizationManaged || ["admin", "director", "asesor"].includes(key))
+      && (isSuper || ROLE_META[key].level > (ROLE_META[me?.role]?.level ?? 99)))
     .map(([key, m]) => ({ key, ...m }));
 
   const inputStyle = {
@@ -209,6 +217,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
 
   return (
     <div style={{ padding: isMobile ? "10px 0 0" : "28px 28px 0", display: "flex", flexDirection: "column", gap: isMobile ? 14 : 20, height: "100%" }}>
+      {actionError && <div role="alert" style={{ color: T.rose, border: `1px solid ${T.rose}55`, borderRadius: 10, padding: "10px 14px", fontSize: 12 }}>{actionError}</div>}
 
       {/* ── Header ── */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>

@@ -251,7 +251,7 @@ const ComandoOps = ({ T, accent = "#F472B6" }) => {
       )}
 
       {/* ── Caja y nómina ── */}
-      <G T={T}>
+      {data?.caja && <G T={T}>
         {titulo("Caja del mes", `Lo de ${empresa} como empresa: lo que cobró, lo que pagó y cuánto le debe a cada quien`)}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
           <Tarjeta icon={Wallet} label="Cobró a clientes" valor={money(caja.entro)} color="#22C55E" T={T} />
@@ -306,7 +306,7 @@ const ComandoOps = ({ T, accent = "#F472B6" }) => {
             </p>
           </div>
         )}
-      </G>
+      </G>}
 
       <div style={{ display: "flex", justifyContent: isMobile ? "stretch" : "flex-end" }}>
         <button

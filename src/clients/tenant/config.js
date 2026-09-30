@@ -48,6 +48,14 @@ const tenantConfig = {
     procesoGuiado: false,
   },
 
+  // El motor compartido de tareas usa palabras neutrales para clientes nuevos.
+  // Las pestañas de producción audiovisual de Duke no les corresponden.
+  navLabels: { mkt: "Proyectos" },
+  mkt: {
+    hideTabs: ["pipeline", "solicitudes"],
+    tabLabels: { marcas: "Proyectos" },
+  },
+
   crm: {
     aiAgentsPanel: false,
     advisorMetricsTab: false,
