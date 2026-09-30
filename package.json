@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "prebuild": "node tools/check_mobile_perf.mjs && node tools/check_plan_semanal.mjs",
+    "prebuild": "npm run check:project && node tools/check_mobile_perf.mjs && node tools/check_plan_semanal.mjs",
     "mapa": "node scripts/generar-mapa.mjs",
     "buscar": "node scripts/buscar.mjs",
     "plano": "node scripts/generar-plano.mjs",
@@ -21,7 +21,8 @@
     "verificar-rpc": "node scripts/verificar-rpc-permisos.mjs",
     "build:app": "vite build --mode app",
     "verificar:appstore-ios": "node scripts/verificar-appstore-ios.mjs",
-    "salud": "node scripts/salud.mjs"
+    "salud": "node scripts/salud.mjs",
+    "check:project": "node scripts/check-project-boundary.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",
