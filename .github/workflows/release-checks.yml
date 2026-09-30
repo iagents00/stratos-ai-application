@@ -1,0 +1,31 @@
+name: Release checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Install isolated PostgreSQL test engine
+        run: npm install --prefix /tmp/stratos-db-audit @electric-sql/pglite@0.5.8 --no-fund --no-audit
+      - run: npm run test:rails-db
+        env:
+          STRATOS_PGLITE_MODULE: /tmp/stratos-db-audit/node_modules/@electric-sql/pglite/dist/index.js
+      - run: npm test
+      - run: npm run ops:check
+      - run: npm run verificar-rails
+      - run: npm run verificar-docs
+      - run: npm run check:runtime
+      - run: node scripts/check-tenant-modules.mjs
+      - run: npm run verificar-rpc
+      - run: npm run build

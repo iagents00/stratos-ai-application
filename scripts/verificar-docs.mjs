@@ -72,4 +72,4 @@ if (rotas) {
   console.error(`\nHay documentación que manda al lugar equivocado. Corregí las rutas de arriba.\n`);
   process.exit(1);
 }
-console.log("Ninguna documentación miente.\n");
+console.log("Las referencias verificadas apuntan a archivos existentes; el contenido y el despliegue requieren revisión.\n");

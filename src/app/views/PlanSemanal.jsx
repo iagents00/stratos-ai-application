@@ -76,6 +76,8 @@ export default function PlanSemanal({ T, onOpenCopilot }) {
   const [guardando, setGuardando] = useState(false);
   const [guardadoAt, setGuardadoAt] = useState(null);
   const [error, setError]   = useState(null);
+  const [errorCarga, setErrorCarga] = useState(null);
+  const [reintento, setReintento] = useState(0);
   const [diaMovil, setDiaMovil] = useState(() => DIAS[Math.min((new Date().getDay() + 6) % 7, 6)].k);
   const [nuevaPrio, setNuevaPrio] = useState("");
 
@@ -101,24 +103,30 @@ export default function PlanSemanal({ T, onOpenCopilot }) {
   useEffect(() => {
     if (!orgId || !quien) return;
     let vivo = true;
-    setCargando(true); setError(null);
+    setCargando(true); setErrorCarga(null);
     supabase.from("mkt_tasks")
       .select("id, descripcion, updated_at")
       .eq("organization_id", orgId).eq("assignee_id", quien)
       .eq("origen", "plan_semanal").eq("titulo", tituloFila)
       .is("deleted_at", null)
       .order("updated_at", { ascending: false }).limit(1)
+      .abortSignal(AbortSignal.timeout(12000))
       .then(({ data, error: e }) => {
         if (!vivo) return;
-        if (e) { setError("No pude cargar el plan. Actualiza la página."); setCargando(false); return; }
+        if (e) { setErrorCarga("El servicio no respondió. Tu internet puede estar bien."); setCargando(false); return; }
         const fila = data?.[0];
         setRowId(fila?.id || null);
         setPlan(parsePlan(fila?.descripcion));
         setGuardadoAt(fila?.updated_at || null);
         setCargando(false);
+      })
+      .catch(() => {
+        if (!vivo) return;
+        setErrorCarga("El servicio no respondió. Tu internet puede estar bien.");
+        setCargando(false);
       });
     return () => { vivo = false; };
-  }, [orgId, quien, tituloFila]);
+  }, [orgId, quien, tituloFila, reintento]);
 
   /* ── Guardado ──────────────────────────────────────────────────────────────
      Debounce de 900ms: se escribe una hoja completa, no hace falta una ida por
@@ -334,6 +342,13 @@ export default function PlanSemanal({ T, onOpenCopilot }) {
 
       {error && (
         <div style={{ ...card, borderColor: `${AMBER}66`, color: AMBER, fontSize: 12.5, padding: 12 }}>{error}</div>
+      )}
+
+      {errorCarga && (
+        <div style={{ ...card, borderColor: `${AMBER}66`, color: AMBER, fontSize: 12.5, padding: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <span>{errorCarga}</span>
+          <button type="button" onClick={() => setReintento((n) => n + 1)} style={btn(false)}>Reintentar</button>
+        </div>
       )}
 
       {/* ── Días en el celular (la grilla de 7 no entra) ── */}

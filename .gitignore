@@ -53,3 +53,5 @@ dd/
 .wa-sessions/
 
 .playwright-cli/
+
+output/playwright/

@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "release": {
+    "commit": "84f5f10ac114ca685fe7692903598e0cfe89194b",
+    "serviceWorker": "stratos-v428",
+    "deploymentId": "dpl_8HPNsqGJiB21gQzuyEKZ3fvj6Dqx",
+    "url": "https://stratos-ai-application-2x9zsvfpw-iagents-projects.vercel.app",
+    "state": "READY",
+    "target": "production",
+    "aliases": [
+      "getstratosai.com",
+      "app.getstratosai.com",
+      "www.getstratosai.com",
+      "stratoscapitalgroup.com",
+      "app.stratoscapitalgroup.com",
+      "www.stratoscapitalgroup.com",
+      "stratos-ai-application.vercel.app",
+      "stratos-ai-application-iagents-projects.vercel.app",
+      "stratos-ai-application-git-codex-system-f65974-iagents-projects.vercel.app"
+    ]
+  },
+  "rollback": {
+    "verifiedDeploymentId": "dpl_Fwx7c8XAsHPTdm11vz62Zodrda5F",
+    "serviceWorker": "stratos-v426",
+    "mode": "dry-run",
+    "executed": false
+  },
+  "checks": {
+    "nodeTestsPassed": 15,
+    "isolatedPostgresChecksPassed": 12,
+    "githubRelease": "SUCCESS",
+    "githubPlans": "SUCCESS",
+    "productionUi": {
+      "adminPreviewOnly": true,
+      "pipelineHiddenInMiDia": true,
+      "portfolioAndReturn": true,
+      "newLeadDialogOpenAndCancel": true,
+      "organizationRulesChanged": false,
+      "prospectMessagesSent": false
+    }
+  },
+  "health": {
+    "schemaVersion": 1,
+    "checkedAt": "2026-09-13T17:51:03.070Z",
+    "durationMs": 1500,
+    "ok": true,
+    "web": [
+      {
+        "origin": "https://app.stratoscapitalgroup.com",
+        "checks": [
+          {
+            "name": "web",
+            "ok": true,
+            "status": 200,
+            "ms": 726,
+            "detail": {
+              "asset": "/assets/index-B6u168Se.js"
+            }
+          },
+          {
+            "name": "release",
+            "ok": true,
+            "status": 200,
+            "ms": 530,
+            "detail": {
+              "commit": "84f5f10ac114ca685fe7692903598e0cfe89194b",
+              "serviceWorker": "stratos-v428"
+            }
+          },
+          {
+            "name": "service_worker",
+            "ok": true,
+            "status": 200,
+            "ms": 536,
+            "detail": {
+              "version": "stratos-v428"
+            }
+          }
+        ]
+      },
+      {
+        "origin": "https://stratoscapitalgroup.com",
+        "checks": [
+          {
+            "name": "web",
+            "ok": true,
+            "status": 200,
+            "ms": 687,
+            "detail": {
+              "asset": "/assets/index-B6u168Se.js"
+            }
+          },
+          {
+            "name": "release",
+            "ok": true,
+            "status": 200,
+            "ms": 1017,
+            "detail": {
+              "commit": "84f5f10ac114ca685fe7692903598e0cfe89194b",
+              "serviceWorker": "stratos-v428"
+            }
+          },
+          {
+            "name": "service_worker",
+            "ok": true,
+            "status": 200,
+            "ms": 869,
+            "detail": {
+              "version": "stratos-v428"
+            }
+          }
+        ]
+      },
+      {
+        "origin": "https://getstratosai.com",
+        "checks": [
+          {
+            "name": "web",
+            "ok": true,
+            "status": 200,
+            "ms": 1464,
+            "detail": {
+              "asset": "/assets/index-B6u168Se.js"
+            }
+          },
+          {
+            "name": "release",
+            "ok": true,
+            "status": 200,
+            "ms": 1271,
+            "detail": {
+              "commit": "84f5f10ac114ca685fe7692903598e0cfe89194b",
+              "serviceWorker": "stratos-v428"
+            }
+          },
+          {
+            "name": "service_worker",
+            "ok": true,
+            "status": 200,
+            "ms": 533,
+            "detail": {
+              "version": "stratos-v428"
+            }
+          }
+        ]
+      }
+    ],
+    "platform": [
+      {
+        "name": "database",
+        "ok": true,
+        "status": 200,
+        "ms": 529
+      },
+      {
+        "name": "auth_health",
+        "ok": true,
+        "status": 200,
+        "ms": 531
+      }
+    ],
+    "unverified": [
+      "authenticated CRUD and tenant isolation",
+      "backup restore/PITR",
+      "n8n execution and providers",
+      "native apps"
+    ]
+  },
+  "pending": [
+    "Apply and verify migration 243 in the actual Supabase project after staging and n8n compatibility checks",
+    "Deploy and test Edge authentication protections",
+    "Restore database, Storage and n8n in isolation and measure RTO/RPO",
+    "Verify push channel after browser registration error",
+    "Duke seller acceptance and named owner/successor access",
+    "Required main branch review"
+  ],
+  "limitations": [
+    "Read-only network health is not a full end-to-end or recovery certification",
+    "SQL checks ran on an isolated PostgreSQL engine, not production",
+    "Existing CRM opening can automatically clear is_new after 20 seconds; UI navigation is not guaranteed read-only"
+  ]
+}

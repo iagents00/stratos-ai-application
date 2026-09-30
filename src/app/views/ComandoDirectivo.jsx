@@ -730,7 +730,8 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark", loading = fal
                   <div style={{ flex: 1, minWidth: 0, height: 34, borderRadius: 8, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)", overflow: "hidden" }}>
                     <div style={{
                       width: `${widthPct}%`, height: "100%", borderRadius: 8,
-                      background: s.color, display: "flex", alignItems: "center",
+                      background: s.color, display: "flex", alignItems: "center", paddingLeft: s.value > 0 ? 12 : 0,
+                      transition: "width 0.3s ease",
                     }}>
 
                     </div>

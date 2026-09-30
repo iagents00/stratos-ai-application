@@ -5433,8 +5433,8 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
               }}>🔥 Requiere Humano</span>
             )}
             {hot && lead.tag !== "requiere-humano" && <span style={{ fontSize: 10.5, fontWeight: 500, color: T.accent, background: `${T.accent}14`, border: `1px solid ${T.accentB}`, padding: "3px 9px", borderRadius: 99, letterSpacing: "0.05em" }}>HOT</span>}
-            {scheduledCallNM && (
-              <ScheduledCallBadge scheduledAt={scheduledCallNM.scheduled_at} variant="drawer" T={T} isLight={isLight} />
+            {getScheduledCall(lead) && (
+              <ScheduledCallBadge scheduledAt={getScheduledCall(lead).scheduled_at} variant="drawer" T={T} isLight={isLight} />
             )}
             {inactive >= 7 && <span style={{ fontSize: 10.5, fontWeight: 500, color: T.rose, background: `${T.rose}14`, border: `1px solid ${T.rose}33`, padding: "3px 9px", borderRadius: 99 }}>{inactive}d inactivo</span>}
             <span style={{ fontSize: 10.5, fontWeight: 500, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99 }}>Etapa {stageIdx + 1}/{STAGES.length}</span>

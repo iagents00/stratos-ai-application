@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "production": {
+    "projectId": "prj_Epv30SFnQmJGnxy3LdYLKV8NwDLi",
+    "team": "iagents-projects",
+    "supabaseProject": "glulgyhkrqpykxmujodb",
+    "origins": [
+      "https://app.stratoscapitalgroup.com",
+      "https://stratoscapitalgroup.com",
+      "https://getstratosai.com"
+    ]
+  },
+  "services": [
+    {
+      "id": "web",
+      "ownerRole": "Responsable de entrega web",
+      "entrypoints": [
+        "src/main.jsx",
+        "src/app/App.jsx",
+        "vercel.json",
+        "public/sw.js"
+      ],
+      "dependsOn": [
+        "auth",
+        "data"
+      ],
+      "runbook": "docs/operacion/RECUPERACION.md",
+      "recovery": "Promover una revisión previamente verificada en Vercel; no tocar la base"
+    },
+    {
+      "id": "auth",
+      "ownerRole": "Administrador Supabase",
+      "entrypoints": [
+        "src/lib/supabase.js",
+        "src/lib/auth.js",
+        "src/contexts/AuthContext.jsx",
+        "src/contexts/ClientOrgGuard.jsx"
+      ],
+      "dependsOn": [
+        "data"
+      ],
+      "runbook": "docs/operacion/RECUPERACION.md",
+      "recovery": "Comprobar servicio Auth, proyecto y sesión; preservar tokens y caché durante el diagnóstico"
+    },
+    {
+      "id": "data",
+      "ownerRole": "Administrador Supabase",
+      "entrypoints": [
+        "supabase/functions",
+        "supabase/migrations",
+        "src/lib/lead-save.js",
+        "src/lib/lead-storage.js"
+      ],
+      "dependsOn": [],
+      "runbook": "docs/operacion/RECUPERACION.md",
+      "recovery": "Restaurar backup/PITR en destino aislado, validar RLS y datos antes de cambiar tráfico"
+    },
+    {
+      "id": "rails",
+      "ownerRole": "Administrador comercial y responsable técnico",
+      "entrypoints": [
+        "src/app/features/Admin/RailsSettings.jsx",
+        "src/hooks/useRailsConfig.js",
+        "src/lib/rails-store.js",
+        "src/lib/next-action-engine.js",
+        "src/app/views/MiDia.jsx",
+        "src/lib/agenda.js",
+        "supabase/migrations/243_rails_gobierno_y_agenda_segura.sql"
+      ],
+      "dependsOn": [
+        "auth",
+        "data"
+      ],
+      "runbook": "docs/operacion/RIELES.md",
+      "recovery": "Leer configuración vigente, revisar confirmación y permisos; volver a versión registrada con un administrador"
+    },
+    {
+      "id": "copilot",
+      "ownerRole": "Administrador de automatizaciones",
+      "entrypoints": [
+        "src/lib/telegram.js",
+        "src/lib/iagents-actions.js",
+        "n8n/workflows"
+      ],
+      "dependsOn": [
+        "data",
+        "automations"
+      ],
+      "runbook": "docs/operacion/RECUPERACION.md",
+      "recovery": "Revisar ejecución e historial antes de reenviar comandos inciertos"
+    },
+    {
+      "id": "automations",
+      "ownerRole": "Administrador n8n/Easypanel",
+      "entrypoints": [
+        "n8n/README.md",
+        "n8n/workflows"
+      ],
+      "dependsOn": [
+        "data"
+      ],
+      "runbook": "docs/operacion/RECUPERACION.md",
+      "recovery": "Restaurar base n8n y clave de cifrado; arrancar con workflows inactivos y activar tras verificar idempotencia"
+    },
+    {
+      "id": "edge",
+      "ownerRole": "Administrador Supabase",
+      "entrypoints": [
+        "supabase/functions"
+      ],
+      "dependsOn": [
+        "auth",
+        "data"
+      ],
+      "runbook": "docs/operacion/RECUPERACION.md",
+      "recovery": "Desplegar función concreta con proyecto explícito y secretos existentes; Vercel no despliega estas funciones"
+    },
+    {
+      "id": "push",
+      "ownerRole": "Responsable móvil e integraciones",
+      "entrypoints": [
+        "api/push/refresh.js",
+        "src/lib/push.js",
+        "mobile/capacitor.config.json"
+      ],
+      "dependsOn": [
+        "data",
+        "edge"
+      ],
+      "runbook": "docs/operacion/RECUPERACION.md",
+      "recovery": "Verificar registro del dispositivo y proveedor; no borrar tokens durante el diagnóstico"
+    },
+    {
+      "id": "finance",
+      "ownerRole": "Administrador financiero y responsable técnico",
+      "entrypoints": [
+        "src/app/views/Caja.jsx",
+        "src/app/views/FinanzasAdmin.jsx",
+        "src/lib/financial-data.js"
+      ],
+      "dependsOn": [
+        "auth",
+        "data"
+      ],
+      "runbook": "docs/operacion/RECUPERACION.md",
+      "recovery": "Conciliar moneda, filtros y páginas con movimientos; nunca recomponer saldos borrando registros"
+    },
+    {
+      "id": "mobile",
+      "ownerRole": "Responsable de entrega móvil",
+      "entrypoints": [
+        "mobile/capacitor.config.json",
+        ".github/workflows/android-play.yml",
+        ".github/workflows/ios-testflight.yml"
+      ],
+      "dependsOn": [
+        "auth",
+        "data",
+        "edge"
+      ],
+      "runbook": "docs/operacion/RECUPERACION.md",
+      "recovery": "Distribuir binario verificado; una reversión web no cambia el código empaquetado"
+    }
+  ]
+}

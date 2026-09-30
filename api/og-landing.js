@@ -9,13 +9,29 @@
  * El crawler ve el OG; el usuario ve el app completo.
  */
 export default async function handler(req, res) {
-  const host = (req.headers && req.headers.host) || "app.stratoscapitalgroup.com";
+  if (req.method && !["GET", "HEAD"].includes(req.method)) {
+    res.statusCode = 405;
+    res.setHeader("Allow", "GET, HEAD");
+    return res.end();
+  }
+  const requestedHost = String(req.headers?.host || "").toLowerCase();
+  const allowedHosts = new Set([
+    "app.stratoscapitalgroup.com", "stratoscapitalgroup.com", "www.stratoscapitalgroup.com",
+    "getstratosai.com", "www.getstratosai.com", "app.getstratosai.com",
+    "stratos-ai-application.vercel.app", process.env.VERCEL_URL,
+    process.env.VERCEL_BRANCH_URL, process.env.VERCEL_PROJECT_PRODUCTION_URL,
+  ].filter(Boolean));
+  // Never interpolate arbitrary Host headers into a server-side fetch or HTML.
+  const host = allowedHosts.has(requestedHost) ? requestedHost : "app.stratoscapitalgroup.com";
   const base = `https://${host}`;
   let html;
   try {
-    const r = await fetch(`${base}/index.html`, { headers: { "x-og-bypass": "1" } });
+    const r = await fetch(`${base}/index.html`, {
+      headers: { "x-og-bypass": "1" }, signal: AbortSignal.timeout(8000), redirect: "error",
+    });
+    if (!r.ok) throw new Error("index_unavailable");
     html = await r.text();
-  } catch (e) {
+  } catch {
     res.statusCode = 302;
     res.setHeader("Location", "/index.html");
     return res.end();
@@ -48,5 +64,5 @@ export default async function handler(req, res) {
   res.statusCode = 200;
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Cache-Control", "public, max-age=300, s-maxage=600");
-  res.end(html);
+  res.end(req.method === "HEAD" ? undefined : html);
 }

@@ -1,3 +1,4 @@
+import { requireUser } from "../_shared/require-user.ts";
 // Stratos AI — Edge Function: suggest-next-actions
 //
 // Agente de IA "co-pilot" para asesores inmobiliarios de Stratos
@@ -264,6 +265,10 @@ Deno.serve(async (req: Request) => {
     "Access-Control-Allow-Origin": "*",
     "Content-Type": "application/json",
   };
+
+  if (!await requireUser(req)) {
+    return new Response(JSON.stringify({ error: "sesion_requerida" }), { status: 401, headers: cors });
+  }
 
   try {
     const { lead, tasks } = await req.json();
