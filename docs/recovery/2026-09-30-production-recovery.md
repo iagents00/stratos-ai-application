@@ -28,7 +28,7 @@ Publicar desde /Users/ivanrodriguezruelas/stratos-ai-application: integrar el PR
 
 ## Trabajo pendiente preservado
 
-Los PR 711 (secuencia de webinar del 2 de septiembre) y 616 (expresamente marcado NO MERGEAR) se mantienen para revisión específica. Los PR antiguos 580, 571, 270, 221, 218, 189, 156, 64, 42 y 16 se conservan; no se reemplaza código actual con ramas antiguas sin confirmar su vigencia. No se eliminan proyectos Vercel, historial ni ramas como parte de esta recuperación.
+El PR 749 se cerró después de comprobar que sus cuatro archivos de integración están preservados byte por byte en main, con numeración SQL actualizada. Los PR históricos se marcaron stratos-historico para comprobar su vigencia antes de integrar. Los PR 711 (secuencia de webinar del 2 de septiembre) y 616 (expresamente marcado NO MERGEAR) se mantienen para revisión específica. Los PR antiguos 580, 571, 270, 221, 218, 189, 156, 64, 42 y 16 se conservan; no se reemplaza código actual con ramas antiguas sin confirmar su vigencia. No se eliminan proyectos Vercel, historial ni ramas como parte de esta recuperación.
 
 ## Verificación
 
@@ -37,3 +37,7 @@ Los PR 711 (secuencia de webinar del 2 de septiembre) y 616 (expresamente marcad
 ## Organización permanente
 
 A petición del usuario, se conserva PR obligatorio y CI para main, sin exigir una segunda cuenta aprobadora. Se documenta el flujo en AGENTS.md y DEPLOYMENT.md. La publicación automática de Vercel verifica que cada archivo de entrada coincide con main, evitando que un CLI con cambios locales reintroduzca una versión vieja. Las funciones de IA de notas y sugerencias ya responden HTTP 200 con datos ficticios; Gemini 3.5 Flash-Lite resuelve la saturación del modelo principal. La versión web pasa a v435 para renovar cachés.
+
+## Compatibilidad de publicación comprobada
+
+Vercel serializa vercel.json al construir y la CLI añade name y version. El control admite JSON semánticamente equivalente, pero sigue rechazando cambios reales; name=stratos-ai-application y version=2 quedan declarados en la fuente oficial para que Git y CLI produzcan la misma configuración. La compilación Git de producción pasó el control inicial de fuente, las pruebas y el build; una conexión cerrada al repetir la consulta final bloqueó la publicación. Se fuerzan conexiones nuevas y hasta tres intentos para errores transitorios, manteniendo el bloqueo si no se puede verificar main.
