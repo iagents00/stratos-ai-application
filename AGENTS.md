@@ -13,7 +13,7 @@ Esta carpeta contiene exclusivamente la plataforma Stratos AI y sus clientes reg
 
 - Antes de iniciar una tarea, ejecutar `git fetch origin main` y revisar estado y diferencias con `origin/main`. Conservar los cambios existentes antes de actualizar; nunca restablecerlos ni sustituir main por una carpeta antigua.
 - Partir de main reciente, trabajar en una rama `codex/` y entregar los cambios mediante PR al repositorio `iagents00/stratos-ai-application`.
-- Para terminar una tarea que solicita dejar cambios live, integrar el PR cuando `Validar Stratos` y `verificar` estén aprobados. No detenerse en un preview si el usuario solicitó producción.
+- Al completar cambios solicitados en la plataforma, el flujo predeterminado es integrar el PR cuando `Validar Stratos` y `verificar` estén aprobados y comprobar producción. Respetar una petición explícita de revisión, borrador, solo preview o no publicar. No tratar cambios pendientes o trabajo en curso como una entrega terminada.
 - Después de integrar, actualizar la carpeta principal a `origin/main` y comprobar que `release.json` de los dominios tiene el SHA integrado. Vercel se encarga de actualizar los dominios tras superar la compilación protegida.
 - El proyecto y sus dominios permanecen en `project-identity.json`. No usar `vercel --prod` desde worktrees, respaldos ni checkouts antiguos. La alternativa manual es `npm run deploy:production`, seguida de `npm run release:promote -- URL`.
 - Un commit, preview o build no despliega por sí solo migraciones ni funciones de Supabase. Si una tarea las cambia, comprobar la versión activa y aplicar solo los cambios nuevos al proyecto Stratos; nunca ejecutar el historial SQL completo a ciegas.

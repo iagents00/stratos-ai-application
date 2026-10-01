@@ -41,3 +41,9 @@ A petición del usuario, se conserva PR obligatorio y CI para main, sin exigir u
 ## Compatibilidad de publicación comprobada
 
 Vercel serializa vercel.json al construir y la CLI añade name y version. El control admite JSON semánticamente equivalente, pero sigue rechazando cambios reales; name=stratos-ai-application y version=2 quedan declarados en la fuente oficial para que Git y CLI produzcan la misma configuración. La compilación Git de producción pasó el control inicial de fuente, las pruebas y el build; una conexión cerrada al repetir la consulta final bloqueó la publicación. Se fuerzan conexiones nuevas y hasta tres intentos para errores transitorios, manteniendo el bloqueo si no se puede verificar main.
+
+## Publicación recuperada y flujo automático
+
+La entrega 9125a359c1005e3ba0c93845267fb1d87a3b2a8b, web v435, se construyó desde la carpeta principal en dpl_3BzS92E9reVRoMCHam4VryK4hEAC y se promovió después de verificar fuente, proyecto y CI. app.stratoscapitalgroup.com y getstratosai.com devolvieron release.json correcto y dirty=false. El control operativo de los tres dominios pasó; Huli volvió a pasar 44 comprobaciones sin escrituras.
+
+Se habilitó autoAssignCustomDomains=true con la rama main y build:vercel protegido. La siguiente integración de esta documentación comprueba la publicación automática; main será la fuente más reciente después de ella. AGENTS.md deja la entrega a producción como flujo predeterminado de cambios terminados solicitados por el usuario. Se conserva la petición de no publicar cuando exista.
