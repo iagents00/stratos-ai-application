@@ -8,6 +8,11 @@ const repository = 'iagents00/stratos-ai-application';
 const sourceDirectories = ['src', 'public', 'api', 'server', 'scripts', 'tools', 'assets', 'tests', 'ops'];
 const sourceFiles = ['package.json', 'package-lock.json', 'index.html', 'vite.config.js', 'vercel.json', 'project-identity.json', 'eslint.config.js'];
 const isSource = path => sourceFiles.includes(path) || sourceDirectories.some(dir => path.startsWith(dir + '/'));
+export function canonicalJson(value) {
+  if (Array.isArray(value)) return value.map(canonicalJson);
+  if (value && typeof value === 'object') return Object.fromEntries(Object.keys(value).sort().map(key => [key, canonicalJson(value[key])]));
+  return value;
+}
 export function gitBlobHash(bytes) {
   return createHash('sha1').update(Buffer.from(`blob ${bytes.length}\0`)).update(bytes).digest('hex');
 }
@@ -18,7 +23,16 @@ export function verifySourceTree(root, tree) {
   for (const [path, entry] of expected) {
     const local = resolve(root, path);
     if (!local.startsWith(resolve(root) + '/') || entry.mode === '120000' || !existsSync(local) || !lstatSync(local).isFile()) throw new Error(`Archivo de fuente ausente o inseguro: ${path}`);
-    if (gitBlobHash(readFileSync(local)) !== entry.sha) throw new Error(`Cambios sin integrar en main: ${path}`);
+    const body = readFileSync(local);
+    if (gitBlobHash(body) !== entry.sha) {
+      // Vercel vuelve a serializar su configuración durante la construcción.
+      const actualJson = path === 'vercel.json' ? JSON.parse(body.toString()) : null;
+      if (!entry.canonicalJSON || JSON.stringify(canonicalJson(actualJson)) !== entry.canonicalJSON) {
+        const details = path === 'vercel.json' && entry.canonicalJSON
+          ? ` (claves locales: ${Object.keys(actualJson).join(',')}; claves oficiales: ${Object.keys(JSON.parse(entry.canonicalJSON)).join(',')})` : '';
+        throw new Error(`Cambios sin integrar en main: ${path}${details}`);
+      }
+    }
   }
   const walk = directory => {
     if (!existsSync(resolve(root, directory))) return;
@@ -48,6 +62,11 @@ export async function checkVercelProduction(root = process.cwd(), env = process.
   if (branch.commit?.sha !== env.VERCEL_GIT_COMMIT_SHA) throw new Error('Publicación antigua: el commit construido ya no es el main vigente.');
   const tree = await github(`git/trees/${branch.commit.commit.tree.sha}?recursive=1`);
   if (tree.truncated) throw new Error('No se puede verificar un árbol truncado.');
+  const configEntry = tree.tree.find(entry => entry.path === 'vercel.json');
+  const configBlob = await github(`git/blobs/${configEntry.sha}`);
+  const configBytes = Buffer.from(configBlob.content, 'base64');
+  if (gitBlobHash(configBytes) !== configEntry.sha) throw new Error('Configuración oficial no verificable.');
+  configEntry.canonicalJSON = JSON.stringify(canonicalJson(JSON.parse(configBytes.toString())));
   const count = verifySourceTree(root, tree.tree);
   console.log(`Fuente oficial de producción: ${branch.commit.sha} (${count} archivos comprobados).`);
 }
