@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { gitBlobHash, verifySourceTree } from '../scripts/check-vercel-production.mjs';
+import { canonicalJson, gitBlobHash, verifySourceTree } from '../scripts/check-vercel-production.mjs';
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), 'stratos-source-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
@@ -38,4 +38,16 @@ test('rechaza un árbol incompleto y enlaces simbólicos en entradas de producci
   assert.throws(() => verifySourceTree(root, []), /Fuente incompleta/);
   tree.at(-1).mode = '120000';
   assert.throws(() => verifySourceTree(root, tree), /inseguro/);
+});
+
+test('acepta la serialización equivalente de Vercel y rechaza cambios reales de configuración', t => {
+  const {root, tree} = fixture(t);
+  const expected = {framework: 'vite', buildCommand: 'npm run build:vercel'};
+  const config = tree.find(entry => entry.path === 'vercel.json');
+  config.sha = gitBlobHash(Buffer.from(JSON.stringify(expected, null, 2)));
+  config.canonicalJSON = JSON.stringify(canonicalJson(expected));
+  writeFileSync(join(root, 'vercel.json'), JSON.stringify({buildCommand: expected.buildCommand, framework: expected.framework}));
+  assert.doesNotThrow(() => verifySourceTree(root, tree));
+  writeFileSync(join(root, 'vercel.json'), JSON.stringify({...expected, buildCommand: 'npm run old'}));
+  assert.throws(() => verifySourceTree(root, tree), /Cambios sin integrar/);
 });
