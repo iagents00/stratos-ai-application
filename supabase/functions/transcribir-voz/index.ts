@@ -28,6 +28,7 @@
 // ruido y pagarlos.
 // ─────────────────────────────────────────────────────────────────────────────
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { requireUser } from "../_shared/require-user.ts";
 
 const OPENAI_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
 const ELEVEN_KEY = Deno.env.get("ELEVENLABS_API_KEY") ?? "";
@@ -64,8 +65,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors(origin) });
   if (req.method !== "POST") return json({ ok: false, error: "method_not_allowed" }, 405, origin);
 
-  // Va con verify_jwt: solo alguien con sesión abierta en el CRM puede usarla.
-  // Sin eso, cualquiera en internet podría gastar la cuenta transcribiendo.
+  if (!await requireUser(req)) return json({ ok: false, error: "sesion_requerida" }, 401, origin);
+
   if (!OPENAI_KEY && !ELEVEN_KEY) {
     // Se dice, no se calla: un "no se pudo transcribir" a secas manda a buscar
     // el problema al teléfono, que es donde NO está.

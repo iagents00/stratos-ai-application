@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   verificar:
@@ -56,7 +56,7 @@ jobs:
       # renombró `config` a `activa`) y apagó en silencio toda la
       # personalización por tenant. Nadie lo vio porque no crasheaba.
       - name: Instalar dependencias
-        run: npm ci --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: El contexto de cliente no puede desincronizarse
         run: node scripts/verificar-contexto-cliente.mjs
@@ -65,6 +65,12 @@ jobs:
       # los switches se moverían y la lista del día seguiría igual.
       - name: La configuración de Rails tiene que llegar al motor
         run: node scripts/verificar-rails.mjs
+
+      - name: Rails conserva permisos, compromisos y reintentos
+        run: npm run probar-rails
+
+      - name: Las RPC del frontend deben estar registradas
+        run: npm run verificar-rpc
 
       # El repo ya decía "español neutro mexicano" y nadie lo revisaba: se habían
       # colado 33 textos en voseo, incluido el botón de registrar un cliente.
@@ -75,31 +81,3 @@ jobs:
       # documentación apuntó a un archivo que nunca existió con ese nombre.
       - name: Las migraciones se leen en orden
         run: node scripts/verificar-migraciones.mjs
-
-  regenerar:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: verificar
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Regenerar los planos
-        run: |
-          node scripts/generar-mapa.mjs
-          node scripts/generar-plano.mjs
-
-      - name: Commitear si cambiaron
-        run: |
-          if git diff --quiet MAPA.md PLANO.md; then
-            echo "Los planos ya estaban al día."
-            exit 0
-          fi
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add MAPA.md PLANO.md
-          git commit -m "docs(planos): regenerar MAPA.md y PLANO.md [skip ci]"
-          git push

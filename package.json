@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "prebuild": "node tools/check_mobile_perf.mjs && node tools/check_plan_semanal.mjs",
+    "prebuild": "npm run check:project && node tools/check_mobile_perf.mjs && node tools/check_plan_semanal.mjs",
     "mapa": "node scripts/generar-mapa.mjs",
     "buscar": "node scripts/buscar.mjs",
     "plano": "node scripts/generar-plano.mjs",
@@ -21,7 +21,27 @@
     "verificar-rpc": "node scripts/verificar-rpc-permisos.mjs",
     "build:app": "vite build --mode app",
     "verificar:appstore-ios": "node scripts/verificar-appstore-ios.mjs",
-    "salud": "node scripts/salud.mjs"
+    "salud": "node scripts/salud.mjs",
+    "check:project": "node scripts/check-project-boundary.mjs",
+    "wa:cecilia-bridge": "node scripts/cecilia-baileys-bridge.mjs",
+    "wa:cecilia-bridge:webjs": "node scripts/cecilia-whatsapp-web-bridge.mjs",
+    "predev": "npm run check:project",
+    "postbuild": "node scripts/ops/release-manifest.mjs",
+    "check:runtime": "node scripts/check-runtime-lint.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "release:check": "node scripts/check-production-source.mjs",
+    "deploy:production": "npm run release:check && vercel deploy --prod --skip-domain --yes",
+    "release:promote": "node scripts/promote-production.mjs",
+    "postbuild:app": "node scripts/ops/release-manifest.mjs dist-app",
+    "ops:doctor": "node scripts/ops/doctor.mjs",
+    "ops:check": "node scripts/ops/check-catalog.mjs && node scripts/ops/generate-system-index.mjs --check",
+    "ops:rollback": "node scripts/ops/rollback.mjs",
+    "ops:backup-check": "node scripts/ops/verify-backup.mjs",
+    "test:rails-db": "node tests/sql/rails-security.mjs",
+    "ops:inventory": "node scripts/ops/generate-system-index.mjs",
+    "probar-rails": "node scripts/probar-rails.mjs",
+    "prebuild:app": "npm run check:project && node tools/check_mobile_perf.mjs && node tools/check_plan_semanal.mjs",
+    "build:vercel": "node scripts/build-vercel.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",
@@ -42,6 +62,12 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
-    "vite": "^8.0.1"
+    "vite": "^8.0.1",
+    "@whiskeysockets/baileys": "^7.0.0-rc14",
+    "pino": "^10.3.1",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.34.7",
+    "@electric-sql/pglite": "0.5.8"
   }
 }

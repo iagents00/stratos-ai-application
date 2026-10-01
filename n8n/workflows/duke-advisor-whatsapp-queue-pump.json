@@ -1,0 +1,362 @@
+{
+  "name": "DUKE - Advisor WhatsApp Queue Pump",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "duke-advisor-wa-notifications",
+        "responseMode": "onReceived",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "id": "b16974fc-6ed4-4a6b-8c71-df0a4b7a5a3d",
+      "name": "Queue Trigger"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL || 'https://glulgyhkrqpykxmujodb.supabase.co' }}/rest/v1/rpc/fn_advisor_whatsapp_notifications_claim",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_limit: 10 }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        760,
+        300
+      ],
+      "id": "f44c8b79-6ad1-4703-bba5-cbb277e65e72",
+      "name": "Supabase - Claim Queue"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "has-supabase-key",
+              "leftValue": "={{ Boolean($env.SUPABASE_SERVICE_ROLE_KEY) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "has-wa-token",
+              "leftValue": "={{ Boolean($env.WHATSAPP_CLOUD_API_TOKEN || $env.WHATSAPP_TOKEN || $env.META_WHATSAPP_TOKEN) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "has-wa-phone-number-id",
+              "leftValue": "={{ Boolean($env.WHATSAPP_PHONE_NUMBER_ID || $env.META_WHATSAPP_PHONE_NUMBER_ID) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        500,
+        300
+      ],
+      "id": "6e67f27a-c7e0-49fc-abd8-f2c42cad07f3",
+      "name": "Worker Config Ready?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const notifications = Array.isArray($json.notifications) ? $json.notifications : [];\n\nreturn notifications.map((notification) => {\n  const toDigits = String(notification.advisor_phone_e164 || '').replace(/\\D/g, '');\n  return {\n    json: {\n      ...notification,\n      to_digits: toDigits,\n      graph_version: $env.META_GRAPH_VERSION || $env.WHATSAPP_GRAPH_VERSION || 'v26.0'\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        300
+      ],
+      "id": "8e436f24-39b9-4232-8e34-d12c84453382",
+      "name": "Expand Notifications"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "has-to-digits",
+              "leftValue": "={{ $json.to_digits.length >= 10 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "has-wa-token",
+              "leftValue": "={{ Boolean($env.WHATSAPP_CLOUD_API_TOKEN || $env.WHATSAPP_TOKEN || $env.META_WHATSAPP_TOKEN) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "has-wa-phone-number-id",
+              "leftValue": "={{ Boolean($env.WHATSAPP_PHONE_NUMBER_ID || $env.META_WHATSAPP_PHONE_NUMBER_ID) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1280,
+        300
+      ],
+      "id": "5f5646e2-f053-4b86-a0c5-b8e745f8aa16",
+      "name": "Can Send WhatsApp?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/{{ $json.graph_version }}/{{ $env.WHATSAPP_PHONE_NUMBER_ID || $env.META_WHATSAPP_PHONE_NUMBER_ID }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHATSAPP_CLOUD_API_TOKEN || $env.WHATSAPP_TOKEN || $env.META_WHATSAPP_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.to_digits, type: 'text', text: { preview_url: false, body: $json.content } }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        200
+      ],
+      "id": "2d86f557-5c15-41aa-9231-75f14f17959d",
+      "name": "WhatsApp Cloud - Send Advisor Alert",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL || 'https://glulgyhkrqpykxmujodb.supabase.co' }}/rest/v1/rpc/fn_advisor_whatsapp_notification_finish",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_id: $('Expand Notifications').item.json.id, p_ok: Boolean($json.messages?.[0]?.id) && !$json.error, p_provider_message_id: $json.messages?.[0]?.id || null, p_error: $json.error?.message || $json.error || null }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1800,
+        200
+      ],
+      "id": "f7a56ccb-54ec-46ac-96f6-8ba1b9eb8286",
+      "name": "Supabase - Finish WhatsApp Result"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL || 'https://glulgyhkrqpykxmujodb.supabase.co' }}/rest/v1/rpc/fn_advisor_whatsapp_notification_finish",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_id: $json.id, p_ok: false, p_provider_message_id: null, p_error: 'missing_whatsapp_cloud_env_or_destination' }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        420
+      ],
+      "id": "1a7c5e32-f3a4-441b-8ba7-a28ec056c4b2",
+      "name": "Supabase - Finish Missing Config"
+    }
+  ],
+  "connections": {
+    "Queue Trigger": {
+      "main": [
+        [
+          {
+            "node": "Worker Config Ready?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Worker Config Ready?": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Claim Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - Claim Queue": {
+      "main": [
+        [
+          {
+            "node": "Expand Notifications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expand Notifications": {
+      "main": [
+        [
+          {
+            "node": "Can Send WhatsApp?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Can Send WhatsApp?": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Cloud - Send Advisor Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase - Finish Missing Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Cloud - Send Advisor Alert": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Finish WhatsApp Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

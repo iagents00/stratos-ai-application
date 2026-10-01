@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "release": {
+    "commit": "b25bda5ef4a56efab92f5b987896cc9845c52df6",
+    "serviceWorker": "stratos-v430",
+    "deploymentId": "dpl_GtDnqfKoTest3pWXFnVtHLgdLSvB",
+    "url": "https://stratos-ai-application-nb86dp55q-iagents-projects.vercel.app",
+    "state": "READY",
+    "target": "production"
+  },
+  "previousRelease": {
+    "serviceWorker": "stratos-v428",
+    "deploymentId": "dpl_8HPNsqGJiB21gQzuyEKZ3fvj6Dqx"
+  },
+  "health": {
+    "schemaVersion": 1,
+    "checkedAt": "2026-09-14T23:50:02.610Z",
+    "durationMs": 639,
+    "ok": true,
+    "web": [
+      {
+        "origin": "https://app.stratoscapitalgroup.com",
+        "checks": [
+          {
+            "name": "web",
+            "ok": true,
+            "status": 200,
+            "ms": 515,
+            "detail": {
+              "asset": "/assets/index-BX627V2v.js"
+            }
+          },
+          {
+            "name": "release",
+            "ok": true,
+            "status": 200,
+            "ms": 319,
+            "detail": {
+              "commit": "b25bda5ef4a56efab92f5b987896cc9845c52df6",
+              "serviceWorker": "stratos-v430"
+            }
+          },
+          {
+            "name": "service_worker",
+            "ok": true,
+            "status": 200,
+            "ms": 347,
+            "detail": {
+              "version": "stratos-v430"
+            }
+          }
+        ]
+      },
+      {
+        "origin": "https://stratoscapitalgroup.com",
+        "checks": [
+          {
+            "name": "web",
+            "ok": true,
+            "status": 200,
+            "ms": 608,
+            "detail": {
+              "asset": "/assets/index-BX627V2v.js"
+            }
+          },
+          {
+            "name": "release",
+            "ok": true,
+            "status": 200,
+            "ms": 318,
+            "detail": {
+              "commit": "b25bda5ef4a56efab92f5b987896cc9845c52df6",
+              "serviceWorker": "stratos-v430"
+            }
+          },
+          {
+            "name": "service_worker",
+            "ok": true,
+            "status": 200,
+            "ms": 345,
+            "detail": {
+              "version": "stratos-v430"
+            }
+          }
+        ]
+      },
+      {
+        "origin": "https://getstratosai.com",
+        "checks": [
+          {
+            "name": "web",
+            "ok": true,
+            "status": 200,
+            "ms": 484,
+            "detail": {
+              "asset": "/assets/index-BX627V2v.js"
+            }
+          },
+          {
+            "name": "release",
+            "ok": true,
+            "status": 200,
+            "ms": 318,
+            "detail": {
+              "commit": "b25bda5ef4a56efab92f5b987896cc9845c52df6",
+              "serviceWorker": "stratos-v430"
+            }
+          },
+          {
+            "name": "service_worker",
+            "ok": true,
+            "status": 200,
+            "ms": 345,
+            "detail": {
+              "version": "stratos-v430"
+            }
+          }
+        ]
+      }
+    ],
+    "platform": [
+      {
+        "name": "database",
+        "ok": true,
+        "status": 200,
+        "ms": 425
+      },
+      {
+        "name": "auth_health",
+        "ok": true,
+        "status": 200,
+        "ms": 470
+      }
+    ],
+    "unverified": [
+      "authenticated CRUD and tenant isolation",
+      "backup restore/PITR",
+      "n8n execution and providers",
+      "native apps"
+    ]
+  },
+  "checks": {
+    "githubRelease": "SUCCESS",
+    "githubPlans": "SUCCESS",
+    "nodeTestsPassed": 15,
+    "isolatedPostgresChecksPassed": 12,
+    "productionUI": {
+      "singleExpandedClient": true,
+      "compactQueue": true,
+      "adminSettingsRendered": true,
+      "nativeRuleCheckboxVisible": true,
+      "organizationRulesChanged": false,
+      "agendaReadFailureRecoveredWithRetry": true
+    },
+    "fixtureUI": [
+      "failed write retains action",
+      "confirmed result moves keyboard focus",
+      "separate result counters",
+      "next batch",
+      "loading",
+      "read failure",
+      "empty list",
+      "long names",
+      "admin draft and preview",
+      "390 px and 820 px without horizontal overflow"
+    ]
+  },
+  "pending": [
+    "Server protections/migration 243 and Edge deployments",
+    "Real backup restore and remote integration validation",
+    "Duke seller acceptance with test accounts",
+    "Required review before merge to main"
+  ]
+}

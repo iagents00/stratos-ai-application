@@ -27,6 +27,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./useAuth";
+import { readAllRows } from "../lib/read-all-rows.js";
 
 const TABLE = "zoom_agendados";
 
@@ -65,7 +66,7 @@ function isMissingColumn(error) {
   );
 }
 
-export function useZoomAgendados() {
+export function useZoomAgendados({ enabled = true } = {}) {
   const { user } = useAuth();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,48 +75,53 @@ export function useZoomAgendados() {
   // Ref espejo para que refetch no cambie de identidad al degradar columnas
   // (si dependiera del state, el useEffect re-dispararía el fetch en loop).
   const extColsRef = useRef(true);
+  const requestId = useRef(0);
 
   const orgId = user?.organizationId || null;
   const isDemo = !!user?.isDemo;
 
   const refetch = useCallback(async () => {
-    // Sin org real (o modo demo) no hay BD que consultar.
-    if (!orgId || isDemo) {
+    const request = ++requestId.current;
+    if (!enabled || !orgId || isDemo) {
       setRows([]);
+      setError(null);
       setLoading(false);
-      return;
+      return { error: null };
     }
-    const runSelect = (cols) =>
-      supabase
-        .from(TABLE)
-        .select(cols)
-        .order("fecha_zoom", { ascending: true, nullsFirst: false })
-        .order("hora", { ascending: true, nullsFirst: true });
-
-    let { data, error: err } = await runSelect(extColsRef.current ? EXT_COLS : BASE_COLS);
-    if (err && extColsRef.current && isMissingColumn(err)) {
-      // Tabla vieja (sin migración 083): degradar a columnas base y seguir.
+    setLoading(true);
+    const runSelect = cols => readAllRows(() => supabase
+      .from(TABLE).select(cols).eq("organization_id", orgId)
+      .order("fecha_zoom", { ascending: true, nullsFirst: false })
+      .order("hora", { ascending: true, nullsFirst: true }).order("id"));
+    let result = await runSelect(extColsRef.current ? EXT_COLS : BASE_COLS);
+    if (request !== requestId.current) return { error: null };
+    if (result.error && extColsRef.current && isMissingColumn(result.error)) {
       extColsRef.current = false;
       setHasExtCols(false);
-      ({ data, error: err } = await runSelect(BASE_COLS));
+      result = await runSelect(BASE_COLS);
     }
-    if (err) {
-      setError(isMissingTable(err) ? "missing_table" : (err.message || "error"));
-      setRows([]);
-      setLoading(false);
-      return;
-    }
-    setError(null);
-    setRows(Array.isArray(data) ? data : []);
+    if (request !== requestId.current) return { error: null };
+    const message = result.error ? (isMissingTable(result.error) ? "missing_table" : result.error.message || "No se pudo cargar la agenda.") : null;
+    setError(message);
+    if (!message) setRows(result.data);
     setLoading(false);
-  }, [orgId, isDemo]);
+    return { error: message };
+  }, [orgId, isDemo, enabled]);
 
   useEffect(() => {
-    setLoading(true);
+    extColsRef.current = true;
+    // Reset the previous organization before the next external data subscription.
+    setHasExtCols(true);
+    setRows([]);
     refetch();
     const onVis = () => { if (!document.hidden) refetch(); };
     document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
+    return () => {
+      // This is a request generation token, not a DOM ref.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      ++requestId.current;
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, [refetch]);
 
   // Realtime: los triggers del CRM (migración 087) escriben en zoom_agendados;
@@ -130,53 +136,45 @@ export function useZoomAgendados() {
   // Además: el realtime es un extra, nunca debe poder romper el panel →
   // try/catch alrededor de todo.
   useEffect(() => {
-    if (!orgId || isDemo) return;
+    if (!enabled || !orgId || isDemo) return;
     let ch = null;
     try {
       ch = supabase
         .channel(`zoom-agendados-live-${Math.random().toString(36).slice(2)}`)
-        .on("postgres_changes", { event: "*", schema: "public", table: TABLE }, () => refetch())
+        .on("postgres_changes", { event: "*", schema: "public", table: TABLE, filter: `organization_id=eq.${orgId}` }, () => refetch())
         .subscribe();
     } catch (e) {
       console.warn("[Control de Zooms] realtime no disponible:", e?.message || e);
       return;
     }
     return () => {
-      try { if (ch) supabase.removeChannel(ch); } catch (_) { /* noop */ }
+      try { if (ch) supabase.removeChannel(ch); } catch { /* noop */ }
     };
-  }, [orgId, isDemo, refetch]);
+  }, [orgId, isDemo, enabled, refetch]);
 
   // ── Mutaciones ──────────────────────────────────────────────────────────
   // org se fija explícito en el INSERT (la policy WITH CHECK exige que coincida
   // con current_organization_id(); fijarlo evita depender del default).
-  const createRow = useCallback(async (payload) => {
-    if (!orgId || isDemo) return { error: "sin-organización" };
-    const { error: err } = await supabase
-      .from(TABLE)
-      .insert([{ ...sanitize(payload, extColsRef.current), organization_id: orgId }]);
-    if (err) return { error: err.message || "error" };
-    await refetch();
-    return { error: null };
-  }, [orgId, isDemo, refetch]);
+  const mutate = useCallback(async (operation) => {
+    if (!enabled || !orgId || isDemo) return { error: "No hay una organización activa para guardar." };
+    try {
+      const { error: err } = await operation();
+      if (err) return { error: err.message || "No se pudo guardar el cambio." };
+      const refresh = await refetch();
+      return { error: null, refreshError: refresh.error };
+    } catch (err) {
+      return { error: err?.message || "No se pudo conectar. El cambio no se confirmó." };
+    }
+  }, [enabled, orgId, isDemo, refetch]);
 
-  const updateRow = useCallback(async (id, patch) => {
-    if (!orgId || isDemo) return { error: "sin-organización" };
-    const { error: err } = await supabase
-      .from(TABLE)
-      .update(sanitize(patch, extColsRef.current))
-      .eq("id", id);
-    if (err) return { error: err.message || "error" };
-    await refetch();
-    return { error: null };
-  }, [orgId, isDemo, refetch]);
-
-  const removeRow = useCallback(async (id) => {
-    if (!orgId || isDemo) return { error: "sin-organización" };
-    const { error: err } = await supabase.from(TABLE).delete().eq("id", id);
-    if (err) return { error: err.message || "error" };
-    await refetch();
-    return { error: null };
-  }, [orgId, isDemo, refetch]);
+  const createRow = useCallback(payload => mutate(() => supabase.from(TABLE)
+    .insert([{ ...sanitize(payload, extColsRef.current), organization_id: orgId }])
+    .select("id").single()), [mutate, orgId]);
+  const updateRow = useCallback((id, patch) => mutate(() => supabase.from(TABLE)
+    .update(sanitize(patch, extColsRef.current)).eq("id", id).eq("organization_id", orgId)
+    .select("id").single()), [mutate, orgId]);
+  const removeRow = useCallback(id => mutate(() => supabase.from(TABLE).delete()
+    .eq("id", id).eq("organization_id", orgId).select("id").single()), [mutate, orgId]);
 
   return { rows, loading, error, hasExtCols, refetch, createRow, updateRow, removeRow };
 }

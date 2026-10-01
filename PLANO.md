@@ -16,8 +16,8 @@ Antes que nada: las direcciones. Si algo falla, es en alguno de estos lugares.
 
 | Qué | Dónde | Para qué |
 |---|---|---|
-| Código | GitHub `iagents00/stratos-ai-application` | Rama `main` = producción |
-| Web | Vercel → `app.stratoscapitalgroup.com` | Despliega solo al mergear a `main` |
+| Código | GitHub `iagents00/stratos-ai-application` | Verificar SHA efectivo en Vercel; main puede diferir |
+| Web | Vercel → `app.stratoscapitalgroup.com` | Git y promociones verificadas; consultar manifiesto de release |
 | Sitio público | `stratoscapitalgroup.com` | Landing de marketing |
 | Base de datos | Supabase `glulgyhkrqpykxmujodb` | Postgres + Auth + RLS |
 | Automatizaciones | n8n `personal-n8n.suwsiw.easypanel.host` | Entrada de leads, bots, recordatorios |
@@ -55,14 +55,16 @@ columna, estos son los archivos que hay que revisar.
 
 | Tabla | Archivos | Dónde se usa |
 |---|---|---|
-| `profiles` | 6 | `app/views/Caja.jsx` · `app/views/ChatEquipo.jsx` · `app/views/FinanzasAdmin.jsx` _+3_ |
-| `evidencia` | 5 | `app/views/CRM/components.jsx` · `app/views/Caja.jsx` · `app/views/ChatEquipo.jsx` _+2_ |
+| `profiles` | 12 | `app/views/CRM/index.jsx` · `app/views/Caja.jsx` · `app/views/ChatEquipo.jsx` _+9_ |
+| `leads` | 7 | `app/App.jsx` · `app/views/CRM/index.jsx` · `app/views/Caja.jsx` _+4_ |
+| `evidencia` | 6 | `app/views/CRM/components.jsx` · `app/views/Caja.jsx` · `app/views/ChatEquipo.jsx` _+3_ |
+| `organizations` | 4 | `app/App.jsx` · `contexts/TenantConfigGate.jsx` · `hooks/useRailsConfig.js` _+1_ |
 | `team_expenses` | 4 | `app/views/Caja.jsx` · `app/views/Copilot.jsx` · `app/views/FinanzasAdmin.jsx` _+1_ |
-| `leads` | 3 | `app/views/Caja.jsx` · `app/views/FinanzasAdmin.jsx` · `app/views/WhatsApp.jsx` |
+| `proactive_reminders` | 3 | `lib/llamadas.js` · `lib/recordatorios-locales.js` · `lib/telegram.js` |
+| `team_actions` | 3 | `app/App.jsx` · `app/features/MetaPanel/index.jsx` · `app/views/ProductividadTab.jsx` |
 | `expediente_items` | 2 | `app/views/CRM/LeadChatHistory.jsx` · `app/views/CRM/LeadNotesTimeline.jsx` |
 | `mkt_tasks` | 2 | `app/views/Marketing.jsx` · `app/views/PlanSemanal.jsx` |
-| `proactive_reminders` | 2 | `lib/llamadas.js` · `lib/recordatorios-locales.js` |
-| `team_actions` | 2 | `app/App.jsx` · `app/views/ProductividadTab.jsx` |
+| `audit_log` | 1 | `lib/audit.js` |
 | `catalogo_proyectos` | 1 | `app/views/ERP.jsx` |
 | `device_tokens` | 1 | `lib/push-native.js` |
 | `discovery_data` | 1 | `app/views/CRM/LeadDiscoveryPanel.jsx` |
@@ -74,7 +76,7 @@ columna, estos son los archivos que hay que revisar.
 | `mkt_pipeline_items` | 1 | `app/views/Marketing.jsx` |
 | `mkt_projects` | 1 | `app/views/Marketing.jsx` |
 | `mkt_requests` | 1 | `app/views/Marketing.jsx` |
-| `organizations` | 1 | `hooks/useRailsConfig.js` |
+| `projects` | 1 | `hooks/useProperties.js` |
 | `scheduled_calls` | 1 | `hooks/useScheduledCalls.js` |
 | `voice_call_logs` | 1 | `app/views/CRM/LeadVoiceCalls.jsx` |
 | `whatsapp_messages` | 1 | `lib/whatsapp-chat.js` |
@@ -87,20 +89,28 @@ error no está en el frontend.
 
 | Función | Llamada desde |
 |---|---|
+| `create_lead` | `lib/lead-backup.js` · `lib/lead-save.js` · `lib/offline-mode.js` |
+| `copilot_log_msg` | `app/views/Copilot.jsx` · `lib/telegram.js` |
+| `fn_bulk_reassign_leads` | `app/views/CRM/index.jsx` · `app/views/WhatsApp.jsx` |
 | `fn_comando_nsg` | `app/views/ComandoOps.jsx` · `app/views/Nomina.jsx` |
 | `fn_doc_guardar` | `app/views/CuentasCobro.jsx` · `app/views/InformeAvances.jsx` |
 | `fn_doc_link_agregar` | `app/features/MetaPanel/DocsStratos.jsx` · `app/views/InformeAvances.jsx` |
 | `add_expediente_item` | `app/views/CRM/LeadNotesTimeline.jsx` |
-| `copilot_log_msg` | `app/views/Copilot.jsx` |
+| `copilot_agenda_create_from_text` | `lib/telegram.js` |
+| `copilot_handle_callback` | `lib/telegram.js` |
+| `copilot_handle_pending` | `lib/telegram.js` |
 | `copilot_log_msg_media` | `app/views/Copilot.jsx` |
+| `copilot_send` | `lib/telegram.js` |
 | `create_portfolio_link` | `app/views/LandingPages/index.jsx` |
-| `fn_bulk_reassign_leads` | `app/views/WhatsApp.jsx` |
+| `find_lead_duplicate` | `lib/lead-save.js` |
+| `fn_assign_team_action` | `app/features/MetaPanel/index.jsx` |
 | `fn_call_targets` | `app/App.jsx` |
 | `fn_chat_channels` | `app/views/ChatEquipo.jsx` |
 | `fn_chat_create_channel` | `app/views/ChatEquipo.jsx` |
 | `fn_chat_messages` | `app/views/ChatEquipo.jsx` |
 | `fn_chat_read` | `app/views/ChatEquipo.jsx` |
 | `fn_chat_send` | `app/views/ChatEquipo.jsx` |
+| `fn_claim_lead` | `app/views/CRM/index.jsx` |
 | `fn_docs_listar` | `app/features/MetaPanel/DocsStratos.jsx` |
 | `fn_fin_cuenta_cobro_cliente` | `app/views/CuentasCobro.jsx` |
 | `fn_fin_cuenta_cobro_persona` | `app/views/CuentasCobro.jsx` |
@@ -116,19 +126,29 @@ error no está en el frontend.
 | `fn_informe_notas_listar` | `app/views/InformeAvances.jsx` |
 | `fn_llamada_en_curso` | `app/App.jsx` |
 | `fn_mkt_intel` | `app/App.jsx` |
+| `fn_my_company_module_access` | `contexts/TenantConfigGate.jsx` |
+| `fn_org_copilot_responder` | `lib/telegram.js` |
+| `fn_org_team_members` | `app/features/MetaPanel/index.jsx` |
 | `fn_set_my_recovery_email` | `app/views/Profile.jsx` |
 | `fn_set_my_timezone` | `app/views/Profile.jsx` |
 | `fn_start_team_call` | `app/App.jsx` |
+| `fn_team_users` | `lib/auth.js` |
 | `fn_wa_conversations` | `hooks/useWhatsAppInbox.js` |
 | `fn_wa_mark_read` | `hooks/useWhatsAppInbox.js` |
 | `fn_wa_outbox_retry` | `lib/whatsapp-chat.js` |
 | `fn_wa_toggle_pin` | `hooks/useWhatsAppInbox.js` |
+| `get_entity_history` | `lib/audit.js` |
+| `get_my_copilot_activity` | `lib/telegram.js` |
+| `get_my_telegram_activity` | `lib/telegram.js` |
 | `mkt_approve_evidence` | `app/views/Copilot.jsx` |
 | `mkt_attach_evidence_to` | `app/views/Copilot.jsx` |
 | `mkt_comment_evidence` | `app/views/Copilot.jsx` |
 | `mkt_evidence_candidates` | `app/views/Copilot.jsx` |
-| `rails_agenda_hoy` | `lib/agenda.js` |
+| `rails_agenda_del_dia` | `lib/agenda.js` |
+| `rails_guardar_config` | `hooks/useRailsConfig.js` |
 | `rails_marcar_accion` | `lib/agenda.js` |
+| `rails_resolver_accion` | `lib/agenda.js` |
+| `request_telegram_pairing_code` | `lib/telegram.js` |
 | `resolve_portfolio_link` | `app/views/LandingPages/PublicLanding.jsx` |
 
 ---
@@ -143,6 +163,7 @@ Servicios de terceros con los que habla el código.
 | `glulgyhkrqpykxmujodb.supabase.co` | 6 archivos |
 | `drive.google.com` | 3 archivos |
 | `docs.google.com` | 2 archivos |
+| `app.hulipractice.com` | 1 archivo |
 | `brokers.mycocay.com` | 1 archivo |
 | `brokers.simca.mx` | 1 archivo |
 | `cal.com` | 1 archivo |
@@ -150,7 +171,6 @@ Servicios de terceros con los que habla el código.
 | `getstratosai.com` | 1 archivo |
 | `ionic.io` | 1 archivo |
 | `maps.app` | 1 archivo |
-| `meet.google.com` | 1 archivo |
 
 ---
 
@@ -161,21 +181,21 @@ casa; por eso mismo son los que más cuidado piden.
 
 | Archivo | Archivos que lo importan |
 |---|---|
-| `design-system/tokens.js` | **76** |
+| `design-system/tokens.js` | **80** |
 | `lib/supabase.js` | **44** |
-| `hooks/useAuth.js` | **36** |
-| `hooks/useViewport.js` | **31** |
-| `app/SharedComponents.jsx` | **21** |
-| `hooks/useClient.js` | **18** |
+| `hooks/useAuth.js` | **37** |
+| `hooks/useViewport.js` | **30** |
+| `hooks/useClient.js` | **20** |
+| `app/SharedComponents.jsx` | **20** |
 | `lib/native.js` | **18** |
-| `app/views/CRM/zoom-metrics.js` | **6** |
+| `app/views/CRM/date-range.js` | **13** |
+| `app/views/CRM/zoom-metrics.js` | **9** |
+| `lib/whatsapp-admin.js` | **7** |
 | `app/components/Logo.jsx` | **5** |
-| `lib/whatsapp-admin.js` | **5** |
-| `app/views/CRM/date-range.js` | **5** |
+| `app/views/CRM/command-metrics.js` | **5** |
 | `lib/utils.js` | **4** |
 | `lib/offline-mode.js` | **4** |
 | `app/constants/pipeline.js` | **4** |
-| `design-system/primitives.jsx` | **4** |
 
 ---
 
@@ -223,7 +243,7 @@ Los tres caminos que hay que entender. Todo lo demás se deduce de estos.
 1. **El usuario escribe correo y contraseña** → `src/landing/LoginScreen.jsx`
    Pantalla de login.
 2. **signInWithPassword contra Supabase** → `src/lib/auth.js`
-   Sin OAuth ni magic links: por eso no hay redirects que whitelistear.
+   Login por contraseña; revisar también las URLs de recuperación y flujos habilitados en Supabase.
 3. **La sesión queda en localStorage** → `src/lib/supabase.js`
    Con la key por defecto del SDK. No sobreescribirla.
 4. **AuthContext la hidrata al abrir** → `src/contexts/AuthContext.jsx`
@@ -238,7 +258,7 @@ Los tres caminos que hay que entender. Todo lo demás se deduce de estos.
 2. **El panel en el Perfil** → `src/app/views/Profile.jsx`
    Pide escribir el correo completo. Un botón de 'confirmar' a secas se toca sin leer.
 3. **La Edge Function decide, no el navegador** → `supabase/functions/delete-my-account/index.ts`
-   A quién se borra sale del JWT de quien llama. Desplegada y activa en producción.
+   A quién se borra sale del JWT de quien llama. Su publicación efectiva debe verificarse en Supabase.
 4. **Guarda contra dejar la org huérfana**
    Si es el único admin de su organización, se rechaza: nadie podría volver a dar de alta a nadie.
 5. **Los leads NO se borran**

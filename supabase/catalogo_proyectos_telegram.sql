@@ -126,6 +126,12 @@ begin
   end if;
 
   v_norm := public.unaccent(lower(coalesce(v_text,'')));
+  -- Normalizacion tolerante para escritura real de asesores por Telegram.
+  v_norm := regexp_replace(v_norm, '\m(tulun|tulm|tulumm|tulunm)\M', 'tulum', 'g');
+  v_norm := regexp_replace(v_norm, '\m(cuntry|contry|contr[iy]|countryy)\M', 'country', 'g');
+  v_norm := regexp_replace(v_norm, '\m(clu|clb|clubb)\M', 'club', 'g');
+  v_norm := regexp_replace(v_norm, '\m(desarollos|desarrolos|desarollo|desarolo)\M', 'desarrollos', 'g');
+  v_norm := regexp_replace(v_norm, '\m(proyctos|proyetos|proycto|proyeto)\M', 'proyectos', 'g');
 
   -- ZONA (único filtro DURO)
   if v_zona is null then
@@ -150,6 +156,7 @@ begin
       end if;
     end if;
   end if;
+  if v_top <= 0 and v_norm ~ '(mandame|manda|pasame|pasa|dame|enviame|envia|info|detalle|detalles|drive|brochure|pdf|ficha)\s+(el|la|del|de la|de)' then v_top := 1; end if;
   if v_top <= 0 then v_top := 5; end if;
   if v_top > 15 then v_top := 15; end if;
 
@@ -171,9 +178,14 @@ begin
     v_terms := v_terms || array['mar'];
   end if;
 
+  -- Alias comerciales frecuentes escritos como frase.
+  if v_norm ~ 'country\s+club|club\s+country|tulum\s+country' then
+    v_terms := v_terms || array['country', 'club'];
+  end if;
+
   -- TÉRMINOS de texto libres (villa, terreno, condo, nombre del desarrollo, masterbroker…)
   v_rest := v_norm;
-  v_rest := regexp_replace(v_rest, 'top\s*\d+|\d+\s*(mejores|opciones|recamaras?|habitacion(es)?|cuartos?|bd|br|rec)|propiedad(es)?|proyectos?|desarrollos?|catalogo|busca(me|r)?|dame|muestrame|ensename|quiero|necesito|mejores|opciones|cerca del|frente al|vista al|de lujo|luxury|premium', ' ', 'g');
+  v_rest := regexp_replace(v_rest, 'top\s*\d+|\d+\s*(mejores|opciones|recamaras?|habitacion(es)?|cuartos?|bd|br|rec)|propiedad(es)?|proyectos?|desarrollos?|catalogo|busca(me|r)?|dame|mandame|manda|pasame|pasa|enviame|envia|muestrame|ensename|quiero|necesito|mejores|opciones|cerca del|frente al|vista al|de lujo|luxury|premium|detalle(s)?|info|informacion|drive|brochure|pdf|ficha', ' ', 'g');
   v_rest := regexp_replace(v_rest, 'playa del carmen|tulum|cancun|merida|los cabos|(^| )cabo|(^| )pdc|(^| )playa', ' ', 'g');
   v_rest := regexp_replace(v_rest, '\d+\s*(k|mil|mdp|millon(es)?|usd|dolar(es)?|pesos|dls|dlls)|\$|\d{2,}', ' ', 'g');
   v_terms := v_terms || coalesce((
@@ -308,6 +320,11 @@ begin
   end if;
   v_text := trim(coalesce(v_args->>'input_text', v_args->>'text', v_args->>'texto', v_args->>'query',''));
   v_norm := public.unaccent(lower(coalesce(v_text,'')));
+  v_norm := regexp_replace(v_norm, '\m(tulun|tulm|tulumm|tulunm)\M', 'tulum', 'g');
+  v_norm := regexp_replace(v_norm, '\m(cuntry|contry|contr[iy]|countryy)\M', 'country', 'g');
+  v_norm := regexp_replace(v_norm, '\m(clu|clb|clubb)\M', 'club', 'g');
+  v_norm := regexp_replace(v_norm, '\m(desarollos|desarrolos|desarollo|desarolo)\M', 'desarrollos', 'g');
+  v_norm := regexp_replace(v_norm, '\m(proyctos|proyetos|proycto|proyeto)\M', 'proyectos', 'g');
 
   -- (A) Herramienta de catálogo elegida explícitamente por el LLM
   if v_tool in ('buscar_proyectos','buscar_propiedades','buscar_catalogo','catalogo','propiedades','proyectos_catalogo') then
@@ -316,21 +333,25 @@ begin
 
   -- Señales de intención de CATÁLOGO (inventario de inmuebles en venta)
   v_broad :=
-       v_norm ~ '(propiedad|propiedades|proyecto|proyectos|desarrollo|desarrollos|departamento|departamentos|villa|villas|condo|condos|terreno|terrenos|inmueble|inmuebles)'
+       v_norm ~ '(propiedad|propiedades|proyecto|proyectos|desarrollo|desarrollos|desarrol|departamento|departamentos|villa|villas|condo|condos|terreno|terrenos|inmueble|inmuebles)'
     or v_norm ~ 'catalogo'
     or v_norm ~ '(recamara|recamaras|habitacion|habitaciones)'
     or v_norm ~ '(cerca del mar|frente al mar|frente a la playa|vista al mar)'
     or v_norm ~ '\d+\s*(k|mil|mdp)\s*(a|-|y|hasta)\s*\d+'
-    or (v_norm ~ 'top\s*\d+' and v_norm ~ '(\d+\s*(k|mil|mdp|usd|millon)|playa del carmen|tulum|cancun|merida|(^| )cabo)');
+    or (v_norm ~ 'top\s*\d+' and v_norm ~ '(\d+\s*(k|mil|mdp|usd|millon)|playa del carmen|tulum|cancun|merida|(^| )cabo)')
+    or v_norm ~ '(country\s+club|club\s+country|tulum\s+country)'
+    or (v_norm ~ '(mandame|manda|pasame|pasa|dame|enviame|envia|info|detalle|detalles|drive|brochure|pdf|ficha)' and v_norm ~ '(playa del carmen|tulum|cancun|merida|(^| )cabo)');
 
   v_strong :=
        v_norm ~ 'catalogo'
-    or v_norm ~ '(propiedad|propiedades|proyecto|proyectos|desarrollo|desarrollos|inmueble|inmuebles|departamento|departamentos|villa|villas|condo|condos|terreno|terrenos)\s+(en|de|cerca|con|para|frente|dispon|hay|arriba|baj|econom|barat)'
+    or v_norm ~ '(propiedad|propiedades|proyecto|proyectos|desarrollo|desarrollos|desarrol|inmueble|inmuebles|departamento|departamentos|villa|villas|condo|condos|terreno|terrenos)\s+(en|de|cerca|con|para|frente|dispon|hay|arriba|baj|econom|barat)'
     or v_norm ~ '(que|cuales|cuantas|cuantos|dame|muestrame|ensename|busca|buscame|hay|tienes?)\s.*(propiedad|propiedades|proyecto|proyectos|desarrollo|desarrollos|inmueble|inmuebles|departamento|villa|condo|terreno)'
     or v_norm ~ '(propiedad|propiedades|proyecto|proyectos|desarrollo|desarrollos|inmueble|departamento|villa|condo|terreno).*(playa del carmen|tulum|cancun|merida|(^| )cabo)'
     or v_norm ~ '\d+\s*(k|mil|mdp)\s*(a|-|y|hasta)\s*\d+'
     or (v_norm ~ 'top\s*\d+' and v_norm ~ '(\d+\s*(k|mil|mdp|usd|millon)|playa del carmen|tulum|cancun|merida|(^| )cabo|propiedad|proyecto|desarrollo|villa|departamento|terreno)')
-    or ((v_norm ~ 'cerca del mar|frente al mar|frente a la playa|vista al mar') and v_norm ~ '(propiedad|proyecto|desarrollo|departamento|villa|condo|recamara|recamaras)');
+    or ((v_norm ~ 'cerca del mar|frente al mar|frente a la playa|vista al mar') and v_norm ~ '(propiedad|proyecto|desarrollo|departamento|villa|condo|recamara|recamaras)')
+    or v_norm ~ '(country\s+club|club\s+country|tulum\s+country)'
+    or (v_norm ~ '(mandame|manda|pasame|pasa|dame|enviame|envia|info|detalle|detalles|drive|brochure|pdf|ficha)' and v_norm ~ '(playa del carmen|tulum|cancun|merida|(^| )cabo)');
 
   -- (B) El LLM no eligió herramienta (o mandó menú): señal amplia basta
   if v_tool in ('', 'menu') and v_broad then

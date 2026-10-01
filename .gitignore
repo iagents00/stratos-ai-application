@@ -48,3 +48,12 @@ dist-app
 
 # Derived data de compilaciones locales de Xcode
 dd/
+
+# Sesiones locales de WhatsApp Web (credenciales/linked device)
+.wa-sessions/
+
+.playwright-cli/
+
+output/playwright/
+
+supabase/.temp/

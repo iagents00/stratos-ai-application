@@ -1,0 +1,115 @@
+{
+  "generatedAt": "2026-09-27T07:44:45.737Z",
+  "gitHead": "bea83eab790708224a499c731f7e15ae05dbc6a4",
+  "workingTreeDirty": true,
+  "scope": "Technical readiness evidence for the administrative Huli pilot; not regulatory certification",
+  "signed": false,
+  "immutableCustodyVerified": false,
+  "evidence": [
+    {
+      "path": "project-identity.json",
+      "bytes": 190,
+      "sha256": "5bbbfb659ffc8d9294dce7436fc2cf913e1fcd017f22ff3dc3410650029e91dc"
+    },
+    {
+      "path": "api/dental-huli.js",
+      "bytes": 3001,
+      "sha256": "11d52e542ff7e75a998bf60742e313a386a392d0ae8bee2c5afdf7275c8809c4"
+    },
+    {
+      "path": "server/clinical-auth.mjs",
+      "bytes": 1457,
+      "sha256": "9b1e419dd5c969cfc4138cb1b51d79e0bba87346bde1ff8cc79519aa6239a0a6"
+    },
+    {
+      "path": "server/clinical-request.mjs",
+      "bytes": 2436,
+      "sha256": "637e3c260060163c511b1356c2c48bce256bc068937c47f04e48ee81c3b89bc8"
+    },
+    {
+      "path": "server/dental-huli.mjs",
+      "bytes": 5379,
+      "sha256": "646401556ee18da225bba55fe6eecfa97aa8c6d1a022451748fb730cb1159bfb"
+    },
+    {
+      "path": "server/dental-security.mjs",
+      "bytes": 2657,
+      "sha256": "ce9bd87872063fcf86fca31ad0ef6112d59d977efb8aa39ae2e7faea9fffb339"
+    },
+    {
+      "path": "tests/clinical-auth.test.mjs",
+      "bytes": 1388,
+      "sha256": "92d256e06ed6bbcd1d80016bc8816a261a247b8462e9aa5ea56d4248a5f8b299"
+    },
+    {
+      "path": "tests/clinical-request.test.mjs",
+      "bytes": 2345,
+      "sha256": "61aec90b580b835b5fa7309b25d4080c817b89a8ad4548e6fc4872fd54332df4"
+    },
+    {
+      "path": "tests/dental-huli-server.test.mjs",
+      "bytes": 4631,
+      "sha256": "14862b0af65b3b92a3f0b6d91ec701b1231e397bab52203a7035f9c628e18c67"
+    },
+    {
+      "path": "scripts/audit-dental-live.mjs",
+      "bytes": 5444,
+      "sha256": "4ee7daa64e080f6dc7f2c86165a76a4ccb13e8bbef216839297402699ed6c0ed"
+    },
+    {
+      "path": "scripts/build-dental-audit-pack.mjs",
+      "bytes": 1889,
+      "sha256": "6794e07ac89425ece5f0b06f699a5741fc731d0a6976648b2901b9a59a72b327"
+    },
+    {
+      "path": "docs/CLINICA_DENTAL_AUDITORIA_Y_USO_2026-09-27.md",
+      "bytes": 14233,
+      "sha256": "0ca35d1a8e0fc35192f11a193bfb1b3ed4217b7ff487a290071832673793b748"
+    },
+    {
+      "path": "docs/dental-live-audit-2026-09-27.json",
+      "bytes": 6723,
+      "sha256": "536a363331029f6679aac7ed7cef08f6af6cead211532bae8e027b12dac40851"
+    },
+    {
+      "path": "docs/auditoria-clinica/README.md",
+      "bytes": 3932,
+      "sha256": "72d26145cd43b2647d96ce5ef28a76a43c80c7ba8ce0985ea0ab49d51d0f156a"
+    },
+    {
+      "path": "docs/auditoria-clinica/registro-de-brechas.csv",
+      "bytes": 3844,
+      "sha256": "8123f3a558dff0bb43d2976a6c4dcd64b7a502bf303580022b12e21960e4f67d"
+    },
+    {
+      "path": "docs/auditoria-clinica/procedimientos.md",
+      "bytes": 3469,
+      "sha256": "bce8c2c42e75ccb4b130cfb558099cfffaadec9a41c6ec7f23bedd73c2d18bb4"
+    },
+    {
+      "path": "docs/auditoria-clinica/datos-y-documentos-pendientes.md",
+      "bytes": 1829,
+      "sha256": "16f12fde4106351685a2446e00d5d623a27a18658303c0889f43acb9953e8901"
+    },
+    {
+      "path": "docs/auditoria-clinica/pruebas-locales.txt",
+      "bytes": 3223,
+      "sha256": "cc9d68539a91d8b39ae5ab016dbb6adfdfbafb51f82a203f5e3bb62df4532162"
+    },
+    {
+      "path": "docs/auditoria-clinica/verificacion-logs.json",
+      "bytes": 309,
+      "sha256": "68829d20eba18b0ab6109f99b117bd66ae2c7c9243d9e25e46d625e950623a1e"
+    },
+    {
+      "path": "docs/auditoria-clinica/verificacion-despliegue.json",
+      "bytes": 845,
+      "sha256": "7377537cd0d2f545ea0830029d7c3bded872e5e44d2b7f61926148b5a3f9c896"
+    },
+    {
+      "path": "docs/auditoria-clinica/primera-prueba-produccion.json",
+      "bytes": 4703,
+      "sha256": "ec6636172652ce17dac7a5f09f747e60747c7dddf030247b896bb3671802734d"
+    }
+  ]
+}

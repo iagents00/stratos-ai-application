@@ -95,16 +95,6 @@
       y calendario, y pedirlo aca seria un motivo de rechazo el dia que la app
       entre a la tienda.
     -->
-    <!--
-      Abrir una pantalla completa cuando entra una llamada, sin que la persona
-      tenga que tocar nada. Es lo que hace WhatsApp.
-
-      Desde Android 14 esto solo se concede solo a las apps de llamadas y
-      alarmas; al resto hay que pedirselo a la persona. Si no esta concedido
-      Android NO falla: muestra un cartel grande con sonido. Peor que la
-      pantalla completa, mucho mejor que una tira.
-    -->
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.VIBRATE" />
 

@@ -17,8 +17,10 @@
  *   4. Crear los usuarios reales:
  *        node scripts/create_team_users.mjs
  *
- * El script es IDEMPOTENTE: si un email ya existe, lo deja como está
- * y solo actualiza el perfil (nombre + rol).
+ * El script es IDEMPOTENTE: si un email ya existe, lo confirma, actualiza
+ * metadata/perfil y, si el JSON trae "password", también fija esa contraseña.
+ * Usa admin.createUser/updateUserById con email_confirm=true: NO manda correos
+ * de invitación/confirmación, evitando rebotes de Supabase Auth.
  *
  * SEGURIDAD:
  *   • La service role key tiene acceso total — nunca subirla a git.
@@ -47,7 +49,7 @@ function loadEnv() {
     const m = line.match(/^([A-Z_]+)=(.*)$/)
     if (m) env[m[1]] = m[2].replace(/^["']|["']$/g, '')
   }
-  return env
+  return { ...env, ...process.env }
 }
 
 // ── Generar password segura y memorable ────────────────────
@@ -90,6 +92,7 @@ async function main() {
   const env = loadEnv()
   const url = env.VITE_SUPABASE_URL
   const key = env.SUPABASE_SERVICE_ROLE_KEY
+  const anonKey = env.VITE_SUPABASE_ANON_KEY
 
   if (!url || !key) {
     console.error('❌ Faltan VITE_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY en .env.local')
@@ -149,7 +152,7 @@ async function main() {
     try {
       // 1. Crear (o reusar) usuario en auth.users
       let userId
-      let password = generatePassword()
+      let password = String(u.password || '').trim() || generatePassword()
       let alreadyExisted = false
 
       const orgId = u.organizationId || DEFAULT_ORG_ID
@@ -157,7 +160,14 @@ async function main() {
         email,
         password,
         email_confirm: true,             // sin verificación por correo
-        user_metadata: { name, role, organization_id: orgId },
+        user_metadata: {
+          name,
+          role,
+          organization_id: orgId,
+          organization_name: 'Duke del Caribe',
+          organization_slug: 'duke-del-caribe',
+          client_id: 'duke',
+        },
       })
 
       if (createErr) {
@@ -169,7 +179,20 @@ async function main() {
           const existing = list?.users?.find(x => x.email?.toLowerCase() === email)
           if (!existing) throw new Error(`Usuario ya existía pero no se pudo recuperar`)
           userId = existing.id
-          password = '(ya existía — no se cambió)'
+          const { error: updateErr } = await supabase.auth.admin.updateUserById(userId, {
+            password,
+            email_confirm: true,
+            user_metadata: {
+              ...(existing.user_metadata || {}),
+              name,
+              role,
+              organization_id: orgId,
+              organization_name: 'Duke del Caribe',
+              organization_slug: 'duke-del-caribe',
+              client_id: 'duke',
+            },
+          })
+          if (updateErr) throw updateErr
         } else {
           throw createErr
         }
@@ -202,6 +225,58 @@ async function main() {
   const fail  = results.filter(r => r.status === 'error').length
   console.log(`\n📊 Resultado: ${ok} creados · ${reuse} reusados · ${fail} errores\n`)
 
+  // ── Verificación de login real ──────────────────────────────────
+  if (anonKey) {
+    console.log('🔎 Verificando login real con cada cuenta…\n')
+    const authClient = createClient(url, anonKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    })
+
+    for (const r of results.filter(x => x.status !== 'error')) {
+      const { data: login, error: loginErr } = await authClient.auth.signInWithPassword({
+        email: r.email,
+        password: r.password,
+      })
+
+      if (loginErr || !login?.user) {
+        r.status = 'error'
+        r.error = `Login falló: ${loginErr?.message || 'sin usuario'}`
+        console.log(`  ✗ ${r.email}  → ${r.error}`)
+        await authClient.auth.signOut()
+        continue
+      }
+
+      const { data: profile, error: profileErr } = await authClient
+        .from('profiles')
+        .select('id,name,role,active,organization_id')
+        .eq('id', login.user.id)
+        .maybeSingle()
+
+      if (profileErr || !profile) {
+        r.status = 'error'
+        r.error = `Perfil no accesible: ${profileErr?.message || 'no encontrado'}`
+        console.log(`  ✗ ${r.email}  → ${r.error}`)
+        await authClient.auth.signOut()
+        continue
+      }
+
+      if (profile.role !== r.role || profile.organization_id !== (r.organizationId || DEFAULT_ORG_ID) || profile.active !== true) {
+        r.status = 'error'
+        r.error = `Perfil incorrecto: role=${profile.role}, org=${profile.organization_id}, active=${profile.active}`
+        console.log(`  ✗ ${r.email}  → ${r.error}`)
+        await authClient.auth.signOut()
+        continue
+      }
+
+      r.verified = true
+      console.log(`  ✓ ${r.email}  login OK · ${profile.role} · Duke del Caribe`)
+      await authClient.auth.signOut()
+    }
+    console.log()
+  } else {
+    console.log('⚠️  VITE_SUPABASE_ANON_KEY no está en .env.local; se omitió la verificación de login real.\n')
+  }
+
   // ── Generar archivo de credenciales ──────────────────────
   const lines = []
   lines.push('# Stratos AI — Credenciales del equipo')
@@ -221,7 +296,7 @@ async function main() {
   lines.push('---')
   lines.push('## Mensaje de bienvenida (copy-paste por persona)')
   lines.push('')
-  results.filter(r => r.status === 'created').forEach(r => {
+  results.filter(r => r.status !== 'error').forEach(r => {
     lines.push(`### Para ${r.name} (${r.email})`)
     lines.push('```')
     lines.push(`Hola ${r.name.split(' ')[0]} 👋`)
@@ -245,7 +320,8 @@ async function main() {
   console.log(`📝 Credenciales guardadas en: ${outPath}`)
   console.log(`   Repártelas individualmente al equipo y luego BORRA el archivo.\n`)
 
-  if (fail > 0) process.exit(1)
+  const finalFail = results.filter(r => r.status === 'error').length
+  if (finalFail > 0) process.exit(1)
 }
 
 main().catch(e => {

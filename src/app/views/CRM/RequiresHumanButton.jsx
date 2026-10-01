@@ -48,12 +48,10 @@ export default function RequiresHumanButton({
 
   useEffect(() => () => { if (resetTimer.current) clearTimeout(resetTimer.current); }, []);
 
-  if (!useIa) return null;            // solo iAgents ve este botón
-  if (!lead) return null;
 
-  const rawPhone   = String(lead.phone || lead.whatsapp_phone_e164 || "").trim();
+  const rawPhone   = String(lead?.phone || lead?.whatsapp_phone_e164 || "").trim();
   const phoneClean = rawPhone.replace(/[^0-9+]/g, "");
-  const alreadyMarked = lead.tag === "requiere-humano";
+  const alreadyMarked = lead?.tag === "requiere-humano";
 
   const handleClick = useCallback(async () => {
     if (state === "loading" || alreadyMarked) return;
@@ -87,6 +85,8 @@ export default function RequiresHumanButton({
     if (resetTimer.current) clearTimeout(resetTimer.current);
     resetTimer.current = setTimeout(() => { setState("idle"); setErrMsg(null); }, FEEDBACK_RESET_MS);
   }, [phoneClean, state, alreadyMarked, lead, onUpdate]);
+
+  if (!useIa || !lead) return null;
 
   // ───────── Colores semánticos rojos (urgente) ─────────
   const danger        = isLight ? "#DC2626" : "#F87171";

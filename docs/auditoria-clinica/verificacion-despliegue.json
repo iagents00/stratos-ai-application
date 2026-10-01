@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-09-27T07:44:03.669Z",
+  "deployment": {
+    "id": "dpl_7vBVwVb8PDJ7VkP8ZtAdDiuyK9xK",
+    "url": "https://stratos-ai-application-fws6ofpe6-iagents-projects.vercel.app",
+    "inspectorUrl": "https://vercel.com/iagents-projects/stratos-ai-application/7vBVwVb8PDJ7VkP8ZtAdDiuyK9xK",
+    "readyState": "READY",
+    "target": "production",
+    "deploymentApiUrl": "https://api.vercel.com/v13/deployments/dpl_7vBVwVb8PDJ7VkP8ZtAdDiuyK9xK"
+  },
+  "checks": [
+    {
+      "host": "https://getstratosai.com",
+      "siteStatus": 200,
+      "stratosIdentity": true,
+      "unauthenticatedApiStatus": 401,
+      "hasRequestId": true
+    },
+    {
+      "host": "https://app.stratoscapitalgroup.com",
+      "siteStatus": 200,
+      "stratosIdentity": true,
+      "unauthenticatedApiStatus": 401,
+      "hasRequestId": true
+    }
+  ]
+}

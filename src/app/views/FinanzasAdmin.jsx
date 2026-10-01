@@ -31,6 +31,7 @@ import {
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { P, font, fontDisp } from "../../design-system/tokens";
 import { G, KPI, Pill, Ico } from "../SharedComponents";
+import { currencyCode, isCurrentMonth, summarizeMovements, fetchAllRows, csvCell } from "../../lib/financial-data";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
 import { useIsMobile } from "../../hooks/useViewport";
@@ -55,12 +56,6 @@ const fmtDate = (iso) => {
   } catch { return "—"; }
 };
 
-// Escapa un valor para una celda CSV.
-const csvCell = (s) => {
-  const v = String(s ?? "");
-  return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
-};
-
 const FinanzasAdmin = ({ T: _T }) => {
   const T = _T || P;
   const { user } = useAuth();
@@ -69,7 +64,8 @@ const FinanzasAdmin = ({ T: _T }) => {
   const orgId = user?.organizationId;
 
   const [tab, setTab] = useState("panel");
-  const [rows, setRows] = useState([]);
+  const [allRows, setRows] = useState([]);
+  const [selectedCurrency, setSelectedCurrency] = useState("");
   const [people, setPeople] = useState({});   // profile id → nombre
   const [obras, setObras] = useState({});     // lead id → nombre (obra)
   const [loading, setLoading] = useState(true);
@@ -86,15 +82,15 @@ const FinanzasAdmin = ({ T: _T }) => {
     setError("");
     try {
       const [mov, profs, leads] = await Promise.all([
-        supabase.from("team_expenses")
+        fetchAllRows(() => supabase.from("team_expenses")
           .select("id, tipo, amount, currency, account, category, description, spent_at, created_by, project_id, source")
           .eq("organization_id", orgId)
           .order("spent_at", { ascending: false })
-          .limit(1000),
-        supabase.from("profiles").select("id, name").eq("organization_id", orgId),
-        supabase.from("leads").select("id, name").eq("organization_id", orgId).is("deleted_at", null).limit(400),
+          .order("id")),
+        fetchAllRows(() => supabase.from("profiles").select("id, name").eq("organization_id", orgId).order("id")),
+        fetchAllRows(() => supabase.from("leads").select("id, name").eq("organization_id", orgId).is("deleted_at", null).order("id")),
       ]);
-      if (mov.error) throw mov.error;
+      if (mov.error || profs.error || leads.error) throw mov.error || profs.error || leads.error;
       setRows(mov.data || []);
       setPeople(Object.fromEntries((profs.data || []).map(p => [p.id, p.name])));
       setObras(Object.fromEntries((leads.data || []).map(l => [l.id, l.name])));
@@ -107,27 +103,12 @@ const FinanzasAdmin = ({ T: _T }) => {
 
   useEffect(() => { load(); }, [load]);
 
-  // Moneda dominante del dataset (para mostrar el código junto a los totales).
-  const currency = useMemo(() => {
-    const c = {};
-    rows.forEach(r => { const k = r.currency || ""; if (k) c[k] = (c[k] || 0) + 1; });
-    const top = Object.entries(c).sort((a, b) => b[1] - a[1])[0];
-    return top ? top[0] : null;
-  }, [rows]);
+  const currencies = useMemo(() => [...new Set(allRows.map(r => currencyCode(r.currency)))].sort(), [allRows]);
+  const currency = currencies.includes(selectedCurrency) ? selectedCurrency : (currencies[0] || "USD");
+  const rows = useMemo(() => allRows.filter(r => currencyCode(r.currency) === currency), [allRows, currency]);
 
   // KPIs del mes en curso.
-  const month = useMemo(() => {
-    const now = new Date();
-    const first = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-    let ing = 0, egr = 0, count = 0;
-    rows.forEach(r => {
-      if (new Date(r.spent_at).getTime() < first) return;
-      count++;
-      const a = Number(r.amount || 0);
-      if (r.tipo === "ingreso") ing += a; else egr += a;
-    });
-    return { ing, egr, bal: ing - egr, count };
-  }, [rows]);
+  const month = useMemo(() => summarizeMovements(rows, currency, new Date()), [rows, currency]);
 
   // Saldo acumulado (todo el histórico cargado).
   const allTime = useMemo(() => {
@@ -174,11 +155,10 @@ const FinanzasAdmin = ({ T: _T }) => {
   // Egresos por categoría del mes en curso (top 6).
   const catBreakdown = useMemo(() => {
     const now = new Date();
-    const first = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
     const map = {};
     rows.forEach(r => {
       if ((r.tipo || "egreso") !== "egreso") return;
-      if (new Date(r.spent_at).getTime() < first) return;
+      if (!isCurrentMonth(r.spent_at, now)) return;
       const k = r.category || "Sin categoría";
       map[k] = (map[k] || 0) + Number(r.amount || 0);
     });
@@ -195,9 +175,9 @@ const FinanzasAdmin = ({ T: _T }) => {
     const header = ["fecha", "tipo", "monto", "moneda", "cuenta", "categoria", "obra", "descripcion", "origen"];
     const lines = rows.map(r => [
       (r.spent_at || "").slice(0, 10), r.tipo || "", r.amount ?? "", r.currency || "",
-      csvCell(r.account), csvCell(r.category), csvCell(obras[r.project_id]),
-      csvCell(r.description), r.source || "",
-    ].join(","));
+      r.account, r.category, obras[r.project_id],
+      r.description, r.source || "",
+    ].map(csvCell).join(","));
     // descargarArchivo y no <a download>: dentro de la app ese atributo lo
     // ignora el WebView y el boton no hace NADA, sin error. Ver native.js.
     descargarArchivo(
@@ -255,6 +235,13 @@ const FinanzasAdmin = ({ T: _T }) => {
         <div style={{ padding: "10px 16px", borderRadius: 10, border: `1px solid ${NEG}40`, background: `${NEG}10`, color: NEG, fontSize: 12.5 }}>{error}</div>
       )}
 
+      {tab !== "caja" && <label style={{ color: T.txt2, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        Moneda del informe
+        <select aria-label="Moneda del informe" value={currency} onChange={e => setSelectedCurrency(e.target.value)} style={{ background: T.bg, color: T.txt, border: `1px solid ${T.border}`, borderRadius: 8, padding: 10 }}>
+          {(currencies.length ? currencies : [currency]).map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <span style={{ fontSize: 12 }}>Totales y exportación en {currency}, sin conversión.</span>
+      </label>}
       {/* ── Tab Navigation ── */}
       <div style={{ display: "flex", gap: 4, padding: "4px", borderRadius: 12, background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.025)", border: `1px solid ${T.border}` }}>
         {tabs.map(t => {
@@ -280,10 +267,10 @@ const FinanzasAdmin = ({ T: _T }) => {
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* KPIs reales */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
-            <KPI T={T} label="Ingresos del mes" value={money(month.ing)} sub={curSuffix ? currency : "este mes"} icon={TrendingUp} color={POS} />
-            <KPI T={T} label="Egresos del mes" value={money(month.egr)} sub={curSuffix ? currency : "este mes"} icon={TrendingDown} color={NEG} />
-            <KPI T={T} label="Balance del mes" value={money(month.bal)} sub={`${month.count} movimiento${month.count === 1 ? "" : "s"}`} icon={Scale} color={month.bal >= 0 ? POS : NEG} />
-            <KPI T={T} label="Saldo acumulado" value={money(allTime.bal)} sub="todo el histórico" icon={Wallet} color={ACC} />
+            <KPI T={T} label="Ingresos del mes" value={loading ? "…" : money(month.ing)} sub={curSuffix ? currency : "este mes"} icon={TrendingUp} color={POS} />
+            <KPI T={T} label="Egresos del mes" value={loading ? "…" : money(month.egr)} sub={curSuffix ? currency : "este mes"} icon={TrendingDown} color={NEG} />
+            <KPI T={T} label="Balance del mes" value={loading ? "…" : money(month.bal)} sub={`${month.count} movimiento${month.count === 1 ? "" : "s"}`} icon={Scale} color={month.bal >= 0 ? POS : NEG} />
+            <KPI T={T} label="Saldo acumulado" value={loading ? "…" : money(allTime.bal)} sub="todo el histórico" icon={Wallet} color={ACC} />
           </div>
 
           {/* Gráfica + últimos movimientos */}

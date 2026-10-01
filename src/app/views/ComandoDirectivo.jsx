@@ -30,27 +30,32 @@ import {
 } from "recharts";
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
+import AdvisorMetrics from "./CRM/AdvisorMetrics";
+import { INDICATORS } from "./CRM/indicators.js";
 import { useIsMobile } from "../../hooks/useViewport";
-import AdvisorMetrics, { INDICATORS } from "./CRM/AdvisorMetrics";
 import { useClient } from "../../hooks/useClient";
-import { buildExecutivePdf, evolutionCols, asesorCols } from "./ComandoDirectivo.pdf";
+import { buildExecutivePdf } from "./ComandoDirectivo.pdf";
 import ZoomControl from "./ZoomControl";
 import ZoomBoard from "./CRM/ZoomBoard";
 import ProductividadTab from "./ProductividadTab";
 import { useZoomAgendados } from "../../hooks/useZoomAgendados";
-import { milestoneOf, funnelEntryOf, zoomEventsOf, RECORRIDO_STAGES, CIERRE_STAGES, advisorDisplayGroup, INACTIVE_ADVISOR_GROUP } from "./CRM/zoom-metrics";
+import { milestoneOf, funnelEntryOf, zoomEventsOf, RECORRIDO_STAGES, CIERRE_STAGES } from "./CRM/zoom-metrics";
 import DateRangeControl from "./CRM/DateRangeControl";
 import { savePdfDoc, isNativeApp } from "../../lib/native";
-import { createDefaultDateFilter, resolveDateRange, timestampInRange } from "./CRM/date-range";
+import { createDefaultDateFilter, resolveDateRange, timestampInRange, dateRangeLabel } from "./CRM/date-range";
+
+import { aggregateCommandMetrics, buildMetricBuckets, buildMetricSeries, percentage } from "./CRM/command-metrics.js";
+
+import { createCommandReport } from "./CRM/command-report.js";
 
 const FULL_LABELS = {
   assigned:       "Leads asignados",
-  contacted:      "Leads contactados",
-  qualified:      "Leads calificados",
+  contacted:      "Leads gestionados",
+  qualified:      "Leads en seguimiento o posteriores",
   zoomScheduled:  "Zooms agendados",
   zoomDone:       "Zooms realizados",
   activePostZoom: "Clientes activos post-Zoom",
-  followUps:      "Seguimientos realizados",
+  followUps:      "Seguimientos acumulados",
 };
 
 // Paleta unificada — SOLO derivados de azul / verde / naranja. Sin rosas,
@@ -80,149 +85,6 @@ function automaticGranularity(range) {
   return GRANULARITIES[2];
 }
 
-const MES_ABBR     = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
-const MES_FULL     = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const DIA_SEM_ABBR = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
-
-// ── Generación de buckets temporales ────────────────────────────────────────
-// Cada bucket: { key, label (eje X), csvLabel, startTs, endTs }.
-// Los buckets están ordenados de más antiguo a más reciente (izq → der).
-// El parámetro `count` controla cuántos buckets generar (configurable por el
-// usuario desde los chips de rango), permitiendo zoom in/out sobre el período.
-function buildBuckets(granularityId, count) {
-  const now = new Date();
-  const buckets = [];
-  const n = Math.max(1, count | 0);
-
-  if (granularityId === "day") {
-    for (let i = n - 1; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-      const next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
-      buckets.push({
-        key: d.toISOString().slice(0, 10),
-        // Eje X: número de día + abbr mes. En rangos cortos también añadimos
-        // día de la semana ("Mar 14") para que se entienda al instante.
-        label: n <= 14
-          ? `${DIA_SEM_ABBR[d.getDay()]} ${d.getDate()}`
-          : `${d.getDate()} ${MES_ABBR[d.getMonth()]}`,
-        tooltipLabel: `${DIA_SEM_ABBR[d.getDay()]} ${d.getDate()} ${MES_FULL[d.getMonth()]}`,
-        csvLabel: d.toISOString().slice(0, 10),
-        startTs: d.getTime(),
-        endTs:   next.getTime(),
-        isCurrent: i === 0,
-      });
-    }
-    return buckets;
-  }
-
-  if (granularityId === "week") {
-    // Semana ISO (lunes 00:00 — domingo 23:59:59).
-    const day = now.getDay();
-    const diff = day === 0 ? 6 : day - 1;
-    const thisMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff);
-    for (let i = n - 1; i >= 0; i--) {
-      const start = new Date(thisMonday.getFullYear(), thisMonday.getMonth(), thisMonday.getDate() - i * 7);
-      const end   = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7);
-      const endVisible = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
-      buckets.push({
-        key: start.toISOString().slice(0, 10),
-        label: `${start.getDate()} ${MES_ABBR[start.getMonth()]}`,
-        tooltipLabel: `Sem. ${start.getDate()} ${MES_ABBR[start.getMonth()]} – ${endVisible.getDate()} ${MES_ABBR[endVisible.getMonth()]}`,
-        csvLabel: `Semana ${start.toISOString().slice(0, 10)}`,
-        startTs: start.getTime(),
-        endTs:   end.getTime(),
-        isCurrent: i === 0,
-      });
-    }
-    return buckets;
-  }
-
-  // month
-  for (let i = n - 1; i >= 0; i--) {
-    const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const end   = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
-    buckets.push({
-      key: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}`,
-      label: `${MES_ABBR[start.getMonth()]} ${String(start.getFullYear()).slice(-2)}`,
-      tooltipLabel: `${MES_FULL[start.getMonth()]} ${start.getFullYear()}`,
-      csvLabel: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}`,
-      startTs: start.getTime(),
-      endTs:   end.getTime(),
-      isCurrent: i === 0,
-    });
-  }
-  return buckets;
-}
-
-function buildBucketsForDateRange(granularityId, range) {
-  if (!range || range.fromTs === null) return buildBuckets(granularityId, granularityId === "day" ? 30 : granularityId === "week" ? 12 : 12);
-  const buckets = [];
-  let cursor = new Date(range.from);
-  const endTs = range.toTs;
-
-  if (granularityId === "week") {
-    const day = cursor.getDay();
-    const diff = day === 0 ? 6 : day - 1;
-    cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() - diff);
-  } else if (granularityId === "month") {
-    cursor = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
-  }
-
-  for (let guard = 0; guard < 370 && cursor.getTime() < endTs; guard++) {
-    const start = new Date(cursor);
-    let end;
-    let label;
-    let tooltipLabel;
-    let csvLabel;
-
-    if (granularityId === "day") {
-      end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1);
-      label = `${DIA_SEM_ABBR[start.getDay()]} ${start.getDate()}`;
-      tooltipLabel = `${DIA_SEM_ABBR[start.getDay()]} ${start.getDate()} ${MES_FULL[start.getMonth()]}`;
-      csvLabel = start.toISOString().slice(0, 10);
-    } else if (granularityId === "week") {
-      end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7);
-      const visibleEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1);
-      label = `${start.getDate()} ${MES_ABBR[start.getMonth()]}`;
-      tooltipLabel = `Sem. ${start.getDate()} ${MES_ABBR[start.getMonth()]} – ${visibleEnd.getDate()} ${MES_ABBR[visibleEnd.getMonth()]}`;
-      csvLabel = `Semana ${start.toISOString().slice(0, 10)}`;
-    } else {
-      end = new Date(start.getFullYear(), start.getMonth() + 1, 1);
-      label = `${MES_ABBR[start.getMonth()]} ${String(start.getFullYear()).slice(-2)}`;
-      tooltipLabel = `${MES_FULL[start.getMonth()]} ${start.getFullYear()}`;
-      csvLabel = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}`;
-    }
-
-    buckets.push({
-      key: csvLabel,
-      label,
-      tooltipLabel,
-      csvLabel,
-      startTs: Math.max(start.getTime(), range.fromTs),
-      endTs: Math.min(end.getTime(), range.toTs),
-      isCurrent: Date.now() >= start.getTime() && Date.now() < end.getTime(),
-    });
-    cursor = end;
-  }
-
-  return buckets;
-}
-
-function leadsInBucket(leads, bucket) {
-  return leads.filter(l => {
-    if (!l.created_at) return false;
-    const t = new Date(l.created_at).getTime();
-    return !Number.isNaN(t) && t >= bucket.startTs && t < bucket.endTs;
-  });
-}
-
-// ── Utilidades de export ────────────────────────────────────────────────────
-function csvEscape(v) {
-  const s = v == null ? "" : String(v);
-  if (/[",\n;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
-
 function htmlEscape(v) {
   return String(v == null ? "" : v)
     .replace(/&/g, "&amp;")
@@ -239,9 +101,10 @@ function downloadFile(filename, content, mimeType = "text/html;charset=utf-8") {
 }
 
 // ── Componente principal ────────────────────────────────────────────────────
-const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
+const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark", loading = false, loadError = null, onRetry = null }) => {
   const isLight = theme === "light";
-  const T = _T || (isLight ? LP : P);
+  const baseTheme = _T || (isLight ? LP : P);
+  const T = isLight ? baseTheme : { ...baseTheme, txt3: baseTheme.txt2 };
   const accent = T.accent;
   const { config: clientConfig } = useClient();
   const clientDisplayName = clientConfig?.legalName || clientConfig?.name || "Stratos";
@@ -263,6 +126,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   const showZoomTab = !!clientConfig?.features?.zoomControl;
   const isMobile = useIsMobile();
   const [tab, setTab] = useState("indicadores");
+  const [exporting, setExporting] = useState(false);
   const [dateFilter, setDateFilter] = useState(createDefaultDateFilter);
   const activeDateRange = useMemo(
     () => resolveDateRange(dateFilter.preset, dateFilter.customFrom, dateFilter.customTo),
@@ -273,101 +137,28 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   // zoom_agendados existe (migración 027). Mientras no esté aplicada en este
   // proyecto, lo ocultamos: el tablero ZoomBoard ya da la métrica real desde el
   // pipeline, así que un panel vacío + aviso de migración solo confunde.
-  const { error: zoomTableError } = useZoomAgendados();
+  const zoomData = useZoomAgendados({ enabled: showZoomTab });
+  const zoomTableError = zoomData.error;
   const zoomTableMissing = zoomTableError === "missing_table";
 
   const granularity = useMemo(() => automaticGranularity(activeDateRange), [activeDateRange]);
   const granularityId = granularity.id;
 
-  // Buckets temporales del período seleccionado.
-  const buckets = useMemo(
-    () => buildBucketsForDateRange(granularityId, activeDateRange),
-    [activeDateRange, granularityId],
-  );
-
-  // TODOS los leads cuentan en los totales del Comando — el mismo universo que
-  // el KPI "Clientes en Pipeline" del CRM, para que ambos números cuadren
-  // siempre. Las cuentas de prueba/sistema/inactivas (Asesor Prueba, iAgents,
-  // ex-asesores) NO se excluyen de los cálculos: se agrupan como una sola fila
-  // "Cuentas inactivas" en las tablas por asesor (ver advisorDisplayGroup).
-  const visibleLeads = leadsData;
-
-  // Timestamps de los eventos de Zoom de toda la cartera (1 por lead y por
-  // fase, deduplicados en zoomEventsOf). Fuente única para la gráfica, los
-  // totales del rango y el embudo: TODOS cuentan por la FECHA REAL del evento,
-  // igual que ZoomBoard y la tabla por asesor. `null` = hito inferido sin fecha
-  // (solo cuenta en "Histórico", como en el resto de paneles). Los Zooms dados
-  // por cuentas hoy inactivas también cuentan: son Zooms reales del histórico.
-  const zoomEventTimes = useMemo(() => {
-    const toTs = (at) => {
-      if (!at) return null;
-      const t = new Date(at).getTime();
-      return Number.isFinite(t) ? t : null;
-    };
-    const sched = [];
-    const done = [];
-    for (const l of visibleLeads) {
-      const entry = funnelEntryOf(l);
-      if (entry) sched.push(toTs(entry.at));
-      const d = zoomEventsOf(l).done;
-      if (d) done.push(toTs(d.at));
-    }
-    return { sched, done };
-  }, [visibleLeads]);
-
-  // Cuenta eventos dentro de un rango global ({fromTs,toTs} o Histórico).
-  const countZoomEvents = (times, range) => {
-    if (!range || range.fromTs === null) return times.length; // Histórico incluye inferidos
-    return times.filter(ts => ts !== null && ts >= range.fromTs && ts < range.toTs).length;
-  };
-
-  // Para cada bucket: leads filtrados + 7 indicadores ya computados.
-  // Las 2 series de Zoom se sobreescriben con el conteo por fecha del evento —
-  // "Zooms agendados del martes" = zooms cuya cita/registro cayó el martes, no
-  // "leads creados el martes que algún día tuvieron Zoom".
-  const series = useMemo(() => {
-    return buckets.map(b => {
-      const inB = leadsInBucket(visibleLeads, b);
-      const row = {
-        label: b.label,
-        tooltipLabel: b.tooltipLabel,
-        csvLabel: b.csvLabel,
-        isCurrent: b.isCurrent,
-      };
-      for (const ind of INDICATORS) row[ind.key] = ind.compute(inB);
-      row.zoomScheduled = zoomEventTimes.sched.filter(ts => ts !== null && ts >= b.startTs && ts < b.endTs).length;
-      row.zoomDone      = zoomEventTimes.done.filter(ts => ts !== null && ts >= b.startTs && ts < b.endTs).length;
-      return row;
-    });
-  }, [buckets, visibleLeads, zoomEventTimes]);
-
-  // Leads creados dentro del rango temporal visible.
-  const rangeLeads = useMemo(() => {
-    return visibleLeads.filter((lead) => timestampInRange(lead.created_at, activeDateRange));
-  }, [activeDateRange, visibleLeads]);
-
-  // ── Dos vistas de totales, ambas reales y coordinadas con el CRM ──────────
-  //
-  // 1) `snapshotTotals` — ESTADO ACTUAL del pipeline completo. Coincide con
-  //    los KPIs del CRM (Pipeline por Etapa, Zooms Totales) porque corre sobre
-  //    TODOS los leads de leadsData sin filtro temporal. Es lo que dirección
-  //    quiere ver al entrar al Comando Directivo.
-  //
-  // 2) `rangeTotals` — FLUJO del período seleccionado. Cuenta solo leads
-  //    creados dentro del rango temporal visible. Equivale a la suma de las
-  //    barras del chart (un lead cae en exactamente un bucket). Esto alimenta
-  //    el footer "Total del rango" de la tabla de evolución y la tabla por
-  //    asesor.
-  //
-  // Las KPI cards muestran el snapshot (estado actual) para que el número de
-  // "Zooms agendados" en el dashboard coincida con el chip "Zoom Agendado 14"
-  // del CRM. El chart y la tabla siguen siendo flow-based porque su propósito
-  // es mostrar evolución temporal.
-  const snapshotTotals = useMemo(() => {
-    const t = {};
-    for (const ind of INDICATORS) t[ind.key] = ind.compute(visibleLeads);
-    return t;
-  }, [visibleLeads]);
+  const visibleLeads = useMemo(() => leadsData.filter(l => !l.deleted_at), [leadsData]);
+  const metrics = useMemo(() => aggregateCommandMetrics(visibleLeads, activeDateRange), [visibleLeads, activeDateRange]);
+  const rangeLeads = metrics.cohort;
+  const rangeTotals = metrics.totals;
+  const snapshotTotals = useMemo(() => aggregateCommandMetrics(visibleLeads, null).totals, [visibleLeads]);
+  const metricDates = useMemo(() => visibleLeads.flatMap(l => {
+    const dates = [l.created_at];
+    const scheduled = funnelEntryOf(l);
+    const done = zoomEventsOf(l).done;
+    if (scheduled) dates.push(scheduled.at);
+    if (done) dates.push(done.at);
+    return dates;
+  }), [visibleLeads]);
+  const buckets = useMemo(() => buildMetricBuckets(granularityId, activeDateRange, metricDates), [granularityId, activeDateRange, metricDates]);
+  const series = useMemo(() => buildMetricSeries(visibleLeads, buckets), [visibleLeads, buckets]);
 
   // Embudo de conversión comercial: del lead al cierre. Los hitos de Zoom
   // (agendado/realizado/recorrido/cierre) se cuentan POR FECHA REAL DEL EVENTO
@@ -378,8 +169,8 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   // totales" es la cohorte creada en el rango (entrada del embudo).
   const funnel = useMemo(() => {
     let rec = 0, cie = 0;
-    const zsch = countZoomEvents(zoomEventTimes.sched, activeDateRange);
-    const zdone = countZoomEvents(zoomEventTimes.done, activeDateRange);
+    const zsch = rangeTotals.zoomScheduled;
+    const zdone = rangeTotals.zoomDone;
     for (const l of visibleLeads) {
       const r = milestoneOf(l, RECORRIDO_STAGES);
       if (r && timestampInRange(r.at, activeDateRange)) rec++;
@@ -388,26 +179,15 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     }
     const total = rangeLeads.length;
     const stages = [
-      { label: "Leads totales",      value: total, color: "#64748B", icon: Users },
+      { label: "Leads nuevos",      value: total, color: "#64748B", icon: Users },
       { label: "Zoom agendado",      value: zsch,  color: "#2563EB", icon: CalendarDays },
       { label: "Zoom realizado",     value: zdone, color: "#10B981", icon: CheckCircle2 },
-      { label: "Recorrido / visita", value: rec,   color: "#06B6D4", icon: MapPin },
+      { label: "Visitas agendadas", value: rec,   color: "#06B6D4", icon: MapPin },
       { label: "Apartó / Cierre",    value: cie,   color: accent,    icon: Handshake },
     ];
     const max = Math.max(1, ...stages.map(s => s.value));
     return { stages, max };
-  }, [visibleLeads, rangeLeads, activeDateRange, accent, zoomEventTimes]);
-
-  const rangeTotals = useMemo(() => {
-    const t = {};
-    for (const ind of INDICATORS) t[ind.key] = ind.compute(rangeLeads);
-    // Zooms por fecha real del evento — mismo número que el embudo, la gráfica
-    // y la fila TOTAL de la tabla por asesor (antes era por cohorte de creación
-    // del lead y los paneles no cuadraban entre sí).
-    t.zoomScheduled = countZoomEvents(zoomEventTimes.sched, activeDateRange);
-    t.zoomDone      = countZoomEvents(zoomEventTimes.done, activeDateRange);
-    return t;
-  }, [rangeLeads, zoomEventTimes, activeDateRange]);
+  }, [visibleLeads, rangeLeads, activeDateRange, accent, rangeTotals.zoomScheduled, rangeTotals.zoomDone]);
 
   // ── Export — Reporte ejecutivo en PDF (vectorial, jsPDF) ──────────────────
   // Construye el PDF dibujando texto/tablas con jsPDF (ver ComandoDirectivo.pdf
@@ -416,31 +196,22 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
   // El `html` que se arma abajo queda SOLO como fallback imprimible por si el
   // import de jsPDF fallara en algún navegador exótico.
   const handleExport = async () => {
+    if (loading || loadError || exporting) return;
+    setExporting(true);
     const now = new Date();
     const stamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
     const hhmm  = `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
-    const periodSpan = buckets.length > 0
-      ? `${buckets[0].csvLabel} → ${buckets[buckets.length - 1].csvLabel}`
-      : "—";
-
-    // Cuentas ocultas agrupadas bajo una sola etiqueta (al final de la tabla)
-    // para que las filas sumen el total sin ensuciar con nombres inactivos.
-    const asesores = [...new Set(rangeLeads.map(l => l.asesor).filter(Boolean).map(advisorDisplayGroup))]
-      .sort((a, b) => {
-        if (a === INACTIVE_ADVISOR_GROUP) return 1;
-        if (b === INACTIVE_ADVISOR_GROUP) return -1;
-        return a.localeCompare(b, "es");
-      });
+    const periodSpan = dateRangeLabel(activeDateRange);
+    const asesores = metrics.rows.map(row => row.asesor);
 
     // KPIs derivados — útiles para dirección.
     const totalLeads     = rangeLeads.length;
-    const tasaCalif      = totalLeads ? Math.round((rangeTotals.qualified / totalLeads) * 100) : 0;
-    const tasaZoomSobreCal = rangeTotals.qualified
-      ? Math.round((rangeTotals.zoomDone / rangeTotals.qualified) * 100)
-      : 0;
+    const tasaCalif = percentage(rangeTotals.qualified, totalLeads);
+    const tasaZoomSobreCal = percentage(INDICATORS.find(i => i.key === "zoomDone").compute(rangeLeads), totalLeads);
+    const formatRate = value => value === null ? "—" : value + "%";
     const promedioSeguim = totalLeads
       ? (rangeTotals.followUps / totalLeads).toFixed(1)
-      : "0.0";
+      : "—";
 
     const maxIndVal = Math.max(1, ...INDICATORS.map(i => rangeTotals[i.key] || 0));
 
@@ -698,19 +469,19 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
         <div class="sub">creados en el rango</div>
       </div>
       <div class="stat">
-        <div class="label">Tasa de calificación</div>
-        <div class="value">${tasaCalif}%</div>
+        <div class="label">En seguimiento+</div>
+        <div class="value">${formatRate(tasaCalif)}</div>
         <div class="sub">${rangeTotals.qualified} de ${totalLeads || 0}</div>
       </div>
       <div class="stat">
-        <div class="label">Conversión a Zoom</div>
-        <div class="value">${tasaZoomSobreCal}%</div>
-        <div class="sub">zooms realizados / calificados</div>
+        <div class="label">Cohorte con Zoom</div>
+        <div class="value">${formatRate(tasaZoomSobreCal)}</div>
+        <div class="sub">leads nuevos con hito de Zoom / leads nuevos</div>
       </div>
       <div class="stat">
         <div class="label">Seguim. por lead</div>
         <div class="value">${promedioSeguim}</div>
-        <div class="sub">promedio del rango</div>
+        <div class="sub">acumulado de la cohorte</div>
       </div>
     </div>
 
@@ -718,7 +489,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     <div class="ind-grid">
       ${INDICATORS.map(ind => {
         const val = rangeTotals[ind.key] || 0;
-        const w = Math.max(2, Math.round((val / maxIndVal) * 100));
+        const w = (val / maxIndVal) * 100;
         const color = COLORS_BY_KEY[ind.key] || "#10B981";
         return `
         <div class="ind">
@@ -768,12 +539,12 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
         </thead>
         <tbody>
           ${asesores.map(ases => {
-            const leadsOf = rangeLeads.filter(l => advisorDisplayGroup(l.asesor) === ases);
+            const advisorRow = metrics.rows.find(row => row.asesor === ases);
             return `
             <tr>
               <td>${htmlEscape(ases)}</td>
-              <td>${leadsOf.length}</td>
-              ${INDICATORS.map(i => `<td>${i.compute(leadsOf)}</td>`).join("")}
+              <td>${advisorRow.count}</td>
+              ${INDICATORS.map(i => `<td>${advisorRow.metrics[i.key]}</td>`).join("")}
             </tr>`;
           }).join("")}
         </tbody>
@@ -792,54 +563,11 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
     //    array del CRM). El builder vectorial (ComandoDirectivo.pdf.js) lo
     //    dibuja con jsPDF: márgenes correctos, tablas paginadas sin cortar
     //    filas, texto seleccionable. Caracteres dentro de cp1252 (sin "→").
-    const dailyNote = granularityId === "day"
-      ? '"Asignados" = leads registrados ese día. Zooms Ag./Real. cuentan por la fecha real del evento. Las demás columnas reflejan el estado actual de esos leads en el pipeline.'
-      : '"Asignados" = leads registrados en el periodo. Zooms Ag./Real. cuentan por la fecha real del evento. Las demás columnas reflejan el estado actual de esos leads en el pipeline.';
-
-    const model = {
-      meta: {
-        clientName: clientDisplayName,
-        stamp, hhmm,
-        granularityLabel: granularity.label,
-        periodsCount: buckets.length,
-        periodSpan,
-        totalLeadsPipeline: visibleLeads.length,
-        asesoresCount: asesores.length,
-      },
-      pipelineCards: [
-        { label: "Pipeline total",    value: String(visibleLeads.length),             sub: "leads en el CRM", color: "#10B981" },
-        { label: "Zooms agendados",   value: String(snapshotTotals.zoomScheduled),  sub: "histórico del pipeline", color: COLORS_BY_KEY.zoomScheduled },
-        { label: "Zooms realizados",  value: String(snapshotTotals.zoomDone),       sub: "histórico del pipeline", color: COLORS_BY_KEY.zoomDone },
-        { label: "Activos post-Zoom", value: String(snapshotTotals.activePostZoom), sub: "estado actual",   color: COLORS_BY_KEY.activePostZoom },
-      ],
-      rangeCards: [
-        { label: "Leads nuevos",         value: String(totalLeads),     sub: "creados en el rango",        color: "#6EE7C2" },
-        { label: "Tasa de calificación", value: `${tasaCalif}%`,        sub: `${rangeTotals.qualified} de ${totalLeads || 0}`, color: "#0EA5E9" },
-        { label: "Conversión a Zoom",    value: `${tasaZoomSobreCal}%`, sub: "realizados / calificados",   color: "#2563EB" },
-        { label: "Seguim. por lead",     value: String(promedioSeguim), sub: "promedio del rango",         color: "#EA580C" },
-      ],
-      indicators: INDICATORS.map(ind => ({
-        label: FULL_LABELS[ind.key] || ind.label,
-        value: rangeTotals[ind.key] || 0,
-        color: COLORS_BY_KEY[ind.key] || "#10B981",
-      })),
-      evolution: {
-        title: `Evolución temporal  -  ${granularity.label}`,
-        note: dailyNote,
-        cols: evolutionCols(INDICATORS.length),
-        headers: ["Período", ...INDICATORS.map(i => i.label)],
-        rows: series.map(r => [r.csvLabel, ...INDICATORS.map(i => r[i.key] || 0)]),
-        totals: ["Total del rango", ...INDICATORS.map(i => rangeTotals[i.key] || 0)],
-      },
-      asesores: {
-        cols: asesorCols(INDICATORS.length),
-        headers: ["Asesor", "Leads", ...INDICATORS.map(i => i.label)],
-        rows: asesores.map(ases => {
-          const leadsOf = rangeLeads.filter(l => advisorDisplayGroup(l.asesor) === ases);
-          return [ases, leadsOf.length, ...INDICATORS.map(i => i.compute(leadsOf))];
-        }),
-      },
-    };
+    const model = createCommandReport({
+      leads: visibleLeads, range: activeDateRange, series, buckets,
+      clientName: clientDisplayName, granularityLabel: granularity.label,
+      labels: FULL_LABELS, colors: COLORS_BY_KEY, now,
+    });
 
     const filenameBase = `comando-directivo_${granularity.label.toLowerCase()}_${stamp}`;
     try {
@@ -859,6 +587,8 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
         // Navegador donde jsPDF no cargó: descargamos el HTML imprimible.
         downloadFile(`${filenameBase}.html`, html);
       }
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -900,18 +630,21 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
             );
           })}
         </div>
-        <button onClick={handleExport} title="Descarga el reporte ejecutivo como PDF" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", gap:7, minHeight:44, padding:"0 16px", borderRadius:11, width: isMobile ? "100%" : "auto", background: isLight ? `linear-gradient(135deg, ${accent} 0%, ${accent}DD 100%)` : `${accent}18`, color: isLight ? "#FFFFFF" : accent, border:`1px solid ${isLight ? "transparent" : `${accent}55`}`, fontSize:13, fontWeight:600, fontFamily:fontDisp, cursor:"pointer", boxShadow: isLight ? `0 2px 8px ${accent}40` : "none", WebkitTapHighlightColor: "transparent" }}>
-          <Download size={14} strokeWidth={2.4} /> Generar PDF
+        <button onClick={handleExport} disabled={loading || !!loadError || exporting} title="Descarga el reporte ejecutivo como PDF" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"8px 14px", borderRadius:9, background: isLight ? `linear-gradient(135deg, ${accent} 0%, ${accent}DD 100%)` : `${accent}18`, color: isLight ? "#FFFFFF" : accent, border:`1px solid ${isLight ? "transparent" : `${accent}55`}`, fontSize:12, fontWeight:500, fontFamily:fontDisp, cursor:"pointer", boxShadow: isLight ? `0 2px 8px ${accent}40` : "none" }}>
+          <Download size={13} strokeWidth={2.4} /> {exporting ? "Generando…" : "Generar PDF de Leads"}
         </button>
         </div>
       )}
 
+      {loading && <p role="status" style={{ color: T.txt2, fontFamily: font }}>Cargando la cartera completa… Los indicadores son provisionales.</p>}
+      {loadError && <p role="alert" style={{ color: T.txt2, fontFamily: font }}>No se pudo actualizar la cartera. {onRetry && <button onClick={onRetry}>Reintentar</button>}</p>}
       <DateRangeControl
         T={T}
         isLight={isLight}
         value={dateFilter}
         onChange={setDateFilter}
         label="Rango global del Comando"
+        allowFuture={showZoomTab}
       />
 
       {(!showZoomTab || tab === "indicadores") && (
@@ -924,7 +657,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
           </h2>
           <p style={{ margin: "4px 0 0", fontSize: 12.5, color: T.txt3, fontFamily: font }}>
             {showZoomTab
-              ? <>Primer filtro comercial · del lead al Zoom (entrada → contacto → calificación → Zoom) · vista <strong style={{ color: T.txt2 }}>{granularity.label}</strong> · {rangeLeads.length} leads en el rango</>
+              ? <>Actividad de leads e hitos del pipeline · vista <strong style={{ color: T.txt2 }}>{granularity.label}</strong> · {rangeLeads.length} leads en el rango</>
               : <>Indicadores ejecutivos del equipo · vista <strong style={{ color: T.txt2 }}>{granularity.label}</strong> · {rangeLeads.length} leads en el rango</>}
           </p>
         </div>
@@ -939,7 +672,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
           </span>
           {!showZoomTab && (
           <button
-            onClick={handleExport}
+            onClick={handleExport} disabled={loading || !!loadError || exporting}
             title="Descarga el reporte ejecutivo como PDF — listo para enviar a dirección"
             style={{
               display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
@@ -965,7 +698,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
             }}
           >
             <Download size={13} strokeWidth={2.4} />
-            Generar PDF
+            {exporting ? "Generando…" : "Generar PDF de Leads"}
           </button>
           )}
         </div>
@@ -975,18 +708,16 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       <G T={T}>
         <div style={{ marginBottom: 16 }}>
           <p style={{ fontSize: 14.5, fontWeight: 500, color: T.txt, fontFamily: fontDisp, margin: 0, letterSpacing: "-0.014em" }}>
-            Embudo de conversión
+            Actividad comercial del período
           </p>
-          <p style={{ fontSize: 12, color: T.txt3, fontFamily: font, margin: "3px 0 0", lineHeight: 1.5 }}>
-            Del lead al cierre · cuántos avanzan en cada etapa y dónde se caen. Cada barra es proporcional al total de leads.
+          <p style={{ fontSize: 11, color: T.txt3, fontFamily: font, margin: "3px 0 0", lineHeight: 1.5 }}>
+            Leads por fecha de creación; hitos por fecha del primer movimiento. Son poblaciones distintas: estas barras no representan tasas de conversión.
           </p>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {funnel.stages.map((s, i) => {
+          {funnel.stages.map((s) => {
             const Icon = s.icon;
-            const widthPct = Math.max(4, Math.round((s.value / funnel.max) * 100));
-            const prev = i > 0 ? funnel.stages[i - 1].value : null;
-            const conv = prev ? Math.round((s.value / prev) * 100) : null;
+            const widthPct = (s.value / funnel.max) * 100;
             return (
               <div key={s.label} style={{ display: "flex", alignItems: isMobile ? "stretch" : "center", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 6 : 12 }}>
                 <div style={{ width: isMobile ? "auto" : 150, flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
@@ -995,18 +726,18 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                   </span>
                   <span style={{ fontSize: 12.5, fontWeight: 400, color: T.txt2, fontFamily: font, lineHeight: 1.2 }}>{s.label}</span>
                 </div>
-                <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ flex: 1, minWidth: 180, display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{ flex: 1, minWidth: 0, height: 34, borderRadius: 8, background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)", overflow: "hidden" }}>
                     <div style={{
                       width: `${widthPct}%`, height: "100%", borderRadius: 8,
-                      background: s.color, display: "flex", alignItems: "center", paddingLeft: 12,
+                      background: s.color, display: "flex", alignItems: "center", paddingLeft: s.value > 0 ? 12 : 0,
                       transition: "width 0.3s ease",
                     }}>
-                      <span style={{ fontSize: 14, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.01em", textShadow: "0 1px 3px rgba(0,0,0,0.45)" }}>{s.value.toLocaleString("es-MX")}</span>
+
                     </div>
                   </div>
-                  <span style={{ minWidth: 64, flexShrink: 0, fontSize: 12, color: T.txt3, fontFamily: font, textAlign: "right", whiteSpace: "nowrap" }}>
-                    {conv !== null ? <><strong style={{ color: T.txt2 }}>{conv}%</strong> del previo</> : "100%"}
+                  <span style={{ width: 84, flexShrink: 0, fontSize: 11, color: T.txt3, fontFamily: font, textAlign: "right" }}>
+                    <strong style={{ color: T.txt, fontSize: 14 }}>{s.value.toLocaleString("es-MX")}</strong>
                   </span>
                 </div>
               </div>
@@ -1039,6 +770,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
               <button
                 key={ind.key}
                 onClick={() => toggleSeries(ind.key)}
+                aria-pressed={!hidden}
                 title={hidden ? "Mostrar serie" : "Ocultar serie"}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 7,
@@ -1109,9 +841,9 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
                 width={36}
               />
               {/* Marca "Hoy" — solo cuando hay más de un bucket. */}
-              {series.length > 1 && (
+              {series.length > 1 && series.some(row => row.isCurrent) && (
                 <ReferenceLine
-                  x={series[series.length - 1].label}
+                  x={series.find(row => row.isCurrent)?.label}
                   stroke={isLight ? "rgba(15,23,42,0.30)" : "rgba(255,255,255,0.25)"}
                   strokeDasharray="2 4"
                   strokeWidth={1}
@@ -1165,7 +897,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
           {/* El "excel" del director comercial va HASTA ARRIBA (pedido de Ivan):
               al abrir la pestaña aterriza directo en su tabla de Zooms. Solo si
               la tabla zoom_agendados existe (migración 027/083). */}
-          {!zoomTableMissing && <ZoomControl theme={isLight ? "light" : "dark"} />}
+          {!zoomTableMissing && <ZoomControl theme={isLight ? "light" : "dark"} dateFilter={dateFilter} data={zoomData} />}
           {/* Métrica de Zooms del pipeline (histórico por etapas) — debajo. */}
           <ZoomBoard
             leadsData={visibleLeads}
@@ -1176,7 +908,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark" }) => {
       )}
 
       {showZoomTab && tab === "productividad" && (
-        <ProductividadTab T={T} isLight={isLight} />
+        <ProductividadTab T={T} isLight={isLight} dateFilter={dateFilter} />
       )}
     </div>
   );
@@ -1191,7 +923,6 @@ function ChartTooltip({ active, payload, label, isLight, T, hiddenSeries }) {
   const items = payload
     .filter(p => !hiddenSeries?.[p.dataKey])
     .sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
-  const total = items.reduce((s, p) => s + (p.value || 0), 0);
   return (
     <div style={{
       background: isLight ? "#FFFFFF" : "#0E1320",
@@ -1221,49 +952,9 @@ function ChartTooltip({ active, payload, label, isLight, T, hiddenSeries }) {
           </div>
         ))}
       </div>
-      {items.length > 1 && (
-        <div style={{
-          marginTop: 8, paddingTop: 8,
-          borderTop: `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.07)"}`,
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-        }}>
-          <span style={{ fontSize: 11, fontWeight: 500, color: T.txt3, fontFamily: fontDisp, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            Total
-          </span>
-          <span style={{ fontSize: 13, fontWeight: 500, color: T.txt, fontVariantNumeric: "tabular-nums", fontFamily: fontDisp }}>
-            {total}
-          </span>
-        </div>
-      )}
+
     </div>
   );
-}
-
-// ── Estilos de tabla compartidos ─────────────────────────────────────────────
-function tableHeadStyle(T, align = "right") {
-  return {
-    padding: "11px 14px",
-    textAlign: align,
-    fontSize: 11.5, fontWeight: 500,
-    color: T.txt2, fontFamily: fontDisp,
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
-    whiteSpace: "nowrap",
-    borderBottom: `1px solid ${T.bg === "#060A11" ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.06)"}`,
-  };
-}
-
-function tableCellStyle(T, align = "right", bold = false) {
-  return {
-    padding: "10px 14px",
-    textAlign: align,
-    fontSize: 12.5,
-    fontWeight: bold ? 600 : 500,
-    color: T.txt,
-    fontFamily: fontDisp,
-    fontVariantNumeric: "tabular-nums",
-    whiteSpace: "nowrap",
-  };
 }
 
 export default ComandoDirectivo;

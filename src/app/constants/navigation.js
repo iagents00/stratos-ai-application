@@ -13,6 +13,7 @@ import { Target,
 } from "lucide-react";
 
 export const nav = [
+  { id: "mi_espacio", l: "Agenda",    i: Target     },
   { id: "c",     l: "CRM",       i: Users      },
   // Mi Espacio como módulo VISIBLE bajo el CRM (reunión 11-ago): es una segunda
   // puerta al MISMO panel (metaOpen), no una vista nueva — no hay dos estados.
@@ -129,6 +130,7 @@ export const MODULE_ROLES = {
   // cambiar su contraseña (entran con una temporal que les da RRHH).
   perfil: ["super_admin","admin","director","ceo","asesor","marketing","colaborador"],
   admin:  ["super_admin","admin"],
+  mi_espacio: ["super_admin","admin","director","ceo","asesor"],
 };
 
 export const MODULE_NAMES = {
@@ -139,6 +141,7 @@ export const MODULE_NAMES = {
   mkt_dia: "Mi Día", mkt_marcas: "Marcas", mkt_pipe: "Registro de Propiedades", mkt_sol: "Solicitudes",
   mkt_equipo: "Equipo", mkt_reporte: "Actividades", midrive: "Mi Drive", plan: "Plan Semanal",
   planes: "Planes", perfil: "Perfil", admin: "Usuarios",
+  mi_espacio: "Agenda",
 };
 
 // ─── Aislamiento por organización ─────────────────────────────────────────────
@@ -182,6 +185,12 @@ export const AREA_MEMBER_MODULES = new Set(["miespacio", "plan", "mkt_reporte", 
 // rol `marketing` (su equipo) Y el admin de marketing (Alex) — no los admins de ventas.
 export const MKT_SECTION_MODULES = new Set(["mkt_reporte", "mkt_equipo", "mkt_dia", "mkt_marcas", "mkt_pipe", "mkt_sol"]);
 
+export function isMarketingUser(user) {
+  const emailLocal = String(user?.email || "").split("@")[0].trim().toLowerCase();
+  const name = String(user?.name || "").trim().toLowerCase();
+  return user?.role === "marketing" || user?.isMarketingAdmin === true || emailLocal.endsWith(".mkt") || name.endsWith(".mkt") || emailLocal.endsWith(".mtk") || name.endsWith(".mtk");
+}
+
 export function isStratosOrg(orgId) {
   return orgId === STRATOS_ORG_ID;
 }
@@ -210,6 +219,8 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
     // visible es rechazo seguro. Los planes se contratan hablando con un
     // ejecutivo, que es lo que hace la pantalla en web.
   if (moduleId === "planes" && esAppNativa()) return false;
+  if (clientConfig?.liveHuli === true || (clientConfig?.demoOnly === true && user.isDemo)) return ["c", "copilot", "mi_espacio", "perfil"].includes(moduleId);
+  if (moduleId === "mi_espacio") return false;
   // (1) Restricción per-usuario — gana sobre todo lo demás.
   if (user.crmOnly === true && !CRM_ONLY_MODULES.has(moduleId)) return false;
   // (1b) Admin de MARKETING (Alex): aunque su rol sea super_admin, su casa es
@@ -230,6 +241,13 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   // el problema nunca fue el dato, era esta regla aplicándose donde no va.
   if (user.isMarketingAdmin === true && isStratosOrg(user.organizationId)
       && !MARKETING_ADMIN_MODULES.has(moduleId)) return false;
+  // Empresas nuevas: el servidor devuelve los permisos efectivos del usuario.
+  // Esta condición solo organiza el menú; RLS y RPC comprueban los datos.
+  if (moduleId === "caja" && clientConfig?.id === "tenant") {
+    const access = clientConfig?.features?.cajaPolicy;
+    return access?.enabled === true && (access.read_all === true
+      || access.read_own === true || access.create === true);
+  }
   // (1c) COLABORADOR de área: su espacio es cerrado y se resuelve acá completo,
   // sin caer al permiso por rol de más abajo (MODULE_ROLES no lo lista en casi
   // nada a propósito: lo que no está en AREA_MEMBER_MODULES, no lo ve).

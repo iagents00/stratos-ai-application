@@ -1,0 +1,40 @@
+✔ clinic tenant requires a verified session rather than the old shared cookie (0.669541ms)
+✔ clinic access rejects other users, cross-tenant profiles and inactive accounts (0.194209ms)
+✔ only the active registered administrator can access the fixed tenant (0.086ms)
+✔ platform lazy JSON parser failures are returned as client errors (0.708834ms)
+✔ clinical request rejects malformed or non-object JSON with client errors (0.859209ms)
+✔ clinical body limit measures UTF-8 bytes including multibyte data (0.119625ms)
+✔ trace records verified actor and outcome without request data or injected action (1.875792ms)
+✔ denials have no invented actor and logger failures expose no contents (0.334042ms)
+✔ booking a demo slot removes availability without altering original fixtures (0.726916ms)
+✔ Huli and reminder requests clearly remain simulated (1.267ms)
+✔ dental profile routes never replace other clients (0.188625ms)
+✔ dental demo uses independent identity and explicitly fictitious records (0.099875ms)
+{"event":"clinical_gateway_request","schemaVersion":1,"requestId":"b77b3cc7-e9c0-40d5-99b5-90247daeeee6","occurredAt":"2026-09-27T07:43:00.006Z","method":"GET","action":"metadata","status":401,"outcome":"denied_or_failed","durationMs":0}
+{"event":"clinical_gateway_request","schemaVersion":1,"requestId":"8c58ec70-28dc-419f-9d41-a44162f9eae9","occurredAt":"2026-09-27T07:43:00.007Z","method":"POST","action":"metadata","status":403,"outcome":"denied_or_failed","durationMs":0}
+{"event":"clinical_gateway_request","schemaVersion":1,"requestId":"f7ee198c-99b0-4d92-bbd3-106b59c325e4","occurredAt":"2026-09-27T07:43:00.036Z","method":"POST","action":"login","status":200,"outcome":"allowed","durationMs":29}
+✔ clinic authentication checks password and expires tamper-proof scoped sessions (55.678583ms)
+✔ calendar day uses provider timezone and daylight-saving boundaries (29.5335ms)
+✔ doctor/sede selection must belong to the server-discovered scope (0.429584ms)
+✔ patient results minimize personal data and accept no caller-supplied organization (0.296292ms)
+✔ availability rejects scope mismatch and unknown actions cannot create appointments (0.640375ms)
+✔ HTTP gateway denies unauthenticated access and cross-origin login (29.835042ms)
+✔ Huli empty agenda payload is accepted but malformed nonempty payload is rejected (0.800917ms)
+✔ routes only explicit Huli commands and validates dates/ranges (0.766125ms)
+✔ doctor and clinic must both belong to the provisioned pair (0.490708ms)
+✔ authenticates server-side and scopes every GET; returns only slot timestamps (23.35575ms)
+✔ rejects wrong organizations and inactive organizations (0.624833ms)
+✔ rejects cross-clinic availability responses (0.533791ms)
+✔ provider errors never expose raw credentials or upstream payloads (0.207459ms)
+✔ permite el proyecto correcto y compilaciones sin enlace local (3.852833ms)
+✔ bloquea un enlace a otro proyecto o equipo (3.119125ms)
+✔ bloquea un proyecto cruzado declarado por Vercel (2.300125ms)
+✔ valida repo.json y rechaza enlaces ambiguos (6.908584ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 245.380375

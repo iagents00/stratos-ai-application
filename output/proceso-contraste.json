@@ -1,0 +1,52 @@
+[
+  {
+    "theme": "dark",
+    "role": "body",
+    "ratio": 15.46
+  },
+  {
+    "theme": "dark",
+    "role": "secondary",
+    "ratio": 6.59
+  },
+  {
+    "theme": "dark",
+    "role": "context",
+    "ratio": 6.95
+  },
+  {
+    "theme": "dark",
+    "role": "accent",
+    "ratio": 12.59
+  },
+  {
+    "theme": "dark",
+    "role": "primary",
+    "ratio": 13.26
+  },
+  {
+    "theme": "light",
+    "role": "body",
+    "ratio": 18.72
+  },
+  {
+    "theme": "light",
+    "role": "secondary",
+    "ratio": 8.98
+  },
+  {
+    "theme": "light",
+    "role": "context",
+    "ratio": 8.08
+  },
+  {
+    "theme": "light",
+    "role": "accent",
+    "ratio": 5.31
+  },
+  {
+    "theme": "light",
+    "role": "primary",
+    "ratio": 5.31
+  }
+]

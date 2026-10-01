@@ -12,8 +12,7 @@
  * resto de Comando Directivo. Sin librerías nuevas, todo inline styles.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { Fragment, useMemo, useState, useCallback } from "react";
-import { descargarArchivo } from "../../../lib/native";
+import { Fragment, useMemo, useState, useCallback, useId } from "react";
 import {
   Video, Plus, RefreshCw, Search, X, Pencil, Trash2, Flame, Download,
   CalendarDays, CheckCircle2, UserCheck, Clock3, AlertTriangle,
@@ -21,6 +20,7 @@ import {
 } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../../design-system/tokens";
 import { G, KPI } from "../../SharedComponents";
+import { descargarArchivo } from "../../../lib/native";
 import { useIsMobile } from "../../../hooks/useViewport";
 import { useZoomAgendados } from "../../../hooks/useZoomAgendados";
 import { useTeam } from "../../../hooks/useTeam";
@@ -32,6 +32,7 @@ import {
 import ResumenZooms from "./Resumen";
 import GraficasZooms from "./Graficas";
 import ZoomLista from "./ZoomLista";
+import { resolveDateRange, timestampInRange, dateRangeLabel } from "../CRM/date-range.js";
 import { todayStr, weekRange, next7Range, inRange, prettyDate, isoWeekNumber, DOW_FULL, MES_FULL } from "./dates";
 
 // Mes y día (nombre completo) de un YYYY-MM-DD — columnas "Mes" y "Día del
@@ -55,13 +56,32 @@ const RANGES = [
   { id: "todos", label: "Todos" },
 ];
 
-const ZoomControl = ({ theme = "dark" }) => {
+const ZoomControl = ({ theme = "dark", dateFilter = null, data = null }) => {
   const isLight = theme === "light";
-  const T = isLight ? LP : P;
+  const T = isLight ? LP : { ...P, txt3: P.txt2 };
   const accent = T.accent;
   const isMobile = useIsMobile();
 
-  const { rows, loading, error, hasExtCols, refetch, createRow, updateRow, removeRow } = useZoomAgendados();
+  const ownData = useZoomAgendados({ enabled: !data });
+  const { rows: allRows, loading, error, hasExtCols, refetch, createRow, updateRow, removeRow } = data || ownData;
+  const dateRange = useMemo(() => dateFilter ? resolveDateRange(dateFilter.preset, dateFilter.customFrom, dateFilter.customTo) : null, [dateFilter]);
+  const rows = useMemo(() => allRows.filter(row => timestampInRange(row.fecha_zoom, dateRange)), [allRows, dateRange]);
+  const [operationError, setOperationError] = useState("");
+  const runChange = async (operation) => {
+    if (busy) return { error: "Hay un cambio en curso." };
+    setBusy(true);
+    setOperationError("");
+    try {
+      const result = await operation();
+      if (result?.error) setOperationError(result.error);
+      if (result?.refreshError) setOperationError("Cambio guardado; no se pudo actualizar la lista. Usa Recargar.");
+      return result || { error: null };
+    } catch (err) {
+      const message = err?.message || "No se pudo confirmar el cambio. Reintenta.";
+      setOperationError(message);
+      return { error: message };
+    } finally { setBusy(false); }
+  };
 
   // Quién puede aparecer en los dropdowns de Liner y Presentador: el equipo REAL
   // de la organización, no una lista escrita a mano. Antes eran constantes fijas,
@@ -109,10 +129,8 @@ const ZoomControl = ({ theme = "dark" }) => {
   const discDirtyFor = (r) => discoveryDraft !== (r.discovery || "");
   const saveDiscovery = async (r) => {
     if (busy) return;
-    setBusy(true);
-    await updateRow(r.id, { discovery: discoveryDraft });
-    setBusy(false);
-    setDiscoveryOpenId(null);
+    const result = await runChange(() => updateRow(r.id, { discovery: discoveryDraft }));
+    if (!result.error) setDiscoveryOpenId(null);
   };
   const copyDiscovery = async () => {
     try {
@@ -163,9 +181,9 @@ const ZoomControl = ({ theme = "dark" }) => {
     const needle = q.trim().toLowerCase();
     let list = rows.filter((r) => {
       // rango
-      if (range === "hoy" && r.fecha_zoom !== today) return false;
-      if (range === "semana" && !inRange(r.fecha_zoom, wk.start, wk.end)) return false;
-      if (range === "prox7" && !inRange(r.fecha_zoom, n7.start, n7.end)) return false;
+      if (!dateFilter && range === "hoy" && r.fecha_zoom !== today) return false;
+      if (!dateFilter && range === "semana" && !inRange(r.fecha_zoom, wk.start, wk.end)) return false;
+      if (!dateFilter && range === "prox7" && !inRange(r.fecha_zoom, n7.start, n7.end)) return false;
       // estatus
       if (statusFilter !== "Todos" && r.estatus !== statusFilter) return false;
       // calentitos (señal de cierre detectada en el Zoom)
@@ -187,18 +205,20 @@ const ZoomControl = ({ theme = "dark" }) => {
       return (a.hora || "").localeCompare(b.hora || "");
     });
     return list;
-  }, [rows, range, statusFilter, hotOnly, q, today]);
+  }, [rows, range, statusFilter, hotOnly, q, today, dateFilter]);
 
   // Tabla con separadores por día — la misma lectura agrupada del sheet:
   // una banda por fecha con su conteo, y debajo los Zooms de ese día.
   const tableItems = useMemo(() => {
     const items = [];
+    const counts = new Map();
+    for (const row of filtered) counts.set(row.fecha_zoom || "", (counts.get(row.fecha_zoom || "") || 0) + 1);
     let prev = "__none__";
     for (const r of filtered) {
       const f = r.fecha_zoom || "";
       if (f !== prev) {
         prev = f;
-        items.push({ type: "sep", fecha: r.fecha_zoom, count: filtered.filter(x => (x.fecha_zoom || "") === f).length });
+        items.push({ type: "sep", fecha: r.fecha_zoom, count: counts.get(f) });
       }
       items.push({ type: "row", r });
     }
@@ -298,40 +318,34 @@ const ZoomControl = ({ theme = "dark" }) => {
     });
   };
 
-  const closeModal = () => { setModalOpen(false); setForm(null); setEditingId(null); setFormErr(""); };
+  const closeModal = () => { if (busy) return; setModalOpen(false); setForm(null); setEditingId(null); setFormErr(""); };
 
   const save = async () => {
+    if (busy || !form) return;
     if (!form.cliente?.trim()) { setFormErr("El cliente es obligatorio."); return; }
-    setBusy(true);
-    const res = editingId ? await updateRow(editingId, form) : await createRow(form);
-    setBusy(false);
+    const res = await runChange(() => editingId ? updateRow(editingId, form) : createRow(form));
     if (res?.error) { setFormErr(typeof res.error === "string" ? res.error : "No se pudo guardar."); return; }
-    closeModal();
+    setModalOpen(false); setForm(null); setEditingId(null); setFormErr("");
   };
 
   const onDelete = async (row) => {
+    if (busy) return;
     if (!window.confirm(`¿Eliminar el Zoom de "${row.cliente || "—"}"? Esta acción no se puede deshacer.`)) return;
-    setBusy(true);
-    await removeRow(row.id);
-    setBusy(false);
+    await runChange(() => removeRow(row.id));
   };
 
   const onInlineStatus = async (row, estatus) => {
     if (estatus === row.estatus) return;
-    setBusy(true);
-    await updateRow(row.id, { estatus });
-    setBusy(false);
+    await runChange(() => updateRow(row.id, { estatus }));
   };
 
   // Marca/desmarca "calentito" directo desde la tabla — señal de cierre
   // detectada en el Zoom (carta oferta / identificación / cuentas de apartado).
   const onToggleHot = async (row) => {
-    setBusy(true);
-    await updateRow(row.id, { calentito: !row.calentito });
-    setBusy(false);
+    await runChange(() => updateRow(row.id, { calentito: !row.calentito }));
   };
 
-  const onRefresh = async () => { setBusy(true); await refetch(); setBusy(false); };
+  const onRefresh = () => runChange(refetch);
 
   // ── Estilos compartidos (theme-aware) ────────────────────────────────────
   const cardBorder = isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.06)";
@@ -360,7 +374,7 @@ const ZoomControl = ({ theme = "dark" }) => {
               Control de Zooms
             </h2>
             <p style={{ margin: "2px 0 0", fontSize: 12.5, color: T.txt2, fontFamily: font }}>
-              Agenda de Zooms de venta — Liner, Presentador y estatus en un solo lugar.
+              Citas de Zoom de venta · cada fila es una cita. Los hitos del pipeline se muestran debajo por cliente.
             </p>
           </div>
         </div>
@@ -385,6 +399,7 @@ const ZoomControl = ({ theme = "dark" }) => {
           </button>
           <button
             onClick={exportCsv}
+            disabled={loading || !!error}
             title="Descarga la tabla (con los filtros aplicados) como CSV — el mismo formato del sheet"
             style={{
               display: "inline-flex", alignItems: "center", gap: 7,
@@ -439,10 +454,13 @@ const ZoomControl = ({ theme = "dark" }) => {
         </G>
       )}
 
+      {operationError && <p role="alert" style={{ color: T.rose, fontFamily: font }}>{operationError}</p>}
+      {dateFilter && <p style={{ color: T.txt2, fontSize: 12, fontFamily: font }}>Agenda y resúmenes por fecha de la cita: {dateRangeLabel(dateRange)}. La búsqueda y los filtros de estatus sólo afectan la tabla y su CSV.</p>}
+
       {/* ── Toolbar de filtros ─────────────────────────────────────────────── */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         {/* Rango */}
-        <div style={{ display: "inline-flex", gap: 3, padding: 3, borderRadius: 12, background: subtleBg, border: `1px solid ${rowBorder}` }}>
+        {!dateFilter && <div style={{ display: "inline-flex", gap: 3, padding: 3, borderRadius: 12, background: subtleBg, border: `1px solid ${rowBorder}` }}>
           {RANGES.map((r) => {
             const active = range === r.id;
             return (
@@ -454,7 +472,7 @@ const ZoomControl = ({ theme = "dark" }) => {
               }}>{r.label}</button>
             );
           })}
-        </div>
+        </div>}
 
         {/* Estatus */}
         <select
@@ -642,14 +660,14 @@ const ZoomControl = ({ theme = "dark" }) => {
               {loading && (
                 <tr><td colSpan={hasExtCols ? 16 : 15} style={{ ...tdStyle(T, "center"), padding: "32px", color: T.txt3 }}>Cargando Zooms…</td></tr>
               )}
-              {!loading && filtered.length === 0 && (
+              {!loading && !error && filtered.length === 0 && (
                 <tr><td colSpan={hasExtCols ? 16 : 15} style={{ ...tdStyle(T, "center"), padding: "36px 20px", color: T.txt3 }}>
                   {rows.length === 0
                     ? "Aún no hay Zooms registrados. Crea el primero con “Nuevo Zoom”."
                     : "Ningún Zoom coincide con este filtro."}
                 </td></tr>
               )}
-              {!loading && tableItems.map((item, idx) => {
+              {!loading && !error && tableItems.map((item, idx) => {
                 if (item.type === "sep") {
                   const esHoy = item.fecha === today;
                   return (
@@ -695,7 +713,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                   </td>
                   <td style={tdStyle(T, "left")}>{r.proyecto || "—"}</td>
                   <td style={{ ...tdStyle(T, "center"), padding: "8px 10px" }} onClick={(e) => e.stopPropagation()}>
-                    <StatusSelect T={T} isLight={isLight} value={r.estatus} onChange={(s) => onInlineStatus(r, s)} />
+                    <StatusSelect disabled={busy} T={T} isLight={isLight} value={r.estatus} onChange={(s) => onInlineStatus(r, s)} />
                   </td>
                   <td style={{ ...tdStyle(T, "left"), maxWidth: 230, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 500, fontSize: 12.5, fontFamily: font }} title={r.comentarios || ""}>
                     {r.comentarios || "—"}
@@ -763,7 +781,7 @@ const ZoomControl = ({ theme = "dark" }) => {
                       <div style={{
                         padding: "12px 16px 14px",
                         background: isLight ? "rgba(16,185,129,0.05)" : "rgba(16,185,129,0.06)",
-                        borderLeft: "3px solid #10B981",
+                        borderLeft: "1px solid #10B981",
                       }}>
                         {/* Tarjeta del editor — revelado one-shot (seguro con el
                                guard HIDDEN-PAUSE-SOLO-INFINITE de mobile-perf). */}
@@ -879,7 +897,8 @@ const ZoomControl = ({ theme = "dark" }) => {
             { id: "graficas",     l: "Gráficas",     Icon: BarChart3,     badge: 0 },
             ...(hasExtCols ? [{ id: "calentitos", l: "Alta intención", Icon: Flame, badge: calientes.length, badgeColor: "#DC2626" }] : []),
             { id: "reactivacion", l: "Reactivación", Icon: RotateCcw, badge: paraReactivar.length, badgeColor: "#F59E0B" },
-          ].map(({ id, l, Icon, badge, badgeColor }) => {
+          ].map(section => {
+            const { id, l, Icon, badge, badgeColor } = section;
             const active = seccion === id;
             return (
               <button
@@ -911,23 +930,23 @@ const ZoomControl = ({ theme = "dark" }) => {
         </div>
       </div>
 
-      {seccion === "resumen" && (
+      {!loading && !error && seccion === "resumen" && (
         <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
-            <KPI T={T} label="Zooms hoy"        value={kpis.hoy}    icon={CalendarDays} color={accent}     sub="agendados para hoy" />
+            <KPI T={T} label={dateFilter ? "Zooms en el rango" : "Zooms hoy"} value={dateFilter ? rows.length : kpis.hoy}    icon={CalendarDays} color={accent}     sub={dateFilter ? "por fecha de la cita" : "agendados para hoy"} />
             <KPI T={T} label="Esta semana"      value={kpis.semana} icon={Video}        color={T.blue}     sub="lunes a domingo" />
             <KPI T={T} label="Por confirmar"    value={kpis.porConfirmar} icon={Clock3} color="#F59E0B"    sub={kpis.vencidos ? `+ ${kpis.vencidos} vencidos sin resolver` : "Agendados hoy o a futuro"} />
             <KPI T={T} label="Tasa de asistencia" value={kpis.tasa == null ? "—" : `${kpis.tasa}%`} icon={UserCheck} color="#10B981" sub={`${kpis.asistio} asistió · ${kpis.noShow} no show`} />
           </div>
-          <ResumenZooms rows={rows} T={T} isLight={isLight} onOpenZoom={openEdit} />
+          <ResumenZooms dateRange={dateRange} rows={rows} T={T} isLight={isLight} onOpenZoom={openEdit} />
         </>
       )}
 
-      {seccion === "graficas" && (
-        <GraficasZooms rows={rows} T={T} isLight={isLight} />
+      {!loading && !error && seccion === "graficas" && (
+        <GraficasZooms dateRange={dateRange} rows={rows} T={T} isLight={isLight} />
       )}
 
-      {seccion === "calentitos" && (
+      {!loading && !error && seccion === "calentitos" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div>
             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 500, fontFamily: fontDisp, color: T.txt, display: "inline-flex", alignItems: "center", gap: 8 }}>
@@ -942,7 +961,7 @@ const ZoomControl = ({ theme = "dark" }) => {
         </div>
       )}
 
-      {seccion === "reactivacion" && (
+      {!loading && !error && seccion === "reactivacion" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div>
             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 500, fontFamily: fontDisp, color: T.txt, display: "inline-flex", alignItems: "center", gap: 8 }}>
@@ -973,12 +992,14 @@ const ZoomControl = ({ theme = "dark" }) => {
 };
 
 // ── Sub-componente: select de estatus inline (pill coloreado) ────────────────
-function StatusSelect({ T, isLight, value, onChange }) {
+function StatusSelect({ isLight, value, onChange, disabled }) {
   const c = estatusColor(value);
   const textColor = isLight ? `color-mix(in srgb, ${c} 62%, #0B1220 38%)` : c;
   return (
     <select
       value={value}
+      disabled={disabled}
+      aria-label="Estatus del Zoom"
       onChange={(e) => onChange(e.target.value)}
       style={{
         appearance: "none", WebkitAppearance: "none",
@@ -990,6 +1011,7 @@ function StatusSelect({ T, isLight, value, onChange }) {
         textAlign: "center", textAlignLast: "center",
       }}
     >
+      {!ESTATUS.includes(value) && <option value={value || ""}>{value || "Sin clasificar"}</option>}
       {ESTATUS.map((s) => <option key={s} value={s} style={{ color: "#0B1220" }}>{s}</option>)}
     </select>
   );
@@ -1129,7 +1151,7 @@ function ZoomModal({ T, isLight, accent, editing, form, setField, formErr, busy,
 // (datalist nativa → dropdown sugerido pero permite escribir nombres nuevos,
 //  igual que el Excel toleraba entradas a mano.)
 function EditableSelect({ T, isLight, value, options, onChange, placeholder }) {
-  const listId = useMemo(() => `dl-${Math.random().toString(36).slice(2, 9)}`, []);
+  const listId = useId();
   return (
     <>
       <input

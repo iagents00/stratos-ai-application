@@ -20,61 +20,65 @@
  * SIEMPRE completadas/total (en-proceso y no-la-hice NO son avance).
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { ChevronRight } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { font, fontDisp } from "../../design-system/tokens";
-import { isHiddenAdvisor } from "./CRM/zoom-metrics";
+import { useAuth } from "../../hooks/useAuth";
+import { readAllRows } from "../../lib/read-all-rows.js";
+import { resolveDateRange, toTimestamp } from "./CRM/date-range.js";
+import { productivityRows } from "./CRM/productivity-metrics.js";
 
-// Deriva el estado mostrable de una acción a partir de los campos de la DB.
-// `done` manda (es la fuente de verdad del avance); `status` solo afina los no-hechos.
-const deriveState = (a) => {
-  if (a.done) return "done";
-  if (a.status === "in_progress") return "in_progress";
-  if (a.status === "not_done") return "not_done";
-  return "pending";
+const fmtDate = (iso) => {
+  const timestamp = toTimestamp(iso);
+  if (timestamp === null) return "";
+  const options = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? { day: "numeric", month: "short" } : { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" };
+  return new Date(timestamp).toLocaleString("es-MX", options);
 };
 
-const fmtDate = (iso) =>
-  iso ? new Date(iso).toLocaleString("es-MX", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
-
-export default function ProductividadTab({ T, isLight }) {
-  const [rows, setRows] = useState(null);
-  const [open, setOpen] = useState(() => new Set());   // asesores expandidos
-
+export default function ProductividadTab({ T, isLight, dateFilter = null }) {
+  const { user } = useAuth();
+  const orgId = user?.organizationId;
+  const isDemo = !!user?.isDemo;
+  const [actions, setActions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [open, setOpen] = useState(() => new Set());
+  const requestId = useRef(0);
+  const range = useMemo(() => dateFilter ? resolveDateRange(dateFilter.preset, dateFilter.customFrom, dateFilter.customTo) : null, [dateFilter]);
+  const rows = useMemo(() => productivityRows(actions, range), [actions, range]);
+  const refresh = useCallback(async () => {
+    const request = ++requestId.current;
+    if (!orgId || isDemo) {
+      setActions([]); setError(null); setLoading(false); return;
+    }
+    setLoading(true);
+    const result = await readAllRows(() => supabase.from("team_actions").select("*")
+      .eq("organization_id", orgId).order("due_at", { ascending: true }).order("id"));
+    if (request !== requestId.current) return;
+    setError(result.error?.message || null);
+    if (!result.error) setActions(result.data);
+    setLoading(false);
+  }, [orgId, isDemo]);
   useEffect(() => {
-    let cancelled = false;
-    // select('*') → traemos también `status` y `nota` SI existen (forward-compatible).
-    supabase.from("team_actions").select("*").order("due_at", { ascending: true })
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        if (error) { console.warn("[Stratos] productividad load:", error.message); setRows([]); return; }
-        const byAsesor = {};
-        (data || []).forEach(a => {
-          // Cuentas de prueba/sistema fuera — mismo criterio que el resto del Comando.
-          if (isHiddenAdvisor(a.asesor_name)) return;
-          const k = (a.asesor_name && a.asesor_name.trim()) || "Sin asignar";
-          byAsesor[k] = byAsesor[k] || { asesor: k, items: [] };
-          byAsesor[k].items.push({
-            id: a.id,
-            text: a.text || "(sin descripción)",
-            state: deriveState(a),
-            due_at: a.due_at,
-            completed_at: a.completed_at,
-            nota: a.nota || "",
-          });
-        });
-        const arr = Object.values(byAsesor).map(g => {
-          const done = g.items.filter(i => i.state === "done").length;
-          const inProg = g.items.filter(i => i.state === "in_progress").length;
-          const notDone = g.items.filter(i => i.state === "not_done").length;
-          const pend = g.items.length - done;   // todo lo no-hecho cuenta como pendiente
-          return { ...g, done, inProg, notDone, pend, total: g.items.length };
-        }).sort((x, y) => y.total - x.total);
-        setRows(arr);
-      });
-    return () => { cancelled = true; };
-  }, []);
+    // Reset the previous organization before the next external data subscription.
+    setActions([]);
+    refresh();
+    const onVisible = () => { if (!document.hidden) refresh(); };
+    document.addEventListener("visibilitychange", onVisible);
+    let channel;
+    if (orgId && !isDemo) {
+      channel = supabase.channel("command-productivity-" + Math.random().toString(36).slice(2))
+        .on("postgres_changes", { event: "*", schema: "public", table: "team_actions", filter: "organization_id=eq." + orgId }, refresh).subscribe();
+    }
+    return () => {
+      // This is a request generation token, not a DOM ref.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      ++requestId.current;
+      document.removeEventListener("visibilitychange", onVisible);
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [refresh, orgId, isDemo]);
 
   const toggle = (asesor) =>
     setOpen(prev => { const n = new Set(prev); n.has(asesor) ? n.delete(asesor) : n.add(asesor); return n; });
@@ -92,7 +96,7 @@ export default function ProductividadTab({ T, isLight }) {
 
   // Resumen textual de la fila (pendientes · completadas [· en proceso] [· sin hacer]).
   const summary = (r) => {
-    const parts = [`${r.pend} pendientes`, `${r.done} completadas`];
+    const parts = [`${r.pend - r.inProg - r.notDone} pendientes sin respuesta`, `${r.done} completadas`];
     if (r.inProg)  parts.push(`${r.inProg} en proceso`);
     if (r.notDone) parts.push(`${r.notDone} sin hacer`);
     return parts.join(" · ");
@@ -105,20 +109,22 @@ export default function ProductividadTab({ T, isLight }) {
           Indicadores · Productividad
         </h2>
         <p style={{ margin: "4px 0 0", fontSize: 12.5, color: T.txt3, fontFamily: font }}>
-          Lista de Acción por asesor · toca una fila para ver el detalle. El coach de Telegram da seguimiento a estas acciones.
+          Acciones por fecha programada (o creación si no tienen fecha). El avance es completadas / total del rango. Toca una fila para ver el detalle.
         </p>
       </div>
 
-      {rows === null && (
+      <button onClick={refresh} disabled={loading} style={{ alignSelf: "flex-start" }}>Recargar productividad</button>
+      {error && <p role="alert" style={{ color: T.txt2 }}>No se pudo cargar la productividad: {error}. Usa Recargar para reintentar.</p>}
+      {loading && (
         <p style={{ fontSize: 13, color: T.txt3, fontFamily: font }}>Cargando…</p>
       )}
-      {rows !== null && rows.length === 0 && (
+      {!loading && !error && rows.length === 0 && (
         <p style={{ fontSize: 13, color: T.txt3, fontFamily: font }}>
-          Aún no hay acciones de equipo. Agrega acciones desde la Lista de Acción (botón de la meta).
+          No hay acciones de equipo en este rango.
         </p>
       )}
 
-      {rows !== null && rows.length > 0 && (
+      {!loading && !error && rows.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {rows.map(r => {
             const pct = r.total ? Math.round((r.done / r.total) * 100) : 0;
@@ -133,6 +139,7 @@ export default function ProductividadTab({ T, isLight }) {
                 <div
                   onClick={() => toggle(r.asesor)}
                   role="button"
+                  aria-expanded={isOpen}
                   tabIndex={0}
                   onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(r.asesor); } }}
                   style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", cursor: "pointer", userSelect: "none" }}
@@ -145,7 +152,7 @@ export default function ProductividadTab({ T, isLight }) {
                     <div style={{ fontSize: 14, fontWeight: 500, fontFamily: fontDisp, color: T.txt, letterSpacing: "-0.02em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.asesor}</div>
                     <div style={{ fontSize: 12, color: T.txt3, fontFamily: font, marginTop: 2 }}>{summary(r)}</div>
                     <div style={{ height: 6, borderRadius: 6, background: rowBorder, marginTop: 8, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${pct}%`, background: T.accent, transition: "width 0.3s" }} />
+                      <div style={{ height: "100%", width: `${pct}%`, background: T.accent }} />
                     </div>
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0 }}>

@@ -18,7 +18,7 @@ import { DATE_PRESETS, dateRangeLabel, resolveDateRange } from "./date-range";
 import RangeCalendar from "./RangeCalendar";
 import { useIsMobile } from "../../../hooks/useViewport";
 
-export default function DateRangeControl({ T, isLight, value, onChange, label = "Período" }) {
+export default function DateRangeControl({ T, isLight, value, onChange, label = "Período", allowFuture = false }) {
   const isMobile = useIsMobile();
   const range = resolveDateRange(value.preset, value.customFrom, value.customTo);
   const [calOpen, setCalOpen] = useState(value.preset === "custom");
@@ -109,6 +109,7 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
               key={preset.id}
               type="button"
               onClick={() => selectPreset(preset.id)}
+              aria-pressed={active}
               style={{
                 ...chipBase,
                 border: `1px solid ${active ? "rgba(110,231,194,0.32)" : chipBorder}`,
@@ -128,6 +129,7 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
         <button
           type="button"
           onClick={openCustom}
+          aria-expanded={calOpen}
           style={{
             ...chipBase,
             border: `1px solid ${isCustom ? T.accent : chipBorder}`,
@@ -158,9 +160,10 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
             animation: "fadeIn 0.18s ease both",
           }}
         >
-          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 330 }}>
+          <div role="dialog" aria-label="Seleccionar rango de fechas" onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 330 }}>
             <RangeCalendar
               isLight={isLight}
+              allowFuture={allowFuture}
               fromStr={value.customFrom}
               toStr={value.customTo}
               onPick={(from, to) => onChange({ ...value, preset: "custom", customFrom: from, customTo: to })}

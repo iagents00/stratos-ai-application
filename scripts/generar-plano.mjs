@@ -66,8 +66,8 @@ function agrupar(re) {
     .sort((a, b) => b.archivos.length - a.archivos.length || compararTexto(a.k, b.k));
 }
 
-const tablas = agrupar(/\.from\("([a-z_]+)"/g);
-const rpcs   = agrupar(/\.rpc\("([a-z_]+)"/g);
+const tablas = agrupar(/\.from\(\s*['"]([a-z_]+)['"]/g);
+const rpcs   = agrupar(/\.rpc\(\s*['"]([a-z_]+)['"]/g);
 const envs   = agrupar(/import\.meta\.env\.(VITE_[A-Z_]+)/g);
 const hosts  = agrupar(/https:\/\/([a-zA-Z0-9.-]+\.(?:com|host|co|io|mx|app|dev))/g);
 
@@ -121,7 +121,7 @@ const FLUJOS = [
     titulo: "Cómo se inicia sesión",
     pasos: [
       { t: "El usuario escribe correo y contraseña", d: "Pantalla de login.", f: "src/landing/LoginScreen.jsx" },
-      { t: "signInWithPassword contra Supabase", d: "Sin OAuth ni magic links: por eso no hay redirects que whitelistear.", f: "src/lib/auth.js" },
+      { t: "signInWithPassword contra Supabase", d: "Login por contraseña; revisar también las URLs de recuperación y flujos habilitados en Supabase.", f: "src/lib/auth.js" },
       { t: "La sesión queda en localStorage", d: "Con la key por defecto del SDK. No sobreescribirla.", f: "src/lib/supabase.js" },
       { t: "AuthContext la hidrata al abrir", d: "Con timeout suave: si tarda, muestra login pero NO borra la sesión.", f: "src/contexts/AuthContext.jsx" },
       { t: "Se resuelve a qué cliente pertenece", d: "Por `organization_id`, y redirige si entró por el path equivocado.", f: "src/contexts/ClientOrgGuard.jsx" },
@@ -132,7 +132,7 @@ const FLUJOS = [
     pasos: [
       { t: "Lo exige Apple", d: "Guideline 5.1.1(v): una app que permite crear cuentas tiene que permitir borrarlas desde adentro.", f: null },
       { t: "El panel en el Perfil", d: "Pide escribir el correo completo. Un botón de 'confirmar' a secas se toca sin leer.", f: "src/app/views/Profile.jsx" },
-      { t: "La Edge Function decide, no el navegador", d: "A quién se borra sale del JWT de quien llama. Desplegada y activa en producción.", f: "supabase/functions/delete-my-account/index.ts" },
+      { t: "La Edge Function decide, no el navegador", d: "A quién se borra sale del JWT de quien llama. Su publicación efectiva debe verificarse en Supabase.", f: "supabase/functions/delete-my-account/index.ts" },
       { t: "Guarda contra dejar la org huérfana", d: "Si es el único admin de su organización, se rechaza: nadie podría volver a dar de alta a nadie.", f: null },
       { t: "Los leads NO se borran", d: "Son registros de la empresa, no de la persona. La interfaz lo dice explícitamente.", f: null },
     ],
@@ -201,8 +201,8 @@ Antes que nada: las direcciones. Si algo falla, es en alguno de estos lugares.
 
 | Qué | Dónde | Para qué |
 |---|---|---|
-| Código | GitHub \`iagents00/stratos-ai-application\` | Rama \`main\` = producción |
-| Web | Vercel → \`app.stratoscapitalgroup.com\` | Despliega solo al mergear a \`main\` |
+| Código | GitHub \`iagents00/stratos-ai-application\` | Verificar SHA efectivo en Vercel; main puede diferir |
+| Web | Vercel → \`app.stratoscapitalgroup.com\` | Git y promociones verificadas; consultar manifiesto de release |
 | Sitio público | \`stratoscapitalgroup.com\` | Landing de marketing |
 | Base de datos | Supabase \`glulgyhkrqpykxmujodb\` | Postgres + Auth + RLS |
 | Automatizaciones | n8n \`personal-n8n.suwsiw.easypanel.host\` | Entrada de leads, bots, recordatorios |

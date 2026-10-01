@@ -1,0 +1,20 @@
+{
+  "brand": "Stratos AI",
+  "status": "Logo definitivo seleccionado por el usuario",
+  "variants": [
+    {
+      "file": "stratos-logo-definitivo.png",
+      "use": "Principal, sin luz inferior",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "472eda64814c9a11d67e516d4b697c25d22b6783eb95e1cb14e2d8268dcf9903"
+    },
+    {
+      "file": "stratos-logo-definitivo-portada.png",
+      "use": "Variante con luz inferior para portadas",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "5e8bf36f44fd14e5f7ac95f1e3dd0d6018896a82390fc27fdc288420c926d35c"
+    }
+  ]
+}

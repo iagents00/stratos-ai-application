@@ -1,127 +1,39 @@
-# DEPLOYMENT — Stratos AI
+# Publicación de Stratos AI
 
-Dos sitios, un repositorio. Esta guía cubre el deploy completo en Vercel + Namecheap.
+## Fuente y destino oficiales
 
----
+- Repositorio: https://github.com/iagents00/stratos-ai-application
+- Rama de producción: `main`.
+- Proyecto Vercel: `stratos-ai-application`, `prj_Epv30SFnQmJGnxy3LdYLKV8NwDLi`.
+- Equipo: `iagents-projects`, `team_81sa1P6XuaBzPoKajzdGCM2Q`.
+- Identidad: `project-identity.json`. Mantener los dominios y variables existentes.
+- Carpeta principal: `/Users/ivanrodriguezruelas/stratos-ai-application`.
 
-## Arquitectura
+## Trabajo desde Codex o cualquier herramienta
 
-| URL | Qué sirve | Auth |
-|-----|-----------|------|
-| `stratoscapitalgroup.com` | Landing Page (marketing) | ❌ Ninguna |
-| `app.stratoscapitalgroup.com` | Plataforma (CRM, ERP, IA…) | ✅ LoginScreen |
+1. Ejecutar `npm run check:project` y `git fetch origin main`; revisar y preservar cambios pendientes antes de actualizar.
+2. Iniciar una rama desde main reciente. Guardar todos los cambios e impulsar un PR.
+3. GitHub exige PR y las pruebas `Validar Stratos` y `verificar`; no exige una segunda persona. Main no permite force push ni borrado, y las reglas incluyen administradores.
+4. Integrar el PR aprobado. Vercel construye automáticamente el commit de main, con sus variables de producción.
+5. `npm run build:vercel` comprueba el SHA contra main de GitHub y compara los archivos de fuente con el árbol oficial. Ejecuta controles runtime, aplicación, Rails y aislamiento antes de construir; vuelve a comprobar main al terminar. Un error mantiene la publicación anterior.
+6. Los dominios se actualizan automáticamente al terminar la construcción aprobada. Comprobar `/release.json` en `app.stratoscapitalgroup.com` y `getstratosai.com`: proyecto correcto, SHA esperado y `dirty: false`. Renovar la página para cargar el cliente reciente.
 
-El mismo build de Vite detecta el hostname en runtime y renderiza el componente correcto (`main.jsx`).
+Los cambios sin registrar o pendientes en una rama siguen siendo trabajo en curso. Para quedar live deben integrarse a main. El flujo de Git de Vercel está documentado en https://vercel.com/docs/git/vercel-for-github.
 
----
+## Alternativa manual y recuperación
 
-## 1. Preparar Vercel
+Publicar únicamente desde la carpeta principal, limpia y actualizada a main:
 
-### 1.1 Crear proyecto en Vercel
-
-1. Ve a [vercel.com](https://vercel.com) → **Add New Project**
-2. Conecta tu repositorio de GitHub/GitLab
-3. Framework: **Vite**
-4. Build command: `npm run build`
-5. Output dir: `dist`
-6. Click **Deploy**
-
-### 1.2 Variables de entorno en Vercel
-
-En el proyecto → **Settings → Environment Variables**:
-
-```
-VITE_APP_URL = https://app.stratoscapitalgroup.com
+```sh
+npm run check:project
+npm run deploy:production
+npm run release:promote -- https://URL-DEL-DEPLOYMENT.vercel.app
 ```
 
-*(Agrega las de Supabase cuando las tengas)*
+La publicación manual se prepara sin dominios y verifica identidad, SHA y resultado antes de promover. No publicar desde una carpeta vieja ni cambiar el enlace de proyecto. Para revertir cambios de código, crear un PR de reversión sobre main; no promover código viejo como si fuera la versión reciente.
 
----
+## Servicios y datos
 
-## 2. Configurar dominios en Vercel
+Las variables privadas permanecen en Vercel y Supabase. No copiarlas al repositorio. Funciones Edge y migraciones requieren publicación controlada en `stratos-prod`; nunca aplicar todo el historial SQL. Rails queda apagado hasta una solicitud explícita por organización.
 
-Vercel → tu proyecto → **Settings → Domains**
-
-Agrega ambos dominios:
-- `stratoscapitalgroup.com`
-- `app.stratoscapitalgroup.com`
-
-Vercel te dará registros DNS para configurar en Namecheap.
-
----
-
-## 3. Configurar DNS en Namecheap
-
-Ve a **Namecheap → Manage → Advanced DNS** de tu dominio.
-
-### Registros requeridos
-
-| Tipo | Host | Valor | TTL |
-|------|------|-------|-----|
-| `A` | `@` | `76.76.21.21` | Automatic |
-| `CNAME` | `www` | `cname.vercel-dns.com` | Automatic |
-| `CNAME` | `app` | `cname.vercel-dns.com` | Automatic |
-
-> **Nota:** Los IPs/CNAME exactos los muestra Vercel al agregar el dominio. Usa los que te indique Vercel, no los de arriba si difieren.
-
-### Nameservers
-
-Si Namecheap tiene nameservers personalizados, verifica que no bloqueen los registros CNAME. Lo más simple: deja los nameservers de Namecheap y agrega los registros manualmente.
-
----
-
-## 4. Verificar propagación
-
-La propagación DNS tarda entre 5 minutos y 48 horas.
-
-Para verificar:
-```bash
-dig stratoscapitalgroup.com
-dig app.stratoscapitalgroup.com
-```
-
-O usa [dnschecker.org](https://dnschecker.org).
-
----
-
-## 5. Prueba de funcionamiento
-
-| URL | Resultado esperado |
-|-----|--------------------|
-| `stratoscapitalgroup.com` | Landing Page (sin login) |
-| `app.stratoscapitalgroup.com` | Login screen de Stratos |
-| `localhost:5173` | Landing Page |
-| `localhost:5173/?app` | Login screen (dev only) |
-
----
-
-## 6. Deploy continuo
-
-Cada `git push` a `main` despliega automáticamente en Vercel.
-
-Para un deploy manual:
-```bash
-npm run build
-# Vercel detecta el push y despliega
-```
-
----
-
-## Credenciales de demo (desarrollo)
-
-```
-Email:    demo@stratos.ai
-Password: Demo2024
-```
-
-Se crean automáticamente en `localStorage` al primer login.
-
----
-
-## Próximo paso: Supabase
-
-Cuando migres de `localStorage` a Supabase real:
-1. Crea proyecto en [supabase.com](https://supabase.com)
-2. Copia `URL` y `anon key` al `.env.local`
-3. Agrega las mismas variables en Vercel → Environment Variables
-4. Sigue el plan en `.claude/plans/glittery-doodling-avalanche.md`
+El monitor horario `Vigilar versión de producción` verifica que el dominio coincide con la última publicación Production exitosa. La recuperación y sus respaldos están documentados en `docs/recovery/2026-09-30-production-recovery.md`.

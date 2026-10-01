@@ -3,7 +3,7 @@ import {
   Users, UserCheck, Search, Filter, Plus, X, CheckCircle2,
   AlertCircle, TrendingUp, Target, Zap, Star, BarChart3,
   Clock, Calendar, Building2, Briefcase, FileText, Activity,
-  ChevronDown, ChevronRight, SlidersHorizontal, Mail, Phone,
+  ChevronDown, ChevronUp, ChevronRight, SlidersHorizontal, Mail, Phone,
   Shield, Atom, RefreshCw, ListChecks,
   BadgeCheck, Banknote, ClipboardList, Workflow, ExternalLink,
 } from "lucide-react";
@@ -11,6 +11,7 @@ import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tool
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { useIsMobile } from "../../hooks/useViewport";
 import { G, KPI, Pill, Ico } from "../SharedComponents";
+import Team from "./Team";
 
 const AIAtom = ({ size = 20, color = P.violet, spin = false }) => (
   <svg width={size} height={size} viewBox="0 0 36 36" fill="none" style={spin ? { animation: "atomSpin 3s linear infinite" } : {}}>
@@ -35,10 +36,10 @@ const AIAtom = ({ size = 20, color = P.violet, spin = false }) => (
    IA para Selección, Evaluación y Gestión de Talento 2026
    Inspirado en: Workday, Greenhouse, HireVue, Paradox AI
    ════════════════════════════════════════════════════════ */
-const RRHHModule = ({ T: _T }) => {
+const RRHHModule = ({ T: _T, initialTab = "panel" }) => {
   const isMobile = useIsMobile();
   const T = _T || P;
-  const [tab, setTab] = useState("panel");
+  const [tab, setTab] = useState(initialTab);
   const [pipelineFilter, setPipelineFilter] = useState("todos");
   const [pipelineSearch, setPipelineSearch] = useState("");
   const [aiScanning, setAiScanning] = useState(false);
@@ -128,6 +129,7 @@ const RRHHModule = ({ T: _T }) => {
 
   const tabs = [
     { id: "panel", label: "Panel", icon: BarChart3, hint: "Resumen ejecutivo" },
+    { id: "rendimiento", label: "Rendimiento", icon: Activity, hint: "Todo el personal" },
     { id: "pipeline", label: "Pipeline IA", icon: Workflow, hint: `${candidates.length} candidatos` },
     { id: "vacantes", label: "Vacantes", icon: Briefcase, hint: `${vacantes.filter(v=>v.status==="Activa").length} activas` },
     { id: "empleados", label: "Directorio", icon: Users, hint: `${empleados.length} empleados` },
@@ -396,6 +398,11 @@ const RRHHModule = ({ T: _T }) => {
             </G>
           </div>
         </div>
+      )}
+
+      {/* ═══ RENDIMIENTO DEL PERSONAL ═══ */}
+      {tab === "rendimiento" && (
+        <Team T={T} />
       )}
 
       {/* ═══ PIPELINE IA ═══ */}

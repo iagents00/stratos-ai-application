@@ -5,7 +5,7 @@
  * Zooms, derivado del pipeline + historial (ver ./zoom-metrics.js), no de la
  * tabla `zoom_agendados` (vacía en prod). Tres bloques:
  *   1) KPIs: Zooms realizados / agendados / conversión / activos post-Zoom.
- *   2) Tabla por presentador (quién dio los Zooms).
+ *   2) Tabla por presentador (quién registró el hito).
  *   3) Lista cliente-por-cliente con Zoom realizado (click abre el expediente).
  *
  * "Zoom realizado" = el lead entró ALGUNA VEZ a Zoom Concretado o a una etapa
@@ -17,21 +17,22 @@ import { useMemo, useState } from "react";
 import { CalendarDays, CheckCircle2, MapPin, Handshake, History, ChevronDown } from "lucide-react";
 import { P, LP, font, fontDisp, STAGE_COLORS, normalizeStage } from "../../../design-system/tokens";
 import { zoomEventsOf, funnelEntryOf, milestoneOf, ACTIVE_POST_ZOOM_STAGES, RECORRIDO_STAGES, CIERRE_STAGES, zoomMovements, advisorDisplayGroup } from "./zoom-metrics";
-import DateRangeControl from "./DateRangeControl";
-import { createDefaultDateFilter, resolveDateRange, timestampInRange } from "./date-range";
 import { useIsMobile } from "../../../hooks/useViewport";
+import DateRangeControl from "./DateRangeControl";
+import { createDefaultDateFilter, resolveDateRange, timestampInRange, toTimestamp } from "./date-range";
 
 const fmtFecha = (iso) => {
   if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
+  const timestamp = toTimestamp(iso);
+  if (timestamp === null) return "—";
+  const d = new Date(timestamp);
   return d.toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "2-digit" });
 };
 
 export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead = null, dateFilter: sharedDateFilter = null }) {
-  const isLight = theme === "light";
-  const T = isLight ? LP : P;
   const isMobile = useIsMobile();
+  const isLight = theme === "light";
+  const T = isLight ? LP : { ...P, txt3: P.txt2 };
   const [localDateFilter, setLocalDateFilter] = useState(createDefaultDateFilter);
   const [presentadorFilter, setPresentadorFilter] = useState("__all__");
   const [histOpen, setHistOpen] = useState(false);
@@ -47,18 +48,18 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
   // etapa actual (registro faltante). Respeta el período y el filtro de presentador.
   const historial = useMemo(() => {
     let rows = zoomMovements(leadsData)
-      .filter(m => !m.inferred && timestampInRange(m.at, dateRange))
+      .filter(m => timestampInRange(m.at, dateRange))
       .filter(m => histKind === "all" || m.kind === histKind)
-      .filter(m => presentadorFilter === "__all__" || (m.by || m.lead.asesor) === presentadorFilter);
-    rows.sort((a, b) => (b.at ? new Date(b.at).getTime() : 0) - (a.at ? new Date(a.at).getTime() : 0));
+      .filter(m => presentadorFilter === "__all__" || advisorDisplayGroup(m.by || m.lead.asesor) === presentadorFilter);
+    rows.sort((a, b) => (toTimestamp(b.at) || 0) - (toTimestamp(a.at) || 0));
     return rows;
   }, [dateRange, leadsData, histKind, presentadorFilter]);
 
-  // Totales del embudo + productividad por presentador (quién dio el Zoom).
+  // Totales del embudo + productividad por presentador (quién registró el hito).
   // AGENDADOS = entró al funnel (agendado o ya realizado) → siempre ≥ realizados.
   // REALIZADOS = hizo el Zoom. Ambos con split registrado/inferido.
   const { byPresenter, totals } = useMemo(() => {
-    const map = {}; // person -> realizados (presentó)
+    const map = Object.create(null); // person -> primer hito registrado
     let tAg = 0, tAgInf = 0, tDone = 0, tDoneInferred = 0;
     for (const l of leadsData) {
       const entry = funnelEntryOf(l);
@@ -113,8 +114,8 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
   // Recorrido → Cierre. Cada uno es un hito histórico (pasó por ahí alguna vez).
   const KPIS = [
     { key: "scheduled", label: "Zooms agendados",  value: totals.scheduled, icon: CalendarDays, color: "#2563EB", sub: totals.scheduledInferred ? `${totals.scheduledRegistered} registrados · ${totals.scheduledInferred} inferidos` : "entraron al funnel de Zoom" },
-    { key: "done",      label: "Zooms realizados", value: totals.done,      icon: CheckCircle2, color: "#10B981", sub: totals.doneInferred ? `${totals.doneRegistered} registrados · ${totals.doneInferred} inferidos` : "se dieron (histórico)" },
-    { key: "rec",       label: "Recorridos",       value: recorridos,       icon: MapPin,       color: "#06B6D4", sub: "clientes que llegaron a visita" },
+    { key: "done",      label: "Zooms realizados", value: totals.done,      icon: CheckCircle2, color: "#10B981", sub: totals.doneInferred ? `${totals.doneRegistered} registrados · ${totals.doneInferred} inferidos` : "hitos de realización en el pipeline" },
+    { key: "rec",       label: "Visitas agendadas",       value: recorridos,       icon: MapPin,       color: "#06B6D4", sub: "hito de agenda de visita" },
     { key: "close",     label: "Apartó / Cierre",  value: cierres,          icon: Handshake,    color: accent,    sub: "milestones de cierre" },
   ];
 
@@ -127,7 +128,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
             Filtro 2 · Control de Zooms
           </h2>
           <p style={{ margin: "4px 0 0", fontSize: 12.5, color: T.txt3, fontFamily: font }}>
-            Segundo filtro comercial · el embudo desde el Zoom: agendado → realizado → recorrido → cierre, con el estado y el siguiente paso de cada cliente.
+            Hitos del pipeline: un lead por fase, por fecha del primer movimiento. La agenda operativa cuenta citas; puede incluir varias por cliente. El autor del movimiento no siempre es el presentador.
           </p>
         </div>
       </div>
@@ -174,7 +175,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
           }}>
             <CheckCircle2 size={12} color="#10B981" strokeWidth={2.5} />
             {totals.doneRegistered} confirmados + {totals.doneInferred} recuperados por su etapa
-            <span style={{ color: T.txt3 }}>· el sistema no pierde ningún Zoom aunque no se marque el paso</span>
+            <span style={{ color: T.txt3 }}>· inferidos por etapa; no prueban asistencia</span>
           </span>
         )}
       </div>
@@ -184,8 +185,8 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
         <h3 style={{ margin: "0 0 2px", fontSize: 16, fontWeight: 400, fontFamily: fontDisp, color: T.txt }}>
           Zooms realizados por asesor
         </h3>
-        <p style={{ margin: "0 0 10px", fontSize: 12, color: T.txt3, fontFamily: font }}>
-          Quién corrió el Zoom (presentador) — acreditado a quien lo dio, no al dueño actual del lead.
+        <p style={{ margin: "0 0 10px", fontSize: 11.5, color: T.txt3, fontFamily: font }}>
+          Autor del primer hito de realización o etapa posterior. Para asistencia y presentador confirmado, consulta la agenda operativa.
         </p>
         <div style={{ borderRadius: 14, background: isLight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.02)", border: `1px solid ${rowBorder}`, overflow: "hidden", overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -222,6 +223,7 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
       <div>
         <button
           onClick={() => setHistOpen(o => !o)}
+          aria-expanded={histOpen}
           style={{
             display: "flex", alignItems: "center", gap: 8, width: "100%",
             padding: "12px 14px", borderRadius: 12, cursor: "pointer",
@@ -231,12 +233,19 @@ export default function ZoomBoard({ leadsData = [], theme = "dark", onOpenLead =
         >
           <History size={15} color={accent} strokeWidth={2.2} />
           <span>Historial de movimientos de Zoom</span>
-          <span style={{ fontSize: 12.5, fontWeight: 500, color: T.txt3 }}>· {historial.length} movimientos</span>
+          <span style={{ fontSize: 12, fontWeight: 500, color: T.txt3 }}>· {historial.length} {historial.length === 1 ? "movimiento" : "movimientos"}</span>
           <ChevronDown size={16} color={T.txt3} style={{ marginLeft: "auto", transform: histOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
         </button>
 
         {histOpen && (
           <div style={{ marginTop: 10 }}>
+            <label style={{ display: "block", marginBottom: 10, color: T.txt2, fontFamily: font, fontSize: 12 }}>
+              Autor del hito{" "}
+              <select aria-label="Autor del hito" value={presentadorFilter} onChange={event => setPresentadorFilter(event.target.value)}>
+                <option value="__all__">Todos</option>
+                {[...new Set(zoomMovements(leadsData).map(m => advisorDisplayGroup(m.by)))].sort((a,b) => a.localeCompare(b, "es")).map(name => <option key={name} value={name}>{name}</option>)}
+              </select>
+            </label>
             <div role="tablist" aria-label="Tipo" style={{ display: "inline-flex", gap: 4, padding: 3, borderRadius: 10, background: headerBg, border: `1px solid ${rowBorder}`, marginBottom: 10 }}>
               {[{ id: "all", l: "Todos" }, { id: "scheduled", l: "Agendados" }, { id: "done", l: "Realizados" }].map(t => {
                 const active = histKind === t.id;

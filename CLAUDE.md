@@ -1,159 +1,21 @@
-# Stratos AI — Guía para Desarrolladores
+# Stratos AI — Guía de mantenimiento
 
-Este archivo es leído automáticamente por Claude Code al abrir el proyecto.
-Es el punto de entrada oficial para cualquier dev que trabaje aquí.
+Antes de modificar el sistema, lee [docs/operacion/README.md](docs/operacion/README.md). Es el punto de entrada para arquitectura, incidentes, responsables y recuperación.
 
----
+## Estado actual verificado en código
 
-## Stack Tecnológico
+React 19 + Vite 8; Supabase Auth/Postgres/Storage y Edge Functions; Vercel para web/API; n8n para automatizaciones; Capacitor para móvil. Las versiones exactas están en package-lock.json. La autenticación y la base **ya están implementadas**. El demo local es una simulación y no representa una sesión productiva.
 
-| Capa | Tecnología |
-|------|-----------|
-| Frontend | React 18 + Vite |
-| Estilos | CSS-in-JS (inline styles) — NO Tailwind |
-| Iconos | Lucide React |
-| Gráficas | Recharts |
-| Auth actual | localStorage (demo/prototipo) |
-| Auth producción | Supabase (plan listo, pendiente de implementar) |
-| Base de datos | Supabase PostgreSQL (pendiente) |
+- `src/main.jsx`: entrada y selección de cliente.
+- `src/contexts/AuthContext.jsx`: sesión real y recuperación de estado.
+- `src/contexts/ClientOrgGuard.jsx`: correspondencia de organización.
+- `src/app/App.jsx`: shell y carga de datos; vistas en src/app/views y features en src/app/features.
+- `src/app/constants/navigation.js`: acceso visual por módulos/roles; RLS y RPC son la autorización efectiva.
+- MAPA.md y PLANO.md: índices generados del código, no inventario certificado de lo desplegado remotamente.
 
----
+Usar Node 24 y `npm ci`. Ejecutar `npm run dev`, `npm test`, `npm run check:runtime`, `npm run ops:check`, `npm run planos` y `npm run build`. Consultar [entrega](docs/operacion/ENTREGA.md) antes de publicar. La producción efectiva se identifica en Vercel y /release.json, no por asumir que coincide con main.
 
-## Estructura de Archivos
-
-```
-src/
-├── main.jsx                     ← Entry point: AuthProvider + routing por hostname
-├── index.css                    ← Reset global
-│
-├── design-system/               ← FUENTE ÚNICA DE VERDAD para diseño
-│   ├── tokens.js                ← Colores (P, PL), tipografías, spacing, STAGES
-│   └── primitives.jsx           ← Componentes atómicos: GlassCard, Pill, IconBox, KPICard
-│
-├── contexts/
-│   └── AuthContext.jsx          ← Estado global de auth (user, login, logout, etc.)
-│
-├── hooks/
-│   └── useAuth.js               ← Hook: const { user, login, logout } = useAuth()
-│
-├── lib/
-│   ├── supabase.js              ← Cliente Supabase (listo para activar)
-│   └── auth.js                  ← Capa auth: signIn/signUp/signOut (localStorage→Supabase)
-│
-├── data/
-│   ├── leads.js                 ← Datos mock CRM
-│   └── constants.js             ← Re-exporta desde design-system/tokens
-│
-├── assets/
-│   └── hero.png
-│
-├── landing/                     ← Sitio público (stratoscapitalgroup.com)
-│   ├── LandingMarketing.jsx     ← Página principal de marketing
-│   ├── PricingScreen.jsx        ← Planes y precios
-│   └── LoginScreen.jsx          ← Login / Registro / Forgot password
-│
-└── app/                         ← Plataforma autenticada (app.stratoscapitalgroup.com)
-    ├── App.jsx                  ← Shell: sidebar + nav + todas las vistas
-    └── App.css                  ← Animaciones y estilos de la plataforma
-
-CLAUDE.md                 ← Este archivo (léelo primero)
-DESIGN_SYSTEM.md          ← Referencia visual completa
-DEVELOPMENT.md            ← Patrones de código y convenciones
-QUICK_REFERENCE.md        ← Componentes copy-paste
-CHANGELOG.md              ← Historial de versiones
-```
-
----
-
-## Cómo Correr el Proyecto
-
-```bash
-# 1. Instalar dependencias
-npm install
-
-# 2. Correr en desarrollo
-npm run dev
-# → http://localhost:5173
-
-# 3. Build de producción
-npm run build
-
-# 4. Preview del build
-npm run preview
-```
-
----
-
-## Flujo de Autenticación (Estado Actual)
-
-El auth vive en `AuthContext` como estado React global:
-
-```
-main.jsx
-  └── <AuthProvider>          ← Provee user, login, logout a TODA la app
-       ├── isApp = true  → <App />              (plataforma)
-       └── isApp = false → <LandingMarketing />  (marketing)
-
-App.jsx (app/App.jsx)
-  └── const { user, login, logout } = useAuth()
-       ├── !user → <LoginScreen onLogin={login} />
-       └── user  → render de la plataforma completa
-```
-
-### Cómo funciona el login/registro ahora
-
-**Capa de datos:** `src/lib/auth.js`
-- `signIn(email, password)` → verifica en localStorage
-- `signUp(name, email, password)` → crea usuario en localStorage
-- `signOut()` → borra sesión
-- Todas retornan `{ data, error }` — igual que Supabase Auth
-
-**Almacenamiento:**
-- `localStorage["stratos_users"]` → array de todos los usuarios registrados
-- `localStorage["stratos_user"]`  → usuario activo de la sesión
-
-**Para consumir auth en cualquier componente:**
-```js
-import { useAuth } from "../hooks/useAuth";
-const { user, login, logout, loading, error } = useAuth();
-```
-
-### Cuenta demo pre-sembrada
-
-```
-Email:      demo@stratos.ai
-Password:   demo2027
-```
-
-Se crea automáticamente en `AuthContext` al iniciar la app si no existe.
-
----
-
-## Cómo Migrar a Supabase (PENDIENTE — siguiente sprint)
-
-El plan completo está en `.claude/plans/glittery-doodling-avalanche.md`.
-
-### Pasos resumidos:
-
-1. **Crear proyecto en Supabase** (manual en supabase.com)
-2. **Instalar SDK**: `npm install @supabase/supabase-js`
-3. **Crear `src/lib/supabase.js`**:
-```js
-import { createClient } from '@supabase/supabase-js'
-export const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-)
-```
-4. **Crear `.env.local`** (NO subir a Git):
-```
-VITE_SUPABASE_URL=https://xxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJxxx...
-```
-5. **Reemplazar el auth de localStorage** en `main.jsx` y `LandingMarketing.jsx`
-   con llamadas a `supabase.auth.signIn()` / `signUp()` / `resetPasswordForEmail()`
-
-Con Supabase, el envío de emails (verificación y recuperación) funciona automáticamente.
+Las secciones siguientes contienen decisiones históricas y guardas. Mantener el comportamiento salvo evidencia y pruebas; las afirmaciones de configuraciones remotas necesitan comprobación actual.
 
 ---
 
@@ -217,7 +79,7 @@ En su lugar:
   dónde mirar cuando algo se rompe en producción.
 
 Los dos se generan leyendo el código y el CI los regenera en cada push a `main`,
-así que **no pueden mentir**. No los edites a mano.
+y CI comprueba su vigencia. Esto detecta rutas y referencias, no certifica afirmaciones narrativas ni despliegues remotos. No los edites a mano.
 
 - **`npm run buscar "texto"`** — para cuando alguien dice "cambiá el botón que
   dice Generar PDF". Devuelve archivo y línea al instante.
@@ -229,28 +91,11 @@ npm run buscar "generar pdf"    # ¿dónde está este texto?
 
 ---
 
-## Cómo Agregar una Vista Nueva
+## Agregar una vista y sus permisos
 
-1. Crear función `const MiVista = ({ oc }) => { ... }` en `App.jsx`
-2. Agregar al array `nav` en `App.jsx`:
-```js
-{ id: "mv", l: "Mi Vista", i: IconName }
-```
-3. Agregar render en el switch de vistas:
-```jsx
-{v === "mv" && <MiVista oc={oc} />}
-```
+Crear el componente en src/app/views o src/app/features, integrarlo mediante carga diferida en App.jsx y registrar su acceso en navigation.js y configuración del cliente. Verificar también RLS/RPC: ocultar el menú no basta. Actualizar catálogo operativo si añade una dependencia externa y regenerar los planos.
 
----
-
-## Roles de Usuario (Para cuando se integre Supabase)
-
-```
-super_admin  → Ve y controla todo
-ceo          → Dashboard, CRM, ERP, Finanzas, Team
-director     → Su equipo, su CRM, su pipeline
-asesor       → Solo sus leads y sus registros
-```
+Roles de configuración Rieles: admin y super_admin de la misma organización. Los demás roles trabajan su alcance de clientes, sin configurar el proceso.
 
 ---
 
@@ -297,7 +142,7 @@ VITE_SUPABASE_ANON_KEY=    # Anon key de Supabase
 - `DESIGN_SYSTEM.md` — es la referencia de diseño del cliente
 - La paleta de colores `P` — cualquier cambio afecta toda la app
 - El sistema de auth en `main.jsx` — es el punto central
-- Los datos mock en `App.jsx` — serán reemplazados por Supabase queries
+- Los datos de demostración: nunca confundirlos con datos de producción
 
 ---
 
@@ -326,21 +171,9 @@ Esta config se logró después de **MUCHAS** iteraciones para resolver:
 | `public/sw.js` | `CACHE_VERSION` | bump cada vez que cambies auth/schema | Sin bump, navegadores con SW viejo siguen sirviendo bundle pre-fix |
 | `src/lib/auth.js` | `signOut({ scope: 'local' })` | **NO volver al default `global`** | El default de Supabase revoca las sesiones de TODOS los dispositivos del usuario: salir en la PC botaba también al teléfono (y sus notificaciones). 2026-07-29 |
 
-### Duración de sesiones (2026-07-29) — la llave está en el DASHBOARD, no en el código
+### Sesiones: diagnóstico antes de configuración
 
-El síntoma «se cierra la sesión a cada rato» NO es del frontend (la caché local dura 30 días y el
-contexto ya reintenta 2 veces antes de botar): es la **rotación del refresh token + la detección de
-reutilización** de Supabase. Una PWA/teléfono que se suspende a mitad de una renovación reintenta con
-el token viejo → Supabase lo trata como robo → revoca la familia entera → login forzado. Para que las
-sesiones duren MESES (hasta cambio de contraseña o logout explícito), en el **Dashboard de Supabase**
-(`glulgyhkrqpykxmujodb` → Authentication → Sessions):
-1. **Refresh token reuse interval**: subirlo a `86400` (o desactivar «Detect compromised refresh
-   tokens» si la opción existe en el plan) — es lo que mata sesiones legítimas de PWA/multi-pestaña.
-2. **Access token (JWT) expiry**: subir de 3600 a `43200` (12 h) — menos renovaciones = menos
-   oportunidades de choque.
-3. NO activar «Time-box user sessions» ni «Inactivity timeout» (hoy están apagados — verificado:
-   `auth.sessions.not_after` es null en todas).
-Cambiar la contraseña sigue revocando todas las sesiones (comportamiento pedido por Ángel).
+Comprobar en el proyecto correcto la configuración actual y sus logs antes de atribuir cierres a la rotación de tokens. No desactivar detección de reutilización ni ampliar plazos de seguridad automáticamente para ocultar errores. Los incidentes históricos no acreditan el estado actual del dashboard. Conservar y probar las guardas locales al investigar.
 
 ### Cómo se logró cada parte (debugging history)
 
