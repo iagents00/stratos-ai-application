@@ -20,7 +20,7 @@ Se completaron en stratos-prod los límites de empresas nuevas (247), permisos r
 
 ## Prevención y publicación
 
-Vercel mantiene su proyecto original y ahora ejecuta npm run build con control de identidad. autoAssignCustomDomains=false evita reemplazar los dominios al terminar cualquier build. El flujo publica primero sin asignar dominios y promueve únicamente el deployment revisado.
+Vercel mantiene su proyecto original y ahora ejecuta npm run build con control de identidad. La publicación inicial se prepara sin asignar dominios. Después de recuperarla se habilita la actualización automática desde main con build:vercel: fuente exacta comparada con GitHub, pruebas previas y comprobación de main al finalizar. Las alternativas manuales siguen preparando y promoviendo una entrega identificada.
 
 release:check exige la carpeta principal, Git limpio, repositorio correcto, HEAD igual a origin/main reciente y Validar Stratos aprobado. release:promote verifica proyecto, SHA, READY, gitDirty y release.json antes de cambiar dominios. release.json identifica proyecto, commit y versión de service worker. Se conserva el monitor horario que detectó correctamente el frontend antiguo.
 
@@ -33,3 +33,7 @@ Los PR 711 (secuencia de webinar del 2 de septiembre) y 616 (expresamente marcad
 ## Verificación
 
 64 pruebas de aplicación, 34 pruebas de Rails y 12 controles PostgreSQL; revisión de módulos para 14 empresas y dos roles; control de rutas por tenant; compilaciones web y app; guardas iOS, identidad, migraciones, referencias, RPC y catálogo operativo. La comprobación runtime no detecta referencias indefinidas ni hooks condicionales; subsisten avisos de estilo del código previo. Las publicaciones a las tiendas y las pruebas de cada proveedor de llamadas, mensajes y campañas tienen ciclos propios; no se consideran demostradas por una compilación.
+
+## Organización permanente
+
+A petición del usuario, se conserva PR obligatorio y CI para main, sin exigir una segunda cuenta aprobadora. Se documenta el flujo en AGENTS.md y DEPLOYMENT.md. La publicación automática de Vercel verifica que cada archivo de entrada coincide con main, evitando que un CLI con cambios locales reintroduzca una versión vieja. Las funciones de IA de notas y sugerencias ya responden HTTP 200 con datos ficticios; Gemini 3.5 Flash-Lite resuelve la saturación del modelo principal. La versión web pasa a v435 para renovar cachés.
