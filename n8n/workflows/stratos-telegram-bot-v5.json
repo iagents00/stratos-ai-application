@@ -1,0 +1,538 @@
+{
+  "name": "Stratos Telegram Bot v5 — Postgres-first",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## STRATOS BOT v5\n**Postgres-first** · **Minimal n8n**\n\nToda la lógica de presentación, confirmación y dispatch vive en Supabase.\nn8n solo transporta:\n1. recibe `message` o `callback_query`\n2. (voz → Whisper, foto → respuesta)\n3. llama UNA RPC:\n   - `bot_handle_callback` para callbacks\n   - `bot_nlu_dispatch` para mensajes (via AI Agent)\n4. devuelve `reply.text` + `reply.inline_keyboard`\n\n**Para mantener:** los cambios de texto/botones se hacen editando las funciones\n`_bot_fmt_*`, `_bot_kb_*` y `bot_nlu_dispatch` en SQL. No hay que reimportar el workflow.",
+        "height": 280,
+        "width": 480,
+        "color": 7
+      },
+      "id": "sticky-overview",
+      "name": "Sticky: Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-120, -260]
+    },
+    {
+      "parameters": {
+        "content": "### TRIGGER\nRecibe AMBOS tipos de update:\n- `message` (texto / voz / foto)\n- `callback_query` (tap en botón inline)\n\nEl Switch siguiente los separa.",
+        "height": 220,
+        "width": 320,
+        "color": 4
+      },
+      "id": "sticky-trigger",
+      "name": "Sticky: Trigger",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [400, -260]
+    },
+    {
+      "parameters": {
+        "content": "### ROUTING\nRamas:\n- **CALLBACK** → directo a `bot_handle_callback` (sin IA, sin memoria)\n- **VOICE** → Whisper → texto → AI\n- **PHOTO** → respuesta cortés\n- **TEXT** → AI Agent",
+        "height": 200,
+        "width": 360,
+        "color": 5
+      },
+      "id": "sticky-routing",
+      "name": "Sticky: Routing",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [800, -260]
+    },
+    {
+      "parameters": {
+        "content": "### AI AGENT\n- Modelo: Claude Sonnet 4.5\n- Memoria: Postgres `n8n_chat_histories`\n- UNA sola tool: `bot_nlu_dispatch`\n  → el modelo solo decide `tool_name` + `args`\n  → la BD se encarga de TODO lo demás\n\nSystem prompt: ver `system-prompt-asesor-v3.md`",
+        "height": 220,
+        "width": 360,
+        "color": 3
+      },
+      "id": "sticky-ai",
+      "name": "Sticky: AI Agent",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1600, -260]
+    },
+    {
+      "parameters": {
+        "content": "### OUTPUT\nLas dos ramas (IA y callback) producen el mismo sobre:\n```\n{ reply: { text, inline_keyboard } }\n```\n\nUn Merge las une → un Switch decide si lleva botones → Telegram sendMessage.",
+        "height": 200,
+        "width": 360,
+        "color": 6
+      },
+      "id": "sticky-output",
+      "name": "Sticky: Output",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [2400, -260]
+    },
+    {
+      "parameters": {
+        "updates": ["message", "callback_query"],
+        "additionalFields": {
+          "download": false
+        }
+      },
+      "id": "telegram-trigger",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [480, 0],
+      "webhookId": "telegram-bot-v5-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "env-url",
+              "name": "SUPABASE_URL",
+              "value": "={{ $env.SUPABASE_URL }}",
+              "type": "string"
+            },
+            {
+              "id": "env-key",
+              "name": "SUPABASE_SERVICE_ROLE_KEY",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "global-config",
+      "name": "Global Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [480, 200],
+      "notes": "Lee SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY del entorno de n8n. NUNCA hardcodear aquí."
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "is-callback",
+                    "leftValue": "={{ $json.callback_query }}",
+                    "rightValue": "",
+                    "operator": { "type": "object", "operation": "exists", "singleValue": true }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "callback_query"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "is-voice",
+                    "leftValue": "={{ $json.message.voice }}",
+                    "rightValue": "",
+                    "operator": { "type": "object", "operation": "exists", "singleValue": true }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "voice"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "is-photo",
+                    "leftValue": "={{ $json.message.photo }}",
+                    "rightValue": "",
+                    "operator": { "type": "object", "operation": "exists", "singleValue": true }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "photo"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "is-text",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "switch-update-type",
+      "name": "Switch UPDATE_TYPE",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [880, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Global Config').item.json.SUPABASE_URL }}/rest/v1/rpc/bot_handle_callback",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Global Config').item.json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Global Config').item.json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_telegram_chat_id\": {{ $('Telegram Trigger').item.json.callback_query.from.id }},\n  \"p_callback_data\": \"{{ $('Telegram Trigger').item.json.callback_query.data }}\"\n}",
+        "options": {}
+      },
+      "id": "rpc-handle-callback",
+      "name": "RPC bot_handle_callback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1280, -200],
+      "notes": "Despacha la acción del botón. La BD valida HMAC y ejecuta el RPC correspondiente. Devuelve { ok, reply }."
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "callbackQueryId": "={{ $('Telegram Trigger').item.json.callback_query.id }}",
+        "text": "",
+        "additionalFields": {}
+      },
+      "id": "tg-answer-callback",
+      "name": "TG Answer Callback",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1680, -200],
+      "notes": "Apaga el spinner del botón en Telegram. Debe llamarse en <3s."
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}"
+      },
+      "id": "tg-get-voice",
+      "name": "TG Get Voice",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1280, 0]
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": { "language": "es" }
+      },
+      "id": "whisper",
+      "name": "Whisper Transcribe",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.6,
+      "position": [1480, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "chat-id", "name": "chat_id", "value": "={{ $('Telegram Trigger').item.json.message.from.id }}", "type": "number" },
+            { "id": "input-text", "name": "input_text", "value": "={{ $json.text }}", "type": "string" },
+            { "id": "orig-type", "name": "original_type", "value": "voice", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-input-voice",
+      "name": "Set Input (voice)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1680, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "chat-id", "name": "chat_id", "value": "={{ $('Telegram Trigger').item.json.message.from.id }}", "type": "number" },
+            { "id": "input-text", "name": "input_text", "value": "={{ $('Telegram Trigger').item.json.message.text }}", "type": "string" },
+            { "id": "orig-type", "name": "original_type", "value": "text", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-input-text",
+      "name": "Set Input (text)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1280, 400]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "Las imágenes llegarán pronto. Por ahora cuéntame en texto o audio qué necesitas.",
+        "additionalFields": { "appendAttribution": false }
+      },
+      "id": "tg-photo-reject",
+      "name": "TG Photo Reject",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1280, 200]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.input_text }}",
+        "options": {
+          "systemMessage": "PEGAR_AQUI_EL_CONTENIDO_DE_system-prompt-asesor-v3.md"
+        }
+      },
+      "id": "ai-agent",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [1880, 200],
+      "notes": "Modelo: Claude Sonnet 4.5. Memoria: Postgres. UNA tool: bot_nlu_dispatch.\nReemplaza el systemMessage con el contenido de system-prompt-asesor-v3.md"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-sonnet-4-5-20250929",
+          "mode": "list"
+        },
+        "options": {
+          "maxTokensToSample": 1024,
+          "temperature": 0.2
+        }
+      },
+      "id": "anthropic-model",
+      "name": "Anthropic Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.2,
+      "position": [1740, 420]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=tg:{{ $('Telegram Trigger').item.json.message.from.id }}",
+        "tableName": "n8n_chat_histories",
+        "contextWindowLength": 12
+      },
+      "id": "postgres-memory",
+      "name": "Postgres Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.2,
+      "position": [1900, 420]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Global Config').item.json.SUPABASE_URL }}/rest/v1/rpc/bot_nlu_dispatch",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Global Config').item.json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Global Config').item.json.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_telegram_chat_id\": {{ $('Telegram Trigger').item.json.message.from.id }},\n  \"p_tool_name\": \"{tool_name}\",\n  \"p_args\": {args}\n}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "tool_name",
+              "description": "Nombre de la operación. Válidos: menu, list_pending, dashboard, view_lead, quick_search, pipeline_summary, list_expediente, lead_history, list_tasks, upsert_lead, update_fields, add_seguimiento, add_comunicacion, add_expediente_note, add_expediente_voice, add_task, set_ai_agent, pin_lead, create_deal, soft_delete, complete_task, image",
+              "type": "string"
+            },
+            {
+              "name": "args",
+              "description": "JSON con los args específicos de cada tool. Ej: {\\\"phone\\\":\\\"5551234\\\",\\\"name\\\":\\\"Marco\\\"}. Para reads simples puede ser {}",
+              "type": "json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "tool-nlu-dispatch",
+      "name": "bot_nlu_dispatch",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2080, 420]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 2,
+        "options": {}
+      },
+      "id": "merge-paths",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [2480, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normaliza la salida: ya sea desde bot_handle_callback (HTTP directo)\n// o desde el AI Agent (que devolvió el sobre via su única tool).\n// Ambas vienen como un objeto con un campo `reply` o un array con 1 elemento.\n\nconst item = $input.first().json;\n\n// Caso 1: HTTP Request a bot_handle_callback (devuelve array de 1)\nif (Array.isArray(item) && item[0]?.reply) {\n  return [{ json: item[0] }];\n}\nif (item?.reply) {\n  return [{ json: item }];\n}\n\n// Caso 2: AI Agent output — el modelo devolvió el sobre como texto JSON\nlet parsed = null;\nif (typeof item?.output === 'string') {\n  try { parsed = JSON.parse(item.output); } catch (e) { /* fallback */ }\n}\nif (parsed?.reply) {\n  return [{ json: parsed }];\n}\n\n// Fallback: si el agente devolvió solo texto plano\nreturn [{ json: {\n  ok: true,\n  reply: {\n    text: item?.output || item?.text || 'Listo.',\n    parse_mode: null,\n    inline_keyboard: []\n  }\n}}];"
+      },
+      "id": "normalize-reply",
+      "name": "Normalize Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2680, 0]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "has-keyboard",
+                    "leftValue": "={{ $json.reply.inline_keyboard }}",
+                    "rightValue": 0,
+                    "operator": { "type": "array", "operation": "lengthGt", "rightType": "number" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "with_buttons"
+            }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      },
+      "id": "switch-has-keyboard",
+      "name": "Switch HAS_KEYBOARD",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [2880, 0]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Telegram Trigger').item.json.message ? $('Telegram Trigger').item.json.message.from.id : $('Telegram Trigger').item.json.callback_query.from.id }}",
+        "text": "={{ $json.reply.text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "reply_markup": "={\"inline_keyboard\": {{ JSON.stringify($json.reply.inline_keyboard) }} }"
+        }
+      },
+      "id": "tg-send-buttons",
+      "name": "TG Send (with buttons)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [3120, -100]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Telegram Trigger').item.json.message ? $('Telegram Trigger').item.json.message.from.id : $('Telegram Trigger').item.json.callback_query.from.id }}",
+        "text": "={{ $json.reply.text }}",
+        "additionalFields": { "appendAttribution": false }
+      },
+      "id": "tg-send-plain",
+      "name": "TG Send (plain)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [3120, 100]
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [[{ "node": "Global Config", "type": "main", "index": 0 }]]
+    },
+    "Global Config": {
+      "main": [[{ "node": "Switch UPDATE_TYPE", "type": "main", "index": 0 }]]
+    },
+    "Switch UPDATE_TYPE": {
+      "main": [
+        [{ "node": "RPC bot_handle_callback", "type": "main", "index": 0 }],
+        [{ "node": "TG Get Voice", "type": "main", "index": 0 }],
+        [{ "node": "TG Photo Reject", "type": "main", "index": 0 }],
+        [{ "node": "Set Input (text)", "type": "main", "index": 0 }]
+      ]
+    },
+    "RPC bot_handle_callback": {
+      "main": [[{ "node": "TG Answer Callback", "type": "main", "index": 0 }]]
+    },
+    "TG Answer Callback": {
+      "main": [[{ "node": "Merge", "type": "main", "index": 0 }]]
+    },
+    "TG Get Voice": {
+      "main": [[{ "node": "Whisper Transcribe", "type": "main", "index": 0 }]]
+    },
+    "Whisper Transcribe": {
+      "main": [[{ "node": "Set Input (voice)", "type": "main", "index": 0 }]]
+    },
+    "Set Input (voice)": {
+      "main": [[{ "node": "AI Agent", "type": "main", "index": 0 }]]
+    },
+    "Set Input (text)": {
+      "main": [[{ "node": "AI Agent", "type": "main", "index": 0 }]]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [[{ "node": "AI Agent", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [[{ "node": "AI Agent", "type": "ai_memory", "index": 0 }]]
+    },
+    "bot_nlu_dispatch": {
+      "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]]
+    },
+    "AI Agent": {
+      "main": [[{ "node": "Merge", "type": "main", "index": 1 }]]
+    },
+    "Merge": {
+      "main": [[{ "node": "Normalize Reply", "type": "main", "index": 0 }]]
+    },
+    "Normalize Reply": {
+      "main": [[{ "node": "Switch HAS_KEYBOARD", "type": "main", "index": 0 }]]
+    },
+    "Switch HAS_KEYBOARD": {
+      "main": [
+        [{ "node": "TG Send (with buttons)", "type": "main", "index": 0 }],
+        [{ "node": "TG Send (plain)", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "stratos-v5",
+    "templateCredsSetupCompleted": false
+  },
+  "tags": ["stratos", "telegram", "bot", "v5"]
+}
