@@ -47,12 +47,23 @@ export function verifySourceTree(root, tree) {
   return expected.size;
 }
 async function github(path) {
-  const response = await fetch(`https://api.github.com/repos/${repository}/${path}`, {
-    headers: { accept: 'application/vnd.github+json', 'user-agent': 'stratos-production-source' },
-    signal: AbortSignal.timeout(20000), cache: 'no-store',
-  });
-  if (!response.ok) throw new Error(`No se puede verificar la fuente oficial de GitHub (HTTP ${response.status}).`);
-  return response.json();
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const response = await fetch(`https://api.github.com/repos/${repository}/${path}`, {
+        headers: { accept: 'application/vnd.github+json', 'user-agent': 'stratos-production-source', connection: 'close' },
+        signal: AbortSignal.timeout(20000), cache: 'no-store',
+      });
+      if (!response.ok) {
+        const error = new Error(`No se puede verificar la fuente oficial de GitHub (HTTP ${response.status}).`);
+        error.retryable = response.status >= 500;
+        throw error;
+      }
+      return await response.json();
+    } catch (error) {
+      if (error.retryable === false || attempt === 2) throw error;
+      await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
+    }
+  }
 }
 export async function checkVercelProduction(root = process.cwd(), env = process.env) {
   checkProjectBoundary(root, env);

@@ -40,4 +40,4 @@ A petición del usuario, se conserva PR obligatorio y CI para main, sin exigir u
 
 ## Compatibilidad de publicación comprobada
 
-Vercel serializa vercel.json al construir y la CLI añade name y version. El control admite JSON semánticamente equivalente, pero sigue rechazando cambios reales; name=stratos-ai-application y version=2 quedan declarados en la fuente oficial para que Git y CLI produzcan la misma configuración. La compilación Git de producción ya pasó el control de fuente, las pruebas y el build.
+Vercel serializa vercel.json al construir y la CLI añade name y version. El control admite JSON semánticamente equivalente, pero sigue rechazando cambios reales; name=stratos-ai-application y version=2 quedan declarados en la fuente oficial para que Git y CLI produzcan la misma configuración. La compilación Git de producción pasó el control inicial de fuente, las pruebas y el build; una conexión cerrada al repetir la consulta final bloqueó la publicación. Se fuerzan conexiones nuevas y hasta tres intentos para errores transitorios, manteniendo el bloqueo si no se puede verificar main.
