@@ -2829,10 +2829,10 @@ export default function App() {
           backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)",
         }}>
           {mobilePrimaryBar.map(n => {
-            const a = v === n.id && !plusOpen;
+            const a = (n.id === "miespacio" ? metaOpen : v === n.id && !metaOpen) && !plusOpen;
             const activeColor = isLight ? T.accent : "#E9FCF4";
             return (
-              <button key={n.id} onClick={() => { setV(n.id); setPlusOpen(false); }} style={{
+              <button key={n.id} onClick={() => { setPlusOpen(false); if (n.id === "miespacio") { setMetaOpen(true); return; } setMetaOpen(false); setV(n.id); }} style={{
                 display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3,
                 flex:1, minWidth:0, padding:"7px 4px", borderRadius:14, cursor:"pointer",
                 border: a ? (isLight ? "1px solid rgba(15,23,42,0.10)" : "1px solid rgba(190,245,225,0.16)") : "1px solid transparent",
@@ -3049,7 +3049,7 @@ export default function App() {
                 const a = v === n.id;
                 const activeColor = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#E9FCF4");
                 return (
-                  <button key={n.id} onClick={() => { setV(n.id); setPlusOpen(false); }} style={{
+                  <button key={n.id} onClick={() => { setPlusOpen(false); if (n.id === "miespacio") { setMetaOpen(true); return; } setMetaOpen(false); setV(n.id); }} style={{
                     display:"flex", flexDirection:"column", alignItems:"center", gap:6, padding:"13px 4px 11px",
                     borderRadius:16, border: a ? (isLight ? `1px solid ${activeColor}45` : "1px solid rgba(190,245,225,0.16)") : (isLight ? "1px solid rgba(15,23,42,0.06)" : "1px solid rgba(255,255,255,0.05)"),
                     cursor:"pointer", minWidth:0,
