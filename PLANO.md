@@ -159,7 +159,7 @@ Servicios de terceros con los que habla el código.
 
 | Servicio | Usado en |
 |---|---|
-| `personal-n8n.suwsiw.easypanel.host` | 14 archivos |
+| `personal-n8n.suwsiw.easypanel.host` | 15 archivos |
 | `glulgyhkrqpykxmujodb.supabase.co` | 6 archivos |
 | `drive.google.com` | 3 archivos |
 | `docs.google.com` | 2 archivos |

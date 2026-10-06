@@ -27,6 +27,7 @@ import brasaYPiedraConfig  from "./brasa-y-piedra/config";
 import gasilConfig         from "./gasil/config";
 import demoConfig          from "./demo/config";
 import tenantConfig        from "./tenant/config";
+import iSpaceConfig        from "./i-space/config";
 
 // Registry de todos los clientes conocidos
 const CLIENT_CONFIGS = {
@@ -56,6 +57,7 @@ const CLIENT_CONFIGS = {
   // Entrada neutral y compartida para empresas creadas desde el alta masiva.
   // El organization_id real viene del usuario y RLS; nunca del path.
   tenant:           tenantConfig,
+  "i-space":        iSpaceConfig,
 };
 
 /**

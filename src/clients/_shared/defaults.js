@@ -17,6 +17,8 @@ export const DEFAULT_CLIENT_CONFIG = {
   name:      "Stratos AI",
   legalName: "Stratos Capital Group",
   tagline:   "Plataforma inteligente de gestión inmobiliaria",
+  // Optional tenant-specific Copilot guidance; null preserves the CRM guide.
+  copilot: null,
 
   // Dominios propios que resuelven a este cliente (white-label con su dominio).
   // El resolver (src/clients/index.js) los matchea por hostname EXACTO con
