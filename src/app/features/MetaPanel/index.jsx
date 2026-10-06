@@ -682,8 +682,9 @@ export default function MetaPanel({
     .mp-del{opacity:0;transition:opacity .16s ease}
     .mp-row:hover .mp-del,.mp-row:focus-within .mp-del{opacity:.5}
     .mp-del:hover,.mp-del:focus-visible{opacity:1!important}
-    .mp-actions{transition:transform .2s cubic-bezier(.16,1,.3,1)}
-    .mp-row:hover .mp-actions,.mp-row:focus-within .mp-actions{transform:translateX(-34px)}
+    .mp-desktop-row{display:flex;align-items:center;gap:16px;padding-right:32px}
+    .mp-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;justify-content:flex-end}
+    @media(min-width:769px) and (max-width:1100px){.mp-desktop-row{flex-wrap:wrap}.mp-desktop-row>.mp-actions{margin-left:40px;flex-wrap:wrap;justify-content:flex-start}}
     .mp-rowdel{position:absolute;right:16px;top:50%;transform:translateY(-50%);opacity:0;transition:opacity .18s ease}
     .mp-row:hover .mp-rowdel,.mp-row:focus-within .mp-rowdel{opacity:.55}
     .mp-rowdel:hover,.mp-rowdel:focus-visible{opacity:1!important}
@@ -1476,7 +1477,7 @@ export default function MetaPanel({
                   />
                 );
                 const noteEl = (
-                  <details className="mp-note-details" open={!!a.note && !a._demo} style={{ marginTop:4 }}>
+                  <details className="mp-note-details" open={!!a.note && !a._demo} style={{ marginTop:6, maxWidth:640, minWidth:0 }}>
                     <summary style={{
                       cursor:"pointer",
                       listStyle:"none",
@@ -1501,6 +1502,8 @@ export default function MetaPanel({
                       }}
                       style={{
                         width:"100%",
+                        boxSizing:"border-box",
+                        display:"block",
                         resize:"vertical",
                         minHeight:42,
                         maxHeight:120,
@@ -1685,7 +1688,7 @@ export default function MetaPanel({
                     }}
                     style={{
                       position:"relative",
-                      padding: isMobile ? "14px 16px" : "16px 18px",
+                      padding: isMobile ? "16px" : "18px 20px",
                       borderRadius:R.row, marginBottom:8,
                       // El MISMO 6% de rojo no pesa igual en los dos temas: sobre
                       // negro se hunde y sobre blanco grita. En claro va a la mitad.
@@ -1721,27 +1724,24 @@ export default function MetaPanel({
                         </div>
                       </>
                     ) : (
-                      /* ── PC: una línea. Contexto + responsable a la IZQUIERDA;
-                            fecha a la izquierda del bloque de metadatos y estatus a la
-                            derecha. Sin columnas fijas: evita recortes cuando la fecha
-                            es larga. Borrar flota al pasar (no reserva espacio). ── */
+                      /* Desktop: contenido flexible, acciones estables y espacio reservado para eliminar. */
                       <>
-                        <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+                        <div className="mp-desktop-row">
                           {checkBtn}
                           <div style={{ flex:"1 1 360px", minWidth:0 }}>
-                            <div style={{ marginBottom:7 }}>{titleEl}{noteEl}</div>
+                            <div style={{ marginBottom:12 }}>{titleEl}{noteEl}</div>
                             <div style={{ display:"flex", alignItems:"center", gap:9, flexWrap:"wrap" }}>
                               {metaEl}
                               {!marketingMode && assigneeSel}
                               {!marketingMode && iagentBtn}
                             </div>
                           </div>
-                          <div className="mp-actions" style={{ display:"flex", alignItems:"center", gap:12, flexShrink:0, justifyContent:"flex-end" }}>
+                          <div className="mp-actions">
                             <div style={{ flexShrink:0 }}>{dateEl}</div>
                             <div style={{ flexShrink:0 }}>{prioBtn}</div>
                           </div>
                         </div>
-                        {/* Eliminar — flota a la derecha, aparece al pasar (no reserva espacio) */}
+                        {/* Eliminar ocupa el margen reservado sin desplazar los controles. */}
                         <button className="mp-rowdel" onClick={() => { persistDelete(a); setMetaActions(p => p.filter(x => x.id!==a.id)); }} title="Eliminar acción" style={{ background:"none", border:"none", cursor:"pointer", padding:4, display:"flex", alignItems:"center" }}>
                           <Trash2 size={15} color={T.txt3} />
                         </button>
