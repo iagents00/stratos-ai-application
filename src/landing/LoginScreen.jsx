@@ -161,9 +161,9 @@ export default function LoginScreen({ onLogin }) {
     color: P.txt, fontSize: 13, fontFamily: font, transition: "border-color 0.2s",
   });
 
-  const Label = ({ text, right }) => (
+  const Label = ({ text, right, htmlFor }) => (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-      <label style={{ fontSize: 10, color: P.txt2, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase" }}>{text}</label>
+      <label htmlFor={htmlFor} style={{ fontSize: 10, color: P.txt2, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase" }}>{text}</label>
       {right}
     </div>
   );
@@ -339,8 +339,8 @@ export default function LoginScreen({ onLogin }) {
               <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
                 {/* Código */}
                 <div>
-                  <Label text="Código de 6 dígitos" />
-                  <input type="text" inputMode="numeric" maxLength={6} value={code}
+                  <Label htmlFor="auth-code" text="Código de 6 dígitos" />
+                  <input id="auth-code" type="text" inputMode="numeric" maxLength={6} value={code}
                     onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} onKeyDown={onKey}
                     onFocus={() => setFocused("code")} onBlur={() => setFocused(null)}
                     placeholder="000000"
@@ -350,11 +350,11 @@ export default function LoginScreen({ onLogin }) {
 
                 {/* Nueva contraseña */}
                 <div>
-                  <Label text="Nueva contraseña" right={password ? (
+                  <Label htmlFor="auth-password" text="Nueva contraseña" right={password ? (
                     <span style={{ fontSize: 10, color: strengthColor, fontWeight: 600, fontFamily: font }}>{strengthLabel}</span>
                   ) : null} />
                   <div style={{ position: "relative" }}>
-                    <input type={showP ? "text" : "password"} value={password} onChange={e => setPass(e.target.value)} onKeyDown={onKey}
+                    <input id="auth-password" type={showP ? "text" : "password"} value={password} onChange={e => setPass(e.target.value)} onKeyDown={onKey}
                       onFocus={() => setFocused("pass")} onBlur={() => setFocused(null)}
                       placeholder="Mínimo 8 caracteres"
                       style={{ ...inputStyle("pass", false), paddingRight: 52 }}
@@ -369,8 +369,8 @@ export default function LoginScreen({ onLogin }) {
 
                 {/* Confirmar nueva contraseña */}
                 <div>
-                  <Label text="Confirmar nueva contraseña" />
-                  <input type={showP ? "text" : "password"} value={confirm} onChange={e => setConfirm(e.target.value)} onKeyDown={onKey}
+                  <Label htmlFor="auth-confirm" text="Confirmar nueva contraseña" />
+                  <input id="auth-confirm" type={showP ? "text" : "password"} value={confirm} onChange={e => setConfirm(e.target.value)} onKeyDown={onKey}
                     onFocus={() => setFocused("confirm")} onBlur={() => setFocused(null)}
                     placeholder="Repite la nueva contraseña"
                     style={inputStyle("confirm", confirm && password !== confirm)}
@@ -439,29 +439,29 @@ export default function LoginScreen({ onLogin }) {
                   <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 14 }}>
                     {/* Nombre completo */}
                     <div>
-                      <Label text="Nombre completo" />
-                      <input type="text" value={name} onChange={e => setName(e.target.value)} onKeyDown={onKey}
+                      <Label htmlFor="auth-name" text="Nombre completo" />
+                      <input id="auth-name" type="text" value={name} onChange={e => setName(e.target.value)} onKeyDown={onKey}
                         onFocus={() => setFocused("name")} onBlur={() => setFocused(null)}
                         placeholder="Tu nombre y apellido" style={inputStyle("name", false)} autoComplete="name" />
                     </div>
 
                     {/* Email */}
                     <div>
-                      <Label text="Correo electrónico" />
-                      <input type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={onKey}
+                      <Label htmlFor="auth-email" text="Correo electrónico" />
+                      <input id="auth-email" type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={onKey}
                         onFocus={() => setFocused("email")} onBlur={() => setFocused(null)}
                         placeholder="correo@empresa.com" style={inputStyle("email", false)} autoComplete="email" />
                     </div>
 
                     {/* Contraseña */}
                     <div>
-                      <Label text="Contraseña" right={password ? (
+                      <Label htmlFor="auth-password" text="Contraseña" right={password ? (
                         <span style={{ fontSize: 10, color: strengthColor, fontWeight: 600, fontFamily: font }}>
                           {strengthLabel}
                         </span>
                       ) : null} />
                       <div style={{ position: "relative" }}>
-                        <input type={showP ? "text" : "password"} value={password} onChange={e => setPass(e.target.value)} onKeyDown={onKey}
+                        <input id="auth-password" type={showP ? "text" : "password"} value={password} onChange={e => setPass(e.target.value)} onKeyDown={onKey}
                           onFocus={() => setFocused("pass")} onBlur={() => setFocused(null)}
                           placeholder="Mínimo 6 caracteres"
                           style={{ ...inputStyle("pass", false), paddingRight: 52 }}
@@ -488,9 +488,9 @@ export default function LoginScreen({ onLogin }) {
 
                     {/* Confirmar contraseña */}
                     <div>
-                      <Label text="Confirmar contraseña" />
+                      <Label htmlFor="auth-confirm" text="Confirmar contraseña" />
                       <div style={{ position: "relative" }}>
-                        <input type={showC ? "text" : "password"} value={confirm} onChange={e => setConfirm(e.target.value)} onKeyDown={onKey}
+                        <input id="auth-confirm" type={showC ? "text" : "password"} value={confirm} onChange={e => setConfirm(e.target.value)} onKeyDown={onKey}
                           onFocus={() => setFocused("confirm")} onBlur={() => setFocused(null)}
                           placeholder="Repite la contraseña"
                           style={{ ...inputStyle("confirm", confirm && password !== confirm), paddingRight: 52 }}
@@ -505,8 +505,8 @@ export default function LoginScreen({ onLogin }) {
 
                     {/* Correo de recuperación (opcional) — a donde llega el código si olvidas la clave */}
                     <div>
-                      <Label text="Correo de recuperación (opcional)" />
-                      <input type="email" value={recoveryEmail} onChange={e => setRecoveryEmail(e.target.value)} onKeyDown={onKey}
+                      <Label htmlFor="auth-recovery" text="Correo de recuperación (opcional)" />
+                      <input id="auth-recovery" type="email" value={recoveryEmail} onChange={e => setRecoveryEmail(e.target.value)} onKeyDown={onKey}
                         onFocus={() => setFocused("recovery")} onBlur={() => setFocused(null)}
                         placeholder="Para recuperar tu acceso si olvidas la clave" style={inputStyle("recovery", false)} autoComplete="email" />
                     </div>
@@ -573,8 +573,8 @@ export default function LoginScreen({ onLogin }) {
 
                     {/* Email */}
                     <div>
-                      <Label text={mode === "login" ? "Correo o usuario" : "Correo electrónico"} />
-                      <input type={mode === "login" ? "text" : "email"} value={email} onChange={e => setEmail(e.target.value)} onKeyDown={onKey}
+                      <Label htmlFor="auth-email" text={mode === "login" ? "Correo o usuario" : "Correo electrónico"} />
+                      <input id="auth-email" type={mode === "login" ? "text" : "email"} value={email} onChange={e => setEmail(e.target.value)} onKeyDown={onKey}
                         onFocus={() => setFocused("email")} onBlur={() => setFocused(null)}
                         placeholder={mode === "login" ? "correo@empresa.com o usuario" : "correo@empresa.com"} style={inputStyle("email", false)} autoComplete={mode === "login" ? "username" : "email"} />
                     </div>
@@ -582,14 +582,14 @@ export default function LoginScreen({ onLogin }) {
                     {/* Contraseña */}
                     {mode === "login" && (
                       <div>
-                        <Label text="Contraseña" right={
+                        <Label htmlFor="auth-password" text="Contraseña" right={
                           <button type="button" onClick={() => go("forgot")} style={{
                             background: "none", border: "none", cursor: "pointer",
                             fontSize: 11, color: P.accent, fontFamily: font, padding: 0,
                           }}>¿Olvidaste tu contraseña?</button>
                         } />
                         <div style={{ position: "relative" }}>
-                          <input type={showP ? "text" : "password"} value={password} onChange={e => setPass(e.target.value)} onKeyDown={onKey}
+                          <input id="auth-password" type={showP ? "text" : "password"} value={password} onChange={e => setPass(e.target.value)} onKeyDown={onKey}
                             onFocus={() => setFocused("pass")} onBlur={() => setFocused(null)}
                             placeholder="••••••••"
                             style={{ ...inputStyle("pass", false), paddingRight: 52 }}

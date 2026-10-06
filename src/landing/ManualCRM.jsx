@@ -14,9 +14,9 @@ import { P as darkPalette } from "../design-system/tokens";
  * Datos en src/landing/manual-content.js — se exponen en window.__STRATOS_MANUAL__
  * para que un agente IA embebido los consuma.
  */
+import { useState, useEffect, useMemo } from "react";
 import {
-  BarChart3, Bell, BellRing, ClipboardList, Flame, ListChecks, MapPin, TrendingUp, Video, Zap, useState, useEffect, useMemo } from "react";
-import {
+  BarChart3, Bell, BellRing, ClipboardList, Flame, ListChecks, MapPin, TrendingUp, Video, Zap,
   ArrowLeft, ArrowRight, Search, Bot, X,
   ChevronRight, Lightbulb, AlertTriangle, Mail, MessageCircle,
   // Iconos usados por las secciones (importados aquí para que esté en bundle)
@@ -290,7 +290,7 @@ const CSS = `
     background: ${P.accentS}; border: 1px solid ${P.accentB};
     border-radius: 10px; padding: 11px 14px; margin-bottom: 7px;
     color: ${P.txt}; font-size: 14px; line-height: 1.55;
-    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-family: inherit;
   }
 
   /* AI Assistant card (placeholder) */
@@ -591,7 +591,7 @@ export default function ManualCRM({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar en el manual..."
+              aria-label="Buscar en el manual" placeholder="Buscar en el manual..."
               autoComplete="off"
               spellCheck="false"
             />
@@ -747,7 +747,7 @@ export default function ManualCRM({
             <input
               type="text"
               className="mn-ai-input"
-              placeholder="Pregúntale al asistente..."
+              aria-label="Pregunta al asistente del manual (próximamente)" placeholder="Pregúntale al asistente..."
               disabled
               aria-disabled="true"
             />

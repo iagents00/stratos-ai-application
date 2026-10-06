@@ -3162,6 +3162,7 @@ export default function App() {
       {/* ══ META PANEL ══ */}
       <MetaPanel
         open={metaOpen && v !== "mi_espacio"}
+        onClose={() => setMetaOpen(false)}
         user={user}
         metaTab={metaTab}
         setMetaTab={setMetaTab}
