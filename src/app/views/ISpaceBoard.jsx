@@ -19,7 +19,7 @@ export default function ISpaceBoard({ T, onOpenCopilot }) {
   const [blockedJump, setBlockedJump] = useState(0);
   useEffect(() => {
     if (!blockedJump || view !== 'kanban') return;
-    const frame = requestAnimationFrame(() => document.getElementById('is-column-bloqueada')?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }));
+    const frame = requestAnimationFrame(() => { document.getElementById('is-column-bloqueada')?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); setBlockedJump(0); });
     return () => cancelAnimationFrame(frame);
   }, [blockedJump, view]);
   const busy = useRef(false), formRef = useRef(null);
