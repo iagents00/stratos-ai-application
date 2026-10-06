@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Mic, FileText, Video, MapPin, GitBranch, Search, BarChart3, Bell, Sparkles, Zap, Gauge, UsersRound, ChevronRight, Check, X } from "lucide-react";
+import { Mic, FileText, Video, MapPin, GitBranch, Search, BarChart3, Bell, BookOpen, Sparkles, Zap, Gauge, UsersRound, ChevronRight, Check, X } from "lucide-react";
 import { font, fontDisp } from "../../design-system/tokens";
 import { INTEL_FEATURES } from "../constants/intelFeatures";
 const FEATURE_ICONS = {
   Mic, FileText, Video, MapPin, GitBranch, Search,
-  BarChart3, Bell, Sparkles, Zap, Gauge, UsersRound,
+  BarChart3, Bell, BookOpen, Sparkles, Zap, Gauge, UsersRound,
 };
 
 const FEATURE_PROMPTS = {
@@ -54,10 +54,10 @@ const COPILOT_GUIDE_STEPS = {
   ],
 };
 
-export default function CapabilitiesPanel({ T, isLight, onClose, onPrefill }) {
-  const [expanded, setExpanded] = useState("registrar-voz");
-  const requested = INTEL_FEATURES.filter((feature) => feature.kind === "pedis");
-  const automatic = INTEL_FEATURES.filter((feature) => feature.kind === "agente");
+export default function CapabilitiesPanel({ T, isLight, onClose, onPrefill, features = INTEL_FEATURES }) {
+  const [expanded, setExpanded] = useState(features[0]?.id || null);
+  const requested = features.filter((feature) => feature.kind === "pedis");
+  const automatic = features.filter((feature) => feature.kind === "agente");
 
   const renderGroup = (title, description, features) => (
     <section aria-label={title} style={{ padding: "18px 20px 4px" }}>
@@ -67,9 +67,9 @@ export default function CapabilitiesPanel({ T, isLight, onClose, onPrefill }) {
         {features.map((feature) => {
           const Icon = FEATURE_ICONS[feature.icon] || Sparkles;
           const isExpanded = expanded === feature.id;
-          const prompt = FEATURE_PROMPTS[feature.id];
+          const prompt = feature.prompt || FEATURE_PROMPTS[feature.id];
           const steps = COPILOT_GUIDE_STEPS[feature.id] || feature.how;
-          const channel = feature.kind === "pedis" ? "Copilot web + Telegram" : feature.where;
+          const channel = feature.chan || (feature.kind === "pedis" ? "Copilot web + Telegram" : feature.where);
           return (
             <div key={feature.id} style={{ borderBottom: `1px solid ${T.border}` }}>
               <button
@@ -123,9 +123,8 @@ export default function CapabilitiesPanel({ T, isLight, onClose, onPrefill }) {
       </header>
       <div style={{ overflowY: "auto", overscrollBehavior: "contain", paddingBottom: 20 }}>
         {renderGroup("Pídeselo al Copilot", "Consultas y cambios que inicias con texto o dictado.", requested)}
-        {renderGroup("Agentes que trabajan solos", "Automatizaciones que vigilan la operación y te avisan cuando requieren atención.", automatic)}
+        {automatic.length > 0 && renderGroup("Agentes que trabajan solos", "Automatizaciones que vigilan la operación y te avisan cuando requieren atención.", automatic)}
       </div>
     </aside>
   );
 }
-

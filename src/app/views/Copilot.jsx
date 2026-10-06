@@ -104,6 +104,9 @@ export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp
 /* Chat — layout WhatsApp: header fino, mensajes expansivos, composer compacto */
 /* ─────────────────────────────────────────────────────────────────────────── */
 function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing, puedeCajaFoto, orgId, isDemo }) {
+  const { config: clientConfig } = useClient();
+  const guidance = clientConfig?.copilot;
+  const suggestions = guidance?.suggestions || SUGGESTIONS;
   // La flecha "‹ volver" solo tiene sentido donde el header/bottom-nav se ocultan
   // (modo inmersivo en celular) o en la app nativa. En DESKTOP WEB el sidebar
   // siempre está a la vista → la flecha sobra (pedido de Ángel 24-jul). En iPhone/
@@ -1148,15 +1151,15 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         </button>
       </div>
 
-      {capabilitiesOpen && createPortal(<><div onClick={() => setCapabilitiesOpen(false)} style={{position:"fixed",inset:0,zIndex:100001,background:"rgba(0,0,0,.25)"}} /><CopilotCapabilities T={T} isLight={isLight} onClose={() => setCapabilitiesOpen(false)} onPrefill={prompt => {setInput(prompt);setCapabilitiesOpen(false);inputRef.current?.focus();}} /></>, document.body)}
+      {capabilitiesOpen && createPortal(<><div onClick={() => setCapabilitiesOpen(false)} style={{position:"fixed",inset:0,zIndex:100001,background:"rgba(0,0,0,.25)"}} /><CopilotCapabilities T={T} isLight={isLight} features={guidance?.capabilities} onClose={() => setCapabilitiesOpen(false)} onPrefill={prompt => {setInput(prompt);setCapabilitiesOpen(false);inputRef.current?.focus();}} /></>, document.body)}
 
       {/* ── Banner "Activar notificaciones" (push) ── */}
-      {!isDemo && <NotifBanner T={T} isLight={isLight} />}
+      {!isDemo && <NotifBanner T={T} isLight={isLight} message={guidance?.notificationText} />}
 
       {/* ── Sugerencias colapsables ── */}
       {showSuggestions && (
         <div style={{ display: "flex", gap: 6, padding: "8px 16px", flexWrap: "wrap", flexShrink: 0, background: composerBg, borderBottom: `1px solid ${T.border}` }}>
-          {SUGGESTIONS.map((s) => (
+          {suggestions.map((s) => (
             <button key={s.text} type="button" onClick={() => send(s.text)} disabled={sending}
               style={{
                 padding: "5px 12px", borderRadius: 999, fontSize: chatType.chip, fontFamily: font,
@@ -1196,7 +1199,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
               </button>
             </div>
           ) : messages.length === 0 ? (
-            <EmptyState T={T} isLight={isLight} onPick={send} />
+            <EmptyState T={T} isLight={isLight} onPick={send} guidance={guidance} suggestions={suggestions} />
           ) : (
             messages.map((m) => <Bubble key={m.id} m={m} isLast={m.id === lastAiId} T={T} isLight={isLight} userBg={bubbleUserBg} userTxt={bubbleUserTxt} aiBg={bubbleAiBg} aiBd={bubbleAiBd} onPick={send} sending={sending} />)
           )}
@@ -1828,18 +1831,18 @@ function Typing({ T, isLight, aiBg, aiBd }) {
 }
 
 /* ── Estado vacío ── */
-function EmptyState({ T, isLight, onPick }) {
+function EmptyState({ T, isLight, onPick, guidance, suggestions = SUGGESTIONS }) {
   return (
     <div style={{ margin: "auto", textAlign: "center", maxWidth: 340, padding: 12 }}>
       <div style={{ width: 48, height: 48, borderRadius: 14, margin: "0 auto 12px", background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.15) 0%, rgba(52,211,153,0.08) 100%)", border: `1px solid ${T.accent}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <CopilotMark size={30} isLight={isLight} />
       </div>
-      <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Tu Asistente Operativo</h3>
+      <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>{guidance?.title || "Tu Asistente Operativo"}</h3>
       <p style={{ margin: "0 0 14px", fontSize: chatType.chip + 1, color: T.txt3, lineHeight: 1.5, fontFamily: font }}>
-        Escríbele o díctale por voz. Pídele clientes, agenda, métricas, o busca a alguien por nombre.
+        {guidance?.description || "Escríbele o díctale por voz. Pídele clientes, agenda, métricas, o busca a alguien por nombre."}
       </p>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
-        {SUGGESTIONS.map((s) => (
+        {suggestions.map((s) => (
           <button key={s.text} type="button" onClick={() => onPick(s.text)}
             style={{ padding: "6px 13px", borderRadius: 999, background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.05)", border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`, color: T.txt2, fontSize: chatType.chip, fontFamily: font, cursor: "pointer" }}>
             <Bot size={13} color={T.accent} style={{ marginRight: 4, verticalAlign: "middle" }} />{s.label}
@@ -1855,7 +1858,7 @@ function EmptyState({ T, isLight, onPick }) {
    aviso al teléfono (con la app cerrada), reemplazando la dependencia de Telegram.
    Auto-suscribe corre en App.jsx si el permiso ya está concedido; este banner
    cubre el caso que necesita gesto del usuario (permiso 'default'). */
-function NotifBanner({ T, isLight }) {
+function NotifBanner({ T, isLight, message }) {
   const { user } = useAuth();
   const [show, setShow] = useState(false);
   const [needsInstall, setNeedsInstall] = useState(false);
@@ -1908,7 +1911,7 @@ function NotifBanner({ T, isLight }) {
           ? <>Para recibir avisos con la app cerrada, instalala: <strong style={{ color: T.txt }}>botón Compartir → Agregar a inicio</strong>.</>
           : (err
               ? <span style={{ color: isLight ? "#B91C3A" : "#FCA5A5" }}>{err}</span>
-              : <>Activa las notificaciones para enterarte de tus Zooms, tareas y recordatorios aunque tengas la app cerrada.</>)}
+              : <>{message || "Activa las notificaciones para enterarte de tus Zooms, tareas y recordatorios aunque tengas la app cerrada."}</>)}
       </div>
       {!needsInstall && (
         <button type="button" onClick={enable} disabled={busy}
