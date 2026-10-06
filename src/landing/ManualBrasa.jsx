@@ -1,3 +1,4 @@
+import { P as darkPalette } from "../design-system/tokens";
 /**
  * ManualBrasa.jsx — Manual de uso de Stratos IA para BRASA Y PIEDRA
  *
@@ -13,10 +14,10 @@ import {
 } from "lucide-react";
 
 const P = {
-  bg: "#0D0806", surface: "#161009", glass: "rgba(255,255,255,0.03)",
+  bg: darkPalette.bg, surface: darkPalette.surface, glass: "rgba(255,255,255,0.03)",
   border: "rgba(255,255,255,0.07)", accent: "#EF4444", accentS: "rgba(239,68,68,0.09)",
   accentB: "rgba(239,68,68,0.24)", warn: "#E8A488", warnS: "rgba(232,164,136,0.07)",
-  warnB: "rgba(232,164,136,0.22)", w: "#FFFFFF", txt: "#EDE4DC", txt2: "#A89A8E", txt3: "#5A4C42",
+  warnB: "rgba(232,164,136,0.22)", w: "#FFFFFF", txt: darkPalette.txt, txt2: darkPalette.txt2, txt3: darkPalette.txt3,
 };
 const font = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
 const fontD = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;

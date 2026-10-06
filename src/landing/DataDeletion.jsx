@@ -1,3 +1,4 @@
+import { P as darkPalette } from "../design-system/tokens";
 import { useState, useEffect } from "react";
 import { ArrowLeft, Globe, Mail, Trash2, MessageSquare, Clock, ShieldCheck } from "lucide-react";
 
@@ -5,17 +6,17 @@ import { ArrowLeft, Globe, Mail, Trash2, MessageSquare, Clock, ShieldCheck } fro
    DESIGN TOKENS — alineados con LandingMarketing
    ═══════════════════════════════════ */
 const P = {
-  bg: "#04080F",
-  surface: "#080D17",
+  bg: darkPalette.bg,
+  surface: darkPalette.surface,
   glass: "rgba(255,255,255,0.028)",
   border: "rgba(255,255,255,0.06)",
   accent: "#52D9B8",
   accentS: "rgba(82,217,184,0.07)",
   accentB: "rgba(82,217,184,0.13)",
   w: "#FFFFFF",
-  txt: "#EDF2F7",
-  txt2: "#8A97AA",
-  txt3: "#3D4A5C",
+  txt: darkPalette.txt,
+  txt2: darkPalette.txt2,
+  txt3: darkPalette.txt3,
   r: 14,
 };
 const font  = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif`;
@@ -396,7 +397,7 @@ export default function DataDeletion() {
           position: "sticky",
           top: 0,
           zIndex: 50,
-          background: "rgba(4,8,15,0.85)",
+          background: "rgba(0,0,0,0.85)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
           borderBottom: `1px solid ${P.border}`,

@@ -1,3 +1,4 @@
+import { P as darkPalette } from "../design-system/tokens";
 /**
  * DeliveryHubCRM.jsx — Hub de Entrega del CRM Stratos AI v1.0
  *
@@ -24,8 +25,8 @@ import {
    Coherente con LandingMarketing.jsx y PrivacyPolicy.jsx
    ═══════════════════════════════════════════════════════════════════════════ */
 const P = {
-  bg:       "#04080F",
-  surface:  "#080D17",
+  bg:       darkPalette.bg,
+  surface:  darkPalette.surface,
   glass:    "rgba(255,255,255,0.028)",
   glassH:   "rgba(255,255,255,0.048)",
   border:   "rgba(255,255,255,0.06)",
@@ -41,9 +42,9 @@ const P = {
   mutedB:   "rgba(138,151,170,0.18)",
   rose:     "#E8818C",
   w:        "#FFFFFF",
-  txt:      "#EDF2F7",
-  txt2:     "#8A97AA",
-  txt3:     "#3D4A5C",
+  txt:      darkPalette.txt,
+  txt2:     darkPalette.txt2,
+  txt3:     darkPalette.txt3,
   r:        14,
 };
 const font  = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
@@ -319,7 +320,7 @@ const CSS = `
     position: sticky;
     top: 0;
     z-index: 50;
-    background: rgba(4,8,15,0.78);
+    background: rgba(0,0,0,0.78);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid ${P.border};

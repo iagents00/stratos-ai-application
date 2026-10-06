@@ -596,7 +596,7 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
       <div style={{
         position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 200001,
         width: "min(680px, calc(100vw - 24px))", maxHeight: "92vh", overflowY: "auto",
-        background: isLight ? "#FFFFFF" : "#111318", border: `1px solid ${T.border}`, borderRadius: 22,
+        background: isLight ? "#FFFFFF" : T.surface, border: `1px solid ${T.border}`, borderRadius: 22,
         boxShadow: isLight ? T.shadow3 || "0 40px 100px rgba(15,23,42,0.15)" : "0 40px 100px rgba(0,0,0,0.7)",
       }}>
         {/* Header with accent preview */}

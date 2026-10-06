@@ -1,3 +1,4 @@
+import { P as darkPalette } from "../design-system/tokens";
 /**
  * OnboardingCallCenter.jsx — Guía de configuración inicial del AI Call Center
  * ─────────────────────────────────────────────────────────────────────────────
@@ -34,8 +35,8 @@ import { enviarFormulario } from "../lib/form-submit";
    TOKENS — paleta landing (PL). Coherente con DeliveryHubCRM / ManualCRM.
    ═══════════════════════════════════════════════════════════════════════════ */
 const P = {
-  bg:       "#04080F",
-  surface:  "#080D17",
+  bg:       darkPalette.bg,
+  surface:  darkPalette.surface,
   glass:    "rgba(255,255,255,0.028)",
   glassH:   "rgba(255,255,255,0.048)",
   border:   "rgba(255,255,255,0.07)",
@@ -47,9 +48,9 @@ const P = {
   rose:     "#E8818C",
   roseS:    "rgba(232,129,140,0.08)",
   w:        "#FFFFFF",
-  txt:      "#EDF2F7",
-  txt2:     "#8A97AA",
-  txt3:     "#3D4A5C",
+  txt:      darkPalette.txt,
+  txt2:     darkPalette.txt2,
+  txt3:     darkPalette.txt3,
   r:        14,
 };
 const font  = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
@@ -209,7 +210,7 @@ const CSS = `
   .oc-main { position: relative; z-index: 1; flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 128px 24px 150px; }
   .oc-foot {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
-    background: linear-gradient(to top, ${P.bg} 60%, rgba(4,8,15,0)); padding: 26px 24px 22px;
+    background: linear-gradient(to top, ${P.bg} 60%, rgba(0,0,0,0)); padding: 26px 24px 22px;
   }
   .oc-foot-in { max-width: 760px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .oc-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -419,7 +420,7 @@ export default function OnboardingCallCenter() {
       <div className="oc-bg" />
 
       {/* ── Cabecera fija + barra de avance ──────────────────────────────── */}
-      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 6, background: "rgba(4,8,15,0.78)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", borderBottom: `1px solid ${P.border}` }}>
+      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 6, background: "rgba(0,0,0,0.78)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", borderBottom: `1px solid ${P.border}` }}>
         <div style={{ maxWidth: 760, margin: "0 auto", padding: "0 24px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <a href="https://stratoscapitalgroup.com" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
             <StratosAtom size={22} color="rgba(255,255,255,0.85)" />

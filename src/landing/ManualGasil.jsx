@@ -1,3 +1,4 @@
+import { P as darkPalette } from "../design-system/tokens";
 /**
  * ManualGasil.jsx — Manual de uso de Stratos IA para GASIL RADIODIAGNÓSTICO DEL VALLE
  *
@@ -17,10 +18,10 @@ import {
 } from "lucide-react";
 
 const P = {
-  bg: "#0B0710", surface: "#150E18", glass: "rgba(255,255,255,0.03)",
+  bg: darkPalette.bg, surface: darkPalette.surface, glass: "rgba(255,255,255,0.03)",
   border: "rgba(255,255,255,0.07)", accent: "#E455B4", accentS: "rgba(228,85,180,0.09)",
   accentB: "rgba(228,85,180,0.24)", warn: "#E8B488", warnS: "rgba(232,180,136,0.07)",
-  warnB: "rgba(232,180,136,0.22)", w: "#FFFFFF", txt: "#EDE6EE", txt2: "#A99BAB", txt3: "#5C4E5E",
+  warnB: "rgba(232,180,136,0.22)", w: "#FFFFFF", txt: darkPalette.txt, txt2: darkPalette.txt2, txt3: darkPalette.txt3,
 };
 const font = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
 const fontD = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;

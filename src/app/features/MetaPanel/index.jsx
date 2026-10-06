@@ -409,31 +409,7 @@ export default function MetaPanel({
   // Los controles dentro de una FILA no llevan fondo propio: en la captura el
   // ojo veía caja-dentro-de-caja-dentro-de-caja. Se sostienen con texto y una
   // línea, y ganan fondo sólo al pasar el mouse.
-  // ── MATERIAL (Iván, 31-jul: «como de Apple, glass, en blanco y en negro») ──
-  // Los tres roles siguen siendo tres. Lo que cambia es que dejan de ser un
-  // relleno plano y pasan a ser un MATERIAL, que es como Apple construye sus
-  // superficies. Un material son cuatro cosas juntas, y falta una y se cae:
-  //
-  //   1. tinte translúcido    → deja ver que hay algo debajo
-  //   2. backdrop blur+satura → lo de abajo se difumina y el color revive
-  //                             (el `saturate` es lo que evita el gris muerto)
-  //   3. brillo especular     → una línea de luz de 1px ARRIBA, como el canto
-  //                             de un vidrio real. Es el detalle que más
-  //                             "caro" hace ver una tarjeta y el que casi
-  //                             siempre falta.
-  //   4. sombra ambiental     → dos sombras: uno de contacto (1px, cerrada) y
-  //                             una de ambiente (grande, muy suave). Nunca un
-  //                             resplandor de color.
-  //
-  // El blur sólo es HONESTO donde hay algo detrás que difuminar, y en esta
-  // pantalla eso son DOS sitios: la barra superior (el contenido le pasa por
-  // debajo) y el calendario flotante (se abre encima de las tarjetas). Nada más.
-  // Las tarjetas y las filas se apoyan en un lienzo plano: ahí un
-  // `backdrop-filter` difumina un color liso — devuelve el mismo color liso —
-  // y encima cuesta caro, porque cada capa la compone el navegador por
-  // separado y la lista puede traer decenas de filas. Pagar el costo sin el
-  // efecto es peor que no tener el efecto. Ahí el material se sostiene con
-  // tinte + canto especular + sombra, que es lo que de verdad se ve.
+  // Negro sólido y elevaciones discretas: las capas no acumulan gris.
   const S = isLight ? {
     row:   "rgba(255,255,255,0.74)",
     card:  "rgba(255,255,255,0.80)",
@@ -449,13 +425,13 @@ export default function MetaPanel({
     shadowRow: "0 1px 1.5px rgba(15,23,42,0.04), 0 3px 10px rgba(15,23,42,0.035)",
     shadowPop: "0 2px 6px rgba(15,23,42,0.10), 0 24px 60px rgba(15,23,42,0.18)",
   } : {
-    row:   "rgba(255,255,255,0.034)",
-    card:  "rgba(255,255,255,0.062)",
-    inset: "rgba(255,255,255,0.095)",
+    row:   "#050505",
+    card:  "#080808",
+    inset: "#101010",
     line:  "rgba(255,255,255,0.075)",
     lineS: "rgba(255,255,255,0.145)",
     hair:  "rgba(255,255,255,0.06)",
-    spec:  "inset 0 1px 0 rgba(255,255,255,0.075)",
+    spec:  "inset 0 1px 0 rgba(255,255,255,0.035)",
     blur:  "saturate(180%) blur(30px)",
     shadow:    "0 1px 1.5px rgba(0,0,0,0.34), 0 10px 30px rgba(0,0,0,0.26)",
     shadowRow: "0 1px 1.5px rgba(0,0,0,0.28), 0 3px 10px rgba(0,0,0,0.18)",
@@ -612,12 +588,7 @@ export default function MetaPanel({
   const ownPendingCount = (marketingMode ? agendaActions : metaActions.filter(_isOwnAction)).filter(a => !a.done).length;
   const teamPendingCount = metaActions.filter(a => !a.done).length;
   const chevron  = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='${isLight ? "%235C6B82" : "%238B99AE"}' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>")`;
-  const panelBg  = isLight
-    ? "#F1F3F6"
-    // El lavado del fondo era VERDE mezclado con AZUL (rgba(126,184,240,0.028)):
-    // dos matices en el lienzo hacen que todo lo que se apoya encima parezca de
-    // un color distinto según dónde caiga. Un solo matiz, y muy tenue.
-    : "radial-gradient(130% 90% at 50% -25%, rgba(110,231,194,0.05), transparent 58%), #0C0C0C";
+  const panelBg = isLight ? "#F1F3F6" : "#000000";
   const mpVars = {
     "--mp-txt": T.txt, "--mp-txt2": T.txt2, "--mp-txt3": T.txt3,
     "--mp-accent": T.accent, "--mp-border": T.border, "--mp-borderH": T.borderH,
@@ -627,7 +598,7 @@ export default function MetaPanel({
     // fija y el contenido pasa por debajo, así que hay algo real que difuminar.
     // Por eso baja la opacidad (0.82 → 0.66): a 0.82 el blur casi no se veía,
     // era una barra sólida con un filtro puesto de adorno.
-    "--mp-topbar": isLight ? "rgba(246,248,251,0.66)" : "rgba(12,12,12,0.58)",
+    "--mp-topbar": isLight ? "rgba(246,248,251,0.66)" : "rgba(0,0,0,0.94)",
     "--mp-blur": S.blur,
     "--mp-spec": S.spec,
     "--mp-seg-bg": isLight ? S.inset : S.row,

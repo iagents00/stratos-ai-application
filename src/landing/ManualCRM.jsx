@@ -1,3 +1,4 @@
+import { P as darkPalette } from "../design-system/tokens";
 /**
  * ManualCRM.jsx — Manual del CRM Stratos AI para asesores
  *
@@ -33,8 +34,8 @@ import { CATEGORIES, MANUAL_SECTIONS, searchManual, exposeManualToWindow } from 
    PALETA — coherente con DeliveryHubCRM, LandingMarketing, PrivacyPolicy
    ═══════════════════════════════════════════════════════════════════════════ */
 const P = {
-  bg:       "#04080F",
-  surface:  "#080D17",
+  bg:       darkPalette.bg,
+  surface:  darkPalette.surface,
   glass:    "rgba(255,255,255,0.028)",
   glassH:   "rgba(255,255,255,0.048)",
   border:   "rgba(255,255,255,0.06)",
@@ -59,9 +60,9 @@ const P = {
   roseS:    "rgba(232,129,140,0.08)",
   roseB:    "rgba(232,129,140,0.22)",
   w:        "#FFFFFF",
-  txt:      "#EDF2F7",
-  txt2:     "#8A97AA",
-  txt3:     "#3D4A5C",
+  txt:      darkPalette.txt,
+  txt2:     darkPalette.txt2,
+  txt3:     darkPalette.txt3,
   r:        14,
 };
 const font  = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
@@ -102,7 +103,7 @@ const CSS = `
   /* Top nav sticky */
   .mn-nav {
     position: sticky; top: 0; z-index: 50;
-    background: rgba(4,8,15,0.85);
+    background: rgba(0,0,0,0.85);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid ${P.border};
@@ -706,7 +707,7 @@ export default function ManualCRM({
       {/* ─────────────── ASISTENTE DEL MANUAL (sección única al final) ─────────────── */}
       <section style={{
         borderTop: `1px solid ${P.border}`,
-        background: `linear-gradient(180deg, ${P.bg} 0%, ${P.surface} 100%)`,
+        background: P.bg,
         padding: "72px 24px",
       }}>
         <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}>

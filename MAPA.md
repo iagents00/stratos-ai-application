@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**237 archivos · 80.576 líneas**
+**237 archivos · 80.540 líneas**
 
 ---
 
@@ -135,7 +135,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `index.jsx` | 2365 | Modal de cuatro pestañas: Lista de Acción · Documentos · Plan Estratégico · Protocolo de Ventas |
+| `index.jsx` | 2336 | Modal de cuatro pestañas: Lista de Acción · Documentos · Plan Estratégico · Protocolo de Ventas |
 | `Rails.css` | 832 | _sin describir_ |
 | `AdminPanel.jsx` | 644 | Panel de gestión de usuarios (Super Admin y Admin). |
 | `index.jsx` | 487 | Panel de chat con Agente Stratos AI. |
@@ -394,25 +394,25 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `LandingMarketing.jsx` | 1593 | _sin describir_ |
-| `PrivacyPolicy.jsx` | 1221 | _sin describir_ |
-| `ManualMarketing.jsx` | 1025 | Manual de usuario del equipo de MARKETING de Duke |
+| `LandingMarketing.jsx` | 1576 | _sin describir_ |
+| `PrivacyPolicy.jsx` | 1222 | _sin describir_ |
+| `ManualMarketing.jsx` | 1026 | _sin describir_ |
 | `manual-content.js` | 1004 | _sin describir_ |
 | `Diagnostico.jsx` | 974 | _sin describir_ |
-| `DeliveryHubCRM.jsx` | 880 | Hub de Entrega del CRM Stratos AI v1.0 |
-| `ManualCRM.jsx` | 789 | Manual del CRM Stratos AI para asesores |
+| `DeliveryHubCRM.jsx` | 881 | _sin describir_ |
+| `ManualCRM.jsx` | 790 | _sin describir_ |
 | `manual-telegram-content.js` | 714 | Manual del COPILOT / Asistente IA (Duke del Caribe) |
 | `LoginScreen.jsx` | 701 | Pantalla de autenticación completa para la app |
-| `OnboardingCallCenter.jsx` | 686 | _sin describir_ |
-| `PricingScreen.jsx` | 554 | Planes y pagos para Stratos AI |
-| `DataDeletion.jsx` | 553 | _sin describir_ |
+| `OnboardingCallCenter.jsx` | 687 | _sin describir_ |
+| `DataDeletion.jsx` | 554 | _sin describir_ |
+| `PricingScreen.jsx` | 552 | _sin describir_ |
 | `DukeLeadRouter.jsx` | 343 | _sin describir_ |
-| `ManualGasil.jsx` | 284 | Manual de uso de Stratos IA para GASIL RADIODIAGNÓSTICO DEL VALLE |
-| `ManualNSG.jsx` | 284 | Manual de uso de Stratos IA para NSG |
-| `ManualLegacy.jsx` | 245 | Manual de uso de Stratos IA para LEGACY DESIGN |
-| `ManualBrasa.jsx` | 234 | Manual de uso de Stratos IA para BRASA Y PIEDRA |
-| `ManualMuebleria.jsx` | 223 | Manual de uso de Stratos IA para la MUEBLERÍA |
-| `LoginScreenNative.jsx` | 175 | _sin describir_ |
+| `ManualGasil.jsx` | 285 | _sin describir_ |
+| `ManualNSG.jsx` | 285 | _sin describir_ |
+| `ManualLegacy.jsx` | 246 | _sin describir_ |
+| `ManualBrasa.jsx` | 235 | _sin describir_ |
+| `ManualMuebleria.jsx` | 224 | _sin describir_ |
+| `LoginScreenNative.jsx` | 176 | _sin describir_ |
 
 ### `src/lib/`
 
@@ -550,7 +550,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Agente Ejecutivo | `src/app/components/Chat.jsx:74` |
 | Agente Stratos | `src/app/components/Chat.jsx:60` |
 | Agrega un teléfono…  +1 555 … | `src/app/views/CRM/components.jsx:1305` |
-| Agregar | `src/app/features/MetaPanel/index.jsx:1357` |
+| Agregar | `src/app/features/MetaPanel/index.jsx:1328` |
 | Agregar etapa | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:274` |
 | Agregar link | `src/app/views/LandingPages/index.jsx:1936` |
 | Agregar otro | `src/app/views/Marketing.jsx:2514` |
@@ -581,13 +581,13 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Asesor | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:199` |
 | Así te ayuda a operar | `src/app/components/CopilotCapabilities.jsx:117` |
 | Asignar a | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:207` |
-| Asignar a un asesor | `src/app/features/MetaPanel/index.jsx:993` |
+| Asignar a un asesor | `src/app/features/MetaPanel/index.jsx:964` |
 | Asignar a… | `src/app/views/Marketing.jsx:863` |
-| Asignar responsable | `src/app/features/MetaPanel/index.jsx:982` |
+| Asignar responsable | `src/app/features/MetaPanel/index.jsx:953` |
 | Asistió (sem.) | `src/app/views/ZoomControl/Resumen.jsx:421` |
 | Atención Inmediata | `src/app/views/Dash.jsx:235` |
 | Aún no configuras un correo de recuperación. | `src/app/views/Profile.jsx:430` |
-| Aún no hay documentos | `src/app/features/MetaPanel/index.jsx:1853` |
+| Aún no hay documentos | `src/app/features/MetaPanel/index.jsx:1824` |
 | Aún no hay usuarios activos. | `src/app/features/Admin/CajaPermissionsAdmin.jsx:127` |
 | Autor del hito | `src/app/views/CRM/ZoomBoard.jsx:244` |
 | Badge | `src/app/views/LandingPages/index.jsx:662` |
@@ -622,11 +622,11 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cambiar cuánto gana | `src/app/views/Nomina.jsx:180` |
 | Cambiar el estatus | `src/app/views/Marketing.jsx:1575` |
 | Cambiar etapa | `src/app/views/CRM/components.jsx:277` |
-| Cambiar fecha | `src/app/features/MetaPanel/index.jsx:1236` |
+| Cambiar fecha | `src/app/features/MetaPanel/index.jsx:1207` |
 | Cambiar la etapa del lead | `src/app/views/WhatsApp.jsx:503` |
 | Cambiar orden de las tarjetas de prioridad | `src/app/views/CRM/index.jsx:2639` |
 | Cambiar posición de prioridad | `src/app/views/CRM/index.jsx:2800` |
-| Cambiar prioridad | `src/app/features/MetaPanel/index.jsx:1526` |
+| Cambiar prioridad | `src/app/features/MetaPanel/index.jsx:1497` |
 | Cambios sin guardar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:260` |
 | Campañas Recientes | `src/app/views/LandingPages/index.jsx:1255` |
 | Campo requerido | `src/app/views/LandingPages/index.jsx:641` |
@@ -668,7 +668,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cerrar formulario | `src/app/views/CRM/index.jsx:3253` |
 | Cerrar guía de funciones | `src/app/components/CopilotCapabilities.jsx:120` |
 | Cerrar menú | `src/app/components/MobileHeaderMenu.jsx:52` |
-| Cerrar Mi Espacio | `src/app/features/MetaPanel/index.jsx:745` |
+| Cerrar Mi Espacio | `src/app/features/MetaPanel/index.jsx:716` |
 | Cerrar sesión | `src/app/App.jsx:2727` |
 | Cerrar vista previa | `src/app/views/LandingPages/LandingPagePreview.jsx:202` |
 | Chats | `src/app/views/WhatsApp.jsx:633` |
@@ -744,23 +744,27 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/CRM/index.jsx` (6665 líneas)
 - `src/app/App.jsx` (3190 líneas)
 - `src/app/views/Marketing.jsx` (3075 líneas)
-- `src/landing/LandingMarketing.jsx` (1593 líneas)
-- `src/landing/PrivacyPolicy.jsx` (1221 líneas)
+- `src/landing/LandingMarketing.jsx` (1576 líneas)
+- `src/landing/PrivacyPolicy.jsx` (1222 líneas)
+- `src/landing/ManualMarketing.jsx` (1026 líneas)
 - `src/landing/manual-content.js` (1004 líneas)
 - `src/landing/Diagnostico.jsx` (974 líneas)
 - `src/app/views/ComandoDirectivo.jsx` (961 líneas)
 - `src/app/views/CRM/LeadWhatsAppChat.jsx` (942 líneas)
+- `src/landing/DeliveryHubCRM.jsx` (881 líneas)
 - `src/app/views/RRHHModule.jsx` (846 líneas)
 - `src/app/features/Admin/Rails.css` (832 líneas)
+- `src/landing/ManualCRM.jsx` (790 líneas)
 - `src/app/views/InformeAvances.jsx` (747 líneas)
 - `src/lib/auth.js` (725 líneas)
 - `src/app/views/ERP.jsx` (719 líneas)
-- `src/landing/OnboardingCallCenter.jsx` (686 líneas)
+- `src/landing/OnboardingCallCenter.jsx` (687 líneas)
 - `src/app/views/WhatsApp.jsx` (667 líneas)
 - `src/app/data/catalogoProyectos.js` (611 líneas)
 - `src/app/views/Caja.jsx` (593 líneas)
 - `src/app/views/ChatEquipo.jsx` (569 líneas)
-- `src/landing/DataDeletion.jsx` (553 líneas)
+- `src/landing/DataDeletion.jsx` (554 líneas)
+- `src/landing/PricingScreen.jsx` (552 líneas)
 - `src/app/views/PlanSemanal.jsx` (515 líneas)
 - `src/app/views/ComandoDirectivo.pdf.js` (514 líneas)
 - `src/app/views/ZoomControl/Resumen.jsx` (490 líneas)
@@ -779,6 +783,8 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/Admin/PipelineConfiguratorAdmin.jsx` (312 líneas)
 - `src/clients/clinica-dental/config.js` (311 líneas)
 - `src/lib/lead-save.js` (288 líneas)
+- `src/landing/ManualGasil.jsx` (285 líneas)
+- `src/landing/ManualNSG.jsx` (285 líneas)
 - `src/app/views/ZoomControl/Graficas.jsx` (284 líneas)
 - `src/lib/native.js` (282 líneas)
 - `src/clients/nsg/config.js` (270 líneas)
@@ -786,10 +792,13 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/MetaPanel/DocsStratos.jsx` (262 líneas)
 - `src/index.css` (256 líneas)
 - `src/app/data/chat.js` (249 líneas)
+- `src/landing/ManualLegacy.jsx` (246 líneas)
 - `src/app/views/Nomina.jsx` (238 líneas)
 - `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx` (237 líneas)
+- `src/landing/ManualBrasa.jsx` (235 líneas)
 - `src/lib/manual-stratos-doc.js` (230 líneas)
 - `src/app/views/ProductividadTab.jsx` (225 líneas)
+- `src/landing/ManualMuebleria.jsx` (224 líneas)
 - `src/app/features/Admin/PlatformAdminConsole.jsx` (223 líneas)
 - `src/lib/organize-notes.js` (220 líneas)
 - `src/app/constants/intelFeatures.js` (211 líneas)
@@ -806,7 +815,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/recordatorios-locales.js` (179 líneas)
 - `src/hooks/useWhatsAppInbox.js` (178 líneas)
 - `src/app/views/CRM/RequiresHumanButton.jsx` (177 líneas)
-- `src/landing/LoginScreenNative.jsx` (175 líneas)
+- `src/landing/LoginScreenNative.jsx` (176 líneas)
 - `src/lib/informe-doc.js` (175 líneas)
 - `src/app/views/MiDrive.jsx` (171 líneas)
 - `src/app/components/EstadoAvisos.jsx` (158 líneas)

@@ -1,3 +1,4 @@
+import { P as darkPalette } from "../design-system/tokens";
 import { useState, useEffect } from "react";
 import {
   ArrowRight, Check, X, ChevronDown, Mic, BarChart3,
@@ -13,8 +14,8 @@ import {
    DESIGN SYSTEM
    ═══════════════════════════════════ */
 const P = {
-  bg: "#04080F",
-  surface: "#080D17",
+  bg: darkPalette.bg,
+  surface: darkPalette.surface,
   glass: "rgba(255,255,255,0.028)",
   glassH: "rgba(255,255,255,0.048)",
   border: "rgba(255,255,255,0.06)",
@@ -26,15 +27,15 @@ const P = {
   /* colores secundarios */
   blue: "#6BAED6",
   blueS: "rgba(107,174,214,0.08)",
-  violet: "#9B8AF0",
-  violetS: "rgba(155,138,240,0.08)",
+  violet: darkPalette.violet,
+  violetS: "rgba(181,181,181,0.08)",
   rose: "#D97070",
   roseS: "rgba(217,112,112,0.08)",
   /* texto — blanco dominante */
   w: "#FFFFFF",
-  txt: "#EDF2F7",
-  txt2: "#8A97AA",
-  txt3: "#3D4A5C",
+  txt: darkPalette.txt,
+  txt2: darkPalette.txt2,
+  txt3: darkPalette.txt3,
   r: 14,
 };
 const font    = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif`;
@@ -47,7 +48,7 @@ const mono    = `"SF Mono", "Fira Code", "Cascadia Code", monospace`;
 const CSS = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
-  body { background: #04080F; overflow-x: hidden; }
+  body { background: #000000; overflow-x: hidden; }
 
   @keyframes ticker {
     0%   { transform: translateX(0); }
@@ -127,11 +128,11 @@ const CSS = `
   }
   .ticker-wrap::before {
     left: 0;
-    background: linear-gradient(to right, #04080F 0%, transparent 100%);
+    background: linear-gradient(to right, #000000 0%, transparent 100%);
   }
   .ticker-wrap::after {
     right: 0;
-    background: linear-gradient(to left, #04080F 0%, transparent 100%);
+    background: linear-gradient(to left, #000000 0%, transparent 100%);
   }
   .ticker-track {
     display: flex;
@@ -553,7 +554,7 @@ const VoiceDemo = () => {
               { l: "Asesor", v: "Libre para vender" },
             ].map((it, i) => (
               <div key={i} style={{
-                background: P.violetS, border: "1px solid rgba(155,138,240,0.14)",
+                background: P.violetS, border: "1px solid rgba(181,181,181,0.14)",
                 borderRadius: 8, padding: "10px 12px",
               }}>
                 <p style={{ color: P.txt2, fontSize: 10, fontFamily: mono, marginBottom: 3 }}>{it.l}</p>
@@ -709,8 +710,8 @@ const PricingCard = ({ plan }) => {
         <div style={{
           position: "absolute", top: -12, left: 20,
           padding: "4px 14px", borderRadius: 99,
-          background: plan.highlight ? P.accent : "rgba(155,138,240,0.9)",
-          color: plan.highlight ? "#060A11" : "#fff",
+          background: plan.highlight ? P.accent : "rgba(181,181,181,0.9)",
+          color: plan.highlight ? "#000000" : "#fff",
           fontSize: 10, fontWeight: 700, fontFamily: font,
           letterSpacing: "0.06em", textTransform: "uppercase",
         }}>{plan.badge}</div>
@@ -882,7 +883,7 @@ export default function LandingMarketing({ appUrl = "/?app" }) {
       {/* ── NAV ─────────────────────────── */}
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
-        background: navScrolled ? "rgba(4,8,15,0.92)" : "transparent",
+        background: navScrolled ? "rgba(0,0,0,0.92)" : "transparent",
         backdropFilter: navScrolled ? "blur(24px)" : "none",
         WebkitBackdropFilter: navScrolled ? "blur(24px)" : "none",
         borderBottom: navScrolled ? `1px solid ${P.border}` : "none",
@@ -971,7 +972,7 @@ export default function LandingMarketing({ appUrl = "/?app" }) {
         {mobileMenu && (
           <div style={{
             position: "fixed", top: 64, left: 0, right: 0, bottom: 0, zIndex: 199,
-            background: "rgba(4,8,15,0.98)", backdropFilter: "blur(20px)",
+            background: "rgba(0,0,0,0.98)", backdropFilter: "blur(20px)",
             display: "flex", flexDirection: "column", padding: "24px 24px 40px",
             overflowY: "auto",
           }}>
@@ -994,7 +995,7 @@ export default function LandingMarketing({ appUrl = "/?app" }) {
               <a href="https://wa.me/17479779711?text=Hola%2C%20quiero%20solicitar%20acceso%20a%20Stratos%20AI%20%F0%9F%9A%80" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenu(false)} style={{
                 display: "block", width: "100%", padding: "14px 0", borderRadius: 12, border: "none",
                 background: `linear-gradient(135deg, ${P.accent} 0%, #3BC9A8 100%)`,
-                color: "#04080F", fontSize: 15, fontWeight: 700, fontFamily: fontD, cursor: "pointer",
+                color: "#000000", fontSize: 15, fontWeight: 700, fontFamily: fontD, cursor: "pointer",
                 boxShadow: "0 4px 20px rgba(82,217,184,0.30)", textDecoration: "none", textAlign: "center",
               }}>
                 Solicitar acceso →
@@ -1014,24 +1015,6 @@ export default function LandingMarketing({ appUrl = "/?app" }) {
 
       {/* ── HERO ─────────────────────────── */}
       <section style={{ position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {/* glows */}
-        <div style={{
-          position: "absolute", width: 560, height: 560, borderRadius: "50%",
-          background: `radial-gradient(circle, rgba(82,217,184,0.09) 0%, transparent 70%)`,
-          top: "5%", right: "10%", animation: "drift 10s ease-in-out infinite", pointerEvents: "none",
-        }}/>
-        <div style={{
-          position: "absolute", width: 420, height: 420, borderRadius: "50%",
-          background: `radial-gradient(circle, rgba(107,174,214,0.07) 0%, transparent 70%)`,
-          top: "30%", left: "5%", animation: "drift 14s ease-in-out infinite reverse", pointerEvents: "none",
-        }}/>
-        {/* grid */}
-        <div style={{
-          position: "absolute", inset: 0, opacity: 0.018, pointerEvents: "none",
-          backgroundImage: `linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)`,
-          backgroundSize: "72px 72px",
-        }}/>
-
         {/* contenido hero */}
         <div style={{ ...W, width: "100%", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", paddingTop: 100, paddingBottom: 56 }} className="fade-up">
           {/* OS badge — system tag design */}
@@ -1390,8 +1373,8 @@ export default function LandingMarketing({ appUrl = "/?app" }) {
           {/* card full-width */}
           <div style={{
             borderRadius: 20,
-            border: `1px solid rgba(155,138,240,0.22)`,
-            background: `linear-gradient(135deg, rgba(155,138,240,0.07) 0%, rgba(155,138,240,0.02) 60%, rgba(82,217,184,0.03) 100%)`,
+            border: `1px solid rgba(181,181,181,0.22)`,
+            background: `linear-gradient(135deg, rgba(181,181,181,0.07) 0%, rgba(181,181,181,0.02) 60%, rgba(82,217,184,0.03) 100%)`,
             backdropFilter: "blur(24px)",
             WebkitBackdropFilter: "blur(24px)",
             padding: "clamp(28px, 4vw, 52px)",
@@ -1401,7 +1384,7 @@ export default function LandingMarketing({ appUrl = "/?app" }) {
             {/* glow decoration */}
             <div style={{
               position: "absolute", width: 300, height: 300, borderRadius: "50%",
-              background: `radial-gradient(circle, rgba(155,138,240,0.12) 0%, transparent 70%)`,
+              background: `radial-gradient(circle, rgba(181,181,181,0.12) 0%, transparent 70%)`,
               top: "-80px", right: "5%", pointerEvents: "none",
             }}/>
 
@@ -1411,7 +1394,7 @@ export default function LandingMarketing({ appUrl = "/?app" }) {
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
                   <span style={{
                     padding: "4px 13px", borderRadius: 99,
-                    background: "rgba(155,138,240,0.14)", border: "1px solid rgba(155,138,240,0.25)",
+                    background: "rgba(181,181,181,0.14)", border: "1px solid rgba(181,181,181,0.25)",
                     color: P.violet, fontSize: 10, fontWeight: 700, fontFamily: mono,
                     letterSpacing: "0.08em", textTransform: "uppercase",
                   }}>Enterprise · A medida</span>
@@ -1443,7 +1426,7 @@ export default function LandingMarketing({ appUrl = "/?app" }) {
                     <div key={i} style={{
                       display: "flex", alignItems: "center", gap: 7,
                       padding: "6px 12px", borderRadius: 8,
-                      background: "rgba(155,138,240,0.07)", border: "1px solid rgba(155,138,240,0.14)",
+                      background: "rgba(181,181,181,0.07)", border: "1px solid rgba(181,181,181,0.14)",
                     }}>
                       <cap.icon size={12} color={P.violet} strokeWidth={1.5} />
                       <span style={{ color: P.txt2, fontSize: 12, fontFamily: font, fontWeight: 500 }}>{cap.label}</span>
@@ -1454,7 +1437,7 @@ export default function LandingMarketing({ appUrl = "/?app" }) {
 
               {/* right — pricing */}
               <div style={{
-                background: "rgba(255,255,255,0.03)", border: `1px solid rgba(155,138,240,0.18)`,
+                background: "rgba(255,255,255,0.03)", border: `1px solid rgba(181,181,181,0.18)`,
                 borderRadius: 16, padding: "28px 32px", minWidth: 220, textAlign: "center", flexShrink: 0,
               }}>
                 <p style={{ color: P.txt3, fontSize: 10, fontFamily: mono, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>Inversión desde</p>
@@ -1467,7 +1450,7 @@ export default function LandingMarketing({ appUrl = "/?app" }) {
                 </p>
                 <Btn
                   primary={false}
-                  style={{ width: "100%", justifyContent: "center", fontSize: 13, borderColor: "rgba(155,138,240,0.3)", color: P.violet }}
+                  style={{ width: "100%", justifyContent: "center", fontSize: 13, borderColor: "rgba(181,181,181,0.3)", color: P.violet }}
                   onClick={() => document.getElementById("diagnostico")?.scrollIntoView({ behavior: "smooth" })}
                 >
                   Solicitar propuesta <ArrowRight size={13} />

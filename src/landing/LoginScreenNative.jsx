@@ -1,3 +1,4 @@
+import { P } from "../design-system/tokens";
 import { useState } from "react";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 import { useClient } from "../hooks/useClient";
@@ -101,7 +102,7 @@ const styles = {
     display: "grid",
     placeItems: "center",
     padding: "max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom))",
-    background: "radial-gradient(circle at 50% 10%, #132338 0, #070B12 42%, #05080D 100%)",
+    background: P.bg,
     color: "#E8EEF7",
     fontFamily: font,
   },
@@ -111,7 +112,7 @@ const styles = {
     padding: "36px 26px 28px",
     border: "1px solid rgba(255,255,255,.09)",
     borderRadius: 24,
-    background: "rgba(10,17,28,.92)",
+    background: P.surface,
     boxShadow: "0 24px 70px rgba(0,0,0,.35)",
   },
   mark: {
@@ -137,7 +138,7 @@ const styles = {
     borderRadius: 13,
     padding: "0 14px",
     outline: "none",
-    background: "#0E1724",
+    background: P.bg3,
     color: "#F2F6FB",
     fontSize: 16,
     fontFamily: font,

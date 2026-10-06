@@ -1,3 +1,4 @@
+import { P as darkPalette } from "../design-system/tokens";
 /**
  * ManualMuebleria.jsx — Manual de uso de Stratos IA para la MUEBLERÍA
  *
@@ -14,10 +15,10 @@ import {
 } from "lucide-react";
 
 const P = {
-  bg: "#0C0905", surface: "#151006", glass: "rgba(255,255,255,0.03)",
+  bg: darkPalette.bg, surface: darkPalette.surface, glass: "rgba(255,255,255,0.03)",
   border: "rgba(255,255,255,0.07)", accent: "#F59E0B", accentS: "rgba(245,158,11,0.09)",
   accentB: "rgba(245,158,11,0.24)", warn: "#E8A488", warnS: "rgba(232,164,136,0.07)",
-  warnB: "rgba(232,164,136,0.22)", w: "#FFFFFF", txt: "#EFE7DA", txt2: "#AA9D89", txt3: "#5C503E",
+  warnB: "rgba(232,164,136,0.22)", w: "#FFFFFF", txt: darkPalette.txt, txt2: darkPalette.txt2, txt3: darkPalette.txt3,
 };
 const font = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
 const fontD = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
