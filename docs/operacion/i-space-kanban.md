@@ -23,7 +23,7 @@ Las tarjetas se mueven arrastrando o mediante un selector nativo de estado. El t
 - **Bloqueadas:** columna derivada de un bloqueo manual o una dependencia pendiente/no disponible; no es un estado persistido seleccionable. Las tareas hechas quedan fuera del cómputo de bloqueos. Al resolver la causa, la tarea reaparece en la columna de su estado guardado.
 - **Capacidad:** WIP sugerido de tres tareas en curso, contando la columna derivada. Superarlo muestra una advertencia y no impide guardar. Los límites recomendados para foco y prioridades trimestrales también son orientativos.
 
-`board-model.mjs` valida títulos, ciclos de dependencias, avance con bloqueos y checklist incompleto al cerrar. Permite registrar un bloqueo en una tarea ya en curso sin cambiar su estado. Estas son validaciones de esta interfaz: no constituyen restricciones globales del servidor para Copilot, API u otros clientes.
+`board-model.mjs` valida títulos, ciclos de dependencias, avance con bloqueos y checklist incompleto al cerrar. Permite registrar un bloqueo en una tarea ya en curso sin cambiar su estado. Estas validaciones de interfaz no constituyen restricciones globales de las tablas. El motor de proyectos nuevo también las controla en su RPC transaccional; otros clientes conservan sus reglas existentes. Véase [Copilot de proyectos](i-space-copilot.md).
 
 “Preparar revisión” abre un borrador de tarea con checklist para resultados, evidencia, bloqueos, responsables y siguiente foco. Requiere guardar; no programa revisiones automáticas.
 

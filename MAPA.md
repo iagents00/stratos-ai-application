@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**236 archivos · 80.567 líneas**
+**237 archivos · 80.596 líneas**
 
 ---
 
@@ -21,13 +21,13 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | **Mi Espacio** | _sin vista propia (redirige a otra)_ | — |
 | **Plan Semanal** | `src/app/views/PlanSemanal.jsx` | 515 |
 | **Copilot** | `src/dental-demo/TenantHuliWorkspace.jsx`<br>`src/app/views/Copilot.jsx` | 11<br>2019 |
-| **Marketing** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 145<br>3075 |
-| **Actividades** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 145<br>3075 |
-| **Equipo** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 145<br>3075 |
-| **Mi Día** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 145<br>3075 |
-| **Marcas** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 145<br>3075 |
-| **Propiedades** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 145<br>3075 |
-| **Solicitudes** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 145<br>3075 |
+| **Marketing** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 148<br>3075 |
+| **Actividades** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 148<br>3075 |
+| **Equipo** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 148<br>3075 |
+| **Mi Día** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 148<br>3075 |
+| **Marcas** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 148<br>3075 |
+| **Propiedades** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 148<br>3075 |
+| **Solicitudes** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 148<br>3075 |
 | **Mi Drive** | `src/app/views/MiDrive.jsx` | 171 |
 | **WhatsApp** | _sin vista propia (redirige a otra)_ | — |
 | **Create** | `src/app/views/LandingPages/index.jsx` | 2022 |
@@ -149,7 +149,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `RailsSettings.jsx` | 141 | Configuración de Stratos Rails. Los controles editan un borrador por organización. |
 | `RailsSettings.css` | 86 | _sin describir_ |
 | `CompanySetupAdmin.jsx` | 80 | _sin describir_ |
-| `useBoard.js` | 47 | _sin describir_ |
+| `useBoard.js` | 48 | _sin describir_ |
 | `rails-theme.js` | 31 | _sin describir_ |
 | `RoleBadge.jsx` | 29 | Badge de rol de usuario con colores según nivel. |
 
@@ -208,7 +208,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `MiDia.jsx` | 155 | _sin describir_ |
 | `AdvisorMetrics.jsx` | 152 | Tabla de indicadores por asesor (Comando Directivo dentro del CRM). |
 | `LeadChatHistory.jsx` | 152 | _sin describir_ |
-| `ISpaceBoard.jsx` | 145 | _sin describir_ |
+| `ISpaceBoard.jsx` | 148 | _sin describir_ |
 | `ScheduledCallBadge.jsx` | 144 | _sin describir_ |
 | `IACRMPlanes.jsx` | 119 | _sin describir_ |
 | `constants.js` | 116 | _sin describir_ |
@@ -283,7 +283,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `config.js` | 76 | _sin describir_ |
+| `config.js` | 80 | _sin describir_ |
 
 ### `src/clients/legacy-design/`
 
@@ -418,7 +418,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `telegram.js` | 807 | Pareo del bot de Telegram con el perfil del asesor. |
+| `telegram.js` | 810 | Pareo del bot de Telegram con el perfil del asesor. |
 | `auth.js` | 725 | _sin describir_ |
 | `push.js` | 416 | Sistema de suscripción a notificaciones Web Push |
 | `next-action-engine.js` | 371 | _sin describir_ |
@@ -464,6 +464,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `service-errors.js` | 32 | _sin describir_ |
 | `copilot-profile.js` | 29 | A failed profile lookup is not evidence that Copilot is disabled. |
 | `rails-gestion.js` | 24 | Valida el borrador una vez; un envío incierto se reintenta sin alterar su payload. |
+| `project-copilot.js` | 18 | _sin describir_ |
 | `read-all-rows.js` | 18 | _sin describir_ |
 | `app-review-access.js` | 12 | Implementación web: App Review no existe fuera del binario móvil. |
 | `huli.js` | 10 | _sin describir_ |
@@ -531,9 +532,9 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Actual: | `src/app/views/Profile.jsx:429` |
 | Actualización del sistema | `src/app/components/DynIsland.jsx:408` |
 | Actualización Importante | `src/app/components/DynamicIsland.jsx:132` |
-| Actualizando tu tablero… | `src/app/views/ISpaceBoard.jsx:126` |
+| Actualizando tu tablero… | `src/app/views/ISpaceBoard.jsx:129` |
 | Actualizar | `src/app/features/Admin/CatalogConfiguratorAdmin.jsx:117` |
-| Actualizar tablero | `src/app/views/ISpaceBoard.jsx:100` |
+| Actualizar tablero | `src/app/views/ISpaceBoard.jsx:102` |
 | Adjuntar | `src/app/views/ChatEquipo.jsx:481` |
 | Adjuntar imagen, audio o archivo | `src/app/views/CRM/LeadWhatsAppChat.jsx:843` |
 | Adjuntar PDF, documento o audio | `src/app/views/CRM/components.jsx:1830` |
@@ -569,8 +570,8 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Anterior | `src/app/views/CRM/index.jsx:3155` |
 | Añade tareas concretas para este cliente | `src/app/views/CRM/components.jsx:2162` |
 | Añadir | `src/app/views/CRM/components.jsx:5770` |
-| Añadir paso | `src/app/views/ISpaceBoard.jsx:120` |
-| Añadir tarea | `src/app/views/ISpaceBoard.jsx:135` |
+| Añadir criterio | `src/app/views/ISpaceBoard.jsx:122` |
+| Añadir tarea | `src/app/views/ISpaceBoard.jsx:138` |
 | Aparecerán al inicio de su pipeline en | `src/app/views/CRM/index.jsx:6179` |
 | Aplicaciones | `src/app/App.jsx:3117` |
 | Apps | `src/app/App.jsx:2289` |
@@ -608,11 +609,11 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Buscar por nombre… | `src/dental-demo/HuliWorkspace.jsx:31` |
 | Buscar propiedad, ubicación, estatus, año… | `src/app/views/Marketing.jsx:1430` |
 | Buscar solicitudes… | `src/app/views/Marketing.jsx:2171` |
-| Buscar tareas | `src/app/views/ISpaceBoard.jsx:128` |
-| Buscar una tarea… | `src/app/views/ISpaceBoard.jsx:128` |
-| Cada día: | `src/app/views/ISpaceBoard.jsx:142` |
-| Cada semana: | `src/app/views/ISpaceBoard.jsx:142` |
-| Cada trimestre: | `src/app/views/ISpaceBoard.jsx:142` |
+| Buscar tareas | `src/app/views/ISpaceBoard.jsx:131` |
+| Buscar una tarea… | `src/app/views/ISpaceBoard.jsx:131` |
+| Cada día: | `src/app/views/ISpaceBoard.jsx:145` |
+| Cada semana: | `src/app/views/ISpaceBoard.jsx:145` |
+| Cada trimestre: | `src/app/views/ISpaceBoard.jsx:145` |
 | Caja | `src/app/views/Caja.jsx:298` |
 | Caja: contrato y permisos | `src/app/features/Admin/CajaPermissionsAdmin.jsx:98` |
 | CALCULADORA DE RETORNO | `src/app/views/LandingPages/index.jsx:881` |
@@ -663,7 +664,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cerrar | `src/app/App.jsx:2970` |
 | Cerrar (Esc) | `src/app/views/ZoomControl/index.jsx:811` |
 | Cerrar detalle | `src/app/views/ZoomControl/Resumen.jsx:309` |
-| Cerrar editor | `src/app/views/ISpaceBoard.jsx:106` |
+| Cerrar editor | `src/app/views/ISpaceBoard.jsx:108` |
 | Cerrar formulario | `src/app/views/CRM/index.jsx:3253` |
 | Cerrar guía de funciones | `src/app/components/CopilotCapabilities.jsx:120` |
 | Cerrar menú | `src/app/components/MobileHeaderMenu.jsx:52` |
@@ -671,7 +672,6 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cerrar sesión | `src/app/App.jsx:2739` |
 | Cerrar vista previa | `src/app/views/LandingPages/LandingPagePreview.jsx:202` |
 | Chats | `src/app/views/WhatsApp.jsx:633` |
-| Checklist de entrega | `src/app/views/ISpaceBoard.jsx:120` |
 | Cierres | `src/app/views/Team.jsx:116` |
 | Citas asignadas al presentador principal | `src/app/views/ZoomControl/Graficas.jsx:244` |
 | Citas del día | `src/dental-demo/HuliWorkspace.jsx:37` |
@@ -717,9 +717,10 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Copiado | `src/app/views/LandingPages/LandingPagePreview.jsx:119` |
 | Copiar | `src/app/views/InformeAvances.jsx:633` |
 | Copiar el discovery al portapapeles | `src/app/views/ZoomControl/index.jsx:839` |
+| Copiar prompt | `src/app/views/ISpaceBoard.jsx:125` |
 | Copiar resumen para Telegram | `src/app/views/CRM/components.jsx:4560` |
 | Copiar usuario y contraseña | `src/app/features/Admin/PlatformAdminConsole.jsx:142` |
-| Copilot | `src/app/views/ISpaceBoard.jsx:100` |
+| Copilot | `src/app/views/ISpaceBoard.jsx:102` |
 | Copilot AI | `src/app/views/Copilot.jsx:1130` |
 | Copilot dental | `src/dental-demo/DentalDemo.jsx:52` |
 | Corregir lo que escribiste | `src/app/views/Marketing.jsx:1853` |
@@ -731,7 +732,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Crear administrador partner | `src/app/features/Admin/PlatformAdminConsole.jsx:79` |
 
 
-_(672 textos más — usá `npm run buscar "texto"`)_
+_(675 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -815,7 +816,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/Admin/CajaPermissionsAdmin.jsx` (154 líneas)
 - `src/app/components/DynamicIsland.jsx` (153 líneas)
 - `src/app/views/CRM/LeadChatHistory.jsx` (152 líneas)
-- `src/app/views/ISpaceBoard.jsx` (145 líneas)
+- `src/app/views/ISpaceBoard.jsx` (148 líneas)
 - `src/app/views/CRM/ScheduledCallBadge.jsx` (144 líneas)
 - `src/clients/brasa-y-piedra/config.js` (140 líneas)
 - `src/app/components/CopilotCapabilities.jsx` (131 líneas)
@@ -838,10 +839,10 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/Admin/RailsSettings.css` (86 líneas)
 - `src/lib/backup.js` (85 líneas)
 - `src/app/features/Admin/CompanySetupAdmin.jsx` (80 líneas)
+- `src/clients/i-space/config.js` (80 líneas)
 - `src/contexts/ClientOrgGuard.jsx` (79 líneas)
 - `src/lib/avisos-nativos.js` (79 líneas)
 - `src/lib/transcribir.js` (77 líneas)
-- `src/clients/i-space/config.js` (76 líneas)
 - `src/hooks/useTeam.js` (74 líneas)
 - `src/lib/ringer.js` (72 líneas)
 - `src/lib/agenda.js` (71 líneas)

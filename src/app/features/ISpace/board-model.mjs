@@ -60,3 +60,20 @@ export function localDateTime(value) {
   const d = new Date(value); if (Number.isNaN(d.valueOf())) return '';
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
+
+// Keep actions from the same project together and prerequisites before dependents.
+export function orderBoardTasks(tasks, projects, allTasks = tasks) {
+  const index = new Map(projects.map((p,i) => [p.id,i]));
+  const byId = new Map(allTasks.map(t => [t.id,t])), memo = new Map();
+  const depth = (task, seen = new Set()) => {
+    if (!task?.depends_on || seen.has(task.id)) return 0;
+    if (memo.has(task.id)) return memo.get(task.id);
+    seen.add(task.id); const value = 1 + depth(byId.get(task.depends_on),seen); memo.set(task.id,value); return value;
+  };
+  return [...tasks].sort((a,b) => Number(isFocus(b))-Number(isFocus(a))
+    || String(a.due_at||'z').localeCompare(String(b.due_at||'z'))
+    || (index.get(a.project_id)??Infinity)-(index.get(b.project_id)??Infinity)
+    || depth(a)-depth(b)
+    || String(a.created_at||'').localeCompare(String(b.created_at||''))
+    || a.titulo.localeCompare(b.titulo,'es'));
+}
