@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**237 archivos · 80.569 líneas**
+**237 archivos · 80.540 líneas**
 
 ---
 
@@ -135,7 +135,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `index.jsx` | 2365 | Modal de cuatro pestañas: Lista de Acción · Documentos · Plan Estratégico · Protocolo de Ventas |
+| `index.jsx` | 2336 | Modal de cuatro pestañas: Lista de Acción · Documentos · Plan Estratégico · Protocolo de Ventas |
 | `Rails.css` | 832 | _sin describir_ |
 | `AdminPanel.jsx` | 644 | Panel de gestión de usuarios (Super Admin y Admin). |
 | `index.jsx` | 487 | Panel de chat con Agente Stratos AI. |
@@ -550,7 +550,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Agente Ejecutivo | `src/app/components/Chat.jsx:74` |
 | Agente Stratos | `src/app/components/Chat.jsx:60` |
 | Agrega un teléfono…  +1 555 … | `src/app/views/CRM/components.jsx:1305` |
-| Agregar | `src/app/features/MetaPanel/index.jsx:1357` |
+| Agregar | `src/app/features/MetaPanel/index.jsx:1328` |
 | Agregar etapa | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:274` |
 | Agregar link | `src/app/views/LandingPages/index.jsx:1936` |
 | Agregar otro | `src/app/views/Marketing.jsx:2514` |
@@ -581,13 +581,13 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Asesor | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:199` |
 | Así te ayuda a operar | `src/app/components/CopilotCapabilities.jsx:117` |
 | Asignar a | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:207` |
-| Asignar a un asesor | `src/app/features/MetaPanel/index.jsx:993` |
+| Asignar a un asesor | `src/app/features/MetaPanel/index.jsx:964` |
 | Asignar a… | `src/app/views/Marketing.jsx:863` |
-| Asignar responsable | `src/app/features/MetaPanel/index.jsx:982` |
+| Asignar responsable | `src/app/features/MetaPanel/index.jsx:953` |
 | Asistió (sem.) | `src/app/views/ZoomControl/Resumen.jsx:421` |
 | Atención Inmediata | `src/app/views/Dash.jsx:235` |
 | Aún no configuras un correo de recuperación. | `src/app/views/Profile.jsx:430` |
-| Aún no hay documentos | `src/app/features/MetaPanel/index.jsx:1853` |
+| Aún no hay documentos | `src/app/features/MetaPanel/index.jsx:1824` |
 | Aún no hay usuarios activos. | `src/app/features/Admin/CajaPermissionsAdmin.jsx:127` |
 | Autor del hito | `src/app/views/CRM/ZoomBoard.jsx:244` |
 | Badge | `src/app/views/LandingPages/index.jsx:662` |
@@ -622,11 +622,11 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cambiar cuánto gana | `src/app/views/Nomina.jsx:180` |
 | Cambiar el estatus | `src/app/views/Marketing.jsx:1575` |
 | Cambiar etapa | `src/app/views/CRM/components.jsx:277` |
-| Cambiar fecha | `src/app/features/MetaPanel/index.jsx:1236` |
+| Cambiar fecha | `src/app/features/MetaPanel/index.jsx:1207` |
 | Cambiar la etapa del lead | `src/app/views/WhatsApp.jsx:503` |
 | Cambiar orden de las tarjetas de prioridad | `src/app/views/CRM/index.jsx:2639` |
 | Cambiar posición de prioridad | `src/app/views/CRM/index.jsx:2800` |
-| Cambiar prioridad | `src/app/features/MetaPanel/index.jsx:1526` |
+| Cambiar prioridad | `src/app/features/MetaPanel/index.jsx:1497` |
 | Cambios sin guardar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:260` |
 | Campañas Recientes | `src/app/views/LandingPages/index.jsx:1255` |
 | Campo requerido | `src/app/views/LandingPages/index.jsx:641` |
@@ -668,7 +668,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cerrar formulario | `src/app/views/CRM/index.jsx:3253` |
 | Cerrar guía de funciones | `src/app/components/CopilotCapabilities.jsx:120` |
 | Cerrar menú | `src/app/components/MobileHeaderMenu.jsx:52` |
-| Cerrar Mi Espacio | `src/app/features/MetaPanel/index.jsx:745` |
+| Cerrar Mi Espacio | `src/app/features/MetaPanel/index.jsx:716` |
 | Cerrar sesión | `src/app/App.jsx:2727` |
 | Cerrar vista previa | `src/app/views/LandingPages/LandingPagePreview.jsx:202` |
 | Chats | `src/app/views/WhatsApp.jsx:633` |
