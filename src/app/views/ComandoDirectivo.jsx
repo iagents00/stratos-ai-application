@@ -872,7 +872,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark", loading = fal
                     strokeWidth={2.4}
                     fill={`url(#grad-${ind.key})`}
                     dot={false}
-                    activeDot={{ r: 5, strokeWidth: 2, stroke: isLight ? "#FFFFFF" : "#0E1320", fill: c }}
+                    activeDot={{ r: 5, strokeWidth: 2, stroke: isLight ? "#FFFFFF" : "#0C0C0C", fill: c }}
                     isAnimationActive={true}
                     animationDuration={520}
                   />
@@ -925,7 +925,7 @@ function ChartTooltip({ active, payload, label, isLight, T, hiddenSeries }) {
     .sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
   return (
     <div style={{
-      background: isLight ? "#FFFFFF" : "#0E1320",
+      background: isLight ? "#FFFFFF" : "#0C0C0C",
       border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
       borderRadius: 12,
       padding: "10px 14px",

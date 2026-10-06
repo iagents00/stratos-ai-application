@@ -224,7 +224,7 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null,
             display: "inline-flex", alignItems: "center", gap: 7,
             padding: "8px 14px", borderRadius: 9,
             background: isLight ? accent : `${accent}18`,
-            color: isLight ? "#06080F" : accent,
+            color: isLight ? "#000000" : accent,
             border: `1px solid ${isLight ? "transparent" : `${accent}55`}`,
             fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
             cursor: pdfBusy ? "default" : "pointer", opacity: pdfBusy ? 0.6 : 1,
@@ -368,7 +368,7 @@ export default function ResumenZooms({ rows = [], T, isLight, onOpenZoom = null,
                     padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer",
                     fontSize: 12, fontWeight: active ? 700 : 600, fontFamily: fontDisp,
                     background: active ? (isLight ? accent : `${accent}22`) : "transparent",
-                    color: active ? (isLight ? "#06080F" : accent) : T.txt3,
+                    color: active ? (isLight ? "#000000" : accent) : T.txt3,
                   }}>{s.l}</button>
                 );
               })}

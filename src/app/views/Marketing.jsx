@@ -983,7 +983,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
        ver el contenido pasando por debajo). */
     congelada: {
       position: "sticky", left: 0, zIndex: 2,
-      background: isLight ? "#FBFCFE" : "#0C1119",
+      background: isLight ? "#FBFCFE" : "#0C0C0C",
       borderRight: `1px solid ${bd}`,
     },
   };
@@ -1530,7 +1530,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
               {colsVista.map((c, i) => (
                 <th key={c.extra ? `x-${c.key}` : c.key}
                   style={i === 0
-                    ? { ...hoja.th, ...hoja.congelada, top: 0, zIndex: 4, background: isLight ? "#EEF2F7" : "#141A24" }
+                    ? { ...hoja.th, ...hoja.congelada, top: 0, zIndex: 4, background: isLight ? "#EEF2F7" : "#141414" }
                     : hoja.th}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                     {c.l}
@@ -2921,7 +2921,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           display: "flex", alignItems: "center", justifyContent: "center", padding: 18,
         }}>
           <div onClick={e => e.stopPropagation()} style={{
-            background: isLight ? "#FFFFFF" : "#0B1220", border: `1px solid ${bd}`, borderRadius: 16,
+            background: isLight ? "#FFFFFF" : "#0C0C0C", border: `1px solid ${bd}`, borderRadius: 16,
             padding: 14, maxWidth: "min(92vw, 860px)", maxHeight: "88vh", display: "flex", flexDirection: "column", gap: 10,
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -2948,7 +2948,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           display: "flex", alignItems: "center", justifyContent: "center", padding: 18,
         }}>
           <div onClick={e => e.stopPropagation()} style={{
-            background: isLight ? "#FFFFFF" : "#0B1220", border: `1px solid ${bd}`, borderRadius: 16,
+            background: isLight ? "#FFFFFF" : "#0C0C0C", border: `1px solid ${bd}`, borderRadius: 16,
             padding: 16, width: "min(94vw, 620px)", maxHeight: "88vh", overflowY: "auto",
             display: "flex", flexDirection: "column", gap: 12,
           }}>

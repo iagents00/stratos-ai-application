@@ -255,8 +255,8 @@ try {
         scope: "/",
         display: "standalone",
         orientation: "any",
-        background_color: "#030810",
-        theme_color: "#030810",
+        background_color: "#000000",
+        theme_color: "#000000",
         categories: ["business", "productivity"],
         icons: [
           { src: "/icon-192.png",     sizes: "192x192", type: "image/png", purpose: "any" },

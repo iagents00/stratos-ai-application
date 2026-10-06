@@ -185,7 +185,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
       onClick={onClose}
       style={{
         position: "fixed", inset: 0, zIndex: 100002,
-        background: "rgba(3,8,16,0.78)",
+        background: "rgba(0,0,0,0.78)",
         backdropFilter: "blur(8px)",
         WebkitBackdropFilter: "blur(8px)",
         display: "flex", alignItems: "center", justifyContent: "center",

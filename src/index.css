@@ -247,3 +247,9 @@ html.stratos-native [contenteditable="true"] {
 
 /* En táctil no hay mouse: las scrollbars de 10px solo roban ancho útil. */
 html.stratos-native *::-webkit-scrollbar { width: 0; height: 0; }
+
+/* Match the app canvas, including overscroll and portals. */
+:root:not([data-theme="light"]) { color-scheme: dark; background: #000000; }
+:root:not([data-theme="light"]) body { background: #000000; }
+:root[data-theme="light"] { color-scheme: light; background: #F1F3F6; }
+:root[data-theme="light"] body { background: #F1F3F6; }

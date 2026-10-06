@@ -48,7 +48,7 @@ const palette = (isLight) => isLight ? {
   applyBg:   "rgba(15,23,42,0.05)",
   applyBd:   "rgba(15,23,42,0.08)",
 } : {
-  panelBg:     "linear-gradient(165deg, #101D2B 0%, #070E18 100%)",
+  panelBg:     "linear-gradient(165deg, #141414 0%, #0C0C0C 100%)",
   panelBorder: "rgba(110,231,194,0.20)",
   panelShadow: "0 22px 55px rgba(0,0,0,0.55), 0 0 0 1px rgba(110,231,194,0.05), inset 0 1px 0 rgba(255,255,255,0.05)",
   mint:      "#6EE7C2",

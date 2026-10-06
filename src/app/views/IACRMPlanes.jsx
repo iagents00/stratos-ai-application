@@ -46,8 +46,8 @@ const IACRMPlanes = ({ T, isLight, oc }) => {
             <div key={plan.name} style={{
               borderRadius: 20,
               background: plan.popular
-                ? (isLight ? `linear-gradient(160deg, ${pc}10 0%, rgba(255,255,255,0.95) 100%)` : `linear-gradient(160deg, ${pc}10 0%, rgba(6,10,17,0.99) 100%)`)
-                : (isLight ? "rgba(255,255,255,0.82)" : "rgba(6,10,17,0.98)"),
+                ? (isLight ? `linear-gradient(160deg, ${pc}10 0%, rgba(255,255,255,0.95) 100%)` : `linear-gradient(160deg, ${pc}10 0%, rgba(0,0,0,0.99) 100%)`)
+                : (isLight ? "rgba(255,255,255,0.82)" : "rgba(0,0,0,0.98)"),
               border: `1px solid ${plan.popular ? pc + (isLight ? "44" : "50") : T.border}`,
               padding: "22px", position: "relative",
               boxShadow: plan.popular

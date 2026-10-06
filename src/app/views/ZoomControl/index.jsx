@@ -354,7 +354,7 @@ const ZoomControl = ({ theme = "dark", dateFilter = null, data = null }) => {
   // Fondos SÓLIDOS para las partes fijadas (sticky) — si fueran translúcidos,
   // las filas se verían a través del encabezado al hacer scroll.
   const stickyBg = isLight ? "#FFFFFF" : "#0B1220";
-  const sepBg    = isLight ? "#EBEEF2" : "#101B30";
+  const sepBg    = isLight ? "#EBEEF2" : "#141414";
   const zoomTableHeaderHeight = 56;
 
   return (
@@ -421,7 +421,7 @@ const ZoomControl = ({ theme = "dark", dateFilter = null, data = null }) => {
               fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
               cursor: "pointer",
               background: isLight ? accent : `${accent}1F`,
-              color: isLight ? "#06080F" : accent,
+              color: isLight ? "#000000" : accent,
               border: `1px solid ${isLight ? "transparent" : `${accent}55`}`,
               boxShadow: isLight ? `0 2px 8px ${accent}40` : "none",
             }}
@@ -468,7 +468,7 @@ const ZoomControl = ({ theme = "dark", dateFilter = null, data = null }) => {
                 padding: isMobile ? "11px 15px" : "7px 13px", borderRadius: 9, border: "none", cursor: "pointer",
                 fontSize: 12.5, fontWeight: active ? 700 : 600, fontFamily: fontDisp,
                 background: active ? (isLight ? accent : `${accent}22`) : "transparent",
-                color: active ? (isLight ? "#06080F" : accent) : T.txt2,
+                color: active ? (isLight ? "#000000" : accent) : T.txt2,
               }}>{r.label}</button>
             );
           })}
@@ -1024,7 +1024,7 @@ function ZoomModal({ T, isLight, accent, editing, form, setField, formErr, busy,
       onClick={onCancel}
       style={{
         position: "fixed", inset: 0, zIndex: 1000,
-        background: "rgba(3,8,16,0.62)", backdropFilter: "blur(6px)",
+        background: "rgba(0,0,0,0.62)", backdropFilter: "blur(6px)",
         display: "flex", alignItems: "flex-start", justifyContent: "center",
         padding: "5vh 16px", overflowY: "auto",
       }}
@@ -1033,7 +1033,7 @@ function ZoomModal({ T, isLight, accent, editing, form, setField, formErr, busy,
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "100%", maxWidth: 560,
-          background: isLight ? "#FFFFFF" : "#0B1220",
+          background: isLight ? "#FFFFFF" : "#0C0C0C",
           border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
           borderRadius: 20, padding: 22,
           boxShadow: "0 24px 64px rgba(0,0,0,0.45)",
@@ -1134,7 +1134,7 @@ function ZoomModal({ T, isLight, accent, editing, form, setField, formErr, busy,
           <button onClick={onSave} disabled={busy} style={{
             padding: "10px 18px", borderRadius: 10, cursor: busy ? "default" : "pointer",
             fontSize: 13, fontWeight: 500, fontFamily: fontDisp,
-            background: accent, color: "#06080F", border: "none",
+            background: accent, color: "#000000", border: "none",
             boxShadow: `0 2px 10px ${accent}50`, opacity: busy ? 0.7 : 1,
             display: "inline-flex", alignItems: "center", gap: 7,
           }}>

@@ -52,7 +52,7 @@ function ChartTip({ active, payload, label, isLight, T, totalLabel = "Total" }) 
   const total = items.reduce((s, p) => s + (p.value || 0), 0);
   return (
     <div style={{
-      background: isLight ? "#FFFFFF" : "#0E1320",
+      background: isLight ? "#FFFFFF" : "#0C0C0C",
       border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
       borderRadius: 12, padding: "9px 12px", fontFamily: font, fontSize: 12.5,
       boxShadow: "0 12px 32px rgba(0,0,0,0.20)", minWidth: 160,

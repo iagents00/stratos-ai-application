@@ -62,7 +62,7 @@
       })();
     </script>
     <meta name="google" content="notranslate" />
-    <meta name="theme-color" content="#030810" />
+    <meta name="theme-color" content="#000000" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <!-- "black" (opaca) y NO "black-translucent": el translúcido tiene un bug
          conocido en iOS standalone que deja una FRANJA MUERTA de ~90pt bajo el
@@ -271,7 +271,7 @@
           d.setAttribute("style",
             "position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;" +
             "align-items:center;justify-content:center;gap:14px;padding:28px;text-align:center;" +
-            "background:#060A11;color:#E2E8F0;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;");
+            "background:#000000;color:#E2E8F0;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;");
           d.innerHTML =
             '<div style="font-size:17px;font-weight:600">La app no terminó de abrir</div>' +
             '<div style="font-size:14px;opacity:.7;max-width:300px;line-height:1.5">' +
@@ -334,7 +334,7 @@
         try { tema = localStorage.getItem("stratos_crm_theme") || "dark"; } catch (e) {}
         try { document.documentElement.setAttribute("data-theme", tema); } catch (e) {}
         var claro = tema === "light";
-        var fondo = claro ? "#F1F3F6" : "#060A11";
+        var fondo = claro ? "#F1F3F6" : "#000000";
         var tinta = claro ? "#1F2937" : "#E2E8F0";
         var menta = "#6EE7C2";
 
@@ -577,7 +577,7 @@
               // (IMG_8507). El fix real del recorte: status-bar-style "black"
               // (el letterbox inferior es un bug conocido de black-translucent)
               // — requiere quitar y re-agregar el ícono una vez.
-              'html[data-standalone] { background: #030810; }' +
+              'html[data-standalone] { background: #000000; }' +
               'html[data-standalone][data-theme="light"] { background: #F1F3F6; }';
             document.head.appendChild(st);
             // iOS IGNORA user-scalable=no (accesibilidad) → bloquear el pinch a mano:

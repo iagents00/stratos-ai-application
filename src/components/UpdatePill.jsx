@@ -112,7 +112,7 @@ export default function UpdatePill() {
         maxWidth: "calc(100vw - 32px)",
         padding: "8px 8px 8px 16px",
         borderRadius: 999,
-        background: "rgba(9,18,37,0.94)",
+        background: "rgba(20,20,20,0.94)",
         border: `1px solid ${P.border}`,
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",

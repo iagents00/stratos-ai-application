@@ -183,7 +183,7 @@ export default function HistoryDrawer({
       onClick={onClose}
       style={{
         position: "fixed", inset: 0, zIndex: 100000,
-        background: "rgba(3,8,16,0.72)",
+        background: "rgba(0,0,0,0.72)",
         backdropFilter: "blur(6px)",
         WebkitBackdropFilter: "blur(6px)",
         display: "flex", justifyContent: "flex-end",

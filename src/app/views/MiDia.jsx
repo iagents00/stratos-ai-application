@@ -148,7 +148,7 @@ export default function MiDia({ T: t, theme = 'dark', scope = 'demo', ...props }
     return () => { clearInterval(timer); window.removeEventListener('focus', actualizar); };
   }, []);
   const T = t || (theme === 'light' ? LP : P);
-  return <section className={`stratos-rails ${theme === 'light' ? 'rails-light' : ''}`} style={{ '--rails-text': T.txt, '--rails-secondary': theme === 'light' ? '#4b5563' : '#aebaca', '--rails-border': T.border, '--rails-surface': theme === 'light' ? '#fff' : '#141c28', '--rails-accent': theme === 'light' ? '#087252' : '#6ee7c2', '--rails-field': theme === 'light' ? '#fff' : '#0d1420' }}>
+  return <section className={`stratos-rails ${theme === 'light' ? 'rails-light' : ''}`} style={{ '--rails-text': T.txt, '--rails-secondary': theme === 'light' ? '#4b5563' : '#aebaca', '--rails-border': T.border, '--rails-surface': theme === 'light' ? '#fff' : '#141414', '--rails-accent': theme === 'light' ? '#087252' : '#6ee7c2', '--rails-field': theme === 'light' ? '#fff' : '#0C0C0C' }}>
     <Jornada key={`${scope}:${diaRails(ahora)}`} sessionKey={`${scope}:${diaRails(ahora)}`} {...props} ahora={ahora} />
   </section>;
 }

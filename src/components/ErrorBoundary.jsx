@@ -37,7 +37,7 @@ export default class ErrorBoundary extends Component {
         alignItems: "center",
         justifyContent: "center",
         minHeight: "100vh",
-        background: "#060A11",
+        background: "#000000",
         color: "#E2E8F0",
         fontFamily: `-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif`,
         gap: 16,

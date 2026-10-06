@@ -3,8 +3,8 @@ import { P, LP } from "../../../design-system/tokens";
 // Shared by the admin editor and seller workspace. Dark surfaces deliberately
 // stay neutral and nearly black; the organization accent only marks actions.
 const darkRails = {
-  background: "#050505",
-  surface: "#0A0A0A",
+  background: P.bg,
+  surface: P.surface,
   text: "#EDEDED",
   muted: "#A0A0A0",
   border: "rgba(255,255,255,0.12)",

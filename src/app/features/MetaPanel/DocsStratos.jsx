@@ -238,10 +238,10 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
       {/* Lector — para no tener que bajar el Word solo para mirarlo */}
       {abierto && (
         <div onClick={() => setAbierto(null)}
-          style={{ position: "fixed", inset: 0, zIndex: 99990, background: isLight ? "rgba(15,23,42,0.5)" : "rgba(1,3,9,0.82)", display: "flex", alignItems: "center", justifyContent: "center", padding: 18 }}>
+          style={{ position: "fixed", inset: 0, zIndex: 99990, background: isLight ? "rgba(15,23,42,0.5)" : "rgba(0,0,0,0.82)", display: "flex", alignItems: "center", justifyContent: "center", padding: 18 }}>
           <div onClick={(e) => e.stopPropagation()} style={{
             width: "min(760px, 96vw)", maxHeight: "86dvh", overflowY: "auto",
-            background: isLight ? "#FFFFFF" : "#0A0F1C", border: `1px solid ${bd}`,
+            background: isLight ? "#FFFFFF" : "#0C0C0C", border: `1px solid ${bd}`,
             borderRadius: 18, padding: 24,
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 14, paddingBottom: 12, borderBottom: `1px solid ${bd}` }}>

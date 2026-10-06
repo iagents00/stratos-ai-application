@@ -18,7 +18,7 @@ html.theme-loading-active::before {
   pointer-events: auto;
   cursor: progress;
   user-select: none;
-  background: #030810;
+  background: #000000;
   contain: strict;
 }
 
@@ -248,7 +248,7 @@ option {
    legibles — no rompe nada.) */
 select option,
 select optgroup {
-  background-color: #0C1628;
+  background-color: #141414;
   color: #E2E8F0;
 }
 :root[data-theme="light"] select option,

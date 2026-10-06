@@ -37,7 +37,7 @@ export default function ProFeatureGate({
       onClick={onClose}
       style={{
         position: "fixed", inset: 0, zIndex: 100050,
-        background: "rgba(3,8,16,0.86)",
+        background: "rgba(0,0,0,0.86)",
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",
         display: "flex", alignItems: "center", justifyContent: "center",

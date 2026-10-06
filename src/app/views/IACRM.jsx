@@ -317,7 +317,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
                     <stop offset="95%" stopColor={TG} stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
-                <Tooltip contentStyle={{ background: isLight ? "#FFFFFF" : "#111318", border: `1px solid ${T.border}`, borderRadius: 10, color: T.txt, fontSize: 12 }} />
+                <Tooltip contentStyle={{ background: isLight ? "#FFFFFF" : "#0C0C0C", border: `1px solid ${T.border}`, borderRadius: 10, color: T.txt, fontSize: 12 }} />
                 <Area type="monotone" dataKey="wa" stroke={WA} strokeWidth={2} fill="url(#waGrad)" name="WhatsApp" />
                 <Area type="monotone" dataKey="tg" stroke={TG} strokeWidth={2} fill="url(#tgGrad)" name="Telegram" />
               </AreaChart>
@@ -338,7 +338,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
                 borderRadius: 16,
                 background: isLight
                   ? "#FFFFFF"
-                  : (expanded ? "rgba(6,10,17,0.98)" : T.glass),
+                  : (expanded ? "rgba(0,0,0,0.98)" : T.glass),
                 border: `1px solid ${expanded ? c + (isLight ? "40" : "38") : T.border}`,
                 overflow: "hidden", transition: "all 0.22s",
                 boxShadow: expanded
@@ -369,7 +369,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
                     <div style={{
                       position: "absolute", bottom: -3, right: -3, width: 16, height: 16,
                       borderRadius: "50%", background: chColor,
-                      border: `2px solid ${isLight ? "#FFFFFF" : "#060A11"}`,
+                      border: `2px solid ${isLight ? "#FFFFFF" : "#000000"}`,
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
                       {agent.channel === "whatsapp"

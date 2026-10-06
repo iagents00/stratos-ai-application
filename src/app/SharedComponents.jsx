@@ -86,7 +86,7 @@ export const KPI = ({ label, value, sub, icon: I, color, T: Tprop }) => {
         borderRadius: 20,
         background: isLight
           ? "rgba(255,255,255,0.90)"
-          : "rgba(8,12,24,0.85)",
+          : "rgba(12,12,12,0.85)",
         backdropFilter: "blur(28px) saturate(110%)",
         WebkitBackdropFilter: "blur(28px) saturate(110%)",
         border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : `${c}0C`}`,
@@ -247,7 +247,7 @@ export const ChipSelect = ({ value, onChange, options = [], onAddNew, placeholde
       {open && (
         <div style={{
           position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 600,
-          background: "#0B101A", border: `1px solid ${P.borderH}`, borderRadius: 12,
+          background: "#0C0C0C", border: `1px solid ${P.borderH}`, borderRadius: 12,
           boxShadow: "0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.02)",
           overflow: "hidden", animation: "fadeIn 0.14s ease",
           fontFamily: font,

@@ -93,7 +93,7 @@ export default function CallActionButton({
   const primaryBg = isLight
     ? `linear-gradient(135deg, ${T.accent} 0%, #14B892 100%)`
     : "rgba(255,255,255,0.92)";
-  const primaryFg = isLight ? "#FFFFFF" : "#0A0F18";
+  const primaryFg = isLight ? "#FFFFFF" : "#0C0C0C";
   const secondaryBg = "transparent";
   const secondaryBd = isLight ? `1px solid ${T.accent}66` : `1px solid rgba(255,255,255,0.22)`;
   const secondaryFg = isLight ? (T.accentDark || T.accent) : T.accent;

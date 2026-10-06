@@ -135,7 +135,7 @@ const DynIsland = ({ onExpand, notifications = [] }) => {
                 </div>
                 <p style={{ fontSize: 13, color: P.txt2, lineHeight: 1.6, fontFamily: font, marginBottom: 18 }}>{selectedNotif.detail}</p>
                 <button onClick={() => { onExpand(selectedNotif.action); setIsOpen(false); setSelectedNotif(null); }}
-                  style={{ width: "100%", padding: "13px 16px", borderRadius: 12, background: "rgba(255,255,255,0.95)", color: "#0A0F18", border: "none", fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp, boxShadow: "0 4px 15px rgba(255,255,255,0.15)", letterSpacing: "0.01em", transition: "all 0.2s" }}
+                  style={{ width: "100%", padding: "13px 16px", borderRadius: 12, background: "rgba(255,255,255,0.95)", color: "#0C0C0C", border: "none", fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp, boxShadow: "0 4px 15px rgba(255,255,255,0.15)", letterSpacing: "0.01em", transition: "all 0.2s" }}
                   onMouseEnter={e => { e.currentTarget.style.background = "#FFFFFF"; e.currentTarget.style.boxShadow = "0 6px 25px rgba(255,255,255,0.25)"; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.95)"; e.currentTarget.style.boxShadow = "0 4px 15px rgba(255,255,255,0.15)"; }}
                 >{selectedNotif.btn}</button>

@@ -66,7 +66,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
 
   // Panel expandido — colores tema-aware (antes estaba hardcodeado en oscuro).
   const D = {
-    bg:   isLight ? "#FFFFFF" : "#03060F",
+    bg:   isLight ? "#FFFFFF" : "#000000",
     bd:   isLight ? "rgba(15,23,42,0.09)" : "rgba(255,255,255,0.08)",
     line: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.05)",
     sh:   isLight ? "0 28px 80px rgba(15,23,42,0.22), 0 8px 24px rgba(15,23,42,0.10), 0 0 0 0.5px rgba(15,23,42,0.06)" : "0 24px 80px rgba(0,0,0,0.75), 0 0 0 0.5px rgba(255,255,255,0.04)",
@@ -91,7 +91,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
     acc:  isLight ? "#0D9A76" : "#6EE7C2",
     cardG2: isLight ? "#FFFFFF" : "rgba(255,255,255,0.02)",
     ctaBg:  isLight ? "#0D9A76" : "rgba(255,255,255,0.92)",
-    ctaTxt: isLight ? "#FFFFFF" : "#06080F",
+    ctaTxt: isLight ? "#FFFFFF" : "#000000",
     ctaSh:  isLight ? "0 4px 16px rgba(13,154,118,0.30)" : "0 2px 10px rgba(255,255,255,0.12)",
     ctaHov: isLight ? "#0B8A69" : "#FFFFFF",
   };
@@ -140,7 +140,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
         style={{
           position: "relative",
           height: 30, borderRadius: 50,
-          background: isLight ? "rgba(255,255,255,0.94)" : "#050507",
+          background: isLight ? "rgba(255,255,255,0.94)" : "#000000",
           border: isLight
             ? "1px solid rgba(13,154,118,0.13)"
             : "1px solid rgba(255,255,255,0.07)",

@@ -1075,10 +1075,10 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   /* ── Colores burbujas ── */
   const bubbleUserBg = isLight ? "linear-gradient(135deg, #0D9A76 0%, #067A5E 100%)" : "linear-gradient(135deg, #6EE7C2 0%, #34D399 100%)";
   const bubbleUserTxt = isLight ? "#FFFFFF" : "#041016";
-  const bubbleAiBg = isLight ? "#FFFFFF" : "rgba(18,24,38,0.82)";
+  const bubbleAiBg = isLight ? "#FFFFFF" : "rgba(20,20,20,0.82)";
   const bubbleAiBd = isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)";
-  const bgArea = isLight ? "#F8FAFC" : "#060A12";
-  const composerBg = isLight ? "#FFFFFF" : "rgba(10,15,26,0.95)";
+  const bgArea = isLight ? "#F8FAFC" : T.bg;
+  const composerBg = isLight ? "#FFFFFF" : "rgba(12,12,12,0.95)";
 
   // El motion del avatar solo vive en la ÚLTIMA respuesta del asistente (la
   // más reciente); las burbujas anteriores quedan estáticas. Se recalcula en
@@ -1096,7 +1096,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         // Header inmersivo (estilo WhatsApp): reemplaza al header de la app en
         // móvil → lleva el safe-area-top para no quedar bajo el reloj del iPhone.
         paddingTop: "calc(10px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px)))",
-        background: isLight ? "#FFFFFF" : "rgba(10,15,26,0.95)",
+        background: isLight ? "#FFFFFF" : "rgba(12,12,12,0.95)",
         borderBottom: `1px solid ${T.border}`, zIndex: 10,
         boxShadow: isLight ? "0 1px 3px rgba(15,23,42,0.06)" : "0 1px 3px rgba(0,0,0,0.3)"
       }}>

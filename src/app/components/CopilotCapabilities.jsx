@@ -111,7 +111,7 @@ export default function CapabilitiesPanel({ T, isLight, onClose, onPrefill, feat
   );
 
   return (
-    <aside id="copilot-capabilities" className="copilot-capabilities" aria-label="Guía de funciones del Copilot" style={{ position: "fixed", zIndex: 100002, top: 0, right: 0, bottom: 0, width: "min(430px, 100%)", display: "flex", flexDirection: "column", background: isLight ? "#FFFFFF" : "#0B111D", borderLeft: `1px solid ${T.border}`, boxShadow: isLight ? "-18px 0 44px rgba(15,23,42,0.12)" : "-18px 0 44px rgba(0,0,0,0.38)" }}>
+    <aside id="copilot-capabilities" className="copilot-capabilities" aria-label="Guía de funciones del Copilot" style={{ position: "fixed", zIndex: 100002, top: 0, right: 0, bottom: 0, width: "min(430px, 100%)", display: "flex", flexDirection: "column", background: isLight ? "#FFFFFF" : "#0C0C0C", borderLeft: `1px solid ${T.border}`, boxShadow: isLight ? "-18px 0 44px rgba(15,23,42,0.12)" : "-18px 0 44px rgba(0,0,0,0.38)" }}>
       <header style={{ padding: "18px 20px 16px", borderBottom: `1px solid ${T.border}`, display: "flex", gap: 14, alignItems: "flex-start" }}>
         <div style={{ flex: 1 }}>
           <h2 style={{ margin: 0, fontFamily: fontDisp, fontSize: 18, fontWeight: 720, color: T.txt }}>Así te ayuda a operar</h2>

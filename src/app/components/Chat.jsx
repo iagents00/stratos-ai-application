@@ -48,7 +48,7 @@ const Chat = ({ open, onClose, msgs, setMsgs, inp, setInp }) => {
   return (
     <div style={{
       width: 400, height: "100%", borderLeft: `1px solid ${P.border}`,
-      background: "rgba(6,10,17,0.96)", backdropFilter: "blur(32px)",
+      background: "rgba(0,0,0,0.96)", backdropFilter: "blur(32px)",
       display: "flex", flexDirection: "column", flexShrink: 0,
     }}>
       <div style={{ padding: "14px 18px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -129,7 +129,7 @@ const Chat = ({ open, onClose, msgs, setMsgs, inp, setInp }) => {
                   {m.btn && (
                     <button onClick={() => m.action && send(m.action)} style={{
                       marginTop: 14, width: "100%", padding: "11px 16px", borderRadius: 10,
-                      background: "rgba(255,255,255,0.93)", color: "#0A0F18", fontWeight: 500, fontSize: 12.5,
+                      background: "rgba(255,255,255,0.93)", color: "#0C0C0C", fontWeight: 500, fontSize: 12.5,
                       border: "none", cursor: "pointer", transition: "all 0.25s",
                       display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                       boxShadow: "0 2px 12px rgba(255,255,255,0.1)", letterSpacing: "0.01em"

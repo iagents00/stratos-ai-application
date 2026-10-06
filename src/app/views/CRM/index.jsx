@@ -2663,14 +2663,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       e.currentTarget.style.borderColor = prioritySort === "manual" ? T.border : `${T.accent}44`;
                     }}
                   >
-                    <option value="manual"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Manual (arrastra)</option>
+                    <option value="manual"     style={{ background: isLight ? "#FFFFFF" : "#0C0C0C", color: T.txt }}>Manual (arrastra)</option>
                     {/* «Próximo Zoom» y «En Seguimiento» son etapas de Duke: en un
                         pipeline custom (Legacy = casas) no significan nada. Regla
                         11-ago: la jerga sigue a las etapas de CADA empresa. */}
-                    {!IS_CUSTOM_PIPELINE && <option value="proxZoom"   style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Próximo Zoom</option>}
-                    <option value="newest"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Nuevos primero</option>
-                    <option value="oldest"     style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>Nuevos al fondo</option>
-                    {!IS_CUSTOM_PIPELINE && <option value="concretado" style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>En Seguimiento</option>}
+                    {!IS_CUSTOM_PIPELINE && <option value="proxZoom"   style={{ background: isLight ? "#FFFFFF" : "#0C0C0C", color: T.txt }}>Próximo Zoom</option>}
+                    <option value="newest"     style={{ background: isLight ? "#FFFFFF" : "#0C0C0C", color: T.txt }}>Nuevos primero</option>
+                    <option value="oldest"     style={{ background: isLight ? "#FFFFFF" : "#0C0C0C", color: T.txt }}>Nuevos al fondo</option>
+                    {!IS_CUSTOM_PIPELINE && <option value="concretado" style={{ background: isLight ? "#FFFFFF" : "#0C0C0C", color: T.txt }}>En Seguimiento</option>}
                   </select>
                   <ChevronDown size={12} color={prioritySort === "manual" ? T.txt3 : T.accent} strokeWidth={2.5} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
                 </div>
@@ -2745,7 +2745,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       position: "relative",
                       background: isLight
                         ? "#FFFFFF"
-                        : `linear-gradient(160deg, #0A0F1E 0%, #060810 100%)`,
+                        : `linear-gradient(160deg, #0C0C0C 0%, #000000 100%)`,
                       backdropFilter: isLight ? "none" : "blur(40px) saturate(150%)",
                       WebkitBackdropFilter: isLight ? "none" : "blur(40px) saturate(150%)",
                       border: `1px solid ${isJustDropped ? droppedBorder : restBorder}`,
@@ -2831,7 +2831,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                               }}
                             >
                               {priorityLeads.map((_, i) => (
-                                <option key={i} value={i + 1} style={{ background: isLight ? "#FFFFFF" : "#111318", color: isLight ? "#0B1220" : "#fff", fontFamily: fontDisp }}>Prioridad {i + 1}</option>
+                                <option key={i} value={i + 1} style={{ background: isLight ? "#FFFFFF" : "#0C0C0C", color: isLight ? "#0B1220" : "#fff", fontFamily: fontDisp }}>Prioridad {i + 1}</option>
                               ))}
                             </select>
                             <ChevronDown size={9} color={isLight ? "rgba(11,18,32,0.38)" : "rgba(255,255,255,0.38)"} strokeWidth={2.5} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
@@ -3074,7 +3074,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             boxSizing: "border-box", borderRadius: 10,
                             background: isLight ? T.accentG : "#FFFFFF",
                             border: isLight ? "none" : "1px solid rgba(255,255,255,0.90)",
-                            color: isLight ? "#FFFFFF" : "#040C18",
+                            color: isLight ? "#FFFFFF" : "#0C0C0C",
                             fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
                             letterSpacing: "-0.02em",
                             cursor: "pointer",
@@ -3134,18 +3134,18 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 cursor: "pointer", zIndex: 10, padding: 0,
                 opacity: 0.45,
                 transition: "opacity 0.18s ease, background 0.18s ease, border-color 0.18s ease",
-                background: isLight ? "rgba(255,255,255,0.80)" : "rgba(12,17,28,0.70)",
+                background: isLight ? "rgba(255,255,255,0.80)" : "rgba(12,12,12,0.70)",
                 border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)"}`,
                 boxShadow: "none",
               };
               const onEnter = (e) => {
                 e.currentTarget.style.opacity = "1";
-                e.currentTarget.style.background = isLight ? "#FFFFFF" : "rgba(12,17,28,0.92)";
+                e.currentTarget.style.background = isLight ? "#FFFFFF" : "rgba(12,12,12,0.92)";
                 e.currentTarget.style.borderColor = isLight ? `${T.accent}40` : "rgba(255,255,255,0.22)";
               };
               const onLeave = (e) => {
                 e.currentTarget.style.opacity = "0.45";
-                e.currentTarget.style.background = isLight ? "rgba(255,255,255,0.80)" : "rgba(12,17,28,0.70)";
+                e.currentTarget.style.background = isLight ? "rgba(255,255,255,0.80)" : "rgba(12,12,12,0.70)";
                 e.currentTarget.style.borderColor = isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.12)";
               };
               const ic = isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)";
@@ -3180,7 +3180,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         <>
           <div onClick={() => setAddingLead(false)} style={{
             position: "fixed", inset: 0, zIndex: 500,
-            background: isLight ? "rgba(15,23,42,0.22)" : "rgba(2,5,12,0.78)",
+            background: isLight ? "rgba(15,23,42,0.22)" : "rgba(0,0,0,0.78)",
             backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
             animation: "fadeIn 0.20s ease both",
           }} />
@@ -3190,7 +3190,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             position: "fixed", inset: 0, zIndex: 501,
             width: "100vw", height: "100dvh", maxHeight: "100dvh",
             overflowY: "auto",
-            background: isLight ? "#FFFFFF" : "#111318",
+            background: isLight ? "#FFFFFF" : "#0C0C0C",
             border: "none",
             borderRadius: 0,
             boxShadow: "none",
@@ -3200,7 +3200,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             position: "fixed", top: "50%", left: "50%",
             zIndex: 501, width: "min(720px, 96vw)", maxHeight: "94vh",
             overflowY: "auto",
-            background: isLight ? "#FFFFFF" : "#111318",
+            background: isLight ? "#FFFFFF" : "#0C0C0C",
             border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : T.borderH}`,
             borderRadius: 18,
             boxShadow: isLight
@@ -3557,7 +3557,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                       <div style={{
                         position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0,
                         zIndex: 80,
-                        background: isLight ? "#FFFFFF" : "#0D1119",
+                        background: isLight ? "#FFFFFF" : "#0C0C0C",
                         border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.08)"}`,
                         borderRadius: 12,
                         boxShadow: isLight
@@ -3712,7 +3712,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                         <div style={{
                           position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0,
                           zIndex: 80,
-                          background: isLight ? "#FFFFFF" : "#0D1119",
+                          background: isLight ? "#FFFFFF" : "#0C0C0C",
                           border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.08)"}`,
                           borderRadius: 12,
                           boxShadow: isLight
@@ -3855,7 +3855,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     : "#FFFFFF")
                 : (isLight ? "rgba(15,23,42,0.06)" : T.glass);
               const primaryColor = canSubmit
-                ? (isLight ? "#FFFFFF" : "#040C18")
+                ? (isLight ? "#FFFFFF" : "#0C0C0C")
                 : T.txt2;
               const primaryBorder = canSubmit
                 ? (isLight ? "transparent" : "rgba(255,255,255,0.90)")
@@ -3866,7 +3866,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   ? "0 2px 16px rgba(255,255,255,0.12)"
                   : "none";
               return (
-            <div style={{ padding: "14px 18px 16px", display: "flex", gap: 8, position: isMobile ? "sticky" : "static", bottom: 0, background: isMobile ? (isLight ? "rgba(255,255,255,0.96)" : "rgba(6,10,17,0.96)") : "transparent", backdropFilter: isMobile ? "blur(12px)" : "none", borderTop: isMobile ? `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}` : "none", zIndex: 2 }}>
+            <div style={{ padding: "14px 18px 16px", display: "flex", gap: 8, position: isMobile ? "sticky" : "static", bottom: 0, background: isMobile ? (isLight ? "rgba(255,255,255,0.96)" : "rgba(0,0,0,0.96)") : "transparent", backdropFilter: isMobile ? "blur(12px)" : "none", borderTop: isMobile ? `1px solid ${isLight ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}` : "none", zIndex: 2 }}>
               <button onClick={() => setAddingLead(false)} style={{
                 flex: 1, height: isMobile ? 48 : 38, borderRadius: 10,
                 background: "transparent",
@@ -3948,7 +3948,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
               display: "flex", alignItems: "center",
               padding: 4, borderRadius: 999,
               width: isMobile ? "100%" : 340, maxWidth: "100%",
-              background: isLight ? "rgba(15,23,42,0.055)" : "rgba(8,11,18,0.72)",
+              background: isLight ? "rgba(15,23,42,0.055)" : "rgba(0,0,0,0.72)",
               border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.07)"}`,
               backdropFilter: "blur(20px) saturate(170%)",
               WebkitBackdropFilter: "blur(20px) saturate(170%)",
@@ -4021,7 +4021,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         borderRadius: 12,
         overflow: isMobile ? "auto" : "hidden",
         border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.06)"}`,
-        background: isLight ? "#FFFFFF" : "rgba(11,16,26,0.72)",
+        background: isLight ? "#FFFFFF" : "rgba(12,12,12,0.72)",
         backdropFilter: isLight ? "none" : "blur(40px) saturate(150%)",
         WebkitBackdropFilter: isLight ? "none" : "blur(40px) saturate(150%)",
         boxShadow: isLight
@@ -4191,7 +4191,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   {/* Solo las del tablero abierto: elegir una del otro recorrido
                       dejaba la lista vacía sin explicar por qué. Para MOVER a un
                       paciente el desplegable de la fila sí ofrece todas. */}
-                  {grupoActivo.stages.map(s => <option key={s} value={s} style={{ background: isLight ? "#FFFFFF" : "#111318", color: isLight ? "#0B1220" : "#E2E8F0" }}>{s}</option>)}
+                  {grupoActivo.stages.map(s => <option key={s} value={s} style={{ background: isLight ? "#FFFFFF" : "#0C0C0C", color: isLight ? "#0B1220" : "#E2E8F0" }}>{s}</option>)}
                 </select>
                 <ChevronDown size={10} color={selClr} strokeWidth={2.2} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", flexShrink: 0 }} />
               </div>
@@ -4232,9 +4232,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                     fontFamily: fontDisp, fontWeight: active ? 600 : 400, transition: "all 0.18s",
                   }}>
                   {SORT_OPTS.map(o => (
-                    <option key={o.v} value={o.v} style={{ background: isLight ? "#FFFFFF" : "#111318", color: isLight ? "#0B1220" : "#E2E8F0" }}>{o.label}</option>
+                    <option key={o.v} value={o.v} style={{ background: isLight ? "#FFFFFF" : "#0C0C0C", color: isLight ? "#0B1220" : "#E2E8F0" }}>{o.label}</option>
                   ))}
-                  {!known && <option value="__custom" disabled style={{ background: isLight ? "#FFFFFF" : "#111318", color: isLight ? "#0B1220" : "#E2E8F0" }}>Orden personalizado</option>}
+                  {!known && <option value="__custom" disabled style={{ background: isLight ? "#FFFFFF" : "#0C0C0C", color: isLight ? "#0B1220" : "#E2E8F0" }}>Orden personalizado</option>}
                 </select>
                 <ChevronDown size={10} color={selClr} strokeWidth={2.2} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", flexShrink: 0 }} />
               </div>
@@ -4258,7 +4258,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   fontFamily: fontDisp, fontWeight: active ? 600 : 400, transition: "all 0.18s",
                 }}>
                   <option value="TODO">{L.advisorAll}</option>
-                  {asesoresMaster.map(a => <option key={a} value={a} style={{ background: isLight ? "#FFFFFF" : "#111318", color: isLight ? "#0B1220" : "#E2E8F0" }}>{a.split(" ")[0]} {a.split(" ")[1] || ""}</option>)}
+                  {asesoresMaster.map(a => <option key={a} value={a} style={{ background: isLight ? "#FFFFFF" : "#0C0C0C", color: isLight ? "#0B1220" : "#E2E8F0" }}>{a.split(" ")[0]} {a.split(" ")[1] || ""}</option>)}
                 </select>
                 <ChevronDown size={10} color={selClr} strokeWidth={2.2} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", flexShrink: 0 }} />
               </div>
@@ -4879,7 +4879,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis",
                           fontFamily: font, letterSpacing: "0.005em",
                         }}>
-                        {STAGES.map(s => <option key={s} value={s} style={{ background: "#111318", color: "#fff", fontWeight: 400 }}>{s}</option>)}
+                        {STAGES.map(s => <option key={s} value={s} style={{ background: "#0C0C0C", color: "#fff", fontWeight: 400 }}>{s}</option>)}
                       </select>
                       <ChevronDown size={10} strokeWidth={2}
                         style={{
@@ -5119,14 +5119,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   style={{
                     ...navBtnBase,
                     left: 8,
-                    background: T === P ? "rgba(10,13,20,0.82)" : "rgba(255,255,255,0.88)",
+                    background: T === P ? "rgba(12,12,12,0.82)" : "rgba(255,255,255,0.88)",
                     boxShadow: T === P
                       ? `0 4px 18px rgba(0,0,0,0.50), 0 0 0 1px ${T.accentB}, 0 0 16px ${T.accent}18`
                       : `0 4px 14px rgba(15,23,42,0.18), 0 0 0 1px ${T.accentB}`,
                     color: isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent,
                   }}
                   onMouseEnter={e => { e.currentTarget.style.background = `${T.accent}1E`; e.currentTarget.style.transform = "translateY(-50%) scale(1.08)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = T === P ? "rgba(10,13,20,0.82)" : "rgba(255,255,255,0.88)"; e.currentTarget.style.transform = "translateY(-50%) scale(1)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = T === P ? "rgba(12,12,12,0.82)" : "rgba(255,255,255,0.88)"; e.currentTarget.style.transform = "translateY(-50%) scale(1)"; }}
                 >
                   <ChevronLeft size={18} strokeWidth={2.5} />
                 </button>
@@ -5139,14 +5139,14 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   style={{
                     ...navBtnBase,
                     right: 8,
-                    background: T === P ? "rgba(10,13,20,0.82)" : "rgba(255,255,255,0.88)",
+                    background: T === P ? "rgba(12,12,12,0.82)" : "rgba(255,255,255,0.88)",
                     boxShadow: T === P
                       ? `0 4px 18px rgba(0,0,0,0.50), 0 0 0 1px ${T.accentB}, 0 0 16px ${T.accent}18`
                       : `0 4px 14px rgba(15,23,42,0.18), 0 0 0 1px ${T.accentB}`,
                     color: isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent,
                   }}
                   onMouseEnter={e => { e.currentTarget.style.background = `${T.accent}1E`; e.currentTarget.style.transform = "translateY(-50%) scale(1.08)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = T === P ? "rgba(10,13,20,0.82)" : "rgba(255,255,255,0.88)"; e.currentTarget.style.transform = "translateY(-50%) scale(1)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = T === P ? "rgba(12,12,12,0.82)" : "rgba(255,255,255,0.88)"; e.currentTarget.style.transform = "translateY(-50%) scale(1)"; }}
                 >
                   <ChevronRight size={18} strokeWidth={2.5} />
                 </button>
@@ -5297,7 +5297,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             <div onClick={e => e.stopPropagation()} style={{ marginBottom: 8 }}>
                               <select value={l.st} onChange={e => updateLead({ ...l, st: e.target.value })}
                                 style={{ width: "100%", padding: "5px 8px", borderRadius: 7, background: isLight ? `linear-gradient(135deg, ${c}26 0%, ${c}12 100%)` : `${c}0C`, border: `1px solid ${isLight ? c + "55" : c + "28"}`, color: cText, fontSize: 10.5, fontWeight: 500, cursor: "pointer", outline: "none", appearance: "none", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.55)" : "none" }}>
-                                {STAGES.map(s => <option key={s} value={s} style={{ background: "#111318", color: "#fff" }}>{s}</option>)}
+                                {STAGES.map(s => <option key={s} value={s} style={{ background: "#0C0C0C", color: "#fff" }}>{s}</option>)}
                               </select>
                             </div>
                             {/* Contador de seguimientos — permite al asesor registrar
@@ -6063,7 +6063,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           transform: "translateX(-50%)", zIndex: 600,
           display: "flex", alignItems: "center", gap: 10,
           padding: "9px 10px 9px 14px", borderRadius: 14, maxWidth: "94vw",
-          background: isLight ? "rgba(255,255,255,0.94)" : "rgba(17,19,24,0.94)",
+          background: isLight ? "rgba(255,255,255,0.94)" : "rgba(12,12,12,0.94)",
           border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`,
           boxShadow: isLight
             ? "0 10px 30px rgba(15,23,42,0.16), 0 28px 70px rgba(15,23,42,0.14)"
@@ -6123,21 +6123,21 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         <>
           <div onClick={() => setReassignOpen(false)} style={{
             position: "fixed", inset: 0, zIndex: 700,
-            background: isLight ? "rgba(15,23,42,0.22)" : "rgba(2,5,12,0.78)",
+            background: isLight ? "rgba(15,23,42,0.22)" : "rgba(0,0,0,0.78)",
             backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
             animation: "fadeIn 0.2s ease both",
           }} />
           <div style={isMobile ? {
             position: "fixed", inset: 0, zIndex: 701,
             width: "100vw", height: "100dvh", display: "flex", flexDirection: "column",
-            background: isLight ? "#FFFFFF" : "#111318",
+            background: isLight ? "#FFFFFF" : "#0C0C0C",
             animation: "modalInMobile 0.24s cubic-bezier(0.16,1,0.3,1) both",
             paddingBottom: "var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))",
           } : {
             position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
             zIndex: 701, width: "min(460px, 96vw)", maxHeight: "88vh",
             display: "flex", flexDirection: "column",
-            background: isLight ? "#FFFFFF" : "#111318",
+            background: isLight ? "#FFFFFF" : "#0C0C0C",
             border: `1px solid ${isLight ? "rgba(15,23,42,0.08)" : T.borderH}`,
             borderRadius: 18, overflow: "hidden",
             boxShadow: isLight
@@ -6350,8 +6350,8 @@ const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm
     onConfirm(`${dateVal}T${timeVal}`, "Zoom");
   };
 
-  const modalBg = isLight ? "#FFFFFF" : "#111318";
-  const overlayBg = "rgba(10, 16, 28, 0.75)";
+  const modalBg = isLight ? "#FFFFFF" : "#0C0C0C";
+  const overlayBg = "rgba(12,12,12, 0.75)";
   const borderC = isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.08)";
   const inputBg = isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.02)";
 
@@ -6518,8 +6518,8 @@ const VisitaSchedulingModal = ({ open, lead, onClose, onConfirm, T = P }) => {
     onConfirm(`${dateVal}T${timeVal}`);
   };
 
-  const modalBg = isLight ? "#FFFFFF" : "#111318";
-  const overlayBg = "rgba(10, 16, 28, 0.75)";
+  const modalBg = isLight ? "#FFFFFF" : "#0C0C0C";
+  const overlayBg = "rgba(12,12,12, 0.75)";
   const borderC = isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.08)";
   const inputBg = isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.02)";
 

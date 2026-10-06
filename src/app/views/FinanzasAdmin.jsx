@@ -225,7 +225,7 @@ const FinanzasAdmin = ({ T: _T }) => {
             style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 16px", flex: isMobile ? "1 1 46%" : "0 0 auto", borderRadius: 9, border: `1px solid ${T.border}`, background: T.glass, cursor: rows.length ? "pointer" : "not-allowed", opacity: rows.length ? 1 : 0.5, color: T.txt2, fontSize: 12.5, fontWeight: 400, fontFamily: fontDisp }}>
             <Download size={13} /> Exportar CSV
           </button>
-          <button onClick={() => setTab("caja")} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 20px", flex: isMobile ? "1 1 100%" : "0 0 auto", borderRadius: 9, border: "none", background: isLight ? ACC : "rgba(255,255,255,0.95)", cursor: "pointer", color: isLight ? "#FFF" : "#0A0F18", fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp, boxShadow: isLight ? `0 4px 18px ${ACC}44` : "0 4px 18px rgba(255,255,255,0.12)" }}>
+          <button onClick={() => setTab("caja")} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 20px", flex: isMobile ? "1 1 100%" : "0 0 auto", borderRadius: 9, border: "none", background: isLight ? ACC : "rgba(255,255,255,0.95)", cursor: "pointer", color: isLight ? "#FFF" : "#0C0C0C", fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp, boxShadow: isLight ? `0 4px 18px ${ACC}44` : "0 4px 18px rgba(255,255,255,0.12)" }}>
             <Plus size={14} /> Nuevo movimiento
           </button>
         </div>

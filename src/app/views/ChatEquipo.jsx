@@ -516,7 +516,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
       {/* Nuevo canal */}
       {nuevoCanal && (
         <div onClick={() => setNuevoCanal(null)} style={{
-          position: "fixed", inset: 0, zIndex: 100000, background: "rgba(3,8,16,0.72)",
+          position: "fixed", inset: 0, zIndex: 100000, background: "rgba(0,0,0,0.72)",
           backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
           display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
         }}>
@@ -544,7 +544,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
       {/* Visor de adjunto */}
       {viewer && (
         <div onClick={() => setViewer(null)} style={{
-          position: "fixed", inset: 0, zIndex: 100000, background: "rgba(3,8,16,0.82)",
+          position: "fixed", inset: 0, zIndex: 100000, background: "rgba(0,0,0,0.82)",
           backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
           display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
         }}>
