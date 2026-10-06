@@ -711,7 +711,7 @@ export default function MetaPanel({
     .mp-fade{animation:mpFade .3s cubic-bezier(.16,1,.3,1) both}
     @keyframes mpFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     @media(prefers-reduced-motion:reduce){.mp,.mp-fade,.mp-due-popover{animation:none!important}.mp-row,.mp-datechip,.mp-calday,.mp-timebtn,.mp-quickchip,.mp-iconbtn{transition-duration:.01ms!important}.mp-row:hover,.mp-datechip:hover,.mp-calday:hover,.mp-timebtn:hover,.mp-quickchip:hover,.mp-iconbtn:hover{transform:none!important}}
-    @media(max-width:768px){.mp-seg{display:grid;grid-template-columns:1fr 1fr;width:100%}.mp-mobilebody [style*="grid-template-columns"]{grid-template-columns:1fr!important}.mp-mobilebody [style*="min-width"]{min-width:0!important}}
+    @media(max-width:768px){.mp-seg{display:flex;flex-wrap:nowrap;width:100%;min-width:0;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scroll-padding-inline:4px;scrollbar-width:none;border-radius:14px;padding:4px;gap:4px}.mp-seg::-webkit-scrollbar{display:none}.mp-seg>button{flex:0 0 auto;min-height:44px;padding:10px 16px;font-size:13px;line-height:20px}.mp-mobilebody [style*="grid-template-columns"]{grid-template-columns:1fr!important}.mp-mobilebody [style*="min-width"]{min-width:0!important}}
   `;
 
   return (
@@ -753,9 +753,9 @@ export default function MetaPanel({
               </div>
             </div>
             {/* Control segmentado */}
-            <div className="mp-seg" style={{ order: isMobile ? 3 : 0, flexBasis: isMobile ? "100%" : "auto", justifySelf:"center" }}>
+            <div className="mp-seg" role="group" aria-label="Secciones de Mi Espacio" style={{ order: isMobile ? 3 : 0, flexBasis: isMobile ? "100%" : "auto", justifySelf:"center" }}>
               {tabs.map(({ id, label }) => (
-                <button key={id} aria-pressed={metaTab===id} data-on={metaTab===id ? "1" : "0"} onClick={() => setMetaTab(id)}>{label}</button>
+                <button key={id} aria-pressed={metaTab===id} data-on={metaTab===id ? "1" : "0"} onClick={event => { setMetaTab(id); if (isMobile) event.currentTarget.scrollIntoView({ block:"nearest", inline:"nearest" }); }}>{label}</button>
               ))}
             </div>
             {/* Cerrar — en móvil el topbar es FLEX (no grid), así que `justifySelf`

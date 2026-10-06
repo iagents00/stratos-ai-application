@@ -732,7 +732,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Crear administrador partner | `src/app/features/Admin/PlatformAdminConsole.jsx:79` |
 
 
-_(683 textos más — usá `npm run buscar "texto"`)_
+_(684 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
