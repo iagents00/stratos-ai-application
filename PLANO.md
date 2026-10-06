@@ -55,26 +55,26 @@ columna, estos son los archivos que hay que revisar.
 
 | Tabla | Archivos | Dónde se usa |
 |---|---|---|
-| `profiles` | 12 | `app/views/CRM/index.jsx` · `app/views/Caja.jsx` · `app/views/ChatEquipo.jsx` _+9_ |
+| `profiles` | 13 | `app/features/ISpace/useBoard.js` · `app/views/CRM/index.jsx` · `app/views/Caja.jsx` _+10_ |
 | `leads` | 7 | `app/App.jsx` · `app/views/CRM/index.jsx` · `app/views/Caja.jsx` _+4_ |
 | `evidencia` | 6 | `app/views/CRM/components.jsx` · `app/views/Caja.jsx` · `app/views/ChatEquipo.jsx` _+3_ |
 | `organizations` | 4 | `app/App.jsx` · `contexts/TenantConfigGate.jsx` · `hooks/useRailsConfig.js` _+1_ |
 | `team_expenses` | 4 | `app/views/Caja.jsx` · `app/views/Copilot.jsx` · `app/views/FinanzasAdmin.jsx` _+1_ |
+| `mkt_tasks` | 3 | `app/features/ISpace/useBoard.js` · `app/views/Marketing.jsx` · `app/views/PlanSemanal.jsx` |
 | `proactive_reminders` | 3 | `lib/llamadas.js` · `lib/recordatorios-locales.js` · `lib/telegram.js` |
 | `team_actions` | 3 | `app/App.jsx` · `app/features/MetaPanel/index.jsx` · `app/views/ProductividadTab.jsx` |
 | `expediente_items` | 2 | `app/views/CRM/LeadChatHistory.jsx` · `app/views/CRM/LeadNotesTimeline.jsx` |
-| `mkt_tasks` | 2 | `app/views/Marketing.jsx` · `app/views/PlanSemanal.jsx` |
+| `mkt_brands` | 2 | `app/features/ISpace/useBoard.js` · `app/views/Marketing.jsx` |
+| `mkt_projects` | 2 | `app/features/ISpace/useBoard.js` · `app/views/Marketing.jsx` |
 | `audit_log` | 1 | `lib/audit.js` |
 | `catalogo_proyectos` | 1 | `app/views/ERP.jsx` |
 | `device_tokens` | 1 | `lib/push-native.js` |
 | `discovery_data` | 1 | `app/views/CRM/LeadDiscoveryPanel.jsx` |
 | `fin_invoices` | 1 | `app/views/CuentasCobro.jsx` |
 | `lead_related_contacts` | 1 | `app/views/CRM/LeadRelatedContacts.jsx` |
-| `mkt_brands` | 1 | `app/views/Marketing.jsx` |
 | `mkt_daily_reports` | 1 | `app/views/Marketing.jsx` |
 | `mkt_pipeline_columns` | 1 | `app/views/Marketing.jsx` |
 | `mkt_pipeline_items` | 1 | `app/views/Marketing.jsx` |
-| `mkt_projects` | 1 | `app/views/Marketing.jsx` |
 | `mkt_requests` | 1 | `app/views/Marketing.jsx` |
 | `projects` | 1 | `hooks/useProperties.js` |
 | `scheduled_calls` | 1 | `hooks/useScheduledCalls.js` |

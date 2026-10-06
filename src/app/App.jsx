@@ -140,7 +140,7 @@ function resolveInitialView(user, clientConfig) {
   // Tenant con el CRM APAGADO (features.crm: false — ej. Brasa y Piedra): su
   // casa es Actividades, jamás "c" (caería en «Acceso restringido» en bucle).
   const crmApagado = clientConfig?.features?.crm === false;
-  const fallbackDeseado = user?.role === "colaborador"
+  const fallbackDeseado = clientConfig?.features?.projectKanban ? "mkt" : user?.role === "colaborador"
     ? "plan"
     : ((user?.isMarketingAdmin || user?.role === "marketing" || crmApagado)
         ? "mkt_reporte"
@@ -208,6 +208,7 @@ const Copilot       = lazy(() => import("./views/Copilot"));
 const Profile       = lazy(() => import("./views/Profile"));
 const Trash         = lazy(() => import("./views/Trash"));
 const Marketing     = lazy(() => import("./views/Marketing"));
+const ISpaceBoard = lazy(() => import("./views/ISpaceBoard"));
 const MiDrive       = lazy(() => import("./views/MiDrive"));
 const PlanSemanal   = lazy(() => import("./views/PlanSemanal"));
 
@@ -363,7 +364,7 @@ export default function App() {
 
   // Vista PREVIA a las vistas INMERSIVAS (Copilot / WhatsApp) — su flecha
   // "‹ volver" regresa acá. Se guarda la última vista que NO sea inmersiva.
-  const prevViewRef = useRef(isAsesorRole ? "c" : "d");
+  const prevViewRef = useRef(clientConfig?.features?.projectKanban ? "mkt" : (isAsesorRole ? "c" : "d"));
   useEffect(() => { if (v !== "copilot" && v !== "wa") prevViewRef.current = v; }, [v]);
   const backToPrevView = useCallback(() => setV(prevViewRef.current || (isAsesorRole ? "c" : "d")), [isAsesorRole]);
 
@@ -2773,7 +2774,7 @@ export default function App() {
                   {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} openExpediente={openLeadExpediente} onBack={backToPrevView} chatCount={waInbox.conversations?.length || 0} />}
                   {v === "copilot" && canAccessModule("copilot", user, clientConfig) && (clientConfig.liveHuli ? <HuliWorkspace view="copilot" /> : <Copilot T={T} isLight={isLight} theme={theme} onBack={backToPrevView} score={asesorScore} />)}
                   {(v === "mkt" || v === "mkt_reporte" || v === "mkt_equipo" || v === "mkt_dia" || v === "mkt_marcas" || v === "mkt_pipe" || v === "mkt_sol") && canAccessModule(v, user, clientConfig) && (
-                    <Marketing T={T}
+                    clientConfig?.features?.projectKanban ? <ISpaceBoard T={T} onOpenCopilot={canAccessModule("copilot", user, clientConfig) ? () => setV("copilot") : undefined} /> : <Marketing T={T}
                       initialTab={{ mkt_reporte: "reporte", mkt_equipo: "equipo", mkt_dia: "dia", mkt_marcas: "marcas", mkt_pipe: "pipeline", mkt_sol: "solicitudes" }[v]}
                       onOpenCopilot={canAccessModule("copilot", user, clientConfig) ? () => setV("copilot") : undefined} />
                   )}

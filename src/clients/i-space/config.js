@@ -43,7 +43,7 @@ export default {
     clientId: "i-space",
     organizationId: "cd478b82-d2ff-4543-981d-fb9d7aa1583e",
     copilotWebhook: "https://personal-n8n.suwsiw.easypanel.host/webhook/copilot-tenant",
-    copilotHelp: "Soy tu Copilot de I Space. Puedo consultar tus pendientes, crear y actualizar tareas, guardar recordatorios y conservar contexto de tus proyectos.\n\nPrueba: «¿qué tengo hoy?», «ponme una tarea: revisar mi proyecto mañana a las 10», «ya terminé revisar mi proyecto» o «recuerda que…».\n\nPara crear un proyecto y agrupar sus tareas, abre Proyectos y pulsa +. Tu agenda y documentos están en Mi Espacio. Solo trabajo con los datos de esta organización; no tengo acceso automático a tus cuentas externas.",
+    copilotHelp: "Soy tu Copilot de I Space. Puedo consultar tus pendientes, crear y actualizar tareas, guardar recordatorios y conservar contexto de tus proyectos.\n\nPrueba: «¿qué tengo hoy?», «ponme una tarea: revisar mi proyecto mañana a las 10», «ya terminé revisar mi proyecto» o «recuerda que…».\n\nPara crear un proyecto y agrupar sus tareas, abre Proyectos, entra en la vista Proyectos y pulsa Nuevo proyecto. Tu agenda y documentos están en Mi Espacio. Solo trabajo con los datos de esta organización; no tengo acceso automático a tus cuentas externas.",
   },
   features: {
     ...tenantConfig.features,
@@ -53,6 +53,7 @@ export default {
     copilotModule: true,
     copilotBrain: "tareas",
     mktModule: true,
+    projectKanban: true,
   },
   mkt: {
     ...tenantConfig.mkt,
