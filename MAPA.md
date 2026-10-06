@@ -550,7 +550,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Agente Ejecutivo | `src/app/components/Chat.jsx:74` |
 | Agente Stratos | `src/app/components/Chat.jsx:60` |
 | Agrega un teléfono…  +1 555 … | `src/app/views/CRM/components.jsx:1305` |
-| Agregar | `src/app/features/MetaPanel/index.jsx:1378` |
+| Agregar | `src/app/features/MetaPanel/index.jsx:1379` |
 | Agregar etapa | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:274` |
 | Agregar link | `src/app/views/LandingPages/index.jsx:1936` |
 | Agregar otro | `src/app/views/Marketing.jsx:2514` |
@@ -581,9 +581,9 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Asesor | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:199` |
 | Así te ayuda a operar | `src/app/components/CopilotCapabilities.jsx:117` |
 | Asignar a | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:207` |
-| Asignar a un asesor | `src/app/features/MetaPanel/index.jsx:1014` |
+| Asignar a un asesor | `src/app/features/MetaPanel/index.jsx:1015` |
 | Asignar a… | `src/app/views/Marketing.jsx:863` |
-| Asignar responsable | `src/app/features/MetaPanel/index.jsx:1003` |
+| Asignar responsable | `src/app/features/MetaPanel/index.jsx:1004` |
 | Asistió (sem.) | `src/app/views/ZoomControl/Resumen.jsx:421` |
 | Atención Inmediata | `src/app/views/Dash.jsx:235` |
 | Aún no configuras un correo de recuperación. | `src/app/views/Profile.jsx:430` |
@@ -622,11 +622,11 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cambiar cuánto gana | `src/app/views/Nomina.jsx:180` |
 | Cambiar el estatus | `src/app/views/Marketing.jsx:1575` |
 | Cambiar etapa | `src/app/views/CRM/components.jsx:277` |
-| Cambiar fecha | `src/app/features/MetaPanel/index.jsx:1257` |
+| Cambiar fecha | `src/app/features/MetaPanel/index.jsx:1258` |
 | Cambiar la etapa del lead | `src/app/views/WhatsApp.jsx:503` |
 | Cambiar orden de las tarjetas de prioridad | `src/app/views/CRM/index.jsx:2639` |
 | Cambiar posición de prioridad | `src/app/views/CRM/index.jsx:2800` |
-| Cambiar prioridad | `src/app/features/MetaPanel/index.jsx:1548` |
+| Cambiar prioridad | `src/app/features/MetaPanel/index.jsx:1551` |
 | Cambios sin guardar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:260` |
 | Campañas Recientes | `src/app/views/LandingPages/index.jsx:1255` |
 | Campo requerido | `src/app/views/LandingPages/index.jsx:641` |
@@ -668,7 +668,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cerrar formulario | `src/app/views/CRM/index.jsx:3253` |
 | Cerrar guía de funciones | `src/app/components/CopilotCapabilities.jsx:120` |
 | Cerrar menú | `src/app/components/MobileHeaderMenu.jsx:52` |
-| Cerrar Mi Espacio | `src/app/features/MetaPanel/index.jsx:764` |
+| Cerrar Mi Espacio | `src/app/features/MetaPanel/index.jsx:765` |
 | Cerrar sesión | `src/app/App.jsx:2727` |
 | Cerrar vista previa | `src/app/views/LandingPages/LandingPagePreview.jsx:202` |
 | Chats | `src/app/views/WhatsApp.jsx:633` |
