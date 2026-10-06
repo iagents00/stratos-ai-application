@@ -21,7 +21,7 @@ export default function PaginaSoloWeb() {
   return (
     <div style={{
       minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center",
-      background: "#030810", color: "#E2E8F0", padding: 32, textAlign: "center",
+      background: "#000000", color: "#E2E8F0", padding: 32, textAlign: "center",
       fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',
     }}>
       <div style={{ maxWidth: 320 }}>

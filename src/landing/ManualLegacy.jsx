@@ -1,3 +1,4 @@
+import { P as darkPalette } from "../design-system/tokens";
 /**
  * ManualLegacy.jsx — Manual de uso de Stratos IA para LEGACY DESIGN
  *
@@ -13,10 +14,10 @@ import {
 } from "lucide-react";
 
 const P = {
-  bg: "#060A11", surface: "#0A101B", glass: "rgba(255,255,255,0.03)",
+  bg: darkPalette.bg, surface: darkPalette.surface, glass: "rgba(255,255,255,0.03)",
   border: "rgba(255,255,255,0.07)", accent: "#38BDF8", accentS: "rgba(56,189,248,0.08)",
   accentB: "rgba(56,189,248,0.22)", warn: "#E8A488", warnS: "rgba(232,164,136,0.07)",
-  warnB: "rgba(232,164,136,0.22)", w: "#FFFFFF", txt: "#E2E8F0", txt2: "#8A97AA", txt3: "#3D4A5C",
+  warnB: "rgba(232,164,136,0.22)", w: "#FFFFFF", txt: darkPalette.txt, txt2: darkPalette.txt2, txt3: darkPalette.txt3,
 };
 const font = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
 const fontD = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;

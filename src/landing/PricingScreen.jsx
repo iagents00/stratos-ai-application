@@ -1,3 +1,4 @@
+import { P as darkPalette } from "../design-system/tokens";
 /**
  * PricingScreen - Planes y pagos para Stratos AI
  * Reutilizable: puede montarse en App o LandingMarketing.
@@ -11,19 +12,19 @@ const font  = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Rob
 const fontD = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
 
 const P = {
-  bg:      "#060A11",
-  surface: "#0B1220",
-  card:    "#0D1525",
+  bg:      darkPalette.bg,
+  surface: darkPalette.surface,
+  card:    darkPalette.bg3,
   accent:  "#6EE7C2",
   accentS: "rgba(110,231,194,0.08)",
   accentB: "rgba(110,231,194,0.18)",
   border:  "rgba(255,255,255,0.07)",
   borderH: "rgba(255,255,255,0.13)",
-  txt:     "#E2E8F0",
-  txt2:    "#8B99AE",
-  txt3:    "#4A5568",
+  txt:     darkPalette.txt,
+  txt2:    darkPalette.txt2,
+  txt3:    darkPalette.txt3,
   rose:    "#E8818C",
-  violet:  "#A78BFA",
+  violet:  darkPalette.violet,
   blue:    "#67B7D1",
   amber:   "#F59E0B",
   emerald: "#34D399",
@@ -157,7 +158,7 @@ function PlanCard({ plan, billing, onSelect }) {
         <div style={{ position: "absolute", top: 22, right: 18 }}>
           <span style={{
             fontSize: 9, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase",
-            background: P.accent, color: "#04080F", padding: "3px 10px", borderRadius: 99,
+            background: P.accent, color: "#000000", padding: "3px 10px", borderRadius: 99,
           }}>{plan.badge}</span>
         </div>
       )}
@@ -207,7 +208,7 @@ function PlanCard({ plan, billing, onSelect }) {
             background: plan.highlight
               ? `linear-gradient(135deg, ${P.accent} 0%, #3BC9A8 100%)`
               : `rgba(255,255,255,0.07)`,
-            color: plan.highlight ? "#04080F" : "#FFFFFF",
+            color: plan.highlight ? "#000000" : "#FFFFFF",
             transition: "all 0.2s",
             boxShadow: plan.highlight ? `0 4px 20px ${P.accent}30` : "none",
             letterSpacing: "0.01em",
@@ -285,15 +286,15 @@ function ContratarModal({ plan, billing, onClose, whatsapp, email }) {
     width: "100%", padding: "13px 0", borderRadius: 11,
     border: principal ? "none" : `1px solid ${P.border}`,
     background: principal ? `linear-gradient(135deg, ${P.accent}, #3BC9A8)` : "transparent",
-    color: principal ? "#04080F" : P.txt,
+    color: principal ? "#000000" : P.txt,
     fontSize: 13, fontWeight: 700, fontFamily: fontD, cursor: "pointer",
     textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
     boxShadow: principal ? `0 4px 20px ${P.accent}25` : "none",
   });
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(2,5,12,0.85)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
-      <div style={{ background: "#0D1525", border: `1px solid ${P.border}`, borderRadius: 20, padding: "32px 32px", width: "min(420px, 92vw)" }} onClick={e => e.stopPropagation()}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
+      <div style={{ background: "#141414", border: `1px solid ${P.border}`, borderRadius: 20, padding: "32px 32px", width: "min(420px, 92vw)" }} onClick={e => e.stopPropagation()}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
           <div>
             <p style={{ fontSize: 11, color: P.accent, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 4 }}>Contratar</p>
@@ -367,10 +368,7 @@ export default function PricingScreen({ onBack, embedded = false }) {
       background: P.bg,
       fontFamily: font,
       color: P.txt,
-      backgroundImage: `
-        radial-gradient(ellipse at 20% 0%, rgba(110,231,194,0.04) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 100%, rgba(167,139,250,0.03) 0%, transparent 40%)
-      `,
+      backgroundImage: "none",
     }}>
       <style>{`
         @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
@@ -527,7 +525,7 @@ export default function PricingScreen({ onBack, embedded = false }) {
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <a href={enterpriseWhatsAppUrl} target="_blank" rel="noopener noreferrer" aria-label="Cotizar un plan personalizado por WhatsApp" style={{
               padding: "13px 28px", borderRadius: 11, border: "none", cursor: "pointer",
-              background: `linear-gradient(135deg, ${P.accent}, #3BC9A8)`, color: "#04080F",
+              background: `linear-gradient(135deg, ${P.accent}, #3BC9A8)`, color: "#000000",
               fontSize: 13, fontWeight: 700, fontFamily: fontD,
               boxShadow: `0 4px 20px ${P.accent}30`, textDecoration: "none",
               display: "inline-flex", alignItems: "center", gap: 7,

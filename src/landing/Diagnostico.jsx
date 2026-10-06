@@ -433,14 +433,14 @@ export default function Diagnostico() {
   /* ── VIEW MODE: loader / error ─────────────────────────────────────────── */
   if (viewMode && viewLoading) {
     return (
-      <div className="min-h-screen bg-[#060A11]">
+      <div className="min-h-screen bg-[#000000]">
         <AnticipationLoader text="Cargando diagnóstico del cliente..." subtext="Recuperando blueprint" />
       </div>
     );
   }
   if (viewMode && viewError) {
     return (
-      <div className="min-h-screen bg-[#060A11] text-white flex items-center justify-center p-6 font-sans antialiased">
+      <div className="min-h-screen bg-[#000000] text-white flex items-center justify-center p-6 font-sans antialiased">
         <div className="max-w-md w-full text-center">
           <div className="w-16 h-16 mx-auto mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 flex items-center justify-center">
             <XCircle className="w-8 h-8 text-red-400" strokeWidth={1.5} />
@@ -542,7 +542,7 @@ export default function Diagnostico() {
   /* ── STAGE: GATE (hero) ───────────────────────────────────────────────── */
   if (stage === 'gate') {
     return (
-      <div className="min-h-screen bg-[#060A11] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans antialiased selection:bg-[#34d399]/30">
+      <div className="min-h-screen bg-[#000000] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans antialiased selection:bg-[#34d399]/30">
         <style>{`
           @keyframes stratosAuroraA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(9%,7%) scale(1.22)}}
           @keyframes stratosAuroraB{0%,100%{transform:translate(0,0) scale(1.15)}50%{transform:translate(-8%,-6%) scale(1)}}
@@ -593,7 +593,7 @@ export default function Diagnostico() {
     const progress = ((step + 1) / QUESTION_BANK.length) * 100;
 
     return (
-      <div className="min-h-screen bg-[#060A11] text-white p-4 md:p-8 relative selection:bg-[#34d399]/30 pb-44 md:pb-32 overflow-x-hidden font-sans antialiased flex flex-col items-center">
+      <div className="min-h-screen bg-[#000000] text-white p-4 md:p-8 relative selection:bg-[#34d399]/30 pb-44 md:pb-32 overflow-x-hidden font-sans antialiased flex flex-col items-center">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff02_1px,transparent_1px),linear-gradient(to_bottom,#ffffff02_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none fixed"></div>
         <div className="absolute top-0 w-full h-[500px] bg-[#34d399]/5 blur-[150px] rounded-full pointer-events-none fixed -translate-y-1/2"></div>
 
@@ -653,7 +653,7 @@ export default function Diagnostico() {
                           {tags.map(tag => {
                             const isTagSelected = selectedTags.includes(tag);
                             return (
-                              <button type="button" key={tag} onClick={() => handleTagToggle(tag)} aria-pressed={isTagSelected} className={`px-4 sm:px-5 py-2.5 rounded-full text-[14px] font-medium transition-all inline-flex items-center gap-2 border max-w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#34d399]/40 ${isTagSelected ? 'bg-[#34d399]/10 border-[#34d399]/40 text-[#34d399] shadow-[0_0_15px_rgba(52,211,153,0.1)]' : 'bg-[#060A11] border-white/10 text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}>
+                              <button type="button" key={tag} onClick={() => handleTagToggle(tag)} aria-pressed={isTagSelected} className={`px-4 sm:px-5 py-2.5 rounded-full text-[14px] font-medium transition-all inline-flex items-center gap-2 border max-w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#34d399]/40 ${isTagSelected ? 'bg-[#34d399]/10 border-[#34d399]/40 text-[#34d399] shadow-[0_0_15px_rgba(52,211,153,0.1)]' : 'bg-[#000000] border-white/10 text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}>
                                 {isTagSelected && <Check size={14} strokeWidth={3} className="shrink-0"/>} {tag}
                               </button>
                             );
@@ -669,7 +669,7 @@ export default function Diagnostico() {
         </div>
 
         {activeSelections.length > 0 && (
-          <div className="fixed bottom-0 left-0 w-full bg-[#060A11]/90 backdrop-blur-2xl border-t border-white/10 px-5 pt-5 pb-[calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))+1.25rem)] md:px-6 md:pt-6 md:pb-6 z-50">
+          <div className="fixed bottom-0 left-0 w-full bg-[#000000]/90 backdrop-blur-2xl border-t border-white/10 px-5 pt-5 pb-[calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))+1.25rem)] md:px-6 md:pt-6 md:pb-6 z-50">
             <div className="max-w-3xl mx-auto flex flex-col md:flex-row gap-4 items-center md:pl-16">
               <div className="relative w-full flex-1">
                 <Terminal className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -685,13 +685,13 @@ export default function Diagnostico() {
     );
   }
 
-  if (stage === 'pre-form') return <div className="min-h-screen bg-[#060A11]"><AnticipationLoader text="Procesando tus datos..." subtext={loadingMsg} /></div>;
-  if (stage === 'loading') return <div className="min-h-screen bg-[#060A11]"><AnticipationLoader text="Compilando tu Plano..." subtext={loadingMsg} /></div>;
+  if (stage === 'pre-form') return <div className="min-h-screen bg-[#000000]"><AnticipationLoader text="Procesando tus datos..." subtext={loadingMsg} /></div>;
+  if (stage === 'loading') return <div className="min-h-screen bg-[#000000]"><AnticipationLoader text="Compilando tu Plano..." subtext={loadingMsg} /></div>;
 
   /* ── STAGE: FORM (squeeze) ─────────────────────────────────────────────── */
   if (stage === 'form') {
     return (
-      <div className="min-h-screen bg-[#060A11] text-white flex items-center justify-center p-6 relative font-sans antialiased">
+      <div className="min-h-screen bg-[#000000] text-white flex items-center justify-center p-6 relative font-sans antialiased">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(52,211,153,0.05)_0%,transparent_60%)] pointer-events-none"></div>
         <div className="z-10 max-w-xl w-full">
           <div className="bg-[#030508] border border-white/10 rounded-[2rem] p-6 sm:p-10 md:p-14 shadow-[0_40px_100px_rgba(0,0,0,0.8)] relative overflow-hidden">
@@ -713,17 +713,17 @@ export default function Diagnostico() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="text-[11px] uppercase tracking-[0.1em] text-slate-500 font-bold ml-1 block mb-2">Tu Nombre</label>
-                  <input required value={contact.name} onChange={e => setContact({...contact, name: e.target.value})} className="w-full bg-[#060A11] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]" placeholder="Ej. Juan Pérez" />
+                  <input required value={contact.name} onChange={e => setContact({...contact, name: e.target.value})} className="w-full bg-[#000000] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]" placeholder="Ej. Juan Pérez" />
                 </div>
                 <div>
                   <label className="text-[11px] uppercase tracking-[0.1em] text-slate-500 font-bold ml-1 block mb-2">Agencia / Empresa</label>
-                  <input required value={contact.company} onChange={e => setContact({...contact, company: e.target.value})} className="w-full bg-[#060A11] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]" placeholder="Ej. Inmobiliaria del Valle" />
+                  <input required value={contact.company} onChange={e => setContact({...contact, company: e.target.value})} className="w-full bg-[#000000] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]" placeholder="Ej. Inmobiliaria del Valle" />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="text-[11px] uppercase tracking-[0.1em] text-slate-500 font-bold ml-1 block mb-2">Correo Profesional</label>
-                  <input required type="email" value={contact.email} onChange={e => setContact({...contact, email: e.target.value})} className="w-full bg-[#060A11] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]" placeholder="tucorreo@empresa.com" />
+                  <input required type="email" value={contact.email} onChange={e => setContact({...contact, email: e.target.value})} className="w-full bg-[#000000] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]" placeholder="tucorreo@empresa.com" />
                 </div>
                 <div>
                   <label className="text-[11px] uppercase tracking-[0.1em] text-slate-500 font-bold ml-1 block mb-2">WhatsApp Directo</label>
@@ -732,10 +732,10 @@ export default function Diagnostico() {
                       value={contact.dialCode}
                       onChange={e => setContact({...contact, dialCode: e.target.value})}
                       aria-label="Indicativo pais"
-                      className="bg-[#060A11] border border-white/10 rounded-xl px-3 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)] font-mono w-[116px] shrink-0 cursor-pointer"
+                      className="bg-[#000000] border border-white/10 rounded-xl px-3 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)] font-mono w-[116px] shrink-0 cursor-pointer"
                     >
                       {DIAL_CODES.map(c => (
-                        <option key={c.code} value={c.code} className="bg-[#060A11] text-white">
+                        <option key={c.code} value={c.code} className="bg-[#000000] text-white">
                           {c.flag} {c.code}
                         </option>
                       ))}
@@ -747,7 +747,7 @@ export default function Diagnostico() {
                       pattern="[0-9]*"
                       value={contact.phone}
                       onChange={e => setContact({...contact, phone: e.target.value.replace(/\D/g, '')})}
-                      className="flex-1 min-w-0 bg-[#060A11] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]"
+                      className="flex-1 min-w-0 bg-[#000000] border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#34d399]/50 transition-colors placeholder:text-slate-700 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]"
                       placeholder="55 1234 5678"
                       maxLength={15}
                     />
@@ -810,7 +810,7 @@ export default function Diagnostico() {
             <div className="lg:col-span-8 space-y-12">
               {/* ── FUGA DE CAPITAL ESTIMADA — solo matemáticas, supuestos a la vista ── */}
               {reportData.leak && (
-                <div className="rounded-[2rem] bg-[#060A11] border border-red-500/20 overflow-hidden print:border-black/30">
+                <div className="rounded-[2rem] bg-[#000000] border border-red-500/20 overflow-hidden print:border-black/30">
                   <div className="p-8 md:p-10 bg-gradient-to-r from-red-500/[0.07] to-transparent">
                     <div className="flex items-center gap-2.5 mb-4">
                       <span className="text-[11px] uppercase tracking-[0.16em] font-bold text-red-400 print:text-black">Fuga de capital estimada</span>
@@ -862,7 +862,7 @@ export default function Diagnostico() {
               </div>
 
               <div className="grid md:grid-cols-2 gap-8">
-                <div className="p-10 rounded-3xl bg-[#060A11] border border-red-500/10 shadow-[inset_0_2px_20px_rgba(239,68,68,0.03)] print:border-black/20">
+                <div className="p-10 rounded-3xl bg-[#000000] border border-red-500/10 shadow-[inset_0_2px_20px_rgba(239,68,68,0.03)] print:border-black/20">
                   <h4 className="text-[11px] uppercase tracking-[0.12em] font-bold text-red-400 mb-5 flex items-center gap-3"><XCircle size={16}/> Cómo trabajas hoy</h4>
                   <p className="text-[15px] text-slate-400 font-light leading-relaxed print:text-black/70">Tu equipo no puede escalar sin aumentar costos. Los leads se enfrían por falta de seguimiento inmediato y pierdes comisiones en el caos.</p>
                 </div>
@@ -872,7 +872,7 @@ export default function Diagnostico() {
                 </div>
               </div>
 
-              <div className="p-10 md:p-12 rounded-[2.5rem] bg-[#060A11] border border-white/5 print:border-black/20 print:bg-transparent">
+              <div className="p-10 md:p-12 rounded-[2.5rem] bg-[#000000] border border-white/5 print:border-black/20 print:bg-transparent">
                 <h3 className="text-[11px] uppercase tracking-[0.12em] font-bold text-slate-500 mb-8 flex items-center gap-3"><Workflow size={16}/> Motor Lógico: {reportData.module}</h3>
                 <div className="space-y-4">
                   {reportData.architectureNodes.map((node, i) => {
@@ -898,7 +898,7 @@ export default function Diagnostico() {
                 {reportData.metrics.map((m, i) => {
                   const MIcon = m.icon;
                   return (
-                    <div key={i} className="p-8 rounded-3xl bg-[#060A11] border border-white/5 flex flex-col justify-center items-start print:border-black/20 print:bg-transparent relative overflow-hidden group">
+                    <div key={i} className="p-8 rounded-3xl bg-[#000000] border border-white/5 flex flex-col justify-center items-start print:border-black/20 print:bg-transparent relative overflow-hidden group">
                       <div className="absolute inset-0 bg-gradient-to-br from-[#34d399]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                       <MIcon className="w-6 h-6 text-[#34d399]/50 mb-5 print:text-black" />
                       <div className="text-4xl font-light tracking-tight mb-2 print:text-black">{m.value}</div>
@@ -908,12 +908,12 @@ export default function Diagnostico() {
                 })}
               </div>
 
-              <div className="p-8 md:p-10 rounded-[2rem] bg-[#060A11] border border-white/5 print:border-black/20 print:bg-transparent">
+              <div className="p-8 md:p-10 rounded-[2rem] bg-[#000000] border border-white/5 print:border-black/20 print:bg-transparent">
                 <h3 className="text-[11px] uppercase tracking-[0.12em] font-bold text-slate-500 mb-8 flex items-center gap-3"><CalendarDays size={16} className="shrink-0"/> Plan de 7 Días</h3>
                 <div className="relative border-l border-white/10 ml-4 space-y-8 print:border-black/20">
                   {reportData.timeline.map((step, i) => (
                     <div key={i} className="relative pl-8">
-                      <div className="absolute w-2.5 h-2.5 bg-[#34d399] rounded-full -left-[5.5px] top-1.5 print:bg-black ring-4 ring-[#060A11] print:ring-white"></div>
+                      <div className="absolute w-2.5 h-2.5 bg-[#34d399] rounded-full -left-[5.5px] top-1.5 print:bg-black ring-4 ring-[#000000] print:ring-white"></div>
                       <div className="text-[10px] uppercase tracking-[0.12em] font-bold text-[#34d399] mb-1 print:text-black/50">{step.day}</div>
                       <div className="text-[15px] font-medium text-white mb-1.5 tracking-tight print:text-black">{step.title}</div>
                       <div className="text-[14px] font-light text-slate-400 print:text-black/70 leading-relaxed">{step.desc}</div>
@@ -925,7 +925,7 @@ export default function Diagnostico() {
           </div>
 
           {/* Acompañamiento Stratos — el valor humano: no lo haces solo */}
-          <div className="mt-16 p-8 sm:p-12 rounded-[2.5rem] bg-[#060A11] border border-white/10 print:hidden">
+          <div className="mt-16 p-8 sm:p-12 rounded-[2.5rem] bg-[#000000] border border-white/10 print:hidden">
             <div className="text-center mb-10">
               <p className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#34d399] mb-3">No lo haces solo</p>
               <h2 className="text-2xl md:text-3xl font-light tracking-tight text-white">Stratos lo activa <span className="text-[#34d399]">contigo</span>, paso a paso</h2>
@@ -948,7 +948,7 @@ export default function Diagnostico() {
             </div>
           </div>
 
-          <div className="mt-16 p-8 sm:p-12 md:p-16 rounded-[2.5rem] bg-gradient-to-br from-[#34d399]/10 to-[#060A11] border border-[#34d399]/30 text-center print:hidden relative overflow-hidden shadow-[0_0_60px_rgba(52,211,153,0.1)]">
+          <div className="mt-16 p-8 sm:p-12 md:p-16 rounded-[2.5rem] bg-gradient-to-br from-[#34d399]/10 to-[#000000] border border-[#34d399]/30 text-center print:hidden relative overflow-hidden shadow-[0_0_60px_rgba(52,211,153,0.1)]">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(52,211,153,0.1)_0%,transparent_60%)] pointer-events-none"></div>
             <h2 className="text-3xl md:text-4xl font-light tracking-tight mb-6 text-white relative z-10">La Ejecución "Llave en Mano"</h2>
             <p className="text-[17px] text-slate-300 font-light max-w-3xl mx-auto mb-10 leading-relaxed relative z-10">

@@ -1,3 +1,4 @@
+import { P as darkPalette } from "../design-system/tokens";
 /**
  * ManualMarketing.jsx — Manual de usuario del equipo de MARKETING de Duke
  *
@@ -25,8 +26,8 @@ import {
    PALETA — misma familia que la app (P de App.jsx) y que ManualCRM
    ═══════════════════════════════════════════════════════════════════════════ */
 const P = {
-  bg:       "#060A11",
-  surface:  "#0A101B",
+  bg:       darkPalette.bg,
+  surface:  darkPalette.surface,
   glass:    "rgba(255,255,255,0.03)",
   glassH:   "rgba(255,255,255,0.05)",
   border:   "rgba(255,255,255,0.07)",
@@ -43,9 +44,9 @@ const P = {
   roseS:    "rgba(248,113,113,0.08)",
   roseB:    "rgba(248,113,113,0.25)",
   w:        "#FFFFFF",
-  txt:      "#E2E8F0",
-  txt2:     "#8A97AA",
-  txt3:     "#3D4A5C",
+  txt:      darkPalette.txt,
+  txt2:     darkPalette.txt2,
+  txt3:     darkPalette.txt3,
 };
 const font  = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
 const fontD = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
@@ -360,7 +361,7 @@ const CSS = `
   /* Top nav sticky */
   .mm-nav {
     position: sticky; top: 0; z-index: 50;
-    background: rgba(6,10,17,0.85);
+    background: rgba(0,0,0,0.85);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid ${P.border};
@@ -952,7 +953,7 @@ export default function ManualMarketing() {
       {/* ─────────────── CIERRE — el Copilot te acompaña ─────────────── */}
       <section style={{
         borderTop: `1px solid ${P.border}`,
-        background: `linear-gradient(180deg, ${P.bg} 0%, ${P.surface} 100%)`,
+        background: P.bg,
         padding: "64px 24px",
       }}>
         <div style={{ maxWidth: 680, margin: "0 auto", textAlign: "center" }}>
