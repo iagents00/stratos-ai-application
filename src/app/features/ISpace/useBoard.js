@@ -28,6 +28,7 @@ export function useBoard(orgId, userId) {
     finally { if (request === sequence.current) setLoading(false); }
   }, [orgId]);
   useEffect(() => { setData({ projects: [], tasks: [], people: [], brands: [] }); load(); return () => { sequence.current++; }; }, [load]);
+  useEffect(() => { const refresh = () => load(); window.addEventListener('i-space-board-changed', refresh); return () => window.removeEventListener('i-space-board-changed', refresh); }, [load]);
   const save = async (table, payload, existing) => {
     if (busy.current || !orgId || !userId) return false;
     busy.current = true; setSaving(true); setError(''); setNotice('');

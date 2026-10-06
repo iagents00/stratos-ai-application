@@ -15,6 +15,7 @@
  * Migración relacionada: supabase/migrations/007_telegram_bot_asesor_mode.sql
  */
 import { supabase } from './supabase'
+import { sendProjectCopilot } from './project-copilot.js'
 import { loadCopilotProfile } from './copilot-profile.js'
 import { resolveClientFromLocation, getClientConfigByOrgId } from '../clients'
 
@@ -41,6 +42,7 @@ function tenantCopilotShape(cfg) {
     customBrain: brain !== 'crm',
     webhook: cfg?.tenant?.copilotWebhook || null,
     helpText: cfg?.tenant?.copilotHelp || null,
+    projectAgent: cfg?.features?.projectCopilot === true,
     mktLabel: cfg?.navLabels?.mkt || 'Marketing',
   }
 }
@@ -467,7 +469,7 @@ export async function sendCopilotMessage(rawText, options = {}) {
   // La respuesta directa (cuando no la registra el propio flujo) se guarda igual que
   // siempre. Best-effort (no bloquea la UI).
   try {
-    if (r && typeof r.reply === 'string' && r.reply.trim()) {
+    if (r && !r.persisted && typeof r.reply === 'string' && r.reply.trim()) {
       await withTimeout(supabase.rpc('copilot_log_msg', { p_role: 'ai', p_content: r.reply }), 3000, 'copilot_log_msg');
     }
   } catch { /* logging best-effort, nunca romper el envío */ }
@@ -505,6 +507,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
       const orgCfg = getClientConfigByOrgId(profile?.organization_id);
       if (orgCfg) tenant = tenantCopilotShape(orgCfg);
     } catch { /* noop — se queda la resolución por URL */ }
+    if (tenant.projectAgent) return sendProjectCopilot(cleanText, options);
     // COLABORADOR de área (Comercial, Operativo, Administrativo, Finanzas, RRHH):
     // habla con el MISMO cerebro de tareas que marketing, porque es el que sabe de
     // pendientes, bitácora del día y «ya terminé X». El cerebro de ventas no le

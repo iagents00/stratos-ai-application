@@ -76,6 +76,7 @@ columna, estos son los archivos que hay que revisar.
 | `mkt_pipeline_columns` | 1 | `app/views/Marketing.jsx` |
 | `mkt_pipeline_items` | 1 | `app/views/Marketing.jsx` |
 | `mkt_requests` | 1 | `app/views/Marketing.jsx` |
+| `project_copilot_receipts` | 1 | `lib/project-copilot.js` |
 | `projects` | 1 | `hooks/useProperties.js` |
 | `scheduled_calls` | 1 | `hooks/useScheduledCalls.js` |
 | `voice_call_logs` | 1 | `app/views/CRM/LeadVoiceCalls.jsx` |

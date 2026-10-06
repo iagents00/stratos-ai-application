@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Plus, Search, RefreshCw, ArrowUpRight, X, Flag, GripVertical, LockKeyhole, ListChecks, CalendarDays } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useBoard } from '../features/ISpace/useBoard';
-import { BOARD_STATES, WIP_LIMIT, readDescription, writeDescription, blockingReason, taskColumn, taskProgress, projectProgress, isFocus, validateTask, safeLink, localDateTime } from '../features/ISpace/board-model.mjs';
+import { BOARD_STATES, WIP_LIMIT, readDescription, writeDescription, blockingReason, taskColumn, taskProgress, projectProgress, isFocus, validateTask, safeLink, localDateTime, orderBoardTasks } from '../features/ISpace/board-model.mjs';
 import './ISpaceBoard.css';
+import { buildCodexPrompt } from '../features/ISpace/codex-prompt.mjs';
 
 const QUARTER_MARK = 'Prioridad trimestral: Sí';
 const dateLabel = value => value ? new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'short' }).format(new Date(value)) : 'Sin fecha';
@@ -14,6 +15,7 @@ export default function ISpaceBoard({ T, onOpenCopilot }) {
   const [view, setView] = useState('kanban'), [projectId, setProjectId] = useState('all');
   const [query, setQuery] = useState(''), [filter, setFilter] = useState('all');
   const [editor, setEditor] = useState(null), [draft, setDraft] = useState({});
+  const [promptNotice, setPromptNotice] = useState('');
   const [dragged, setDragged] = useState(null);
   const [expandedColumns, setExpandedColumns] = useState({});
   const [blockedJump, setBlockedJump] = useState(0);
@@ -31,12 +33,12 @@ export default function ISpaceBoard({ T, onOpenCopilot }) {
   const overdue = active.filter(t => t.due_at && new Date(t.due_at) < new Date());
   const projectName = id => projects.find(p => p.id === id)?.nombre || 'Sin proyecto';
   const personName = id => people.find(p => p.id === id)?.name || 'Por asignar';
-  const visible = tasks.filter(t => (projectId === 'all' || (projectId === 'none' ? !t.project_id : t.project_id === projectId))
+  const visible = orderBoardTasks(tasks.filter(t => (projectId === 'all' || (projectId === 'none' ? !t.project_id : t.project_id === projectId))
     && (!query || `${t.titulo} ${t.descripcion || ''} ${projectName(t.project_id)}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()))
     && (filter === 'all' || (filter === 'focus' && isFocus(t)) || (filter === 'unassigned' && !t.assignee_id && t.estado !== 'hecha') || (filter === 'overdue' && overdue.includes(t))))
-    .sort((a,b) => Number(isFocus(b)) - Number(isFocus(a)) || String(a.due_at || 'z').localeCompare(String(b.due_at || 'z')) || a.created_at.localeCompare(b.created_at));
+    , projects, tasks);
   const openTask = (task = null, preset = {}) => {
-    setError(''); setEditor({ type: 'task', item: task });
+    setError(''); setPromptNotice(''); setEditor({ type: 'task', item: task });
     setDraft(task ? { ...task, ...readDescription(task.descripcion), due: localDateTime(task.due_at) }
       : { titulo: '', project_id: projectId !== 'all' && projectId !== 'none' ? projectId : '', estado: 'por_hacer', prioridad: 'media', assignee_id: user.id, depends_on: '', due: '', drive_url: '', notes: '', blocker: '', checklist: [], ...preset });
     requestAnimationFrame(() => { formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); formRef.current?.querySelector('input')?.focus(); });
@@ -117,9 +119,10 @@ export default function ISpaceBoard({ T, onOpenCopilot }) {
           <label>Resultado esperado y notas<textarea rows={3} value={draft.notes} onChange={e => set('notes',e.target.value)} /></label>
           <div className="is-form-grid"><label>Depende de<select value={draft.depends_on || ''} onChange={e => set('depends_on',e.target.value)}><option value="">Sin dependencia</option>{tasks.filter(t => t.id !== editor.item?.id).map(t => <option key={t.id} value={t.id}>{t.titulo}</option>)}</select></label><label>Qué la bloquea<input value={draft.blocker} onChange={e => set('blocker',e.target.value)} placeholder="Vacío si puede avanzar" /></label></div>
           <label className="is-checkline"><input type="checkbox" checked={['alta','urgente'].includes(draft.prioridad)} onChange={e => set('prioridad',e.target.checked ? 'alta' : 'media')} /> Foco semanal</label>
-          <div className="is-checklist"><h3>Checklist de entrega</h3>{draft.checklist.map((item,i) => <div className="is-check-item" key={i}><input aria-label={`Completar paso ${i+1}: ${item.text}`} type="checkbox" checked={item.done} onChange={e => set('checklist',draft.checklist.map((x,j) => j===i ? {...x,done:e.target.checked}:x))} /><input aria-label={`Paso ${i+1}`} value={item.text} onChange={e => set('checklist',draft.checklist.map((x,j) => j===i ? {...x,text:e.target.value}:x))} /><button type="button" aria-label={`Quitar paso ${i+1}`} onClick={() => set('checklist',draft.checklist.filter((_,j)=>j!==i))}><X size={15} /></button></div>)}<button type="button" onClick={() => set('checklist',[...draft.checklist,{text:'',done:false}])}><Plus size={14} /> Añadir paso</button></div>
+          <div className="is-checklist"><h3>Criterios de aceptación</h3>{draft.checklist.map((item,i) => <div className="is-check-item" key={i}><input aria-label={`Completar paso ${i+1}: ${item.text}`} type="checkbox" checked={item.done} onChange={e => set('checklist',draft.checklist.map((x,j) => j===i ? {...x,done:e.target.checked}:x))} /><input aria-label={`Paso ${i+1}`} value={item.text} onChange={e => set('checklist',draft.checklist.map((x,j) => j===i ? {...x,text:e.target.value}:x))} /><button type="button" aria-label={`Quitar paso ${i+1}`} onClick={() => set('checklist',draft.checklist.filter((_,j)=>j!==i))}><X size={15} /></button></div>)}<button type="button" onClick={() => set('checklist',[...draft.checklist,{text:'',done:false}])}><Plus size={14} /> Añadir criterio</button></div>
         </>}
         <label>Enlace a documentos o evidencia<input type="url" value={draft.drive_url || ''} onChange={e => set('drive_url',e.target.value)} placeholder="https://…" /></label>
+        {editor.type !== 'project' && <details><summary>Preparar prompt para Codex</summary><p className="is-help">Copia esta instrucción en el proyecto indicado de Codex. Usa los datos del formulario; generar el prompt no ejecuta ni completa la tarea.</p><label>Prompt para Codex<textarea rows={12} readOnly value={buildCodexPrompt({ ...editor.item, ...draft, descripcion: writeDescription(draft) }, projects.find(p => p.id === draft.project_id), tasks)} onFocus={e => e.target.select()} /></label><button type="button" onClick={async()=>{try{await navigator.clipboard.writeText(buildCodexPrompt({...editor.item,...draft,descripcion:writeDescription(draft)},projects.find(p=>p.id===draft.project_id),tasks));setPromptNotice('Prompt copiado. Pégalo en el proyecto indicado de Codex.');}catch{setPromptNotice('Selecciona el texto del prompt y cópialo.');}}}>Copiar prompt</button>{promptNotice&&<p role="status" className="is-help">{promptNotice}</p>}</details>}
         <div className="is-form-actions"><button type="button" onClick={() => setEditor(null)}>Cancelar</button><button className="is-primary" type="submit">{saving ? 'Guardando…' : 'Guardar cambios'}</button></div>
       </fieldset>
     </form>}
