@@ -12,7 +12,7 @@ import {
   PenTool, Palette, Video, Globe, Cloud, ExternalLink, Trash2, FolderOpen,
   Users, UserRound,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../../lib/supabase";
 import { font, fontDisp } from "../../../design-system/tokens";
 import DocsStratos from "./DocsStratos";
@@ -132,6 +132,53 @@ export default function MetaPanel({
   agendaOnly = false,
   marketingMode = false,
 }) {
+  const isMobile = typeof window !== "undefined" && (window.matchMedia?.("(pointer: coarse)")?.matches || window.innerWidth <= 768);
+  const panelRef = useRef(null);
+  useEffect(() => {
+    if (!open || !panelRef.current) return;
+    const panel = panelRef.current;
+    const opener = document.activeElement;
+    const isolated = [];
+    const previousOverflow = document.body.style.overflow;
+    // On mobile the panel covers the app. Hide covered siblings from keyboard
+    // and assistive technology while keeping desktop navigation available.
+    if (isMobile) {
+      for (let node = panel; node.parentElement; node = node.parentElement) {
+        for (const sibling of node.parentElement.children) {
+          if (sibling !== node && sibling instanceof HTMLElement) {
+            isolated.push([sibling, sibling.inert]);
+            sibling.inert = true;
+          }
+        }
+        if (node.parentElement === document.body) break;
+      }
+      document.body.style.overflow = "hidden";
+    }
+    panel.focus({ preventScroll: true });
+    return () => {
+      isolated.forEach(([element, wasInert]) => { element.inert = wasInert; });
+      if (isMobile) document.body.style.overflow = previousOverflow;
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
+    };
+  }, [open, isMobile]);
+  const onPanelKeyDown = (event) => {
+    if (event.defaultPrevented) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      if (duePickerOpen) setDuePickerOpen(null);
+      else onClose();
+    }
+    if (!isMobile || event.key !== "Tab") return;
+    const controls = [...panelRef.current.querySelectorAll("button, input, select, textarea, summary, a[href], [tabindex]")]
+      .filter(el => !el.disabled && el.tabIndex >= 0 && !el.closest("[inert]") && el.getClientRects().length > 0);
+    const first = controls[0], last = controls.at(-1);
+    if (!first) { event.preventDefault(); return; }
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === panelRef.current)) {
+      event.preventDefault(); last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault(); first.focus();
+    }
+  };
   // ── Persistencia de acciones MANUALES en Supabase (tabla team_actions) ──
   // Las derivadas de leads se siembran en App.jsx (efímeras, se regeneran). Las que el usuario
   // crea acá SÍ se guardan, con fecha/hora límite OBLIGATORIA (la usa el coach de Telegram).
@@ -340,6 +387,7 @@ export default function MetaPanel({
     return (
       <span
         className="mp-edit"
+        role="textbox" aria-multiline={multi} aria-label="Texto editable" tabIndex={0}
         contentEditable suppressContentEditableWarning
         onFocus={e => { if (isEmptyHint) e.currentTarget.textContent = ''; }}
         onBlur={e => {
@@ -376,7 +424,6 @@ export default function MetaPanel({
 
   // En móvil la barra lateral (widget AVANCE que abre este panel en desktop)
   // no existe; el panel se abre desde el menú "+" y debe encajar en pantalla.
-  const isMobile = typeof window !== "undefined" && (window.matchMedia?.("(pointer: coarse)")?.matches || window.innerWidth <= 768);
 
   // ── Lenguaje visual del panel (auditoría "ERP pro × Apple", Jul 2026) ─────────
   // Variables CSS por tema + una capa <style> para hover/focus/afinaciones que el
@@ -631,14 +678,15 @@ export default function MetaPanel({
     .mp-row:active{transform:translateY(0)}
     .mp-grip{opacity:0;transition:opacity .16s ease}
     .mp-row:hover .mp-grip{opacity:.4}
+    .mp button:focus-visible,.mp summary:focus-visible{outline:2px solid var(--mp-accent);outline-offset:3px}
     .mp-del{opacity:0;transition:opacity .16s ease}
-    .mp-row:hover .mp-del{opacity:.5}
-    .mp-del:hover{opacity:1!important}
+    .mp-row:hover .mp-del,.mp-row:focus-within .mp-del{opacity:.5}
+    .mp-del:hover,.mp-del:focus-visible{opacity:1!important}
     .mp-actions{transition:transform .2s cubic-bezier(.16,1,.3,1)}
-    .mp-row:hover .mp-actions{transform:translateX(-34px)}
+    .mp-row:hover .mp-actions,.mp-row:focus-within .mp-actions{transform:translateX(-34px)}
     .mp-rowdel{position:absolute;right:16px;top:50%;transform:translateY(-50%);opacity:0;transition:opacity .18s ease}
-    .mp-row:hover .mp-rowdel{opacity:.55}
-    .mp-rowdel:hover{opacity:1!important}
+    .mp-row:hover .mp-rowdel,.mp-row:focus-within .mp-rowdel{opacity:.55}
+    .mp-rowdel:hover,.mp-rowdel:focus-visible{opacity:1!important}
     .mp-check{transition:border-color .16s ease,background .16s ease,box-shadow .16s ease}
     .mp-check:hover{border-color:var(--mp-accent)!important;box-shadow:0 0 0 4px var(--mp-ringSoft)}
     .mp-select{appearance:none;-webkit-appearance:none;background-image:var(--mp-chevron);background-repeat:no-repeat;background-position:right 9px center;background-size:10px;padding-right:26px!important;transition:border-color .16s ease,background-color .16s ease}
@@ -673,7 +721,7 @@ export default function MetaPanel({
           dejando visibles el header y el menú izquierdo. En móvil (sin sidebar) ocupa
           toda la pantalla. La clase .mp trae position:fixed; inset:0 — acá sólo movemos
           top/left para dejar el marco de la app a la vista. */}
-      <div className="mp" style={{ ...mpVars, top: isMobile ? 0 : 52, left: isMobile ? 0 : 72 }}>
+      <div ref={panelRef} className="mp" role={isMobile ? "dialog" : "region"} aria-modal={isMobile || undefined} aria-label="Mi Espacio" tabIndex={-1} onKeyDown={onPanelKeyDown} style={{ ...mpVars, top: isMobile ? 0 : 52, left: isMobile ? 0 : 72 }}>
         <style>{MP_CSS}</style>
 
         {/* ── Barra superior (sticky, translúcida, alineada al contenedor) ── */}
@@ -707,7 +755,7 @@ export default function MetaPanel({
             {/* Control segmentado */}
             <div className="mp-seg" style={{ order: isMobile ? 3 : 0, flexBasis: isMobile ? "100%" : "auto", justifySelf:"center" }}>
               {tabs.map(({ id, label }) => (
-                <button key={id} data-on={metaTab===id ? "1" : "0"} onClick={() => setMetaTab(id)}>{label}</button>
+                <button key={id} aria-pressed={metaTab===id} data-on={metaTab===id ? "1" : "0"} onClick={() => setMetaTab(id)}>{label}</button>
               ))}
             </div>
             {/* Cerrar — en móvil el topbar es FLEX (no grid), así que `justifySelf`
@@ -715,7 +763,7 @@ export default function MetaPanel({
                 sí la lleva al borde derecho de la fila. */}
             {isMobile && (<button onClick={onClose} title="Cerrar" aria-label="Cerrar Mi Espacio" style={{
               order: 2, marginLeft:"auto", flexShrink:0,
-              width:38, height:38, borderRadius:"50%", border:`1px solid ${T.border}`,
+              width:44, height:44, borderRadius:"50%", border:`1px solid ${T.border}`,
               background:T.glass, color:T.txt2, cursor:"pointer",
               display:"flex", alignItems:"center", justifyContent:"center",
             }}><X size={18} strokeWidth={2} /></button>)}
@@ -763,7 +811,7 @@ export default function MetaPanel({
                           {/* Un solo verde, plano. El degradado #0D9A76 → accent metía
                               dos verdes en una barra de 7px: no se percibe como riqueza,
                               se percibe como que el color no está decidido. */}
-                          <div style={{ width:`${pct}%`, height:"100%", borderRadius:99, background:T.accent, transition:"width .5s cubic-bezier(.16,1,.3,1)" }} />
+                          <div style={{ width:"100%", transform:`scaleX(${pct / 100})`, transformOrigin:"left", height:"100%", borderRadius:99, background:T.accent }} />
                         </div>
                         <span style={{ fontSize:13.5, fontWeight:500, fontFamily:fontDisp, ...TY.num, color:T.txt2, whiteSpace:"nowrap", minWidth:38, textAlign:"right" }}>{pct}%</span>
                       </div>
@@ -873,6 +921,7 @@ export default function MetaPanel({
                     </span>
                     <input
                       className="mp-input"
+                      aria-label="Nueva acción"
                       value={metaNewText}
                       onChange={e => setMetaNewText(e.target.value)}
                       onKeyDown={e => { if (e.key === "Enter") createAction(); }}
@@ -899,6 +948,7 @@ export default function MetaPanel({
                     </summary>
                     <textarea
                       className="mp-input"
+                      aria-label="Descripción de la nueva acción"
                       value={metaNewNote}
                       onChange={e => setMetaNewNote(e.target.value)}
                       placeholder="Solo si hace falta agregar contexto breve."
@@ -1441,6 +1491,7 @@ export default function MetaPanel({
                     <textarea
                       className="mp-input"
                       key={`${a.id}-note-${a.note || ""}`}
+                      aria-label="Descripción de la actividad"
                       defaultValue={a.note || ""}
                       placeholder="Detalle breve si hace falta."
                       rows={2}
@@ -1510,6 +1561,7 @@ export default function MetaPanel({
                 const assigneeSel = (
                   <select
                     className="mp-select"
+                    aria-label="Responsable de la actividad"
                     value={a.assignee || ""}
                     onChange={e => {
                       const v = e.target.value;
@@ -1766,7 +1818,8 @@ export default function MetaPanel({
                 <div style={{ display:"flex", gap:10, marginBottom:24, alignItems:"stretch", flexWrap:"wrap" }}>
                   <input
                     className="mp-input"
-                    value={docUrl}
+                    aria-label="Enlace del documento"
+                      value={docUrl}
                     onChange={e => setDocUrl(e.target.value)}
                     onKeyDown={e => { if (e.key === "Enter") addDoc(); }}
                     placeholder="Pega el enlace — https://docs.google.com/…"
@@ -1780,7 +1833,8 @@ export default function MetaPanel({
                   />
                   <input
                     className="mp-input"
-                    value={docTitle}
+                    aria-label="Nombre del documento (opcional)"
+                      value={docTitle}
                     onChange={e => setDocTitle(e.target.value)}
                     onKeyDown={e => { if (e.key === "Enter") addDoc(); }}
                     placeholder="Nombre (opcional)"
@@ -1975,7 +2029,7 @@ export default function MetaPanel({
                           <E val={r.n} onSave={v => setMetaPlan(p => { const rs=[...p.rocks]; rs[i]={...rs[i],n:v}; return {...p,rocks:rs}; })} style={{ fontSize:12, fontWeight:400, color:T.txt, fontFamily:font, lineHeight:1.35, flex:1 }} />
                           <span style={{ fontSize:11, fontWeight:500, fontFamily:fontDisp, marginLeft:6, flexShrink:0, color:r.pct>=60?"#34D399":r.pct>=40?"#F59E0B":"#F87171" }}>{r.pct}%</span>
                         </div>
-                        <input type="range" min="0" max="100" value={r.pct}
+                        <input aria-label={`Avance de ${r.n}`} type="range" min="0" max="100" value={r.pct}
                           onChange={e => setMetaPlan(p => { const rs=[...p.rocks]; rs[i]={...rs[i],pct:+e.target.value}; return {...p,rocks:rs}; })}
                           style={{ width:"100%", accentColor:r.pct>=60?"#34D399":r.pct>=40?"#F59E0B":"#F87171", height:3, marginBottom:3, cursor:"pointer" }} />
                         <E val={r.owner} onSave={v => setMetaPlan(p => { const rs=[...p.rocks]; rs[i]={...rs[i],owner:v}; return {...p,rocks:rs}; })} style={{ fontSize:10.5, color:T.txt3, fontFamily:font }} />
