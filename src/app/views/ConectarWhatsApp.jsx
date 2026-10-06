@@ -111,7 +111,7 @@ export default function ConectarWhatsApp({ T }) {
               disabled={estado === "conectando"}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
-                background: accent, color: "#04080F", border: "none",
+                background: accent, color: "#000000", border: "none",
                 borderRadius: 10, padding: "11px 18px", fontFamily: font,
                 fontSize: 14, fontWeight: 600,
                 cursor: estado === "conectando" ? "wait" : "pointer",

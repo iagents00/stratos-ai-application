@@ -410,12 +410,12 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
           // border/radius/sombra ni padding lateral), borde a borde y a pantalla
           // completa. El header interno trae su safe-area-top y el composer su
           // safe-area-bottom. Antes tenía un recuadro que lo hacía ver "entrecortado".
-          ? { background: isLight ? "#F8FAFC" : "#060A12", overflow: "hidden" }
+          ? { background: isLight ? "#F8FAFC" : "#000000", overflow: "hidden" }
           : {
               // Desktop: FLUSH como el Copilot — SIN marco de tarjeta (nada de
               // border/radio/sombra/padding externo). El fondo del área de chat +
               // los insets internos (header y hilo) lo dejan limpio, no "encajonado".
-              background: isLight ? "#F8FAFC" : "#060A12", overflow: "hidden",
+              background: isLight ? "#F8FAFC" : "#000000", overflow: "hidden",
             }),
       }}
     >
@@ -427,7 +427,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
             ...(isMobile
               // Header inmersivo tipo Copilot: su propio padding + safe-area-top
               // (es lo más alto de la pantalla) + fondo de barra; pegado al hilo.
-              ? { padding: "calc(10px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 14px 12px", background: isLight ? "#FFFFFF" : "rgba(10,15,26,0.95)" }
+              ? { padding: "calc(10px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 14px 12px", background: isLight ? "#FFFFFF" : "rgba(12,12,12,0.95)" }
               : { padding: "12px 16px" }),
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

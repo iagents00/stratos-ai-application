@@ -168,7 +168,7 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
           display: "inline-flex", alignItems: "center", gap: 5, padding: "8px 16px", borderRadius: 9,
           background: (saving || !form.name.trim()) ? (isLight ? "rgba(15,23,42,0.06)" : T.glass) : (isLight ? `linear-gradient(135deg, ${T.accent}, #14B892)` : "#FFFFFF"),
           border: `1px solid ${(saving || !form.name.trim()) ? inputBorder : "transparent"}`,
-          color: (saving || !form.name.trim()) ? T.txt3 : (isLight ? "#FFFFFF" : "#040C18"),
+          color: (saving || !form.name.trim()) ? T.txt3 : (isLight ? "#FFFFFF" : "#0C0C0C"),
           fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp, cursor: (saving || !form.name.trim()) ? "not-allowed" : "pointer",
         }}><Check size={13} /> {saving ? "Guardando…" : "Guardar"}</button>
       </div>

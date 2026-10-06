@@ -266,7 +266,7 @@ const StageBadge = ({ lead, onUpdate, T = P, compact = false }) => {
         <div style={{
           position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 60,
           minWidth: 210,
-          background: isLight ? "#FFFFFF" : "#111318",
+          background: isLight ? "#FFFFFF" : "#0C0C0C",
           border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : T.borderH}`,
           borderRadius: 12,
           boxShadow: isLight
@@ -1370,7 +1370,7 @@ const DrawerTabIsland = ({ current, onSwitch, T = P }) => {
       borderRadius: 999,
       background: isLight
         ? "rgba(255,255,255,0.92)"
-        : "rgba(12,17,28,0.78)",
+        : "rgba(12,12,12,0.78)",
       backdropFilter: "blur(28px) saturate(180%)",
       WebkitBackdropFilter: "blur(28px) saturate(180%)",
       border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.08)"}`,
@@ -1628,7 +1628,7 @@ const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onR
         height: "68%", minHeight: 320,
         zIndex: 20,
         borderRadius: "20px 20px 0 0",
-        background: T === P ? "#080A10" : "#FAFBFD",
+        background: T === P ? "#000000" : "#FAFBFD",
         border: `1px solid ${isLight ? "rgba(15,23,42,0.09)" : "rgba(255,255,255,0.08)"}`,
         borderBottom: "none",
         boxShadow: T === P
@@ -1812,7 +1812,7 @@ const UpdateChatPanel = ({ isOpen, onClose, expedienteItems = [], onAddItem, onR
         <div style={{
           padding: "9px 16px 14px",
           borderTop: `1px solid ${T.border}`,
-          background: T === P ? "rgba(8,10,16,0.94)" : "rgba(250,251,253,0.94)",
+          background: T === P ? "rgba(0,0,0,0.94)" : "rgba(250,251,253,0.94)",
           backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
           flexShrink: 0,
         }}>
@@ -1968,7 +1968,7 @@ const InlineEdit = ({
           style={{ ...baseInput, cursor: "pointer" }}
         >
           {(options || []).map(o => (
-            <option key={o} value={o} style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>{o}</option>
+            <option key={o} value={o} style={{ background: isLight ? "#FFFFFF" : "#0C0C0C", color: T.txt }}>{o}</option>
           ))}
         </select>
       );
@@ -3167,7 +3167,7 @@ const AsesorPicker = ({
             position: "absolute", top: "calc(100% + 6px)", left: 0,
             minWidth: 260, maxWidth: 320,
             zIndex: 510,
-            background: isLight ? "#FFFFFF" : "#111318",
+            background: isLight ? "#FFFFFF" : "#0C0C0C",
             border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
             borderRadius: 12,
             boxShadow: isLight
@@ -3716,12 +3716,12 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
 
   return createPortal(
     <>
-      <div onClick={safeClose} style={{ position: "fixed", inset: 0, zIndex: 400, background: T === P ? "rgba(2,5,12,0.5)" : "rgba(15,23,42,0.32)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }} />
+      <div onClick={safeClose} style={{ position: "fixed", inset: 0, zIndex: 400, background: T === P ? "rgba(0,0,0,0.5)" : "rgba(15,23,42,0.32)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }} />
       <div style={isMobile ? {
         // ── MOBILE: bottom-sheet full-width que ocupa 92% del viewport ──
         position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 401,
         height: "92dvh", maxHeight: "92dvh",
-        background: T === P ? "#111318" : "#FFFFFF",
+        background: T === P ? "#0C0C0C" : "#FFFFFF",
         borderTop: `1px solid ${T.borderH}`,
         borderRadius: "20px 20px 0 0",
         display: "flex", flexDirection: "column",
@@ -3732,7 +3732,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
         // ── DESKTOP (centered): modal casi-fullscreen centrado ──
         position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 401,
         width: "min(960px, 94vw)", height: "min(880px, 90vh)", maxHeight: "90vh",
-        background: T === P ? "#111318" : "#FFFFFF",
+        background: T === P ? "#0C0C0C" : "#FFFFFF",
         border: `1px solid ${T.borderH}`,
         borderRadius: 20,
         display: "flex", flexDirection: "column", overflow: "hidden",
@@ -3741,7 +3741,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
       } : {
         // ── DESKTOP: drawer lateral 460px ──
         position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401, width: 460,
-        background: T === P ? "#111318" : "#FFFFFF",
+        background: T === P ? "#0C0C0C" : "#FFFFFF",
         borderLeft: `1px solid ${T.borderH}`,
         display: "flex", flexDirection: "column",
         animation: "slideInRight 0.28s cubic-bezier(0.32,0.72,0,1)",
@@ -3919,7 +3919,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
             }}>
               <div onClick={e => e.stopPropagation()} style={{
                 width: "min(380px, 100%)", padding: 22, borderRadius: 16,
-                background: T === P ? "#0F1419" : "#FFFFFF",
+                background: T === P ? "#0C0C0C" : "#FFFFFF",
                 border: `1px solid ${T.borderH}`,
                 boxShadow: "0 24px 60px rgba(0,0,0,0.5)",
               }}>
@@ -4310,7 +4310,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
           bloquea como popup. zIndex sobre el drawer (401). */}
       {idDocViewer && (
         <div onClick={() => setIdDocViewer(null)} style={{
-          position: "fixed", inset: 0, zIndex: 100000, background: "rgba(3,8,16,0.82)",
+          position: "fixed", inset: 0, zIndex: 100000, background: "rgba(0,0,0,0.82)",
           backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
           display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
         }}>
@@ -4502,11 +4502,11 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
 
   return createPortal(
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 400, background: T === P ? "rgba(2,5,12,0.5)" : "rgba(15,23,42,0.32)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }} />
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 400, background: T === P ? "rgba(0,0,0,0.5)" : "rgba(15,23,42,0.32)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }} />
       <div style={isMobile ? {
         position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 401,
         height: "92dvh", maxHeight: "92dvh",
-        background: T === P ? "#111318" : "#FFFFFF",
+        background: T === P ? "#0C0C0C" : "#FFFFFF",
         borderTop: `1px solid ${T.borderH}`,
         borderRadius: "20px 20px 0 0",
         display: "flex", flexDirection: "column",
@@ -4515,7 +4515,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
         paddingBottom: "var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))",
       } : {
         position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401, width: 440,
-        background: T === P ? "#111318" : "#FFFFFF",
+        background: T === P ? "#0C0C0C" : "#FFFFFF",
         borderLeft: `1px solid ${T.borderH}`,
         display: "flex", flexDirection: "column",
         animation: "slideInRight 0.28s cubic-bezier(0.32,0.72,0,1)",
@@ -4602,7 +4602,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
                 {editing ? lead.tag : <InlineEdit value={lead.tag} onSave={v => onUpdate?.({...lead, tag: v})} T={T} isLight={isLight} placeholder="Etiqueta / segmento" emptyText="Sin etiqueta" />}
               </p>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                {editing ? <select value={f("st")} onChange={e => sf("st")(e.target.value)} style={{ padding: "3px 8px", borderRadius: 99, background: `${stgC[f("st")]||T.txt3}18`, border: `1px solid ${stgC[f("st")]||T.txt3}30`, color: isLight ? `color-mix(in srgb, ${stgC[f("st")]||T.txt3} 60%, #0B1220 40%)` : (stgC[f("st")]||T.txt3), fontSize: 11, fontWeight: 500, cursor: "pointer", outline: "none" }}>{STAGES.map(s => <option key={s} value={s} style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>{s}</option>)}</select>
+                {editing ? <select value={f("st")} onChange={e => sf("st")(e.target.value)} style={{ padding: "3px 8px", borderRadius: 99, background: `${stgC[f("st")]||T.txt3}18`, border: `1px solid ${stgC[f("st")]||T.txt3}30`, color: isLight ? `color-mix(in srgb, ${stgC[f("st")]||T.txt3} 60%, #0B1220 40%)` : (stgC[f("st")]||T.txt3), fontSize: 11, fontWeight: 500, cursor: "pointer", outline: "none" }}>{STAGES.map(s => <option key={s} value={s} style={{ background: isLight ? "#FFFFFF" : "#0C0C0C", color: T.txt }}>{s}</option>)}</select>
                   : <Pill color={stageColor} s isLight={isLight}>{lead.st}</Pill>}
                 <span style={{ fontSize: 11, color: T.txt3 }}>·</span>
                 {editing ? (
@@ -4859,7 +4859,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
               {inp("Campaña / Fuente","campana","Referido, Google...")}
               <div style={{ gridColumn: "1 / -1" }}>
                 <p style={{ fontSize: 10.5, fontWeight: 500, color: T.txt3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>Etapa del pipeline</p>
-                <select value={f("st")} onChange={e => sf("st")(e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: 9, background: inputBg, border: `1px solid ${T.borderH}`, color: T.txt, fontSize: 12.5, outline: "none", fontFamily: font, cursor: "pointer" }}>{STAGES.map(s=><option key={s} value={s} style={{ background: isLight ? "#FFFFFF" : "#111318", color: T.txt }}>{s}</option>)}</select>
+                <select value={f("st")} onChange={e => sf("st")(e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: 9, background: inputBg, border: `1px solid ${T.borderH}`, color: T.txt, fontSize: 12.5, outline: "none", fontFamily: font, cursor: "pointer" }}>{STAGES.map(s=><option key={s} value={s} style={{ background: isLight ? "#FFFFFF" : "#0C0C0C", color: T.txt }}>{s}</option>)}</select>
               </div>
               {inp("Proyecto de interés","p","Gobernador 28, Portofino...",true)}
               {textarea("Próxima acción","nextAction","Descripción de la próxima acción...")}
@@ -5034,7 +5034,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
         {/* Footer — solo aparece cuando se edita (Cancelar / Guardar). En modo lectura,
            el switcher inferior (Dynamic Island) ocupa el lugar del CTA. */}
         {editing && (
-          <div style={{ padding: "13px 22px", borderTop: `1px solid ${T.border}`, flexShrink: 0, background: T === P ? "#111318" : "#FFFFFF" }}>
+          <div style={{ padding: "13px 22px", borderTop: `1px solid ${T.border}`, flexShrink: 0, background: T === P ? "#0C0C0C" : "#FFFFFF" }}>
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={cancelEditing} style={{ flex: 1, padding: "11px 0", borderRadius: 11, background: "transparent", border: `1px solid ${T.border}`, color: T.txt3, fontSize: 13, fontWeight: 400, cursor: "pointer", fontFamily: font, transition: "all 0.18s" }} onMouseEnter={e=>{e.currentTarget.style.background=T.glassH;e.currentTarget.style.color=T.txt2;}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=T.txt3;}}>Cancelar</button>
               <button onClick={saveEditing} disabled={!form?.n?.trim()} style={{ flex: 2, padding: "11px 0", borderRadius: 11, background: form?.n?.trim()?`${T.accent}18`:"transparent", border: `1px solid ${form?.n?.trim()?T.accentB:T.border}`, color: form?.n?.trim()?(isLight ? `color-mix(in srgb, ${T.accent} 60%, #0B1220 40%)` : T.accent):T.txt3, fontSize: 13, fontWeight: 500, fontFamily: fontDisp, cursor: form?.n?.trim()?"pointer":"not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "all 0.18s" }}>Guardar cambios</button>
@@ -5090,7 +5090,7 @@ const LeadPanel = ({ lead, onClose, oc, onUpdate, onSwitchTab, onShowHistory, on
           }}>
             <div onClick={e => e.stopPropagation()} style={{
               width: "min(380px, 100%)", padding: 22, borderRadius: 16,
-              background: T === P ? "#0F1419" : "#FFFFFF",
+              background: T === P ? "#0C0C0C" : "#FFFFFF",
               border: `1px solid ${T.borderH}`,
               boxShadow: "0 24px 60px rgba(0,0,0,0.5)",
             }}>
@@ -5338,11 +5338,11 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
 
   return createPortal(
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 400, background: T === P ? "rgba(2,5,12,0.45)" : "rgba(15,23,42,0.32)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)" }} />
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 400, background: T === P ? "rgba(0,0,0,0.45)" : "rgba(15,23,42,0.32)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)" }} />
       <div style={isMobile ? {
         position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 401,
         height: "92dvh", maxHeight: "92dvh",
-        background: T === P ? "#111318" : "#FFFFFF",
+        background: T === P ? "#0C0C0C" : "#FFFFFF",
         borderTop: `1px solid ${T.borderH}`,
         borderRadius: "20px 20px 0 0",
         display: "flex", flexDirection: "column",
@@ -5351,7 +5351,7 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
         paddingBottom: "var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))",
       } : {
         position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 401, width: 480,
-        background: T === P ? "#111318" : "#FFFFFF",
+        background: T === P ? "#0C0C0C" : "#FFFFFF",
         borderLeft: `1px solid ${T.borderH}`,
         display: "flex", flexDirection: "column",
         animation: "slideInRight 0.28s cubic-bezier(0.32,0.72,0,1)",
@@ -5701,7 +5701,7 @@ const ClickDropdown = ({
 
   const triggerBg   = isLight ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.035)";
   const triggerBgH  = isLight ? "#FFFFFF" : "rgba(255,255,255,0.06)";
-  const menuBg      = isLight ? "#FFFFFF" : "#111318";
+  const menuBg      = isLight ? "#FFFFFF" : "#0C0C0C";
   const menuBorder  = isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)";
   const menuShadow  = isLight
     ? "0 4px 12px rgba(15,23,42,0.08), 0 20px 40px rgba(15,23,42,0.10)"

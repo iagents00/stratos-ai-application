@@ -16,11 +16,11 @@
 
 // ─── PALETA — PLATAFORMA (app.stratoscapitalgroup.com) ───────────────────────
 export const P = {
-  // Fondos
-  bg:      "#030810",
-  bg2:     "#07101E",
-  bg3:     "#0C1628",
-  surface: "#091225",
+  // Negro puro para el lienzo; grises neutros para elevación y campos.
+  bg:      "#000000",
+  bg2:     "#080808",
+  bg3:     "#141414",
+  surface: "#0C0C0C",
 
   // Vidrio (glassmorphism)
   glass:   "rgba(255,255,255,0.035)",
@@ -31,9 +31,9 @@ export const P = {
   borderH: "rgba(255,255,255,0.12)",
 
   // Texto — blanco dominante, siempre legible sobre fondos oscuros
-  txt:     "#E2E8F0",
-  txt2:    "#8B99AE",
-  txt3:    "#4A5568",
+  txt:     "#EDEDED",
+  txt2:    "#A3A3A3",
+  txt3:    "#858585",
 
   // Accent — verde menta, usar con moderación
   accent:  "#6EE7C2",
@@ -42,7 +42,7 @@ export const P = {
 
   // Colores semánticos
   blue:    "#7EB8F0",
-  violet:  "#A78BFA",
+  violet:  "#B5B5B5",
   amber:   "#FBBF24",
   rose:    "#E8818C",
   emerald: "#6DD4A8",
@@ -56,10 +56,10 @@ export const P = {
 };
 
 // ─── PALETA — LANDING PÚBLICA (stratoscapitalgroup.com) ──────────────────────
-// Ligeras variaciones intencionales: fondo un poco más oscuro, accent más suave
+// Comparte el negro neutro de la app, con un acento de marca más suave.
 export const PL = {
-  bg:      "#04080F",
-  surface: "#080D17",
+  bg:      "#000000",
+  surface: "#0C0C0C",
 
   glass:   "rgba(255,255,255,0.028)",
   glassH:  "rgba(255,255,255,0.048)",
@@ -67,9 +67,9 @@ export const PL = {
   border:  "rgba(255,255,255,0.06)",
   borderH: "rgba(255,255,255,0.12)",
 
-  txt:     "#EDF2F7",
-  txt2:    "#8A97AA",
-  txt3:    "#3D4A5C",
+  txt:     "#EDEDED",
+  txt2:    "#A3A3A3",
+  txt3:    "#858585",
   w:       "#FFFFFF",
 
   accent:  "#52D9B8",       // Ligeramente más apagado que la app
@@ -78,8 +78,8 @@ export const PL = {
 
   blue:    "#6BAED6",
   blueS:   "rgba(107,174,214,0.08)",
-  violet:  "#9B8AF0",
-  violetS: "rgba(155,138,240,0.08)",
+  violet:  "#B5B5B5",
+  violetS: "rgba(181,181,181,0.08)",
   rose:    "#D97070",
   roseS:   "rgba(217,112,112,0.08)",
 

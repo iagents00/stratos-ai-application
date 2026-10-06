@@ -169,15 +169,15 @@ const Dash = ({ oc, co, leadsData = [], T: _T }) => {
                   <XAxis dataKey="d" tick={{ fill: T.txt3, fontSize: 10.5, fontFamily: font }} axisLine={false} tickLine={false} />
                   <YAxis allowDecimals={false} tick={{ fill: T.txt3, fontSize: 10.5 }} axisLine={false} tickLine={false} width={22} />
                   <Tooltip
-                    contentStyle={{ background: isLight ? "#FFFFFF" : "#111318", border: `1px solid ${T.border}`, borderRadius: 10, color: T.txt, fontSize: 12, boxShadow: isLight ? "0 8px 28px rgba(15,23,42,0.14)" : "0 8px 32px rgba(0,0,0,0.4)" }}
+                    contentStyle={{ background: isLight ? "#FFFFFF" : "#0C0C0C", border: `1px solid ${T.border}`, borderRadius: 10, color: T.txt, fontSize: 12, boxShadow: isLight ? "0 8px 28px rgba(15,23,42,0.14)" : "0 8px 32px rgba(0,0,0,0.4)" }}
                     cursor={{ stroke: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)", strokeWidth: 1 }}
                     formatter={(val, name) => [
                       `${val} acciones`,
                       name === "asesores" ? "Asesores" : "iAgents IA"
                     ]}
                   />
-                  <Area type="monotone" dataKey="asesores" stroke={T.emerald} strokeWidth={2} fill={`url(#${gradId}_em)`} dot={false} activeDot={{ r: 4, fill: T.emerald, stroke: isLight ? "#fff" : "#111318", strokeWidth: 2 }} />
-                  <Area type="monotone" dataKey="iagents"  stroke={T.blue}    strokeWidth={2} fill={`url(#${gradId}_bl)`} dot={false} activeDot={{ r: 4, fill: T.blue,    stroke: isLight ? "#fff" : "#111318", strokeWidth: 2 }} />
+                  <Area type="monotone" dataKey="asesores" stroke={T.emerald} strokeWidth={2} fill={`url(#${gradId}_em)`} dot={false} activeDot={{ r: 4, fill: T.emerald, stroke: isLight ? "#fff" : "#0C0C0C", strokeWidth: 2 }} />
+                  <Area type="monotone" dataKey="iagents"  stroke={T.blue}    strokeWidth={2} fill={`url(#${gradId}_bl)`} dot={false} activeDot={{ r: 4, fill: T.blue,    stroke: isLight ? "#fff" : "#0C0C0C", strokeWidth: 2 }} />
                 </AreaChart>
               </ResponsiveContainer>
             </>

@@ -263,7 +263,7 @@ const RRHHModule = ({ T: _T, initialTab = "panel" }) => {
           >
             <ExternalLink size={13} /> Portal Candidatos
           </button>
-          <button onClick={() => setShowNewVacante(true)} style={{ flex: isMobile ? "1 1 100%" : "0 0 auto", justifyContent: "center", display: "flex", alignItems: "center", gap: 8, padding: "12px 20px", borderRadius: 14, border: isLight ? "1px solid rgba(255,255,255,0.88)" : "none", background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.93)", cursor: "pointer", color: "#080D14", fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp, boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.05)" : "0 2px 14px rgba(255,255,255,0.10)" }}>
+          <button onClick={() => setShowNewVacante(true)} style={{ flex: isMobile ? "1 1 100%" : "0 0 auto", justifyContent: "center", display: "flex", alignItems: "center", gap: 8, padding: "12px 20px", borderRadius: 14, border: isLight ? "1px solid rgba(255,255,255,0.88)" : "none", background: isLight ? "#FFFFFF" : "rgba(255,255,255,0.93)", cursor: "pointer", color: "#0C0C0C", fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp, boxShadow: isLight ? "0 1px 2px rgba(15,23,42,0.05)" : "0 2px 14px rgba(255,255,255,0.10)" }}>
             <Plus size={13} /> Nueva Vacante
           </button>
         </div>
@@ -804,7 +804,7 @@ const RRHHModule = ({ T: _T, initialTab = "panel" }) => {
                     <p style={{ fontSize: 13, color: T.txt, fontWeight: 400, lineHeight: 1.6, margin: 0 }}>{aiResult.recomendacion}</p>
                   </div>
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    <button style={{ flex: "1 1 200px", padding: "13px 20px", borderRadius: 10, border: "none", background: isLight ? "#080D14" : "rgba(255,255,255,0.95)", color: isLight ? "#FFFFFF" : "#0A0F18", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: fontDisp }}>
+                    <button style={{ flex: "1 1 200px", padding: "13px 20px", borderRadius: 10, border: "none", background: isLight ? "#0C0C0C" : "rgba(255,255,255,0.95)", color: isLight ? "#FFFFFF" : "#0C0C0C", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: fontDisp }}>
                       <Plus size={14} style={{ marginRight: 8, verticalAlign: "middle" }} /> Agregar al Pipeline
                     </button>
                     <button onClick={simulateAIScan} style={{ flex: "1 1 120px", padding: "13px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.glass, color: T.txt2, fontSize: 12.5, cursor: "pointer", fontFamily: font, fontWeight: 500 }}>Nuevo análisis</button>

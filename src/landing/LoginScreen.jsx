@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { X, CheckCircle2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { pingSupabase } from "../lib/offline-mode";
+import { P } from "../design-system/tokens";
 import { useClient } from "../hooks/useClient";
 import { requestRecoveryCode, verifyRecoveryCode } from "../lib/recovery";
 import { isNativeApp } from "../lib/native";
@@ -15,18 +16,6 @@ import { isNativeApp } from "../lib/native";
 const font  = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
 const fontD = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
 
-const P = {
-  bg: "#060A11",
-  surface: "#0B1220",
-  accent: "#6EE7C2",
-  accentS: "rgba(110,231,194,0.08)",
-  accentB: "rgba(110,231,194,0.18)",
-  border: "rgba(255,255,255,0.07)",
-  txt: "#E2E8F0",
-  txt2: "#8B99AE",
-  txt3: "#4A5568",
-  rose: "#E8818C",
-};
 
 // Logo Stratos (SVG inline)
 function StratosAtom({ size = 20, color = "#FFFFFF" }) {
@@ -250,10 +239,7 @@ export default function LoginScreen({ onLogin }) {
   return (
     <div style={{
       minHeight: "100vh", background: P.bg, display: "flex", fontFamily: font,
-      backgroundImage: `
-        radial-gradient(ellipse at 20% 10%, rgba(110,231,194,0.04) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 90%, rgba(110,231,194,0.03) 0%, transparent 40%)
-      `,
+      backgroundImage: "none",
     }}>
       <style>{`
         @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }

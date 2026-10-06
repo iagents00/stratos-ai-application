@@ -134,7 +134,7 @@ const CandidatePortal = () => {
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: `radial-gradient(ellipse at 50% 0%, rgba(52,211,153,0.03) 0%, transparent 55%), #0C0E14`, display: "flex", flexDirection: "column", fontFamily: pfb }}>
+    <div style={{ minHeight: "100vh", background: `radial-gradient(ellipse at 50% 0%, rgba(52,211,153,0.03) 0%, transparent 55%), #0C0C0C`, display: "flex", flexDirection: "column", fontFamily: pfb }}>
       <style>{`
         @keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
@@ -146,7 +146,7 @@ const CandidatePortal = () => {
       `}</style>
 
       {/* Topbar */}
-      <div style={{ padding: "16px 28px", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(6,10,17,0.85)", backdropFilter: "blur(20px)", position: "sticky", top: 0, zIndex: 10 }}>
+      <div style={{ padding: "16px 28px", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)", position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 38, height: 38, borderRadius: 11, background: "rgba(110,231,194,0.1)", border: "1px solid rgba(110,231,194,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <StratosAtom size={21} color="#6EE7C2" />
@@ -284,7 +284,7 @@ const CandidatePortal = () => {
                   {pregIdx > 0 && <button onClick={() => setPregIdx(i => i - 1)} style={{ padding: "13px 20px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", fontFamily: pfb }}>← Anterior</button>}
                   <button onClick={handleNextPreg}
                     disabled={!respuestas[pregActual?.id] && !(multiSel[pregActual?.id]?.length > 0)}
-                    style={{ flex: 1, padding: "14px 24px", borderRadius: 11, border: "none", fontSize: 14, fontWeight: 500, cursor: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "pointer" : "default", fontFamily: pf, background: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "#FFF" : "rgba(255,255,255,0.07)", color: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "#080D14" : "rgba(255,255,255,0.2)", transition: "all 0.2s" }}>
+                    style={{ flex: 1, padding: "14px 24px", borderRadius: 11, border: "none", fontSize: 14, fontWeight: 500, cursor: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "pointer" : "default", fontFamily: pf, background: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "#FFF" : "rgba(255,255,255,0.07)", color: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "#0C0C0C" : "rgba(255,255,255,0.2)", transition: "all 0.2s" }}>
                     {pregIdx === totalPregs - 1 ? "Enviar aplicación →" : "Siguiente →"}
                   </button>
                 </div>
@@ -336,7 +336,7 @@ const CandidatePortal = () => {
                   <PortalInp label="Teléfono (WhatsApp)" type="tel" placeholder="+52 55 1234 5678" required val={form.telefono} onChange={v => setF("telefono", v)} error={errors.telefono} />
                   <PortalInp label="LinkedIn (opcional)" placeholder="linkedin.com/in/tu-perfil" val={form.linkedin} onChange={v => setF("linkedin", v)} />
                 </div>
-                <button onClick={() => { if (validateStep1()) setStep(2); }} style={{ marginTop: 24, width: "100%", padding: "15px", borderRadius: 12, border: "none", background: "#FFF", color: "#080D14", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: pf }}>
+                <button onClick={() => { if (validateStep1()) setStep(2); }} style={{ marginTop: 24, width: "100%", padding: "15px", borderRadius: 12, border: "none", background: "#FFF", color: "#0C0C0C", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: pf }}>
                   Continuar →
                 </button>
               </div>
@@ -370,7 +370,7 @@ const CandidatePortal = () => {
                 </div>
                 <div style={{ display: "flex", gap: 10 }}>
                   <button onClick={() => setStep(1)} style={{ padding: "14px 20px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "rgba(255,255,255,0.38)", fontSize: 13, cursor: "pointer", fontFamily: pfb }}>← Atrás</button>
-                  <button onClick={() => { if (form.vacante) setStep(3); }} style={{ flex: 1, padding: "14px", borderRadius: 11, border: "none", background: form.vacante ? "#FFF" : "rgba(255,255,255,0.07)", color: form.vacante ? "#080D14" : "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 500, cursor: form.vacante ? "pointer" : "default", fontFamily: pf }}>
+                  <button onClick={() => { if (form.vacante) setStep(3); }} style={{ flex: 1, padding: "14px", borderRadius: 11, border: "none", background: form.vacante ? "#FFF" : "rgba(255,255,255,0.07)", color: form.vacante ? "#0C0C0C" : "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 500, cursor: form.vacante ? "pointer" : "default", fontFamily: pf }}>
                     Continuar →
                   </button>
                 </div>
@@ -426,7 +426,7 @@ const CandidatePortal = () => {
                 </p>
                 <div style={{ display: "flex", gap: 10 }}>
                   <button onClick={() => setStep(2)} style={{ padding: "14px 20px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "rgba(255,255,255,0.38)", fontSize: 13, cursor: "pointer", fontFamily: pfb }}>← Atrás</button>
-                  <button onClick={() => setStep(4)} style={{ flex: 1, padding: "14px", borderRadius: 11, border: "none", background: cvFile ? "#FFF" : "rgba(255,255,255,0.07)", color: cvFile ? "#080D14" : "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: pf }}>
+                  <button onClick={() => setStep(4)} style={{ flex: 1, padding: "14px", borderRadius: 11, border: "none", background: cvFile ? "#FFF" : "rgba(255,255,255,0.07)", color: cvFile ? "#0C0C0C" : "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: pf }}>
                     {cvFile ? "Analizar y continuar →" : "Continuar sin CV →"}
                   </button>
                 </div>

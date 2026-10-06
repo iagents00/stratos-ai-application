@@ -589,7 +589,7 @@ function TimezonePanel({ T = P, isLight = false, user }) {
         }}
       >
         {options.map(o => (
-          <option key={o.value} value={o.value} style={{ background: isLight ? "#FFFFFF" : "#0F1B2D", color: T.txt }}>
+          <option key={o.value} value={o.value} style={{ background: isLight ? "#FFFFFF" : "#141414", color: T.txt }}>
             {o.label}
           </option>
         ))}

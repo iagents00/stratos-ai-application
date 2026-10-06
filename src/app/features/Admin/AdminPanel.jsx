@@ -32,7 +32,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
   // "#FFFFFF" hardcodeado → invisibles sobre el lienzo claro). Fallback a T.
   const isLight = isLightProp ?? (T !== P);
   const wTxt = isLight ? T.txt : "#FFFFFF";           // texto fuerte (nombres, títulos)
-  const cardBg = isLight ? T.surface : "#111318";     // fondo de modales/opciones
+  const cardBg = isLight ? T.surface : "#0C0C0C";     // fondo de modales/opciones
   // BUG-FIX: adminGetAllUsers() es async (devuelve Promise). Antes lo
   // pasabamos crudo a useState con useState(() => adminGetAllUsers()), lo
   // que dejaba a `users` como una Promise. Cuando users.filter(...) corria
@@ -486,7 +486,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
 
       {credentialModal && createPortal(
         <>
-          <div onClick={() => setCredentialModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(2,5,12,0.78)", backdropFilter: "blur(8px)", zIndex: 500 }} />
+          <div onClick={() => setCredentialModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.78)", backdropFilter: "blur(8px)", zIndex: 500 }} />
           <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: "min(470px, 92vw)", background: cardBg, border: `1px solid ${T.accentB}`, borderRadius: 20, boxShadow: isLight ? T.shadow3 : "0 32px 64px rgba(0,0,0,0.7)", padding: "26px 28px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}><div><p style={{ margin: 0, color: wTxt, fontFamily: fontDisp, fontSize: 17 }}>Acceso temporal</p><p style={{ margin: "5px 0 0", color: T.txt3, fontSize: 12 }}>{credentialModal.user_name}</p></div><button onClick={() => setCredentialModal(null)} style={{ width: 34, height: 34, borderRadius: 9, border: `1px solid ${T.border}`, background: "transparent", color: T.txt3, cursor: "pointer" }}><X size={14} /></button></div>
             <div style={{ marginTop: 18, padding: 15, borderRadius: 12, background: T.glass, border: `1px solid ${T.border}` }}>
@@ -503,7 +503,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
       {/* ── Delete confirmation ── */}
       {deleteConfirm !== null && createPortal(
         <>
-          <div onClick={() => setDeleteConfirm(null)} style={{ position: "fixed", inset: 0, background: "rgba(2,5,12,0.78)", backdropFilter: "blur(8px)", zIndex: 500 }} />
+          <div onClick={() => setDeleteConfirm(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.78)", backdropFilter: "blur(8px)", zIndex: 500 }} />
           <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: "min(400px, 92vw)", background: cardBg, border: `1px solid ${T.rose}30`, borderRadius: 20, boxShadow: isLight ? T.shadow3 : "0 32px 64px rgba(0,0,0,0.7)", padding: "26px 28px", animation: "fadeIn 0.2s ease" }}>
             <div style={{ width: 44, height: 44, borderRadius: 12, background: `${T.rose}12`, border: `1px solid ${T.rose}28`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
               <Trash2 size={20} color={T.rose} />
@@ -524,7 +524,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
       {/* ── Create / Edit / Reset modal ── */}
       {modal !== null && createPortal(
         <>
-          <div onClick={() => setModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(2,5,12,0.78)", backdropFilter: "blur(8px)", zIndex: 500 }} />
+          <div onClick={() => setModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.78)", backdropFilter: "blur(8px)", zIndex: 500 }} />
           <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: "min(500px, 94vw)", maxHeight: "90dvh", overflowY: "auto", background: cardBg, border: `1px solid ${T.borderH}`, borderRadius: 22, boxShadow: isLight ? T.shadow3 : "0 48px 96px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)", animation: "fadeIn 0.22s ease" }}>
             <div style={{ height: 3, background: `linear-gradient(90deg, ${T.accent}, ${T.accent}40)`, borderRadius: "22px 22px 0 0" }} />
             <div style={{ padding: "22px 26px 18px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>

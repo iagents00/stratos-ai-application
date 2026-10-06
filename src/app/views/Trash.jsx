@@ -18,8 +18,8 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
   const { user } = useAuth();
   const isMobile = useIsMobile();
   // Tema por LUMINANCIA del token (los fondos oscuros de la app empiezan con "#0").
-  // Antes comparaba contra valores viejos hardcodeados (#060A11) y como P.bg hoy es
-  // #030810, creia estar en CLARO -> tarjetas blancas en modo oscuro (bug reportado).
+  // Antes comparaba contra valores viejos hardcodeados (#000000) y como P.bg hoy es
+  // #000000, creia estar en CLARO -> tarjetas blancas en modo oscuro (bug reportado).
   const isLight = !/^#0/i.test(String(T?.bg || "#0"));
   const canHardDelete = ["super_admin", "admin"].includes(user?.role);
 
@@ -236,7 +236,7 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
             style={{
               width: "min(420px, 100%)",
               padding: 22, borderRadius: 16,
-              background: isLight ? "#FFFFFF" : "#0F1419",
+              background: isLight ? "#FFFFFF" : "#0C0C0C",
               border: `1px solid ${T.borderH}`,
               boxShadow: "0 24px 60px rgba(0,0,0,0.45)",
             }}>

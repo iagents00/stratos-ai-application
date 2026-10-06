@@ -14,7 +14,7 @@
  * Aesthetic: usa la paleta `T` del theme de App.jsx (glass/border/txt/txt2/txt3/
  * accent) + glassmorphism, igual que el resto del CRM. La detección de light se
  * hace por luminancia del bg (antes comparaba hexes fijos y fallaba con el dark
- * real #030810 → texto casi invisible y tarjetas planas).
+ * real #000000 → texto casi invisible y tarjetas planas).
  */
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
@@ -77,7 +77,7 @@ export default function Caja({ T }) {
 
   // ── Paleta theme-aware (tomada del `T` de App.jsx, igual que el resto del CRM).
   // isLight por LUMINANCIA del bg (robusto): antes se comparaban hexes fijos y
-  // con el dark real (#030810) daba isLight=true → texto oscuro invisible.
+  // con el dark real (#000000) daba isLight=true → texto oscuro invisible.
   const isLight = parseInt(String(T?.bg || "#000000").replace("#", "").slice(0, 2), 16) > 128;
   const txt    = T?.txt     || (isLight ? "#0B1220" : "#E2E8F0");
   const txt2   = T?.txt2    || (isLight ? "#3B4A61" : "#8B99AE");
@@ -543,7 +543,7 @@ export default function Caja({ T }) {
       {/* Visor de comprobante */}
       {viewer && (
         <div onClick={() => setViewer(null)} style={{
-          position: "fixed", inset: 0, zIndex: 100000, background: "rgba(3,8,16,0.82)",
+          position: "fixed", inset: 0, zIndex: 100000, background: "rgba(0,0,0,0.82)",
           backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
           display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
         }}>

@@ -45,7 +45,7 @@ export default function MobileHeaderMenu({ user, T, isLight, unread, pendingSync
       {count > 0 && <span className="mobile-account-dot" style={{ background: unread ? T.accent : "#F59E0B" }} />}
     </button>
     {open && createPortal(<div className="mobile-account-overlay" onClick={close}>
-      <div ref={panel} id="mobile-account-menu" className="mobile-account-panel" role="dialog" aria-modal="true" aria-labelledby="mobile-account-title" onClick={e => e.stopPropagation()} style={{ "--account-accent": T.accent, color: T.txt, background: isLight ? "#FFFFFF" : "#090F18", colorScheme: isLight ? "light" : "dark" }}>
+      <div ref={panel} id="mobile-account-menu" className="mobile-account-panel" role="dialog" aria-modal="true" aria-labelledby="mobile-account-title" onClick={e => e.stopPropagation()} style={{ "--account-accent": T.accent, color: T.txt, background: isLight ? "#FFFFFF" : "#0C0C0C", colorScheme: isLight ? "light" : "dark" }}>
         <div className="mobile-account-heading">
           <div className="mobile-account-avatar" aria-hidden="true">{user?.name?.charAt(0).toUpperCase() || "U"}</div>
           <div className="mobile-account-identity"><strong id="mobile-account-title">{user?.name || "Mi cuenta"}</strong><span>{user?.isDemo ? "Demo" : "Mi cuenta"}</span></div>

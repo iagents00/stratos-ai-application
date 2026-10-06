@@ -153,7 +153,7 @@ export default function DateRangeControl({ T, isLight, value, onChange, label = 
           onClick={() => setCalOpen(false)}
           style={{
             position: "fixed", inset: 0, zIndex: 100000,
-            background: isLight ? "rgba(15,23,42,0.30)" : "rgba(2,5,12,0.62)",
+            background: isLight ? "rgba(15,23,42,0.30)" : "rgba(0,0,0,0.62)",
             backdropFilter: "blur(7px)", WebkitBackdropFilter: "blur(7px)",
             display: "flex", alignItems: "flex-start", justifyContent: "center",
             padding: "max(7vh, 24px) 16px 24px", overflowY: "auto",

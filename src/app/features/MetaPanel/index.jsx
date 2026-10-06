@@ -617,7 +617,7 @@ export default function MetaPanel({
     // El lavado del fondo era VERDE mezclado con AZUL (rgba(126,184,240,0.028)):
     // dos matices en el lienzo hacen que todo lo que se apoya encima parezca de
     // un color distinto según dónde caiga. Un solo matiz, y muy tenue.
-    : "radial-gradient(130% 90% at 50% -25%, rgba(110,231,194,0.05), transparent 58%), #080C15";
+    : "radial-gradient(130% 90% at 50% -25%, rgba(110,231,194,0.05), transparent 58%), #0C0C0C";
   const mpVars = {
     "--mp-txt": T.txt, "--mp-txt2": T.txt2, "--mp-txt3": T.txt3,
     "--mp-accent": T.accent, "--mp-border": T.border, "--mp-borderH": T.borderH,
@@ -627,7 +627,7 @@ export default function MetaPanel({
     // fija y el contenido pasa por debajo, así que hay algo real que difuminar.
     // Por eso baja la opacidad (0.82 → 0.66): a 0.82 el blur casi no se veía,
     // era una barra sólida con un filtro puesto de adorno.
-    "--mp-topbar": isLight ? "rgba(246,248,251,0.66)" : "rgba(10,14,22,0.58)",
+    "--mp-topbar": isLight ? "rgba(246,248,251,0.66)" : "rgba(12,12,12,0.58)",
     "--mp-blur": S.blur,
     "--mp-spec": S.spec,
     "--mp-seg-bg": isLight ? S.inset : S.row,
@@ -1126,9 +1126,9 @@ export default function MetaPanel({
                         borderRadius:R.card,
                         // El calendario flota SOBRE las tarjetas: acá el vidrio sí
                         // tiene qué difuminar, así que es translúcido de verdad y no
-                        // un panel opaco (#0D121D) con `backdropFilter:"none"`, que
+                        // un panel opaco (#0C0C0C) con `backdropFilter:"none"`, que
                         // era pedir un material y después apagarlo.
-                        background:isLight ? "rgba(255,255,255,0.86)" : "rgba(16,22,34,0.82)",
+                        background:isLight ? "rgba(255,255,255,0.86)" : "rgba(20,20,20,0.82)",
                         border:`1px solid ${S.line}`,
                         boxShadow:`${S.spec}, ${S.shadowPop}`,
                         backdropFilter:"saturate(180%) blur(40px)",

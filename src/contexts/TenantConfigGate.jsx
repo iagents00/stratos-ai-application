@@ -47,7 +47,7 @@ export function TenantConfigGate({ children }) {
   }, [needsManagedConfig, loaded, organizationId, retry, setOrganizationFeatures]);
 
   if (!waitingForTenant && (!needsManagedConfig || loaded)) return children;
-  return <div role={error ? "alert" : "status"} style={{ minHeight: "100vh", display: "grid", placeContent: "center", gap: 12, textAlign: "center", background: "#07111c", color: "#e2e8f0", fontFamily: "sans-serif", padding: 24 }}>
+  return <div role={error ? "alert" : "status"} style={{ minHeight: "100vh", display: "grid", placeContent: "center", gap: 12, textAlign: "center", background: "#0C0C0C", color: "#e2e8f0", fontFamily: "sans-serif", padding: 24 }}>
     <div>{waitingForTenant ? "Abriendo tu empresa…" : error || "Preparando tu empresa…"}</div>
     {!waitingForTenant && error && <button onClick={reload} style={{ padding: "9px 15px", cursor: "pointer", borderRadius: 8 }}>Reintentar</button>}
   </div>;
