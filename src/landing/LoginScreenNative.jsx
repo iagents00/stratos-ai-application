@@ -89,6 +89,11 @@ export default function LoginScreenNative({ onLogin }) {
           </button>
         </form>
 
+        <a href="/guest.html" style={styles.guest}>
+          Entrar como invitado
+        </a>
+        <p style={styles.guestHelp}>Explora una demo con datos ficticios, sin cuenta.</p>
+
         <p style={styles.help}>Si no tienes acceso, solicítalo al administrador de tu empresa.</p>
       </section>
     </main>
@@ -172,4 +177,6 @@ const styles = {
     fontFamily: font,
   },
   help: { margin: "24px 0 0", textAlign: "center", color: "#657489", fontSize: 13, lineHeight: 1.45 },
+  guest: { display: "flex", minHeight: 48, alignItems: "center", justifyContent: "center", marginTop: 16, border: `1px solid ${P.borderH}`, borderRadius: 13, color: P.accent, textDecoration: "none", fontSize: 16, fontWeight: 650 },
+  guestHelp: { margin: "8px 0 0", textAlign: "center", color: P.txt2, fontSize: 13, lineHeight: 1.45 },
 };

@@ -81,6 +81,7 @@ jobs:
         run: |
           npm ci
           npm run build:app
+          node --test tests/guest-isolation.test.mjs
 
       - name: Instalar dependencias de Capacitor
         working-directory: mobile
