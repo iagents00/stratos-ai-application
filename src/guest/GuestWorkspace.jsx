@@ -1,3 +1,4 @@
+/** GuestWorkspace.jsx — CRM de ejemplo en memoria, sin conexiones ni cuentas. */
 import { useState } from 'react';
 import { P } from '../design-system/tokens';
 import { initialClients, initialTasks, sampleReply, stages } from './fixtures.js';

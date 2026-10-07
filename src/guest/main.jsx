@@ -1,3 +1,4 @@
+/** main.jsx — Entrada independiente del invitado, sin proveedores de la app. */
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import GuestWorkspace from './GuestWorkspace.jsx';

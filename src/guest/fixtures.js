@@ -1,4 +1,4 @@
-// Invented examples only. Keep this module independent of application fixtures.
+/** fixtures.js — Datos inventados y respuestas locales de la demo aislada. */
 export const stages = ['Nuevo', 'En seguimiento', 'Reunión', 'Cerrado'];
 export function initialClients() {
   return [
