@@ -1018,9 +1018,9 @@ const LandingPages = ({ T = P }) => {
   const [editingProp, setEditingProp] = useState(null);
   const [showCatalogSection, setShowCatalogSection] = useState(false);
   const [savedPages, setSavedPages] = useState([
-    { id: 1, client: "Fam. Rodríguez", date: "3 Abr 2026", props: 3, status: "Enviada", budget: "$280K-$1.2M", opens: 4, asesor: "Ken Lugo Ríos" },
-    { id: 2, client: "James Mitchell", date: "2 Abr 2026", props: 4, status: "Vista", budget: "$180K-$650K", opens: 2, asesor: "Emmanuel Ortiz" },
-    { id: 3, client: "Sarah Williams", date: "1 Abr 2026", props: 2, status: "Generada", budget: "$300K-$600K", opens: 0, asesor: "Cecilia Mendoza" },
+    { id: 1, client: "Alex Ejemplo", date: "3 Abr 2026", props: 3, status: "Enviada", budget: "$280K-$1.2M", opens: 4, asesor: "Asesor 1 Ejemplo" },
+    { id: 2, client: "Sam Ejemplo", date: "2 Abr 2026", props: 4, status: "Vista", budget: "$180K-$650K", opens: 2, asesor: "Asesor 2 Ejemplo" },
+    { id: 3, client: "Robin Ejemplo", date: "1 Abr 2026", props: 2, status: "Generada", budget: "$300K-$600K", opens: 0, asesor: "Asesor 3 Ejemplo" },
   ]);
   const [asesor, setAsesor] = useState("");
   const [asesorWA, setAsesorWA] = useState("");
