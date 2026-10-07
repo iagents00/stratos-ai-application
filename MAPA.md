@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**240 archivos · 80.764 líneas**
+**241 archivos · 80.479 líneas**
 
 ---
 
@@ -124,9 +124,10 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | Archivo | Líneas | Qué hace |
 |---|---|---|
 | `catalogoProyectos.js` | 611 | _sin describir_ |
-| `leads.js` | 348 | _sin describir_ |
 | `chat.js` | 249 | _sin describir_ |
 | `rivieraProperties.js` | 119 | _sin describir_ |
+| `leads.js` | 32 | _sin describir_ |
+| `demo-leads.js` | 31 | Synthetic CRM examples. No customer, advisor or contact data belongs here. |
 | `asesores.js` | 20 | _sin describir_ |
 | `dashboard.js` | 12 | _sin describir_ |
 | `team.js` | 11 | _sin describir_ |
@@ -781,7 +782,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/clients/gasil/config.js` (422 líneas)
 - `src/lib/next-action-engine.js` (371 líneas)
 - `src/lib/offline-mode.js` (351 líneas)
-- `src/app/data/leads.js` (348 líneas)
 - `src/app/views/Dash.jsx` (344 líneas)
 - `src/landing/DukeLeadRouter.jsx` (343 líneas)
 - `src/lib/lead-storage.js` (343 líneas)
