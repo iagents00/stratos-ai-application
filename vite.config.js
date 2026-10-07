@@ -145,6 +145,12 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), ...(soloApp ? [sacarElSitioWeb(stub, nativeLogin, appReviewAccess)] : [])],
-    build: { outDir: soloApp ? 'dist-app' : 'dist' },
+    build: {
+      outDir: soloApp ? 'dist-app' : 'dist',
+      ...(soloApp ? { rollupOptions: { input: {
+        app: fileURLToPath(new URL('./index.html', import.meta.url)),
+        guest: fileURLToPath(new URL('./guest.html', import.meta.url)),
+      } } } : {}),
+    },
   }
 })

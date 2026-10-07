@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**237 archivos · 80.595 líneas**
+**240 archivos · 80.764 líneas**
 
 ---
 
@@ -374,6 +374,14 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `tokens.js` | 237 | FUENTE ÚNICA DE VERDAD para colores, tipografías y espaciado de Stratos AI. |
 | `primitives.jsx` | 159 | Componentes UI atómicos compartidos entre landing y app. |
 
+### `src/guest/`
+
+| Archivo | Líneas | Qué hace |
+|---|---|---|
+| `GuestWorkspace.jsx` | 125 | CRM de ejemplo en memoria, sin conexiones ni cuentas. |
+| `fixtures.js` | 27 | Datos inventados y respuestas locales de la demo aislada. |
+| `main.jsx` | 10 | Entrada independiente del invitado, sin proveedores de la app. |
+
 ### `src/hooks/`
 
 | Archivo | Líneas | Qué hace |
@@ -412,7 +420,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ManualLegacy.jsx` | 246 | _sin describir_ |
 | `ManualBrasa.jsx` | 235 | _sin describir_ |
 | `ManualMuebleria.jsx` | 224 | _sin describir_ |
-| `LoginScreenNative.jsx` | 176 | _sin describir_ |
+| `LoginScreenNative.jsx` | 183 | _sin describir_ |
 
 ### `src/lib/`
 
@@ -541,6 +549,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Administrador | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:199` |
 | Administrador de demostración | `src/dental-demo/DentalIdentity.jsx:3` |
 | Agenda (opcional) | `src/app/views/LandingPages/index.jsx:1606` |
+| Agenda de ejemplo | `src/guest/GuestWorkspace.jsx:88` |
 | Agenda dental | `src/dental-demo/DentalDemo.jsx:47` |
 | Agenda una llamada con | `src/app/views/LandingPages/LandingPagePreview.jsx:458` |
 | Agenda, lista de acción, documentos y plan | `src/app/App.jsx:3042` |
@@ -570,6 +579,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Anterior | `src/app/views/CRM/index.jsx:3155` |
 | Añade tareas concretas para este cliente | `src/app/views/CRM/components.jsx:2162` |
 | Añadir | `src/app/views/CRM/components.jsx:5770` |
+| Añadir cliente de ejemplo | `src/guest/GuestWorkspace.jsx:69` |
 | Añadir criterio | `src/app/views/ISpaceBoard.jsx:122` |
 | Añadir tarea | `src/app/views/ISpaceBoard.jsx:138` |
 | Aparecerán al inicio de su pipeline en | `src/app/views/CRM/index.jsx:6179` |
@@ -596,6 +606,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Buscar (⌘K) | `src/app/App.jsx:2366` |
 | Buscar asesor… | `src/app/views/CRM/components.jsx:3188` |
 | Buscar candidato... | `src/app/views/RRHHModule.jsx:416` |
+| Buscar cliente | `src/guest/GuestWorkspace.jsx:49` |
 | Buscar cliente o teléfono… | `src/app/views/WhatsApp.jsx:212` |
 | Buscar cliente, proyecto, liner… | `src/app/views/ZoomControl/index.jsx:512` |
 | Buscar desarrollo o zona… | `src/app/views/LandingPages/index.jsx:1398` |
@@ -682,6 +693,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Click para editar | `src/app/features/MetaPanel/index.jsx:400` |
 | Click para escribir el número directamente | `src/app/views/CRM/components.jsx:695` |
 | Cliente | `src/app/views/CRM/ZoomBoard.jsx:299` |
+| Clientes de ejemplo | `src/guest/GuestWorkspace.jsx:48` |
 | Clínica Dental · Demo | `src/dental-demo/DentalProfile.jsx:11` |
 | Coaching IA · Análisis | `src/app/views/CRM/components.jsx:4998` |
 | Cohorte con Zoom | `src/app/views/ComandoDirectivo.jsx:477` |
@@ -722,17 +734,13 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Copiar usuario y contraseña | `src/app/features/Admin/PlatformAdminConsole.jsx:142` |
 | Copilot | `src/app/views/ISpaceBoard.jsx:102` |
 | Copilot AI | `src/app/views/Copilot.jsx:1130` |
+| Copilot de ejemplo | `src/guest/GuestWorkspace.jsx:95` |
 | Copilot dental | `src/dental-demo/DentalDemo.jsx:52` |
 | Corregir lo que escribiste | `src/app/views/Marketing.jsx:1853` |
 | Correo | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:200` |
-| Correo de acceso | `src/app/features/Admin/PlatformAdminConsole.jsx:83` |
-| Correo de recuperación | `src/app/views/Profile.jsx:397` |
-| Correo: | `src/app/features/Admin/PlatformAdminConsole.jsx:77` |
-| Crear | `src/app/views/Marketing.jsx:915` |
-| Crear administrador partner | `src/app/features/Admin/PlatformAdminConsole.jsx:79` |
 
 
-_(684 textos más — usá `npm run buscar "texto"`)_
+_(706 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -810,12 +818,12 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/lead-backup.js` (192 líneas)
 - `src/lib/speech-native.js` (189 líneas)
 - `src/app/views/CRM/CallActionButton.jsx` (184 líneas)
+- `src/landing/LoginScreenNative.jsx` (183 líneas)
 - `src/app/components/Chat.jsx` (182 líneas)
 - `src/clients/muebleria/config.js` (182 líneas)
 - `src/lib/recordatorios-locales.js` (179 líneas)
 - `src/hooks/useWhatsAppInbox.js` (178 líneas)
 - `src/app/views/CRM/RequiresHumanButton.jsx` (177 líneas)
-- `src/landing/LoginScreenNative.jsx` (176 líneas)
 - `src/lib/informe-doc.js` (175 líneas)
 - `src/app/views/MiDrive.jsx` (171 líneas)
 - `src/app/components/EstadoAvisos.jsx` (158 líneas)
