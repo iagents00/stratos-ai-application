@@ -1811,7 +1811,7 @@ export default function MetaPanel({
               {/* Los documentos que genera el propio sistema — el manual y todo lo
                   que se guarde desde el Informe. Van ARRIBA de los enlaces porque
                   son los que se usan todos los días. */}
-              <DocsStratos T={T} isLight={isLight} userId={user?.id} empresa={brandLabel} />
+              <DocsStratos T={T} isLight={isLight} userId={user?.id} empresa={brandLabel} isGuest={user?.isGuest === true} />
 
               {/* Add bar — solo admins (RLS solo les permite escribir a ellos) */}
               {canEditFinal && (
