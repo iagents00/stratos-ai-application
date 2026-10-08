@@ -63,7 +63,7 @@ const fmtCuando = (iso) => {
   return `${d.toLocaleDateString("es-MX", { day: "numeric", month: "long" })}, ${hora}`;
 };
 
-export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp, onBack, score }) {
+export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp, onBack, score, demoContext }) {
   const isLight = isLightProp != null ? isLightProp : theme === "light";
   const T = Tprop || (isLight ? LP : P);
   const { config: clientConfig } = useClient();
@@ -97,13 +97,13 @@ export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp
   // el chat — jamás la vieja pantalla "Conecta tu Telegram para activar", que
   // parecía un muro. (`ConnectPrompt` queda en el archivo por si algún tenant
   // futuro con pairing manual lo necesita, pero no se muestra por defecto.)
-  return <Chat T={T} isLight={isLight} botUsername={botUsername} onUnpaired={onUnpaired} onBack={onBack} score={score} isMarketing={isMarketing} puedeCajaFoto={puedeCajaFoto} orgId={orgId} isDemo={!!user?.isDemo} />;
+  return <Chat T={T} isLight={isLight} botUsername={botUsername} onUnpaired={onUnpaired} onBack={onBack} score={score} isMarketing={isMarketing} puedeCajaFoto={puedeCajaFoto} orgId={orgId} isDemo={!!user?.isDemo} demoContext={demoContext} />;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* Chat — layout WhatsApp: header fino, mensajes expansivos, composer compacto */
 /* ─────────────────────────────────────────────────────────────────────────── */
-function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing, puedeCajaFoto, orgId, isDemo }) {
+function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing, puedeCajaFoto, orgId, isDemo, demoContext }) {
   const { config: clientConfig } = useClient();
   const guidance = clientConfig?.copilot;
   const suggestions = guidance?.suggestions || SUGGESTIONS;
@@ -373,7 +373,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     if (isDemo) {
       setInput("");
       const at = new Date().toISOString();
-      setMessages(prev => [...prev,{id:`tmp-demo-${Date.now()}`,role:"user",content:text,occurred_at:at},{id:`ai-demo-${Date.now()}`,role:"ai",content:demoCopilotReply(text),occurred_at:at}]);
+      setMessages(prev => [...prev,{id:`tmp-demo-${Date.now()}`,role:"user",content:text,occurred_at:at},{id:`ai-demo-${Date.now()}`,role:"ai",content:demoCopilotReply(text, demoContext),occurred_at:at}]);
       return;
     }
     const cb = options.callback_data || "";

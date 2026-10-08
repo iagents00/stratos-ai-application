@@ -1,9 +1,5 @@
-/** main.jsx — Entrada independiente del invitado, sin proveedores de la app. */
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import GuestWorkspace from './GuestWorkspace.jsx';
+// Install the isolation boundary BEFORE evaluating any application module.
+import { installGuestBoundary } from './boundary.js';
 
-// No application providers, storage, native plugins, API clients or tenant data.
-createRoot(document.getElementById('guest-root')).render(
-  <StrictMode><GuestWorkspace /></StrictMode>,
-);
+installGuestBoundary(window);
+import('./Workspace.jsx').then(({ mountGuest }) => mountGuest());

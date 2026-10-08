@@ -32,7 +32,7 @@
     "release:check": "node scripts/check-production-source.mjs",
     "deploy:production": "npm run release:check && vercel deploy --prod --skip-domain --yes",
     "release:promote": "node scripts/promote-production.mjs",
-    "postbuild:app": "node scripts/ops/release-manifest.mjs dist-app",
+    "postbuild:app": "node scripts/build-guest.mjs && node scripts/ops/release-manifest.mjs dist-app",
     "ops:doctor": "node scripts/ops/doctor.mjs",
     "ops:check": "node scripts/ops/check-catalog.mjs && node scripts/ops/generate-system-index.mjs --check",
     "ops:rollback": "node scripts/ops/rollback.mjs",

@@ -23,7 +23,7 @@ import { join } from 'node:path'
  * código: así Rollup nunca llega a leer esos archivos y no genera sus chunks.
  * Una condición en tiempo de ejecución los habría dejado igual dentro del bundle.
  */
-const SOLO_WEB = new Set([
+export const SOLO_WEB = new Set([
   './landing/LandingMarketing.jsx',
   './landing/PrivacyPolicy.jsx',
   './landing/DataDeletion.jsx',
@@ -149,7 +149,6 @@ export default defineConfig(({ mode }) => {
       outDir: soloApp ? 'dist-app' : 'dist',
       ...(soloApp ? { rollupOptions: { input: {
         app: fileURLToPath(new URL('./index.html', import.meta.url)),
-        guest: fileURLToPath(new URL('./guest.html', import.meta.url)),
       } } } : {}),
     },
   }
