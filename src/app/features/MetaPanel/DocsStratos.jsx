@@ -55,7 +55,7 @@ export function textoABloques(texto, encabezado = "NSG", fechaISO) {
   return b;
 }
 
-export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
+export default function DocsStratos({ T, isLight, userId, empresa = "NSG", isGuest = false }) {
   const txt    = T?.txt    || (isLight ? "#0B1220" : "#E2E8F0");
   const txt2   = T?.txt2   || (isLight ? "#3B4A61" : "#8B99AE");
   const txt3   = T?.txt3   || (isLight ? "#7A8699" : "#4A5568");
@@ -166,7 +166,7 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
             {MANUAL.secciones.length} secciones · {MANUAL.secciones.reduce((a, s) => a + s.items.length, 0)} funciones · qué hace cada una y qué cambia
           </div>
         </div>
-        <button onClick={bajarManual} title="Descargar el manual en Word"
+        <button onClick={bajarManual} disabled={isGuest} title={isGuest ? "Exportar está disponible al iniciar sesión con tu cuenta." : "Descargar el manual en Word"}
           style={{ ...btn, borderColor: `${accent}55`, color: accent, background: `${accent}14`, fontWeight: 600 }}>
           <Download size={14} /> Word
         </button>
@@ -177,7 +177,7 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
           </a>
         ) : (
           <button onClick={() => aDrive("manual", `Manual de ${MANUAL.titulo}`, manualEnBloques(new Date().toISOString()))}
-            disabled={!!subiendo} title="Subirlo a Drive: queda editable y se baja en Word o PDF" style={btn}>
+            disabled={isGuest || !!subiendo} title={isGuest ? "Drive está disponible al iniciar sesión con tu cuenta." : "Subirlo a Drive: queda editable y se baja en Word o PDF"} style={btn}>
             {subiendo === "manual"
               ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} />
               : <Cloud size={14} />} Drive
@@ -210,7 +210,7 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
           <button onClick={() => setAbierto(d)} title="Leerlo aquí" style={btn}>
             <Eye size={14} />
           </button>
-          <button onClick={() => bajarDoc(d)} title="Descargar en Word" style={btn}>
+          <button onClick={() => bajarDoc(d)} disabled={isGuest} title="Descargar en Word" style={btn}>
             <Download size={14} /> Word
           </button>
           {subido[d.id] ? (
@@ -219,7 +219,7 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
               <Check size={14} />
             </a>
           ) : (
-            <button onClick={() => aDrive(d.id, d.titulo, textoABloques(d.contenido, empresa, d.fecha))} disabled={!!subiendo}
+            <button onClick={() => aDrive(d.id, d.titulo, textoABloques(d.contenido, empresa, d.fecha))} disabled={isGuest || !!subiendo}
               title="Subirlo a Drive: queda editable y se baja en Word o PDF" style={btn}>
               {subiendo === d.id
                 ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} />
@@ -246,7 +246,7 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG" }) {
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 14, paddingBottom: 12, borderBottom: `1px solid ${bd}` }}>
               <div style={{ fontSize: 15, color: txt, fontFamily: fontDisp, textWrap: "pretty" }}>{abierto.titulo}</div>
-              <button onClick={() => bajarDoc(abierto)} style={{ ...btn, borderColor: `${accent}55`, color: accent }}>
+              <button onClick={() => bajarDoc(abierto)} disabled={isGuest} style={{ ...btn, borderColor: `${accent}55`, color: accent }}>
                 <Download size={14} /> Word
               </button>
             </div>

@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**245 archivos · 80.502 líneas**
+**245 archivos · 80.503 líneas**
 
 ---
 
@@ -31,7 +31,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | **Mi Drive** | `src/app/views/MiDrive.jsx` | 171 |
 | **WhatsApp** | _sin vista propia (redirige a otra)_ | — |
 | **Create** | `src/app/views/LandingPages/index.jsx` | 2022 |
-| **Comando** | `src/app/views/ComandoOps.jsx`<br>`src/app/views/ComandoDirectivo.jsx` | 327<br>961 |
+| **Comando** | `src/app/views/ComandoOps.jsx`<br>`src/app/views/ComandoDirectivo.jsx` | 327<br>962 |
 | **Caja** | `src/app/views/Caja.jsx` | 593 |
 | **Chat** | `src/app/views/ChatEquipo.jsx` | 569 |
 | **Proyectos** | `src/app/views/ERP.jsx` | 719 |
@@ -171,7 +171,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `Copilot.jsx` | 2019 | v2 (15-jul) |
 | `index.jsx` | 1223 | Panel "Control de Zooms" — pestaña dentro de Comando Directivo (Duke). |
 | `Profile.jsx` | 1149 | vista de perfil del asesor. |
-| `ComandoDirectivo.jsx` | 961 | _sin describir_ |
+| `ComandoDirectivo.jsx` | 962 | _sin describir_ |
 | `LeadWhatsAppChat.jsx` | 942 | _sin describir_ |
 | `RRHHModule.jsx` | 846 | _sin describir_ |
 | `InformeAvances.jsx` | 747 | _sin describir_ |
@@ -540,7 +540,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Actividad reciente | `src/app/views/CRM/index.jsx:5900` |
 | Actividad y alertas | `src/app/features/Admin/PlatformAdminConsole.jsx:108` |
 | ACTIVO | `src/app/views/CRM/components.jsx:5503` |
-| Activos post-Zoom | `src/app/views/ComandoDirectivo.jsx:458` |
+| Activos post-Zoom | `src/app/views/ComandoDirectivo.jsx:459` |
 | Activos post-Zoom: | `src/app/views/CRM/ZoomBoard.jsx:170` |
 | Actual: | `src/app/views/Profile.jsx:429` |
 | Actualización del sistema | `src/app/components/DynIsland.jsx:408` |
@@ -697,12 +697,12 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cliente | `src/app/views/CRM/ZoomBoard.jsx:299` |
 | Clínica Dental · Demo | `src/dental-demo/DentalProfile.jsx:11` |
 | Coaching IA · Análisis | `src/app/views/CRM/components.jsx:4998` |
-| Cohorte con Zoom | `src/app/views/ComandoDirectivo.jsx:477` |
+| Cohorte con Zoom | `src/app/views/ComandoDirectivo.jsx:478` |
 | Color de acento para la tarjeta | `src/app/views/LandingPages/index.jsx:802` |
 | Color personalizado | `src/app/views/LandingPages/index.jsx:815` |
 | Columna nueva | `src/app/views/Marketing.jsx:1463` |
 | Columnas del equipo | `src/app/views/Marketing.jsx:3035` |
-| Comando Directivo | `src/app/views/ComandoDirectivo.jsx:426` |
+| Comando Directivo | `src/app/views/ComandoDirectivo.jsx:427` |
 | Cómo funciona: | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:214` |
 | Cómo se usa | `src/app/components/DynIsland.jsx:467` |
 | Cómo trabaja el equipo IA | `src/app/views/IACRM.jsx:576` |
@@ -745,7 +745,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Crear administrador partner | `src/app/features/Admin/PlatformAdminConsole.jsx:79` |
 
 
-_(687 textos más — usá `npm run buscar "texto"`)_
+_(685 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -762,7 +762,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/landing/ManualMarketing.jsx` (1026 líneas)
 - `src/landing/manual-content.js` (1004 líneas)
 - `src/landing/Diagnostico.jsx` (974 líneas)
-- `src/app/views/ComandoDirectivo.jsx` (961 líneas)
+- `src/app/views/ComandoDirectivo.jsx` (962 líneas)
 - `src/app/views/CRM/LeadWhatsAppChat.jsx` (942 líneas)
 - `src/landing/DeliveryHubCRM.jsx` (881 líneas)
 - `src/app/views/RRHHModule.jsx` (846 líneas)

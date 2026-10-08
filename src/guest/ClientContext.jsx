@@ -4,7 +4,7 @@ import { crearValorCliente } from '../clients/_shared/client-value.js';
 
 export const guestConfig = {
   ...DEFAULT_CLIENT_CONFIG,
-  id: 'guest', name: 'Stratos AI', legalName: 'Empresa ficticia',
+  id: 'guest', name: 'Stratos AI', legalName: 'Empresa ficticia', isolatedGuest: true,
   tenant: { ...DEFAULT_CLIENT_CONFIG.tenant, clientId: 'guest', organizationId: 'deded000-0000-4000-a000-000000000001', botUsername: '', copilotWebhook: null },
   brand: { ...DEFAULT_CLIENT_CONFIG.brand, appWordmark: 'Stratos AI' },
   support: { email: null, whatsapp: null, phoneLabel: null },

@@ -107,6 +107,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark", loading = fal
   const T = isLight ? baseTheme : { ...baseTheme, txt3: baseTheme.txt2 };
   const accent = T.accent;
   const { config: clientConfig } = useClient();
+  const exportUnavailable = clientConfig?.isolatedGuest === true;
   const clientDisplayName = clientConfig?.legalName || clientConfig?.name || "Stratos";
   // Cantidad de buckets por granularidad — independiente para cada tab.
   // Permite que el usuario haga zoom in/out sin perder el contexto al cambiar
@@ -630,7 +631,7 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark", loading = fal
             );
           })}
         </div>
-        <button onClick={handleExport} disabled={loading || !!loadError || exporting} title="Descarga el reporte ejecutivo como PDF" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"8px 14px", borderRadius:9, background: isLight ? `linear-gradient(135deg, ${accent} 0%, ${accent}DD 100%)` : `${accent}18`, color: isLight ? "#FFFFFF" : accent, border:`1px solid ${isLight ? "transparent" : `${accent}55`}`, fontSize:12, fontWeight:500, fontFamily:fontDisp, cursor:"pointer", boxShadow: isLight ? `0 2px 8px ${accent}40` : "none" }}>
+        <button onClick={handleExport} disabled={exportUnavailable || loading || !!loadError || exporting} title={exportUnavailable ? "Exportar está disponible al iniciar sesión con tu cuenta." : "Descarga el reporte ejecutivo como PDF"} style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"8px 14px", borderRadius:9, background: isLight ? `linear-gradient(135deg, ${accent} 0%, ${accent}DD 100%)` : `${accent}18`, color: isLight ? "#FFFFFF" : accent, border:`1px solid ${isLight ? "transparent" : `${accent}55`}`, fontSize:12, fontWeight:500, fontFamily:fontDisp, cursor:"pointer", boxShadow: isLight ? `0 2px 8px ${accent}40` : "none" }}>
           <Download size={13} strokeWidth={2.4} /> {exporting ? "Generando…" : "Generar PDF de Leads"}
         </button>
         </div>
@@ -672,8 +673,8 @@ const ComandoDirectivo = ({ leadsData = [], T: _T, theme = "dark", loading = fal
           </span>
           {!showZoomTab && (
           <button
-            onClick={handleExport} disabled={loading || !!loadError || exporting}
-            title="Descarga el reporte ejecutivo como PDF — listo para enviar a dirección"
+            onClick={handleExport} disabled={exportUnavailable || loading || !!loadError || exporting}
+            title={exportUnavailable ? "Exportar está disponible al iniciar sesión con tu cuenta." : "Descarga el reporte ejecutivo como PDF — listo para enviar a dirección"}
             style={{
               display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
               minHeight: 44, padding: "0 16px", borderRadius: 11,
