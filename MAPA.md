@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**241 archivos · 80.479 líneas**
+**245 archivos · 80.502 líneas**
 
 ---
 
@@ -82,7 +82,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `App.jsx` | 3191 | _sin describir_ |
+| `App.jsx` | 3192 | _sin describir_ |
 | `SharedComponents.jsx` | 343 | Shared primitive components used by all views. |
 | `App.css` | 321 | _sin describir_ |
 
@@ -109,7 +109,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `navigation.js` | 402 | Configuración de navegación y permisos por módulo. |
+| `navigation.js` | 405 | Configuración de navegación y permisos por módulo. |
 | `intelFeatures.js` | 211 | _sin describir_ |
 | `pipeline.js` | 129 | _sin describir_ |
 | `areas.js` | 97 | _sin describir_ |
@@ -379,9 +379,13 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `GuestWorkspace.jsx` | 125 | CRM de ejemplo en memoria, sin conexiones ni cuentas. |
-| `fixtures.js` | 27 | Datos inventados y respuestas locales de la demo aislada. |
-| `main.jsx` | 10 | Entrada independiente del invitado, sin proveedores de la app. |
+| `backend.js` | 72 | _sin describir_ |
+| `Workspace.jsx` | 29 | _sin describir_ |
+| `boundary.js` | 28 | _sin describir_ |
+| `AuthContext.jsx` | 14 | _sin describir_ |
+| `ClientContext.jsx` | 14 | _sin describir_ |
+| `native.js` | 10 | _sin describir_ |
+| `main.jsx` | 6 | _sin describir_ |
 
 ### `src/hooks/`
 
@@ -475,9 +479,9 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `rails-gestion.js` | 24 | Valida el borrador una vez; un envío incierto se reintenta sin alterar su payload. |
 | `project-copilot.js` | 18 | _sin describir_ |
 | `read-all-rows.js` | 18 | _sin describir_ |
+| `copilot-demo.js` | 16 | Demo messages are local examples; they never claim to write to a real account. |
 | `app-review-access.js` | 12 | Implementación web: App Review no existe fuera del binario móvil. |
 | `huli.js` | 10 | _sin describir_ |
-| `copilot-demo.js` | 8 | Demo messages are local examples; they never claim to write to a real account. |
 | `rails-preview.js` | 8 | La vista previa conserva la ruta y el cliente; nunca arrastra el hash de autenticación. |
 
 ---
@@ -503,7 +507,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | ¿Por qué la Riviera Maya? | `src/app/views/LandingPages/LandingPagePreview.jsx:401` |
 | ¿Qué necesitas? (ej. Flyer promo…) * | `src/app/views/Marketing.jsx:2183` |
 | A consultar | `src/app/views/LandingPages/index.jsx:1846` |
-| Abriendo centro de soporte… | `src/app/App.jsx:1944` |
+| Abriendo centro de soporte… | `src/app/App.jsx:1945` |
 | Abriendo comprobante… | `src/app/views/Caja.jsx:555` |
 | Abriendo documento… | `src/app/views/CRM/components.jsx:4322` |
 | Abriendo tu espacio clínico… | `src/dental-demo/ClinicalProfile.jsx:14` |
@@ -550,10 +554,9 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Administrador | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:199` |
 | Administrador de demostración | `src/dental-demo/DentalIdentity.jsx:3` |
 | Agenda (opcional) | `src/app/views/LandingPages/index.jsx:1606` |
-| Agenda de ejemplo | `src/guest/GuestWorkspace.jsx:88` |
 | Agenda dental | `src/dental-demo/DentalDemo.jsx:47` |
 | Agenda una llamada con | `src/app/views/LandingPages/LandingPagePreview.jsx:458` |
-| Agenda, lista de acción, documentos y plan | `src/app/App.jsx:3042` |
+| Agenda, lista de acción, documentos y plan | `src/app/App.jsx:3043` |
 | Agendar en Huli | `src/dental-demo/HuliWorkspace.jsx:38` |
 | Agendar fecha | `src/app/views/CRM/index.jsx:4655` |
 | Agendar llamada | `src/app/views/LandingPages/LandingPagePreview.jsx:164` |
@@ -580,12 +583,11 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Anterior | `src/app/views/CRM/index.jsx:3155` |
 | Añade tareas concretas para este cliente | `src/app/views/CRM/components.jsx:2162` |
 | Añadir | `src/app/views/CRM/components.jsx:5770` |
-| Añadir cliente de ejemplo | `src/guest/GuestWorkspace.jsx:69` |
 | Añadir criterio | `src/app/views/ISpaceBoard.jsx:122` |
 | Añadir tarea | `src/app/views/ISpaceBoard.jsx:138` |
 | Aparecerán al inicio de su pipeline en | `src/app/views/CRM/index.jsx:6179` |
-| Aplicaciones | `src/app/App.jsx:3105` |
-| Apps | `src/app/App.jsx:2277` |
+| Aplicaciones | `src/app/App.jsx:3106` |
+| Apps | `src/app/App.jsx:2278` |
 | Áreas de atención | `src/app/views/RRHHModule.jsx:793` |
 | Arrastra el CV aquí o haz clic para subir | `src/app/views/RRHHModule.jsx:716` |
 | Arrastra para cambiar la prioridad | `src/app/views/Marketing.jsx:2236` |
@@ -604,10 +606,9 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Badge | `src/app/views/LandingPages/index.jsx:662` |
 | Bajar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:288` |
 | Bajo · Medio · Alto | `src/app/views/CRM/components.jsx:3431` |
-| Buscar (⌘K) | `src/app/App.jsx:2366` |
+| Buscar (⌘K) | `src/app/App.jsx:2367` |
 | Buscar asesor… | `src/app/views/CRM/components.jsx:3188` |
 | Buscar candidato... | `src/app/views/RRHHModule.jsx:416` |
-| Buscar cliente | `src/guest/GuestWorkspace.jsx:49` |
 | Buscar cliente o teléfono… | `src/app/views/WhatsApp.jsx:212` |
 | Buscar cliente, proyecto, liner… | `src/app/views/ZoomControl/index.jsx:512` |
 | Buscar desarrollo o zona… | `src/app/views/LandingPages/index.jsx:1398` |
@@ -656,7 +657,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cargando el plan… | `src/app/views/PlanSemanal.jsx:368` |
 | Cargando el tablero… | `src/app/views/ComandoOps.jsx:127` |
 | Cargando empresas… | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:242` |
-| Cargando equipo… | `src/app/App.jsx:2394` |
+| Cargando equipo… | `src/app/App.jsx:2395` |
 | Cargando movimientos… | `src/app/views/Caja.jsx:467` |
 | Cargando perfil dental… | `src/dental-demo/DentalProfile.jsx:11` |
 | Cargando permisos… | `src/app/features/Admin/CajaPermissionsAdmin.jsx:102` |
@@ -673,7 +674,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Centro de Inteligencia | `src/app/components/DynamicIsland.jsx:81` |
 | Centro de Inteligencia — Activo | `src/app/components/DynamicIsland.jsx:102` |
 | Centro de soporte | `src/app/features/Admin/PlatformAdminConsole.jsx:198` |
-| Cerrar | `src/app/App.jsx:2958` |
+| Cerrar | `src/app/App.jsx:2959` |
 | Cerrar (Esc) | `src/app/views/ZoomControl/index.jsx:811` |
 | Cerrar detalle | `src/app/views/ZoomControl/Resumen.jsx:309` |
 | Cerrar editor | `src/app/views/ISpaceBoard.jsx:108` |
@@ -681,7 +682,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cerrar guía de funciones | `src/app/components/CopilotCapabilities.jsx:120` |
 | Cerrar menú | `src/app/components/MobileHeaderMenu.jsx:52` |
 | Cerrar Mi Espacio | `src/app/features/MetaPanel/index.jsx:765` |
-| Cerrar sesión | `src/app/App.jsx:2727` |
+| Cerrar sesión | `src/app/App.jsx:2728` |
 | Cerrar vista previa | `src/app/views/LandingPages/LandingPagePreview.jsx:202` |
 | Chats | `src/app/views/WhatsApp.jsx:633` |
 | Cierres | `src/app/views/Team.jsx:116` |
@@ -694,7 +695,6 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Click para editar | `src/app/features/MetaPanel/index.jsx:400` |
 | Click para escribir el número directamente | `src/app/views/CRM/components.jsx:695` |
 | Cliente | `src/app/views/CRM/ZoomBoard.jsx:299` |
-| Clientes de ejemplo | `src/guest/GuestWorkspace.jsx:48` |
 | Clínica Dental · Demo | `src/dental-demo/DentalProfile.jsx:11` |
 | Coaching IA · Análisis | `src/app/views/CRM/components.jsx:4998` |
 | Cohorte con Zoom | `src/app/views/ComandoDirectivo.jsx:477` |
@@ -714,7 +714,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Conectando… | `src/app/views/ConectarWhatsApp.jsx:122` |
 | Conectar mi WhatsApp | `src/app/views/ConectarWhatsApp.jsx:123` |
 | Conexión real · Sólo consulta | `src/dental-demo/HuliWorkspace.jsx:28` |
-| Configuración | `src/app/App.jsx:3141` |
+| Configuración | `src/app/App.jsx:3142` |
 | Configuración de empresas nuevas | `src/app/features/Admin/CompanySetupAdmin.jsx:50` |
 | Configuración del proceso comercial | `src/app/features/Admin/RailsSettings.jsx:69` |
 | Confirmados | `src/app/views/ZoomControl/Resumen.jsx:450` |
@@ -735,13 +735,17 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Copiar usuario y contraseña | `src/app/features/Admin/PlatformAdminConsole.jsx:142` |
 | Copilot | `src/app/views/ISpaceBoard.jsx:102` |
 | Copilot AI | `src/app/views/Copilot.jsx:1130` |
-| Copilot de ejemplo | `src/guest/GuestWorkspace.jsx:95` |
 | Copilot dental | `src/dental-demo/DentalDemo.jsx:52` |
 | Corregir lo que escribiste | `src/app/views/Marketing.jsx:1853` |
 | Correo | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:200` |
+| Correo de acceso | `src/app/features/Admin/PlatformAdminConsole.jsx:83` |
+| Correo de recuperación | `src/app/views/Profile.jsx:397` |
+| Correo: | `src/app/features/Admin/PlatformAdminConsole.jsx:77` |
+| Crear | `src/app/views/Marketing.jsx:915` |
+| Crear administrador partner | `src/app/features/Admin/PlatformAdminConsole.jsx:79` |
 
 
-_(706 textos más — usá `npm run buscar "texto"`)_
+_(687 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -751,7 +755,7 @@ Estos no tienen comentario de cabecera, así que el mapa no puede explicar qué
 hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 
 - `src/app/views/CRM/index.jsx` (6665 líneas)
-- `src/app/App.jsx` (3191 líneas)
+- `src/app/App.jsx` (3192 líneas)
 - `src/app/views/Marketing.jsx` (3075 líneas)
 - `src/landing/LandingMarketing.jsx` (1576 líneas)
 - `src/landing/PrivacyPolicy.jsx` (1222 líneas)
@@ -861,6 +865,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/avisos-nativos.js` (79 líneas)
 - `src/lib/transcribir.js` (77 líneas)
 - `src/hooks/useTeam.js` (74 líneas)
+- `src/guest/backend.js` (72 líneas)
 - `src/lib/ringer.js` (72 líneas)
 - `src/lib/agenda.js` (71 líneas)
 - `src/lib/supabase.js` (70 líneas)

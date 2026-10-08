@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, readFileSync, readdirSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkProjectBoundary } from './check-project-boundary.mjs';
 
@@ -22,7 +22,7 @@ export function verifySourceTree(root, tree) {
   for (const file of sourceFiles) if (!expected.has(file)) throw new Error(`Fuente incompleta: ${file}`);
   for (const [path, entry] of expected) {
     const local = resolve(root, path);
-    if (!local.startsWith(resolve(root) + '/') || entry.mode === '120000' || !existsSync(local) || !lstatSync(local).isFile()) throw new Error(`Archivo de fuente ausente o inseguro: ${path}`);
+    if (!local.startsWith(resolve(root) + sep) || entry.mode === '120000' || !existsSync(local) || !lstatSync(local).isFile()) throw new Error(`Archivo de fuente ausente o inseguro: ${path}`);
     const body = readFileSync(local);
     if (gitBlobHash(body) !== entry.sha) {
       // Vercel vuelve a serializar su configuración durante la construcción.

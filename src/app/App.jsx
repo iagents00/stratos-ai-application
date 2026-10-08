@@ -1243,6 +1243,7 @@ export default function App() {
       const denom = Math.max(1, demoLeads.length - 1);
       setLeadsData(demoLeads.map((l, i) => ({
         ...l,
+        ...(user.isGuest && i < 2 ? { asesor: user.name } : {}),
         seguimientos: l.seguimientos ?? 0,
         created_at:   l.created_at
           || parseFechaIngreso(l.fechaIngreso)
@@ -2760,7 +2761,7 @@ export default function App() {
                       : <Dash oc={oc} leadsData={leadsData} T={T} />)}
                   {v === "c"      && (clientConfig.liveHuli ? <HuliWorkspace view="patients" /> : <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} isRefreshing={leadsRefreshing} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} autoOpenNewLead={crmNewLeadTick} onNewLeadHandled={() => setCrmNewLeadTick(0)} onOpenComando={() => setV("d")} />)}
                   {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} openExpediente={openLeadExpediente} onBack={backToPrevView} chatCount={waInbox.conversations?.length || 0} />}
-                  {v === "copilot" && canAccessModule("copilot", user, clientConfig) && (clientConfig.liveHuli ? <HuliWorkspace view="copilot" /> : <Copilot T={T} isLight={isLight} theme={theme} onBack={backToPrevView} score={asesorScore} />)}
+                  {v === "copilot" && canAccessModule("copilot", user, clientConfig) && (clientConfig.liveHuli ? <HuliWorkspace view="copilot" /> : <Copilot T={T} isLight={isLight} theme={theme} onBack={backToPrevView} score={asesorScore} demoContext={user?.isDemo ? { leads: leadsData, tasks: metaActions } : undefined} />)}
                   {(v === "mkt" || v === "mkt_reporte" || v === "mkt_equipo" || v === "mkt_dia" || v === "mkt_marcas" || v === "mkt_pipe" || v === "mkt_sol") && canAccessModule(v, user, clientConfig) && (
                     clientConfig?.features?.projectKanban ? <ISpaceBoard T={T} onOpenCopilot={canAccessModule("copilot", user, clientConfig) ? () => setV("copilot") : undefined} /> : <Marketing T={T}
                       initialTab={{ mkt_reporte: "reporte", mkt_equipo: "equipo", mkt_dia: "dia", mkt_marcas: "marcas", mkt_pipe: "pipeline", mkt_sol: "solicitudes" }[v]}

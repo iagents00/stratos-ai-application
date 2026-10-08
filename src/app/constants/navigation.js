@@ -214,6 +214,9 @@ function esAppNativa() {
 
 export function canAccessModule(moduleId, user, clientConfig = null) {
   if (!user) return false;
+  // The isolated guest uses the real local workflows; account and connected
+  // services are only available after signing in to an enterprise account.
+  if (user.isGuest === true) return ["c", "miespacio", "copilot", "d", "trash"].includes(moduleId);
     // (0) APP NATIVA: "Planes" muestra precios de suscripción. Apple exige
     // In-App Purchase para vender bienes digitales dentro de la app: dejarlo
     // visible es rechazo seguro. Los planes se contratan hablando con un

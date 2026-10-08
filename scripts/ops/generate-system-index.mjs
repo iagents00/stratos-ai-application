@@ -12,7 +12,7 @@ const walk = (dir) =>
     : readdirSync(dir)
         .sort()
         .flatMap((n) => {
-          const p = join(dir, n);
+          const p = join(dir, n).replaceAll('\\', '/');
           return statSync(p).isDirectory() ? walk(p) : [p];
         });
 const apis = walk("api").filter((p) => /\.[jt]s$/.test(p));
