@@ -3,9 +3,9 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * Chat de WhatsApp EN VIVO dentro del expediente del lead (tab "Chat").
  *
- * Muestra el hilo real de WhatsApp (espejo `whatsapp_messages`, lo llena n8n
- * con los eventos de Chatwoot) y permite RESPONDER al cliente sin salir del
- * CRM (cola `whatsapp_outbox` → n8n → Chatwoot → WhatsApp).
+ * Muestra el hilo real de WhatsApp desde el espejo `whatsapp_messages`.
+ * En coexistencia el modo normal es SOLO LECTURA: el equipo atiende desde
+ * WhatsApp Business y Stratos registra la conversación y los leads.
  *
  * Reglas de producto:
  *  - Gateado por feature flag `whatsappChat` (hoy solo Duke lo prende).
@@ -168,7 +168,7 @@ const isUuid = (id) => /^[0-9a-f]{8}-/.test(String(id || ""));
 
 export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadMaxHeight = 360, fill = false }) {
   const { user } = useAuth();
-  const { isFeatureEnabled } = useClient();
+  const { isFeatureEnabled, config: clientConfig } = useClient();
 
   const [messages, setMessages] = useState([]);
   const [outbox, setOutbox] = useState([]);
@@ -192,17 +192,8 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
 
   const flagOn =
     typeof isFeatureEnabled === "function" ? isFeatureEnabled("whatsappChat") : false;
-  // ⏸️ OCULTO temporalmente (09-jul-2026): el chat de WhatsApp en el expediente
-  // NO se muestra a los asesores todavía (los números se conectan por
-  // COEXISTENCIA directo a Meta — ver context/whatsapp-multicliente-plan.md del
-  // AIOS). Solo super_admin (nosotros) lo ve, igual que el módulo. El componente
-  // se usa en el expediente Y en el módulo WhatsApp; con este gate ambos quedan
-  // super_admin-only de forma consistente.
-  //   • Reactivar para TODOS: quitar `&& user?.role === "super_admin"`.
-  //   • Para dejarlo SOLO-LECTURA a asesores en el futuro (leer sin enviar,
-  //     cuando la coexistencia esté consolidada): abrir `enabled` por rol pero
-  //     ocultar el composer si el rol no es de mando.
-  const enabled = flagOn && user?.role === "super_admin";
+  const readOnly = clientConfig?.features?.whatsappReadOnly === true;
+  const enabled = flagOn;
   const canQuery = enabled && !!lead?.id && isUuid(lead.id) && !user?.isDemo;
 
   /* ── Carga + realtime (debounced) + polling de respaldo ─────────────────── */
@@ -274,7 +265,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
     [messages]
   );
   const hasThread = messages.length > 0;
-  const canSend = canQuery && hasThread && windowOpen && conversationId != null && orgId != null;
+  const canSend = !readOnly && canQuery && hasThread && windowOpen && conversationId != null && orgId != null;
 
   // Autoscroll SOLO si el usuario estaba pegado al fondo (no arrastrarlo
   // mientras lee historial arriba).
@@ -751,7 +742,19 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
 
           {/* Composer / aviso de ventana — flexShrink 0: en modo fill jamás se
               comprime ni se pierde (el hilo es el único que scrollea). */}
-          {canSend ? (
+          {readOnly && hasThread ? (
+            <div
+              style={{
+                marginTop: 10, flexShrink: 0, padding: "10px 12px", borderRadius: 10,
+                background: T.accentS, border: `1px solid ${T.accentB}`,
+                fontSize: 12, color: T.txt2, fontFamily: font, lineHeight: 1.5,
+                display: "flex", alignItems: "flex-start", gap: 8,
+              }}
+            >
+              <Lock size={13} style={{ flexShrink: 0, marginTop: 1 }} />
+              <span><strong>Solo lectura.</strong> El equipo responde desde WhatsApp Business; Stratos registra automáticamente la conversación y actualiza el lead.</span>
+            </div>
+          ) : canSend ? (
             <div style={{ marginTop: 10, flexShrink: 0 }}>
               {/* Chip del archivo elegido (aún no enviado) — el audio se puede
                   escuchar antes de mandarlo */}

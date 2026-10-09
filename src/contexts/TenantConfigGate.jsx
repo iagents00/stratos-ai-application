@@ -34,8 +34,15 @@ export function TenantConfigGate({ children }) {
         if (readError || !data) { setError("No se pudo cargar la configuración de tu empresa."); return; }
         const isManaged = data.meta_config?.onboarding?.createdFrom === "whatsapp_admin";
         const cajaPolicy = !access.error && access.data?.caja ? access.data.caja : null;
+        const configuredFeatures = data.meta_config?.features && typeof data.meta_config.features === "object"
+          ? data.meta_config.features : {};
         setOrganizationFeatures(organizationId, isManaged ? {
-          ...managedTenantFeatures(data.meta_config?.features),
+          ...managedTenantFeatures(configuredFeatures),
+          // Integraciones: nunca se prenden por defecto. La consola las activa
+          // solo cuando el canal supera las pruebas de coexistencia.
+          whatsappModule: configuredFeatures.whatsappModule === true,
+          whatsappChat: configuredFeatures.whatsappChat === true,
+          whatsappReadOnly: configuredFeatures.whatsappReadOnly === true,
           // Si la lectura de permisos falla, Caja permanece cerrada en la UI.
           // La RLS del servidor continúa siendo la autoridad.
           caja: cajaPolicy?.enabled === true,

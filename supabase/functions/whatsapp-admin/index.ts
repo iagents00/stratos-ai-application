@@ -1180,15 +1180,19 @@ Deno.serve(async (req) => {
     if (action === "approve_tests") {
       const runId = String(body.run_id ?? "");
       const checks = body.checks as Record<string, unknown> | undefined;
-      const required = ["inbound", "outbound", "media", "isolation"];
+      const required = ["inbound", "lead", "advisor", "isolation"];
       if (!checks || required.some(key => checks[key] !== true)) {
-        return respond({ ok: false, error: "Deben pasar entrada, salida, multimedia y aislamiento." }, 400, origin);
+        return respond({ ok: false, error: "Deben pasar entrada, registro del lead, asignación e aislamiento." }, 400, origin);
       }
       const { data: run } = await admin.from("whatsapp_onboarding_runs").select("id,organization_id,phone_e164,phone_number_id,status").eq("id", runId).maybeSingle();
       if (!run || run.status !== "ready_to_test") return respond({ ok: false, error: "El canal todavía no está listo para aprobar pruebas." }, 409, origin);
       if (!await organizationIsVisible(run.organization_id)) {
         return respond({ ok: false, error: "No tienes acceso a esa empresa." }, 403, origin);
       }
+      const { error: featureError } = await admin.rpc("fn_activate_whatsapp_readonly", {
+        p_organization_id: run.organization_id,
+      });
+      if (featureError) throw featureError;
       await admin.from("whatsapp_onboarding_runs").update({ status: "active", verified_at: new Date().toISOString() }).eq("id", runId);
       if (run.phone_number_id) {
         await admin.from("whatsapp_numero_asesor").update({ estado_conexion: "CONNECTED", verificado_at: new Date().toISOString(), ultimo_error: null }).eq("phone_number_id", run.phone_number_id);

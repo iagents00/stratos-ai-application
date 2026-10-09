@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**245 archivos · 80.503 líneas**
+**245 archivos · 80.507 líneas**
 
 ---
 
@@ -109,7 +109,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `navigation.js` | 405 | Configuración de navegación y permisos por módulo. |
+| `navigation.js` | 399 | Configuración de navegación y permisos por módulo. |
 | `intelFeatures.js` | 211 | _sin describir_ |
 | `pipeline.js` | 129 | _sin describir_ |
 | `areas.js` | 97 | _sin describir_ |
@@ -172,7 +172,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `index.jsx` | 1223 | Panel "Control de Zooms" — pestaña dentro de Comando Directivo (Duke). |
 | `Profile.jsx` | 1149 | vista de perfil del asesor. |
 | `ComandoDirectivo.jsx` | 962 | _sin describir_ |
-| `LeadWhatsAppChat.jsx` | 942 | _sin describir_ |
+| `LeadWhatsAppChat.jsx` | 945 | _sin describir_ |
 | `RRHHModule.jsx` | 846 | _sin describir_ |
 | `InformeAvances.jsx` | 747 | _sin describir_ |
 | `ERP.jsx` | 719 | _sin describir_ |
@@ -343,7 +343,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `AuthContext.jsx` | 376 | Estado global de autenticación — conectado a Supabase Auth. |
 | `ClientOrgGuard.jsx` | 79 | _sin describir_ |
 | `ClientContext.jsx` | 63 | _sin describir_ |
-| `TenantConfigGate.jsx` | 55 | _sin describir_ |
+| `TenantConfigGate.jsx` | 62 | _sin describir_ |
 
 ### `src/data/`
 
@@ -534,8 +534,8 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Acciones de cierre IA | `src/app/views/CRM/components.jsx:5616` |
 | Acciones por bloque | `src/app/features/Admin/RailsSettings.jsx:79` |
 | Activa tu Copilot AI | `src/app/views/Copilot.jsx:1977` |
-| Activar canal | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:233` |
 | Activar para el equipo | `src/app/features/Admin/RailsSettings.jsx:72` |
+| Activar solo lectura | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:233` |
 | Actividad del equipo IA — hoy | `src/app/views/IACRM.jsx:299` |
 | Actividad reciente | `src/app/views/CRM/index.jsx:5900` |
 | Actividad y alertas | `src/app/features/Admin/PlatformAdminConsole.jsx:108` |
@@ -549,7 +549,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Actualizar | `src/app/features/Admin/CatalogConfiguratorAdmin.jsx:117` |
 | Actualizar tablero | `src/app/views/ISpaceBoard.jsx:102` |
 | Adjuntar | `src/app/views/ChatEquipo.jsx:481` |
-| Adjuntar imagen, audio o archivo | `src/app/views/CRM/LeadWhatsAppChat.jsx:843` |
+| Adjuntar imagen, audio o archivo | `src/app/views/CRM/LeadWhatsAppChat.jsx:846` |
 | Adjuntar PDF, documento o audio | `src/app/views/CRM/components.jsx:1830` |
 | Administrador | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:199` |
 | Administrador de demostración | `src/dental-demo/DentalIdentity.jsx:3` |
@@ -745,7 +745,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Crear administrador partner | `src/app/features/Admin/PlatformAdminConsole.jsx:79` |
 
 
-_(685 textos más — usá `npm run buscar "texto"`)_
+_(686 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -763,7 +763,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/landing/manual-content.js` (1004 líneas)
 - `src/landing/Diagnostico.jsx` (974 líneas)
 - `src/app/views/ComandoDirectivo.jsx` (962 líneas)
-- `src/app/views/CRM/LeadWhatsAppChat.jsx` (942 líneas)
+- `src/app/views/CRM/LeadWhatsAppChat.jsx` (945 líneas)
 - `src/landing/DeliveryHubCRM.jsx` (881 líneas)
 - `src/app/views/RRHHModule.jsx` (846 líneas)
 - `src/app/features/Admin/Rails.css` (832 líneas)
@@ -873,4 +873,5 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/CRM/command-report.js` (63 líneas)
 - `src/contexts/ClientContext.jsx` (63 líneas)
 - `src/dental-demo/DentalDemo.jsx` (63 líneas)
+- `src/contexts/TenantConfigGate.jsx` (62 líneas)
 - `src/lib/telefono.js` (61 líneas)
