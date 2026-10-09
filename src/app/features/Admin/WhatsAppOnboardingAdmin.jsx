@@ -50,7 +50,7 @@ export default function WhatsAppOnboardingAdmin({ T, onBack }) {
   const [channelForm, setChannelForm] = useState(EMPTY_CHANNEL);
   const [credentials, setCredentials] = useState(null);
   const [testRun, setTestRun] = useState(null);
-  const [checks, setChecks] = useState({ inbound: false, outbound: false, media: false, isolation: false });
+  const [checks, setChecks] = useState({ inbound: false, lead: false, advisor: false, isolation: false });
 
   const refresh = useCallback(async () => {
     setLoading(true); setError("");
@@ -158,7 +158,7 @@ export default function WhatsAppOnboardingAdmin({ T, onBack }) {
     setChannelForm(p => ({ ...EMPTY_CHANNEL, organization_id: p.organization_id }));
   };
 
-  const approve = () => runAction("approve", () => approveWhatsAppTests(testRun.id, checks), "Canal activado después de verificar las cuatro pruebas.").then(() => { setTestRun(null); setChecks({ inbound: false, outbound: false, media: false, isolation: false }); });
+  const approve = () => runAction("approve", () => approveWhatsAppTests(testRun.id, checks), "Canal activado en modo solo lectura después de verificar las cuatro pruebas.").then(() => { setTestRun(null); setChecks({ inbound: false, lead: false, advisor: false, isolation: false }); });
 
   return (
     <div style={{ padding: "22px 24px 60px", color: T.txt, fontFamily: font, overflowY: "auto" }}>
@@ -207,7 +207,7 @@ export default function WhatsAppOnboardingAdmin({ T, onBack }) {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9, marginTop: 10 }}><div><label style={label}>Propietario</label><select style={input} value={channelForm.owner_type} onChange={e => setChannelForm(p => ({ ...p, owner_type: e.target.value }))}><option value="company">Empresa</option><option value="advisor">Asesor</option></select></div><div><label style={label}>Asignar a</label><select style={input} value={channelForm.advisor_id} onChange={e => setChannelForm(p => ({ ...p, advisor_id: e.target.value }))}><option value="">Sin asignar</option>{selectedProfiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div></div>
           <label style={{ ...label, marginTop: 10 }}>Número internacional</label><input style={input} value={channelForm.phone_e164} onChange={e => setChannelForm(p => ({ ...p, phone_e164: e.target.value }))} placeholder="+57 300 123 4567" />
           <button onClick={startQuickRegistration} disabled={!data?.provider?.portalRegistrationReady || busy === "quick-channel"} style={{ ...button, width: "100%", marginTop: 13, opacity: data?.provider?.portalRegistrationReady ? 1 : .5 }}>{busy === "quick-channel" ? <Loader2 size={14} /> : <ExternalLink size={14} />} Registro rápido con Infobip</button>
-          <div style={{ color: T.txt3, fontSize: 11.5, lineHeight: 1.5, marginTop: 8 }}>Abre directamente WhatsApp → Remitentes en Infobip. Pulsa “Registrar remitente”, elige coexistencia, escanea el QR y selecciona “Don’t share chats”. Si debes iniciar sesión, Infobip te devolverá automáticamente a Remitentes.</div>
+          <div style={{ color: T.txt3, fontSize: 11.5, lineHeight: 1.5, marginTop: 8 }}>Abre directamente WhatsApp → Remitentes en Infobip. Pulsa “Registrar remitente”, elige coexistencia, escanea el QR y selecciona “Don’t share chats”, como exige este flujo de Infobip. Esa opción evita intentar importar el historial anterior; desde la activación, el equipo seguirá atendiendo en WhatsApp Business y Stratos registrará los mensajes nuevos en modo solo lectura.</div>
           <button onClick={connect} disabled={!providerReady || busy === "meta" || busy === "channel"} style={{ ...button, width: "100%", marginTop: 10, background: "transparent", borderColor: T.border, color: T.txt2, opacity: providerReady ? 1 : .5 }}>{busy === "meta" || busy === "channel" ? <Loader2 size={14} /> : <ExternalLink size={14} />} Alta automática Stratos</button>
         </section>
       </div>
@@ -230,7 +230,7 @@ export default function WhatsAppOnboardingAdmin({ T, onBack }) {
         )}
       </section>
 
-      {testRun && <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,.72)", display: "grid", placeItems: "center", padding: 18 }}><div style={{ ...card, width: "min(520px,100%)", background: T.bg }}><h3 style={{ margin: "0 0 6px" }}>Prueba final del canal</h3><p style={{ color: T.txt3, fontSize: 12.5, lineHeight: 1.55 }}>Confirma únicamente después de hacer pruebas reales. El canal no se activa con el estado de registro solamente.</p>{[["inbound","Mensaje entrante llegó al CRM"],["outbound","Respuesta del CRM llegó al teléfono"],["media","Imagen o audio funcionó"],["isolation","El mensaje quedó en la empresa correcta"]].map(([key,text]) => <label key={key} style={{ display: "flex", gap: 9, alignItems: "center", padding: "8px 0", fontSize: 13 }}><input type="checkbox" checked={checks[key]} onChange={e => setChecks(p => ({ ...p, [key]: e.target.checked }))} />{text}</label>)}<div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 14 }}><button onClick={() => setTestRun(null)} style={{ ...button, background: "transparent", borderColor: T.border, color: T.txt2 }}>Cancelar</button><button onClick={approve} disabled={busy === "approve"} style={button}>Activar canal</button></div></div></div>}
+      {testRun && <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,.72)", display: "grid", placeItems: "center", padding: 18 }}><div style={{ ...card, width: "min(520px,100%)", background: T.bg }}><h3 style={{ margin: "0 0 6px" }}>Prueba final del canal</h3><p style={{ color: T.txt3, fontSize: 12.5, lineHeight: 1.55 }}>Confirma únicamente después de hacer pruebas reales de coexistencia. Stratos no enviará mensajes: el equipo seguirá respondiendo desde WhatsApp Business.</p>{[["inbound","Mensaje nuevo apareció en el CRM"],["lead","El lead se creó o actualizó automáticamente"],["advisor","El lead quedó asignado al asesor correcto"],["isolation","El mensaje quedó solamente en la empresa correcta"]].map(([key,text]) => <label key={key} style={{ display: "flex", gap: 9, alignItems: "center", padding: "8px 0", fontSize: 13 }}><input type="checkbox" checked={checks[key]} onChange={e => setChecks(p => ({ ...p, [key]: e.target.checked }))} />{text}</label>)}<div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 14 }}><button onClick={() => setTestRun(null)} style={{ ...button, background: "transparent", borderColor: T.border, color: T.txt2 }}>Cancelar</button><button onClick={approve} disabled={busy === "approve"} style={button}>Activar solo lectura</button></div></div></div>}
     </div>
   );
 }
