@@ -199,6 +199,43 @@ try {
   );
   ok("Provider message ID is idempotent");
 
+  const appEcho = {
+    eventType: "BUSINESS_APP_MESSAGE_ECHO",
+    results: [
+      {
+        integrationType: "WHATSAPP",
+        direction: "OUT",
+        from: "+57 300 000 0001",
+        to: "+57 311 111 1111",
+        messageId: "echo-org-1",
+        receivedAt: "2026-10-09T15:02:00Z",
+        contact: { userId: "573111111111", name: "Cliente Uno" },
+        message: { type: "TEXT", text: "Claro, te envío la información" },
+      },
+    ],
+  };
+  const echoResult = (await callAsService(appEcho)).rows[0].result;
+  assert.equal(echoResult.echoed, 1);
+  assert.equal(echoResult.created, 0);
+  const echoMessage = (
+    await db.query(
+      "select direction, sender_name, sender_type from public.whatsapp_messages where provider_message_id = 'echo-org-1'",
+    )
+  ).rows[0];
+  assert.equal(echoMessage.direction, "out");
+  assert.equal(echoMessage.sender_name, "Asesor Uno");
+  assert.equal(echoMessage.sender_type, "advisor");
+  assert.equal(
+    (await db.query("select count(*)::int n from public.leads where organization_id = $1", [org1]))
+      .rows[0].n,
+    1,
+  );
+  ok("Business App echoes complete the read-only conversation without duplicating leads");
+
+  const duplicateEcho = (await callAsService(appEcho)).rows[0].result;
+  assert.equal(duplicateEcho.duplicate, 1);
+  ok("Business App echoes are idempotent");
+
   const bsuidPayload = {
     results: [
       {
@@ -235,7 +272,7 @@ try {
         `select count(*)::int n from public.whatsapp_messages where organization_id = '${org1}'`,
       )
     ).rows[0].n,
-    1,
+    2,
   );
   ok("BSUID-only contacts remain isolated in the correct tenant");
 

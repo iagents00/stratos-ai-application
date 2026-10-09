@@ -28,7 +28,9 @@ test("The mirror supports privacy identifiers and does not require Chatwoot", ()
   assert.match(migration, /whatsapp_bsuid/);
   assert.match(migration, /contact,userId/);
   assert.match(migration, /alter column chatwoot_conversation_id drop not null/);
-  assert.match(migration, /'in', v_text/);
+  assert.match(migration, /BUSINESS_APP_MESSAGE_ECHO/);
+  assert.match(migration, /infobip_business_app_echo/);
+  assert.match(migration, /lower\(v_direction\), v_text/);
 });
 
 test("Coexistence UI is available to tenant roles but remains read-only", () => {
