@@ -3,8 +3,8 @@
 -- Espejo de WhatsApp Business App -> CRM, SOLO LECTURA y multiempresa.
 --
 -- El usuario sigue atendiendo desde WhatsApp Business. Infobip entrega los
--- mensajes entrantes a n8n y esta RPC resuelve empresa + asesor usando el
--- numero destinatario registrado en whatsapp_numero_asesor. El payload NUNCA
+-- mensajes nuevos y sus ecos a n8n y esta RPC resuelve empresa + asesor usando
+-- el numero empresarial registrado en whatsapp_numero_asesor. El payload NUNCA
 -- puede elegir organization_id ni asesor_id.
 --
 -- Incluye BSUID (contact.userId): desde 2026 Meta puede ocultar el telefono de
@@ -120,8 +120,11 @@ declare
   v_inbox uuid;
   v_message uuid;
   v_new boolean;
+  v_direction text;
+  v_source text;
   v_event jsonb;
   v_received integer := 0;
+  v_echoed integer := 0;
   v_created integer := 0;
   v_duplicate integer := 0;
   v_ignored integer := 0;
@@ -132,9 +135,10 @@ begin
       using errcode = '22023';
   end if;
 
-  -- Infobip tambien puede enviar ecos de sincronizacion con otra forma.
+  -- Los eventos de Subscriptions llegan con otra envoltura. n8n debe
+  -- normalizarlos a results[] y marcar BUSINESS_APP_MESSAGE_ECHO como OUT.
   if payload ? 'entry' and not payload ? 'results' then
-    return jsonb_build_object('ok', true, 'ignored', 'business_app_echo');
+    return jsonb_build_object('ok', true, 'ignored', 'normalization_required');
   end if;
 
   if jsonb_typeof(payload->'results') is distinct from 'array' then
@@ -157,7 +161,21 @@ begin
       continue;
     end if;
 
-    v_recipient := public.fn_phone_canon(r->>'to');
+    v_direction := upper(coalesce(
+      nullif(btrim(r->>'direction'), ''),
+      case when upper(coalesce(payload->>'eventType', payload->>'event', '')) =
+        'BUSINESS_APP_MESSAGE_ECHO' then 'OUT' else 'IN' end
+    ));
+    if v_direction not in ('IN', 'OUT') then
+      raise exception 'Unsupported WhatsApp direction: %', v_direction
+        using errcode = '22023';
+    end if;
+    v_source := case when v_direction = 'OUT'
+      then 'infobip_business_app_echo' else 'infobip' end;
+
+    -- IN: el numero empresarial es destinatario. OUT/echo: es remitente.
+    v_recipient := public.fn_phone_canon(case
+      when v_direction = 'OUT' then r->>'from' else r->>'to' end);
     if v_recipient is null then
       raise exception 'Missing Infobip recipient' using errcode = '22023';
     end if;
@@ -193,7 +211,10 @@ begin
         using errcode = '22023';
     end if;
 
-    v_from := nullif(btrim(r->>'from'), '');
+    -- La identidad del contacto siempre queda del lado opuesto al numero
+    -- empresarial, independientemente de la direccion del mensaje.
+    v_from := nullif(btrim(case
+      when v_direction = 'OUT' then r->>'to' else r->>'from' end), '');
     v_user_id := nullif(btrim(r#>>'{contact,userId}'), '');
     v_bsuid := case
       when v_user_id ~ '^[A-Za-z]{2}\.[A-Za-z0-9._-]{1,147}$' then v_user_id
@@ -273,7 +294,7 @@ begin
       whatsapp_bsuid, whatsapp_username, message_text, media_urls,
       raw_payload, received_at, provider_message_id
     ) values (
-      v_org, 'infobip', v_channel, v_recipient, v_advisor,
+      v_org, v_source, v_channel, v_recipient, v_advisor,
       case when v_phone is not null then '+' || v_phone end, v_phone, v_name,
       v_bsuid, v_username, v_text, v_media,
       r, v_time, v_message_id
@@ -320,9 +341,14 @@ begin
     from public.organizations o where o.id = v_org;
 
     v_event := jsonb_build_object(
-      'id', v_inbox, 'type', 'whatsapp_inbound', 'source', 'infobip',
+      'id', v_inbox,
+      'type', case when v_direction = 'OUT'
+        then 'whatsapp_business_app_echo' else 'whatsapp_inbound' end,
+      'source', v_source,
       'created_at', v_time, 'at', v_time, 'by', 'WhatsApp Business',
-      'action', 'WhatsApp recibido: ' || left(v_text, 500),
+      'action', case when v_direction = 'OUT'
+        then 'WhatsApp enviado desde la app: ' || left(v_text, 500)
+        else 'WhatsApp recibido: ' || left(v_text, 500) end,
       'message_preview', left(v_text, 500), 'inbox_id', v_inbox,
       'provider_message_id', v_message_id, 'channel_id', v_channel
     );
@@ -337,7 +363,9 @@ begin
         case when v_phone is not null then '+' || v_phone end,
         case when v_phone is not null then '+' || v_phone end,
         coalesce(v_from, v_bsuid), v_bsuid, v_username,
-        'whatsapp_inbound', v_stage, v_advisor, v_advisor_name,
+        case when v_direction = 'OUT'
+          then 'whatsapp_business_app' else 'whatsapp_inbound' end,
+        v_stage, v_advisor, v_advisor_name,
         v_time, v_time::text, true, jsonb_build_array(v_event)
       ) returning id into v_lead;
       v_created := v_created + 1;
@@ -370,7 +398,9 @@ begin
       channel_id, whatsapp_bsuid, whatsapp_username
     ) values (
       v_org, v_lead, null,
-      'in', v_text, lower(v_type), v_name, 'contact',
+      lower(v_direction), v_text, lower(v_type),
+      case when v_direction = 'OUT' then coalesce(v_advisor_name, 'WhatsApp Business') else v_name end,
+      case when v_direction = 'OUT' then 'advisor' else 'contact' end,
       v_time, v_media, 'infobip', v_message_id,
       v_channel, v_bsuid, v_username
     )
@@ -385,7 +415,7 @@ begin
       v_org, v_lead, v_advisor, 'whatsapp', left(v_text, 280),
       v_text, v_time,
       jsonb_build_object(
-        'source', 'infobip', 'inbox_id', v_inbox,
+        'source', v_source, 'direction', lower(v_direction), 'inbox_id', v_inbox,
         'provider_message_id', v_message_id, 'recipient', v_recipient,
         'channel_id', v_channel, 'media', v_media,
         'whatsapp_bsuid', v_bsuid, 'whatsapp_username', v_username,
@@ -393,18 +423,22 @@ begin
       )
     );
 
-    v_received := v_received + 1;
+    if v_direction = 'OUT' then
+      v_echoed := v_echoed + 1;
+    else
+      v_received := v_received + 1;
+    end if;
   end loop;
 
   return jsonb_build_object(
-    'ok', true, 'received', v_received, 'created', v_created,
+    'ok', true, 'received', v_received, 'echoed', v_echoed, 'created', v_created,
     'duplicate', v_duplicate, 'ignored', v_ignored, 'errors', v_errors
   );
 end;
 $function$;
 
 comment on function public.fn_ingest_infobip_multitenant(jsonb) is
-  'Ingesta solo lectura de Infobip. Resuelve tenant/asesor por el destinatario activo y espeja mensajes entrantes en el CRM; soporta BSUID.';
+  'Espejo solo lectura de Infobip. Resuelve tenant/asesor por el numero empresarial activo y guarda mensajes entrantes y ecos de WhatsApp Business App; soporta BSUID.';
 
 revoke all on function public.fn_ingest_infobip_multitenant(jsonb)
   from public, anon, authenticated;
