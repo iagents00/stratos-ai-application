@@ -1006,6 +1006,15 @@ const LandingPages = ({ T = P }) => {
   const { user } = useAuth();
   const orgId = user?.organizationId;
   const storageKey = (name) => `stratos_create:${orgId}:${user?.id}:${name}`;
+  // Before external-company opt-in, these legacy drafts could only be made
+  // in Duke. Keep them available there without importing them into new tenants.
+  const readDraft = (name, legacyKey, fallback) => {
+    try {
+      const scoped = localStorage.getItem(storageKey(name));
+      const legacy = orgId === "00000000-0000-0000-0000-000000000001" ? localStorage.getItem(legacyKey) : null;
+      return JSON.parse(scoped || legacy || fallback);
+    } catch { return JSON.parse(fallback); }
+  };
   const publicOrigin = portfolioOrigin(window.location.origin);
   const [catalogRows, setCatalogRows] = useState([]);
   const [catalogError, setCatalogError] = useState("");
@@ -1034,7 +1043,7 @@ const LandingPages = ({ T = P }) => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const isMobile = useIsMobile();
   const [customProperties, setCustomProperties] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(storageKey("properties")) || "[]"); } catch { return []; }
+    return readDraft("properties", "stratos_custom_props", "[]");
   });
   const [showNewPropModal, setShowNewPropModal] = useState(false);
   const [editingProp, setEditingProp] = useState(null);
@@ -1060,7 +1069,7 @@ const LandingPages = ({ T = P }) => {
   const [catSearch, setCatSearch] = useState("");
   // Drive links per property (id → url), persisted in localStorage
   const [driveLinks, setDriveLinks] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(storageKey("driveLinks")) || "{}"); } catch { return {}; }
+    return readDraft("driveLinks", "stratos_drive_links", "{}");
   });
   const [editingLinkId, setEditingLinkId] = useState(null);
   const [editLinkValue, setEditLinkValue] = useState("");
@@ -1129,7 +1138,7 @@ const LandingPages = ({ T = P }) => {
     if (catalogRows.length) return catalogToLandingProps([{ id: "catalogo", items: catalogRows.map(row => ({ ...row, entregaComo: row.entrega_como })) }]);
     return orgId === "00000000-0000-0000-0000-000000000001" ? catalogToLandingProps() : [];
   }, [catalogRows, orgId]);
-  const allProperties = useMemo(() => [...customProperties, ...catalogProps], [customProperties, catalogProps]);
+  const allProperties = useMemo(() => [...customProperties, ...catalogProps, ...(orgId === "00000000-0000-0000-0000-000000000001" ? rivieraProperties : [])], [customProperties, catalogProps, orgId]);
 
   const inBudget = (p) => (!p.priceTo || p.priceTo <= 0) ? true : (p.priceFrom <= clientBudgetMax && p.priceTo >= clientBudgetMin);
   const filteredProperties = useMemo(() => {
