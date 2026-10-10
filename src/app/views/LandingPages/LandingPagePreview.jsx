@@ -21,6 +21,8 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
   // arranca más abajo para no quedar tapado (captura IMG_8504: botones desbordados).
   const topBarH = isMobile ? 104 : 56;
   const [activeProperty, setActiveProperty] = useState(0);
+  const [messageCopied, setMessageCopied] = useState(false);
+  const [copyError, setCopyError] = useState("");
   const [showSharePanel, setShowSharePanel] = useState(false);
 
   const currentProp = properties[activeProperty] || properties[0];
@@ -108,8 +110,8 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
             <div style={{ marginBottom: 16 }}>
               <p style={{ fontSize: 12, color: T.txt2, marginBottom: 8, fontWeight: 400, letterSpacing: "0.04em", textTransform: "uppercase" }}>Enlace de la landing page</p>
               <div style={{ display: "flex", gap: 8 }}>
-                <input readOnly value={demoShareUrl} style={{ flex: 1, padding: "10px 14px", borderRadius: 9, fontSize: 12, background: T.glass, border: `1px solid ${T.border}`, color: T.txt3, fontFamily: font, outline: "none" }} onClick={e => e.target.select()} />
-                <button onClick={() => { onCopyLink(); navigator.clipboard.writeText(demoShareUrl).catch(()=>{}); }} style={{
+                <input readOnly value={demoShareUrl} style={{ flex: 1, minWidth: 0, padding: "10px 14px", borderRadius: 9, fontSize: 12, background: T.glass, border: `1px solid ${T.border}`, color: T.txt3, fontFamily: font, outline: "none" }} onClick={e => e.target.select()} />
+                <button onClick={onCopyLink} style={{
                   padding: "10px 18px", borderRadius: 9, border: "none",
                   background: copied ? T.emerald : T.accent, color: "#000",
                   fontSize: 12.5, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp,
@@ -121,12 +123,13 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
               </div>
             </div>
 
+            {copyError && <p role="alert">{copyError}</p>}
             {/* WhatsApp option */}
             <div style={{ marginBottom: 12 }}>
               <p style={{ fontSize: 12, color: T.txt2, marginBottom: 8, fontWeight: 400, letterSpacing: "0.04em", textTransform: "uppercase" }}>Enviar por WhatsApp</p>
               {waUrl ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <a href={`https://wa.me/${waPhone}?text=${encodeURIComponent(`Hola ${client || "estimado cliente"}, te comparto la presentación exclusiva de propiedades que seleccioné para ti:\n${demoShareUrl}`)}`}
+                  <a href={`https://wa.me/?text=${encodeURIComponent(`Hola ${client || "estimado cliente"}, te comparto la presentación exclusiva de propiedades que seleccioné para ti:\n${demoShareUrl}`)}`}
                     target="_blank" rel="noreferrer"
                     style={{
                       display: "flex", alignItems: "center", gap: 10, padding: "12px 18px",
@@ -135,11 +138,11 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                       transition: "all 0.2s",
                     }}
                   >
-                    <Phone size={16} /> Abrir WhatsApp con cliente
+                    <Phone size={16} /> Elegir cliente en WhatsApp
                   </a>
                   <button onClick={() => {
                     const waMsg = `Hola ${client || "estimado cliente"} 🏡\n\nPrepare una presentación exclusiva con propiedades seleccionadas especialmente para ti.\n\nVe las propiedades aquí:\n${demoShareUrl}\n\n¿Cuándo te viene bien una llamada para revisarlas juntos?`;
-                    navigator.clipboard.writeText(waMsg).then(() => onCopyLink()).catch(() => {});
+                    navigator.clipboard.writeText(waMsg).then(() => { setMessageCopied(true); setCopyError(""); }).catch(() => setCopyError("No se pudo copiar el mensaje."));
                   }} style={{
                     display: "flex", alignItems: "center", gap: 8, padding: "10px 16px",
                     borderRadius: 9, background: T.glass, border: `1px solid ${T.border}`,
@@ -148,7 +151,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                     onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#fff"; }}
                     onMouseLeave={e => { e.currentTarget.style.background = T.glass; e.currentTarget.style.color = T.txt2; }}
                   >
-                    <Copy size={13} /> Copiar mensaje completo para WhatsApp
+                    <Copy size={13} /> {messageCopied ? "Mensaje copiado" : "Copiar mensaje completo para WhatsApp"}
                   </button>
                 </div>
               ) : (
@@ -271,7 +274,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
             <p style={{ fontSize: 13, color: UI.lo, fontFamily: font, marginBottom: 14, fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", animation: "fadeInUp .65s .06s ease both" }}>Preparado para</p>
             <h1 style={{ fontSize: "clamp(42px, 8.6vw, 84px)", fontWeight: 600, color: UI.hi, fontFamily: fontDisp, letterSpacing: "-0.035em", lineHeight: 1.01, marginBottom: 22, animation: "fadeInUp .7s .12s ease both" }}>{client || "Estimado Cliente"}</h1>
             <p style={{ fontSize: "clamp(15px, 2.1vw, 19px)", color: UI.mid, fontFamily: font, lineHeight: 1.6, maxWidth: 620, marginBottom: 34, animation: "fadeInUp .72s .18s ease both" }}>
-              {mensaje || "Una selección curada de las mejores oportunidades de inversión en la Riviera Maya, elegidas específicamente para tus objetivos."}
+              {mensaje || "Una selección de propiedades preparada para tus objetivos."}
             </p>
             <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", animation: "fadeInUp .74s .24s ease both" }}>
               {renderCTAs()}
@@ -279,7 +282,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
             <div style={{ display: "flex", marginTop: "clamp(44px, 7vh, 72px)", flexWrap: "wrap", rowGap: 22, animation: "fadeInUp .78s .3s ease both" }}>
               {[
                 { l: "Propiedades", v: properties.length },
-                { l: "ROI estimado", v: "8–13%" },
+
                 { l: "Ubicaciones", v: [...new Set(properties.map(p => p.location))].length },
               ].map((st, i) => (
                 <div key={st.l} style={{ paddingLeft: i ? "clamp(20px,4vw,42px)" : 0, marginLeft: i ? "clamp(20px,4vw,42px)" : 0, borderLeft: i ? `1px solid ${UI.hair}` : "none" }}>
@@ -393,8 +396,8 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
           </div>
         </section>
 
-        {/* MERCADO */}
-        <section style={{ background: UI.page, padding: `${UI.sec} ${UI.pad}`, borderTop: `1px solid ${UI.hair2}` }}>
+        {/* Legacy reference is not presented as company-specific market data. */}
+        {agencyName === "STRATOS REALTY" && <section style={{ background: UI.page, padding: `${UI.sec} ${UI.pad}`, borderTop: `1px solid ${UI.hair2}` }}>
           <div style={{ maxWidth: UI.maxW, margin: "0 auto" }}>
             <div style={{ marginBottom: "clamp(30px,5vw,50px)", maxWidth: 640 }}>
               <p style={{ fontSize: 12.5, color: acc, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 14, fontFamily: fontDisp }}>El mercado</p>
@@ -446,7 +449,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
               </div>
             </div>
           </div>
-        </section>
+        </section>}
 
         {/* CTA */}
         <section style={{ position: "relative", overflow: "hidden", background: UI.panel, padding: `${UI.sec} ${UI.pad}`, textAlign: "center", borderTop: `1px solid ${UI.hair2}` }}>
@@ -463,7 +466,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
 
         {/* FOOTER */}
         <footer style={{ background: UI.page, padding: `40px ${UI.pad}`, borderTop: `1px solid ${UI.hair2}`, textAlign: "center" }}>
-          <p style={{ fontSize: 12, color: UI.lo, fontFamily: font, lineHeight: 1.7 }}>Riviera Maya, México · Presentación confidencial para {client || "el cliente"}</p>
+          <p style={{ fontSize: 12, color: UI.lo, fontFamily: font, lineHeight: 1.7 }}>{agencyName || "Stratos"} · Presentación confidencial para {client || "el cliente"}</p>
           <p style={{ fontSize: 11.5, color: "rgba(246,248,251,0.28)", marginTop: 6, fontFamily: font }}>{asesor ? `Asesor: ${asesor} · ` : ""}{new Date().toLocaleDateString("es-MX", { month: "long", year: "numeric" })} · Precios en USD · Sujeto a disponibilidad</p>
         </footer>
 

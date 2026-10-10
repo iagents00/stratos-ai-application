@@ -14,7 +14,7 @@
  * comparte como /p#d=<base64url> auto-contenido (el cliente la abre sin login y
  * sin backend). Ver PublicLanding.jsx.
  */
-import { CATALOGO_SECCIONES } from "../../data/catalogoProyectos";
+import { CATALOGO_SECCIONES } from "../../data/catalogoProyectos.js";
 
 const ACCENTS = ["#6EE7C2", "#7EB8F0", "#A78BFA", "#F0B86E", "#5DC8D9", "#86EFAC", "#F0A3BB", "#93C5FD", "#67E8C3", "#B7A6F3"];
 export const accentForName = (name = "") => {
@@ -29,7 +29,7 @@ export const gradientFor = (accent = "#6EE7C2") =>
 // Title-case suave para ubicaciones del Sheet ("Playa del carmen" → "Playa del Carmen").
 const MINOR = new Set(["de", "del", "la", "las", "los", "y", "el"]);
 const titleCase = (s = "") =>
-  s.trim().toLowerCase().split(/\s+/).map((w, i) =>
+  String(s || "").trim().toLowerCase().split(/\s+/).map((w, i) =>
     (i > 0 && MINOR.has(w)) ? w : w.charAt(0).toUpperCase() + w.slice(1)
   ).join(" ");
 
@@ -40,7 +40,7 @@ const TYPE_LABEL = {
   "CONDO LOCK OFF": "Condominio", "RENTA VACACIONAL": "Renta vacacional",
 };
 const typeLabel = (clase = "") => {
-  const c = clase.trim().toUpperCase();
+  const c = String(clase || "").trim().toUpperCase();
   if (!c || ["SIN INFO", "REPETIDO", "VENDIDO", "N/A"].includes(c)) return "";
   return TYPE_LABEL[c] || (c.length <= 16 ? titleCase(c) : "");
 };
@@ -74,7 +74,7 @@ const itemToProp = (it, secId, idx) => {
     it.mantenimiento && `Mantenimiento ${it.mantenimiento}`,
   ].filter(Boolean);
   return {
-    id: `cat:${secId}:${idx}`,
+    id: it.id ? `db:${it.id}` : `cat:${secId}:${idx}`,
     name,
     brand: "",
     location,
@@ -106,13 +106,13 @@ const itemToProp = (it, secId, idx) => {
 };
 
 /** Todas las propiedades del catálogo con carpeta de Drive, listas para el selector. */
-export const catalogToLandingProps = () => {
+export const catalogToLandingProps = (sections = CATALOGO_SECCIONES) => {
   const out = [];
   const seen = new Set();
-  for (const sec of CATALOGO_SECCIONES || []) {
+  for (const sec of sections || []) {
     (sec.items || []).forEach((it, idx) => {
       const name = (it.desarrollo || "").trim();
-      if (!name || !it.drive) return; // solo desarrollos con material de Drive
+      if (!name || (!it.drive && it.origen !== "app")) return; // solo desarrollos con material de Drive
       if (EXCLUDE_CLASS.has((it.clasificacion || "").trim().toUpperCase())) return;
       const key = name.toLowerCase();
       if (seen.has(key)) return; // el mismo desarrollo puede repetirse entre pestañas

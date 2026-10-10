@@ -287,6 +287,14 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
       && (clientConfig?.navLabels?.mkt || "").trim().toLowerCase() === "actividades"
       && MODULE_ROLES.mkt.includes(user.role)) return false;
 
+  // Explicit opt-in for organization-scoped property and presentation tools.
+  if (moduleId === "lp" || moduleId === "e") {
+    const feature = moduleId === "lp" ? "landingPages" : "erp";
+    if (clientConfig?.features?.[feature] === false) return false;
+    if (!isStratosOrg(user.organizationId) && clientConfig?.features?.[feature] !== true) return false;
+    return MODULE_ROLES[moduleId].includes(user.role);
+  }
+
   if (moduleId === "caja") {
     // Caja ahora vive como PESTAÑA dentro de Finanzas. Si el usuario tiene
     // acceso a Finanzas, no la mostramos como opción suelta (evita duplicar).

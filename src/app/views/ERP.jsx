@@ -107,6 +107,7 @@ const ERP = ({ oc, T: _T }) => {
      de DELETE no existe en la base, ni para admins). Viven en la tabla
      `catalogo_proyectos` con origen='app' y se mezclan con las del Sheet. ── */
   const [catalogRows, setCatalogRows] = useState([]);
+  const [catalogError, setCatalogError] = useState("");
   const [loadedCatalogOrgId, setLoadedCatalogOrgId] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [addForm, setAddForm] = useState(ADD_EMPTY);
@@ -117,6 +118,7 @@ const ERP = ({ oc, T: _T }) => {
   useEffect(() => {
     if (!orgId) return;
     let vivo = true;
+    setCatalogError("");
     supabase.from("catalogo_proyectos")
       .select("id, seccion, seccion_nombre, desarrollo, ubicacion, zona, masterbroker, ticket, clasificacion, tipologia, entrega, financiamiento, entrega_como, highlights, mantenimiento, contacto, asesor, drive, maps, origen")
       .eq("organization_id", orgId).eq("visible", true)
@@ -124,9 +126,9 @@ const ERP = ({ oc, T: _T }) => {
       .then(({ data, error }) => {
         if (!vivo) return;
         if (!error && data) setCatalogRows(data.map(r => ({ ...r, entregaComo: r.entrega_como, _app: r.origen === "app" })));
-        else setCatalogRows([]);
+        else { setCatalogRows([]); setCatalogError("No se pudo cargar el catálogo. Vuelve a abrir Proyectos para reintentar."); }
         setLoadedCatalogOrgId(orgId);
-      });
+      }).catch(() => { if (vivo) setCatalogError("No se pudo cargar el catálogo. Vuelve a abrir Proyectos para reintentar."); });
     return () => { vivo = false; };
   }, [orgId]);
 
@@ -283,6 +285,7 @@ const ERP = ({ oc, T: _T }) => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      {catalogError && <p role="alert" style={{ color: T.rose }}>{catalogError}</p>}
       {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(150px, 100%), 1fr))", gap: 14 }}>
         {/* Los subtítulos explican por qué el número de arriba no coincide con el
@@ -296,7 +299,7 @@ const ERP = ({ oc, T: _T }) => {
       </div>
 
       {/* Consulta del catálogo por Telegram */}
-      <div style={{
+      {orgId === DUKE_ORGANIZATION_ID && <div style={{
         display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
         padding: "14px 18px", borderRadius: 16,
         background: isLight ? "rgba(126,184,240,0.08)" : "rgba(126,184,240,0.06)",
@@ -320,7 +323,7 @@ const ERP = ({ oc, T: _T }) => {
             </span>
           ))}
         </div>
-      </div>
+      </div>}
 
       {/* Catálogo */}
       <G np T={T}>
@@ -416,7 +419,7 @@ const ERP = ({ oc, T: _T }) => {
                   fontFamily: fontDisp, opacity: addSaving || !addForm.desarrollo.trim() ? 0.6 : 1,
                 }}>{addSaving ? "Guardando…" : "Guardar propiedad"}</button>
                 <span style={{ fontSize: 12, color: addError ? "#F87171" : T.txt3, fontFamily: font }}>
-                  {addError || "La ve todo el equipo al instante — también el bot de Telegram. Las propiedades no se pueden eliminar."}
+                  {addError || "La ve el equipo de tu empresa desde cualquier dispositivo. Las propiedades no se pueden eliminar."}
                 </span>
               </div>
             </div>
