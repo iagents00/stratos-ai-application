@@ -46,7 +46,8 @@ test('company provisioning, auth assignment and database guards isolate tenants'
   assert.deepEqual((await db.query('select organization_id,role from profiles where id=$1',[id(10)])).rows[0],{organization_id:a,role:'admin'});
   await assert.rejects(newAuth(id(12),b,'asesor'),/licencias/);
   assert.equal((await db.query('select count(*)::int n from auth.users where id=$1',[id(12)])).rows[0].n,0,'Auth creation rolls back when no license remains');
-  await newAuth(id(13),null,null,{organization_id:duke,role:'super_admin'});
+  await newAuth(id(13),null,null,{organization_id:duke,role:'super_admin',recovery_email:'Recovery@Example.com'});
+  assert.equal((await db.query('select recovery_email from profiles where id=$1',[id(13)])).rows[0].recovery_email,'recovery@example.com');
   const forged=(await db.query('select organization_id,role from profiles where id=$1',[id(13)])).rows[0];
   assert.notEqual(forged.organization_id,duke); assert.equal(forged.role,'admin');
   await db.exec("select set_config('request.jwt.claim.role','authenticated',false)");

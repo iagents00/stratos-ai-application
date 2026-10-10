@@ -10,8 +10,10 @@ declare
   v_name text;
   v_org_name text;
   v_slug text;
+  v_recovery text;
 begin
   v_name := coalesce(nullif(btrim(new.raw_user_meta_data->>'name'), ''), split_part(new.email, '@', 1));
+  v_recovery := coalesce(nullif(lower(btrim(new.raw_user_meta_data->>'recovery_email')), ''), lower(new.email));
   v_org := nullif(new.raw_app_meta_data->>'stratos_organization_id', '')::uuid;
   if v_org is not null then
     if not exists(select 1 from public.organizations where id = v_org and active is true) then
@@ -31,7 +33,7 @@ begin
     v_role := 'admin';
   end if;
   insert into public.profiles (id, name, role, organization_id, recovery_email, active)
-    values (new.id, v_name, v_role, v_org, lower(new.email), true);
+    values (new.id, v_name, v_role, v_org, v_recovery, true);
   return new;
 end;
 $$;
