@@ -24,3 +24,11 @@ Fuentes oficiales consultadas: [Añadir y configurar dominios](https://vercel.co
 ## Publicación
 
 Aplicar solamente la migración 270 después de que el frontend que acepta códigos de hasta 64 caracteres esté desplegado. No ejecutar todo el historial SQL. Conserva los códigos existentes (incluidos nombres cortos y los de 40 caracteres que antes fallaban), no reescribe presentaciones ni activa Rails.
+
+## Tarjeta al compartir
+
+La sugerencia automática empieza con el nombre del cliente y reserva espacio para la agencia. Sigue siendo editable. La URL final agrega un código aleatorio, sin necesitar un dominio por cliente. La tarjeta Open Graph muestra «Portafolio para [cliente] · [agencia]», una descripción de la selección y la nueva portada. Se resuelve por código con la RPC pública; no usa credenciales administrativas. Se escapan los nombres antes de incluirlos en HTML. Los enlaces legacy con fragmento conservan la tarjeta genérica porque los fragmentos no llegan al servidor.
+
+La portada está en `public/og-portafolio-stratos-v2.png` (1730 × 909). Creada con la herramienta integrada ImageGen; texto «Portafolio personalizado», marca Stratos, fondo casi negro, letras blancas y acentos azul cielo. Prompt final: portada Open Graph horizontal minimalista y profesional; fondo #05080D, azul #7DD3FC, tipografía blanca; «Stratos» pequeño arriba, título en dos líneas «Portafolio» / «personalizado», línea inferior «Una selección de propiedades para ti», márgenes generosos y una regla azul fina; sin fotografías, edificios, objetos 3D, gradientes, tarjetas decorativas ni marcas de agua.
+
+La imagen es común a las presentaciones; el cliente y la agencia se personalizan en los metadatos de cada enlace. WhatsApp y otras plataformas deciden cuándo mostrar o refrescar la tarjeta y pueden mantener caché de enlaces antiguos. La prueba técnica comprueba HTML y PNG públicos con agente de rastreador; no envía mensajes a contactos.

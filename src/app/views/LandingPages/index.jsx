@@ -17,7 +17,7 @@ import LandingPagePreview from "./LandingPagePreview";
 import { catalogToLandingProps, encodeLanding } from "./catalogAdapter";
 import { useAuth } from "../../../hooks/useAuth";
 import { useIsMobile } from "../../../hooks/useViewport";
-import { normalizeLinkName } from "./link-name.js";
+import { normalizeLinkName, suggestedLinkName } from "./link-name.js";
 import { portfolioOrigin } from "./portfolio-origin.js";
 import { supabase } from "../../../lib/supabase";
 
@@ -1192,7 +1192,7 @@ const LandingPages = ({ T = P }) => {
     try {
       const d = encodeLanding({ client: clientName, mensaje, asesor, asesorWA, asesorCal, agencyName, properties: props, driveLinks });
       const { data: code, error } = await supabase.rpc("create_portfolio_link", {
-        p_payload: d, p_slug: normalizeLinkName(linkName ?? agencyName) || "portafolio",
+        p_payload: d, p_slug: normalizeLinkName(linkName ?? suggestedLinkName(clientName, agencyName)) || "portafolio",
       });
       if (error || typeof code !== "string" || !code) throw error || new Error("Sin enlace");
       const url = `${publicOrigin}/p/${code}`;
@@ -1609,14 +1609,14 @@ const LandingPages = ({ T = P }) => {
 
         <div style={{ marginBottom: 22 }}>
           <label htmlFor="create-link-name" style={{ fontSize: 13, color: T.txt, display: "block", marginBottom: 6 }}>Nombre del enlace</label>
-          <input id="create-link-name" value={linkName ?? agencyName} maxLength={80}
+          <input id="create-link-name" value={linkName ?? suggestedLinkName(clientName, agencyName)} maxLength={80}
             onChange={e => setLinkName(e.target.value)} aria-describedby="create-link-help"
             placeholder="Ej. Adoquín Inmobiliaria"
             style={{ width: "100%", boxSizing: "border-box", padding: "12px 16px", borderRadius: 10, fontSize: 14, background: T.glass, border: `1px solid ${T.border}`, color: T.txt, fontFamily: font }} />
           <p id="create-link-help" style={{ marginTop: 8, fontSize: 12, color: T.txt2, lineHeight: 1.6, overflowWrap: "anywhere" }}>
-            {publicOrigin}/p/{normalizeLinkName(linkName ?? agencyName) || "portafolio"}-código
+            {publicOrigin}/p/{normalizeLinkName(linkName ?? suggestedLinkName(clientName, agencyName)) || "portafolio"}-código
           </p>
-          <p style={{ marginTop: 6, fontSize: 12, color: T.txt2, lineHeight: 1.6 }}>Puedes usar el nombre de tu inmobiliaria o de la selección. Añadimos un código único. No necesitas comprar un dominio. Cualquier persona con el enlace podrá ver la presentación.</p>
+          <p style={{ marginTop: 6, fontSize: 12, color: T.txt2, lineHeight: 1.6 }}>El nombre se forma automáticamente con el cliente y tu inmobiliaria; puedes ajustarlo. Añadimos un código único. No necesitas comprar un dominio. Cualquier persona con el enlace podrá ver la presentación.</p>
           <details style={{ marginTop: 10, fontSize: 12, color: T.txt2, lineHeight: 1.6 }}>
             <summary style={{ cursor: "pointer" }}>¿Quieres usar tu propio dominio?</summary>
             <p>Solicita a tu administrador conectar un subdominio, por ejemplo propiedades.tuinmobiliaria.com. Requiere verificar el dominio y configurar su DNS antes de activarlo. Mientras tanto, este enlace funciona en cualquier dispositivo.</p>

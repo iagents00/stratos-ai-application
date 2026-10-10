@@ -269,7 +269,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
           <div style={{ position: "relative", zIndex: 1, maxWidth: UI.maxW, margin: "0 auto", width: "100%" }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 26, animation: "fadeInUp .6s ease both" }}>
               <StratosAtom size={20} color={acc} />
-              <span style={{ fontSize: 12, color: UI.mid, fontWeight: 600, fontFamily: fontDisp, letterSpacing: "0.24em", textTransform: "uppercase" }}>Portafolio Privado</span>
+              <span style={{ fontSize: 12, color: UI.mid, fontWeight: 600, fontFamily: fontDisp, letterSpacing: "0.24em", textTransform: "uppercase" }}>Portafolio Personalizado</span>
             </div>
             <p style={{ fontSize: 13, color: UI.lo, fontFamily: font, marginBottom: 14, fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", animation: "fadeInUp .65s .06s ease both" }}>Preparado para</p>
             <h1 style={{ fontSize: "clamp(42px, 8.6vw, 84px)", fontWeight: 600, color: UI.hi, fontFamily: fontDisp, letterSpacing: "-0.035em", lineHeight: 1.01, marginBottom: 22, animation: "fadeInUp .7s .12s ease both" }}>{client || "Estimado Cliente"}</h1>
@@ -466,7 +466,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
 
         {/* FOOTER */}
         <footer style={{ background: UI.page, padding: `40px ${UI.pad}`, borderTop: `1px solid ${UI.hair2}`, textAlign: "center" }}>
-          <p style={{ fontSize: 12, color: UI.lo, fontFamily: font, lineHeight: 1.7 }}>{agencyName || "Stratos"} · Presentación confidencial para {client || "el cliente"}</p>
+          <p style={{ fontSize: 12, color: UI.lo, fontFamily: font, lineHeight: 1.7 }}>{agencyName || "Stratos"} · Presentación personalizada para {client || "el cliente"}</p>
           <p style={{ fontSize: 11.5, color: "rgba(246,248,251,0.28)", marginTop: 6, fontFamily: font }}>{asesor ? `Asesor: ${asesor} · ` : ""}{new Date().toLocaleDateString("es-MX", { month: "long", year: "numeric" })} · Precios en USD · Sujeto a disponibilidad</p>
         </footer>
 
