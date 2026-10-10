@@ -1107,9 +1107,17 @@ export default function App() {
   // Cache local de leads en localStorage (stale-while-revalidate).
   // En F5/login pintamos esta versión cacheada al instante, mientras Supabase
   // responde. Cuando llega la respuesta fresca la reemplazamos.
-  // Scope por user.id para que distintas cuentas no se mezclen.
+  // Scope por usuario, organización y permisos para no mezclar carteras.
   // El listener de SIGNED_OUT en AuthContext ya limpia este storage.
-  const leadsCacheKey = user?.id ? `stratos.leads.cache.${user.id}` : null;
+  // Session refreshes replace the profile object, but do not change access.
+  // Only a real user/organization/role change should reload the entire portfolio.
+  const leadsScope = JSON.stringify([user?.id, user?.organizationId, user?.role, !!user?._offline, !!user?.isDemo]);
+  const leadsUserRef = useRef(user);
+  leadsUserRef.current = user;
+  const leadsScopeRef = useRef(leadsScope);
+  leadsScopeRef.current = leadsScope;
+  const leadsRequestRef = useRef(null);
+  const leadsCacheKey = user?.id ? `stratos.leads.cache.${leadsScope}` : null;
 
   const readLeadsCache = useCallback(() => {
     if (!leadsCacheKey) return null;
@@ -1150,62 +1158,65 @@ export default function App() {
   }, [leadsCacheKey]);
 
   const fetchLeads = useCallback(async ({ silent = false } = {}) => {
+    const user = leadsUserRef.current;
+    leadsRequestRef.current?.abort();
+    const controller = new AbortController();
+    leadsRequestRef.current = controller;
+    const current = () => !controller.signal.aborted && leadsScopeRef.current === leadsScope;
+    const cached = !silent ? readLeadsCache() : null;
     setLeadsLoadError(null);
     setLeadsRefreshing(true);
-    // Si NO es silent y hay cache, pintamos cache primero y dejamos
-    // leadsLoading=false (UX: leads aparecen al instante en F5/login).
-    // El fetch a la red continúa y reemplaza con datos frescos al volver.
-    const cached = !silent ? readLeadsCache() : null;
-    if (cached) {
-      setLeadsData(normalizeLeads(cached));
-      setLeadsLoading(false);
-      setLeadsRefreshing(true); // muestra "Actualizando lista…" hasta que llegue el set completo y se reordene
-    } else if (!silent) {
-      setLeadsLoading(true);
-    }
-
-    // Modo offline: cargar del JSON estático + overlay localStorage
-    if (user?._offline) {
-      try {
-        const offlineLeads = await getOfflineLeads(user);
-        setLeadsData(normalizeLeads(offlineLeads));
-      } catch (e) {
-        setLeadsLoadError(e?.message || 'No se pudo cargar la cartera.');
-        console.warn('[Stratos] Error cargando leads offline:', e);
-        if (!cached) setLeadsData([]);
+    try {
+      if (cached) {
+        setLeadsData(normalizeLeads(cached));
+        setLeadsLoading(false);
+      } else if (!silent) {
+        setLeadsLoading(true);
       }
-      setLeadsLoading(false);
-      setLeadsRefreshing(false);
-      return;
-    }
-
-    // Modo online normal — PAGINADO.
-    // Antes era un solo .select() que PostgREST truncaba en 1000 filas, así que
-    // con >1000 leads activos el CRM "perdía" los más antiguos y el contador se
-    // quedaba clavado en 1000. Paginamos para traerlos todos.
-    const { data, error } = await fetchAllPaged(() =>
-      supabase
-        .from('leads').select('*').is('deleted_at', null)
-        .order('created_at', { ascending: false })
-        .order('id', { ascending: false }) // desempate estable en el borde de página
-    );
-    setLeadsLoadError(error?.message || null);
-    if (!error) {
+      if (user?._offline) {
+        const data = await getOfflineLeads(user);
+        if (current()) setLeadsData(normalizeLeads(data));
+        return;
+      }
+      // Discover the server's page cap, then read up to three pages together.
+      // Paint completed batches immediately instead of waiting for all 2,000+.
+      const { data, error } = await fetchAllPaged(() =>
+        supabase.from('leads').select('*').is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .abortSignal(controller.signal),
+        500,
+        { concurrency: 3, onProgress: rows => {
+          if (current() && !silent && rows.length > (cached?.length || 0)) {
+            setLeadsData(normalizeLeads(rows));
+            setLeadsLoading(false);
+          }
+        } },
+      );
+      if (!current()) return;
+      if (error) throw error;
       setLeadsData(normalizeLeads(data));
       writeLeadsCache(data);
-    } else if (!cached) {
-      // Supabase falló y no había cache — intentar offline como último recurso
-      console.warn('[Stratos] Supabase leads falló, intentando offline:', error.message);
-      try {
-        const offlineLeads = await getOfflineLeads(user);
-        if (offlineLeads.length > 0) setLeadsData(normalizeLeads(offlineLeads));
-      } catch (_) { /* noop */ }
+    } catch (error) {
+      if (current()) {
+        setLeadsLoadError(error?.message || 'No se pudo cargar la cartera.');
+        console.warn('[Stratos] Error cargando cartera:', error);
+      }
+    } finally {
+      if (current()) {
+        setLeadsLoading(false);
+        setLeadsRefreshing(false);
+        leadsRequestRef.current = null;
+      }
     }
-    setLeadsLoading(false);
-    setLeadsRefreshing(false);
-  }, [normalizeLeads, user, readLeadsCache, writeLeadsCache]);
+  }, [leadsScope, normalizeLeads, readLeadsCache, writeLeadsCache]);
 
   useEffect(() => {
+    const user = leadsUserRef.current;
+    leadsRequestRef.current?.abort();
+    normalizeCache.current.clear();
+    setLeadsData([]);
+    setLeadsRefreshing(false);
     if (!user) return;
     // Marketing (Alex admin o rol marketing): NO se cargan leads de ventas. Así el
     // header y todo lo que deriva de leadsData quedan vacíos/apagados para ellos.
@@ -1315,9 +1326,10 @@ export default function App() {
       .subscribe();
     return () => {
       if (fallbackTimer) clearTimeout(fallbackTimer);
+      leadsRequestRef.current?.abort();
       supabase.removeChannel(ch);
     };
-  }, [user, fetchLeads]);
+  }, [leadsScope, fetchLeads]);
 
   // FIX (F5 perdía leads): los handlers de realtime arriba mutan leadsData
   // pero NO re-escribían el cache. Si el usuario hacía cambios y luego F5,
@@ -1344,6 +1356,7 @@ export default function App() {
   const [trashedLeads, setTrashedLeads] = useState([]);
 
   const refreshTrash = useCallback(async () => {
+    const user = leadsUserRef.current;
     if (!user || (user.id === 'demo-user-local' || user.isDemo)) return;
     // Paginado por la misma razón que el fetch activo: la papelera puede superar
     // las 1000 filas con el tiempo y PostgREST las truncaría.
@@ -1354,14 +1367,16 @@ export default function App() {
         .order('deleted_at', { ascending: false })
         .order('id', { ascending: false })
     );
-    if (!error && data) setTrashedLeads(normalizeLeads(data));
-  }, [user, normalizeLeads]);
+    if (leadsScopeRef.current === leadsScope && !error && data) setTrashedLeads(normalizeLeads(data));
+  }, [leadsScope, normalizeLeads]);
 
-  // Cargar papelera al montar y cuando cambia user
+  // Cargar papelera al cambiar de cuenta, no al renovar el token.
   useEffect(() => {
+    const user = leadsUserRef.current;
+    setTrashedLeads([]);
     if (!user || (user.id === 'demo-user-local' || user.isDemo) || user._offline) return;
     refreshTrash();
-  }, [user, refreshTrash]);
+  }, [leadsScope, refreshTrash]);
 
   const softDeleteLead = useCallback(async (leadId) => {
     if (!leadId) return { ok: false, error: 'ID inválido' };
@@ -2759,7 +2774,7 @@ export default function App() {
                     : clientConfig?.features?.comandoDirectivo
                       ? <ComandoDirectivo leadsData={leadsData} T={T} theme={theme} loading={leadsLoading || leadsRefreshing} loadError={leadsLoadError} onRetry={() => fetchLeads()} />
                       : <Dash oc={oc} leadsData={leadsData} T={T} />)}
-                  {v === "c"      && (clientConfig.liveHuli ? <HuliWorkspace view="patients" /> : <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} isRefreshing={leadsRefreshing} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} autoOpenNewLead={crmNewLeadTick} onNewLeadHandled={() => setCrmNewLeadTick(0)} onOpenComando={() => setV("d")} />)}
+                  {v === "c"      && (clientConfig.liveHuli ? <HuliWorkspace view="patients" /> : <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} isRefreshing={leadsRefreshing} loadError={leadsLoadError} onRetry={() => fetchLeads({ silent: true })} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} autoOpenNewLead={crmNewLeadTick} onNewLeadHandled={() => setCrmNewLeadTick(0)} onOpenComando={() => setV("d")} />)}
                   {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} openExpediente={openLeadExpediente} onBack={backToPrevView} chatCount={waInbox.conversations?.length || 0} />}
                   {v === "copilot" && canAccessModule("copilot", user, clientConfig) && (clientConfig.liveHuli ? <HuliWorkspace view="copilot" /> : <Copilot T={T} isLight={isLight} theme={theme} onBack={backToPrevView} score={asesorScore} demoContext={user?.isDemo ? { leads: leadsData, tasks: metaActions } : undefined} />)}
                   {(v === "mkt" || v === "mkt_reporte" || v === "mkt_equipo" || v === "mkt_dia" || v === "mkt_marcas" || v === "mkt_pipe" || v === "mkt_sol") && canAccessModule(v, user, clientConfig) && (

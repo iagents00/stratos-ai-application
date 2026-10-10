@@ -128,7 +128,7 @@ function useDebounced(value, ms = 200) {
   return debounced;
 }
 
-function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, isRefreshing = false, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead, autoOpenLead = null, onAutoOpenLeadHandled = () => {}, autoOpenNewLead = 0, onNewLeadHandled = () => {}, onOpenComando = null }) {
+function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () => {}, isRefreshing = false, loadError = null, onRetry, autoOpenPriority1 = 0, onAutoOpenHandled, softDeleteLead, autoOpenLead = null, onAutoOpenLeadHandled = () => {}, autoOpenNewLead = 0, onNewLeadHandled = () => {}, onOpenComando = null }) {
   const { user } = useAuth();
   const { config: clientConfig, clientId, isFeatureEnabled } = useClient();
   const { cfg: railsCfg, cargando: railsCargando, error: railsError, recargar: recargarRails } = useRailsConfig();
@@ -2334,6 +2334,10 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       transition: "color 0.3s ease",
     }}>
 
+      {loadError && <div role="alert" style={{ color: T.txt2, marginBottom: 12 }}>
+        No se pudo completar la actualización de la cartera. La lista puede estar incompleta.
+        <button onClick={onRetry} style={{ minHeight: 44, marginLeft: 12 }}>Reintentar carga</button>
+      </div>}
       {(railsCargando || railsError) && <div role={railsError ? "alert" : "status"} style={{ color: T.txt2 }}>
         {railsError || "Verificando el proceso de tu equipo…"}
         {railsError && <button onClick={recargarRails} style={{ minHeight: 44, marginLeft: 12 }}>Reintentar</button>}
@@ -2430,7 +2434,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   }}
                 >
                   <span style={{ display:"inline-block", width:10, height:10, border:`2px solid ${T.accent}38`, borderTopColor:T.accent, borderRadius:"50%", animation:"spin 0.8s linear infinite" }} />
-                  Actualizando lista…
+                  Actualizando cartera… {leadsData.length.toLocaleString("es-MX")} clientes visibles
                 </span>
               )}
             </div>

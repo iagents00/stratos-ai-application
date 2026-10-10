@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v436'; // v436: liberar el bloqueo de sesión antes de recargar el CRM.
+const CACHE_VERSION = 'stratos-v437'; // v437: carga progresiva y paralela de carteras grandes.
 // const CACHE_VERSION = 'stratos-v424'; // v424: ficha de Google Play (textos + graficos de tienda)
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
