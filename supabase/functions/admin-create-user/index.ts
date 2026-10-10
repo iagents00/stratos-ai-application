@@ -151,6 +151,7 @@ Deno.serve(async (req) => {
     password: clave,
     email_confirm: true,
     user_metadata: { name: nombre },
+    app_metadata: { stratos_organization_id: perfil.organization_id, stratos_role: rol },
   });
 
   if (eCrear) {
@@ -165,15 +166,8 @@ Deno.serve(async (req) => {
   if (!nuevoId) return json({ ok: false, error: "La cuenta no devolvió id." }, 500, origin);
 
   // 4) El perfil hereda la organización de QUIEN CREA. Nunca del request.
-  const { error: ePerfil } = await admin.from("profiles").upsert({
-    id: nuevoId,
-    name: nombre,
-    role: rol,
-    phone,
-    active: true,
-    organization_id: perfil.organization_id,
-    recovery_email: email,
-  });
+  const { error: ePerfil } = await admin.from("profiles").update({ phone, recovery_email: email })
+    .eq("id", nuevoId).eq("organization_id", perfil.organization_id).select("id").single();
 
   if (ePerfil) {
     // Si el perfil falla, la cuenta suelta no sirve para nada: se limpia.

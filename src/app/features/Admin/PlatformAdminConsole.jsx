@@ -2,7 +2,7 @@ import { createElement, useCallback, useEffect, useMemo, useState } from "react"
 import {
   Activity, Building2, Copy, Eye, EyeOff, FolderOpen, Gauge, KeyRound,
   LayoutDashboard, LogOut, Menu, MessageCircle, Plus, RefreshCw,
-  ShieldCheck, Users, Waypoints, X,
+  ShieldCheck, Users, Waypoints, X, Sun, Moon,
 } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { useAuth } from "../../../hooks/useAuth";
@@ -14,6 +14,8 @@ import WhatsAppOnboardingAdmin from "./WhatsAppOnboardingAdmin";
 import PipelineConfiguratorAdmin from "./PipelineConfiguratorAdmin";
 import CatalogConfiguratorAdmin from "./CatalogConfiguratorAdmin";
 import CompanySetupAdmin from "./CompanySetupAdmin";
+import CompanyOnboarding from "./CompanyOnboarding";
+import "./PlatformAdminConsole.css";
 
 const EMPTY_PARTNER = { name: "", admin_name: "", email: "", company_limit: 100 };
 
@@ -43,7 +45,7 @@ function PartnersPanel({ T, data, refresh }) {
   const [credentials, setCredentials] = useState(null);
   const partners = data?.partners || [];
   const organizations = data?.organizations || [];
-  const input = { width: "100%", minHeight: 42, boxSizing: "border-box", borderRadius: 10, border: `1px solid ${T.border}`, background: T.glass, color: T.txt, padding: "0 12px", outline: "none", fontFamily: font, fontSize: 12.5 };
+  const input = { width: "100%", minHeight: 42, boxSizing: "border-box", borderRadius: 10, border: `1px solid ${T.border}`, background: T.glass, color: T.txt, padding: "0 12px", fontFamily: font, fontSize: 12.5 };
   const button = { minHeight: 40, borderRadius: 10, border: `1px solid ${T.accentB}`, background: T.accentS, color: T.accent, padding: "0 14px", fontFamily: font, fontSize: 12.5, fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 };
   const card = { border: `1px solid ${T.border}`, background: T.glass, borderRadius: 16, padding: 17 };
   const label = { color: T.txt3, fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", display: "block", marginBottom: 6 };
@@ -73,15 +75,15 @@ function PartnersPanel({ T, data, refresh }) {
   return (
     <div style={{ padding: "22px 24px 60px", display: "flex", flexDirection: "column", gap: 14 }}>
       <div><h2 style={{ margin: 0, fontFamily: fontDisp, fontSize: 22 }}>Partners y cupos de empresas</h2><p style={{ color: T.txt3, fontSize: 12.5, lineHeight: 1.55, maxWidth: 780 }}>Cada partner recibe un cupo de empresas. Nunca ve los clientes directos de Stratos ni las empresas de otro partner.</p></div>
-      {message && <div style={{ ...card, color: message.ok ? T.accent : "#FCA5A5", borderColor: message.ok ? T.accentB : "rgba(248,113,113,.35)" }}>{message.text}</div>}
+      {message && <div style={{ ...card, color: message.ok ? T.accent : T.rose, borderColor: message.ok ? T.accentB : "rgba(248,113,113,.35)" }}>{message.text}</div>}
       {credentials && <div style={{ ...card, borderColor: T.accentB }}><strong>Acceso temporal — cópialo ahora</strong><div style={{ color: T.txt2, marginTop: 8, fontSize: 13 }}>Correo: <code>{credentials.email}</code><br />Contraseña: <code>{credentials.password}</code></div><button onClick={() => setCredentials(null)} style={{ ...button, marginTop: 10 }}>Ya lo guardé</button></div>}
       <section style={card}>
         <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 14 }}><Plus size={16} color={T.accent} /><strong>Crear administrador partner</strong></div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: 10 }}>
-          <div><label style={label}>Nombre del partner</label><input style={input} value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Distribuidor regional" /></div>
-          <div><label style={label}>Nombre del administrador</label><input style={input} value={form.admin_name} onChange={e => setForm(p => ({ ...p, admin_name: e.target.value }))} /></div>
-          <div><label style={label}>Correo de acceso</label><input style={input} type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} /></div>
-          <div><label style={label}>Cupo de empresas</label><input style={input} type="number" min="1" max="10000" value={form.company_limit} onChange={e => setForm(p => ({ ...p, company_limit: Number(e.target.value) }))} /></div>
+          <div><label htmlFor="partner-field-1" style={label}>Nombre del partner</label><input id="partner-field-1" style={input} value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Distribuidor regional" /></div>
+          <div><label htmlFor="partner-field-2" style={label}>Nombre del administrador</label><input id="partner-field-2" style={input} value={form.admin_name} onChange={e => setForm(p => ({ ...p, admin_name: e.target.value }))} /></div>
+          <div><label htmlFor="partner-field-3" style={label}>Correo de acceso</label><input id="partner-field-3" style={input} type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} /></div>
+          <div><label htmlFor="partner-field-4" style={label}>Cupo de empresas</label><input id="partner-field-4" style={input} type="number" min="1" max="10000" value={form.company_limit} onChange={e => setForm(p => ({ ...p, company_limit: Number(e.target.value) }))} /></div>
         </div>
         <button onClick={create} disabled={busy === "create"} style={{ ...button, marginTop: 13 }}><ShieldCheck size={15} /> Crear partner con acceso aislado</button>
       </section>
@@ -92,10 +94,10 @@ function PartnersPanel({ T, data, refresh }) {
           const org = partner.organizations || {};
           const profile = partner.profiles || {};
           const used = organizations.filter(item => item.parent_organization_id === scopeId).length;
-          return <div key={partner.user_id} style={{ borderTop: `1px solid ${T.border}`, padding: "13px 0", display: "grid", gridTemplateColumns: "minmax(180px,1fr) 120px minmax(180px,240px)", gap: 12, alignItems: "center" }}>
+          return <div key={partner.user_id} className="partner-row" style={{ borderTop: `1px solid ${T.border}`, padding: "13px 0", display: "grid", gridTemplateColumns: "minmax(180px,1fr) 120px minmax(180px,240px)", gap: 12, alignItems: "center" }}>
             <div><div style={{ fontWeight: 700 }}>{org.name || "Partner"}</div><div style={{ color: T.txt3, fontSize: 11.5, marginTop: 4 }}>{profile.name || "Administrador"} · {used} empresas creadas</div></div>
             <div style={{ color: T.txt2, fontSize: 12 }}>{used}/{partner.company_limit || 0} cupos</div>
-            <div style={{ display: "flex", gap: 7 }}><input data-quota={partner.user_id} style={{ ...input, minHeight: 38 }} type="number" min={Math.max(1, used)} defaultValue={partner.company_limit || 1} /><button disabled={busy === partner.user_id} onClick={e => { const field = e.currentTarget.parentElement.querySelector("input"); changeQuota(partner, field.value); }} style={{ ...button, minHeight: 38 }}>Guardar</button></div>
+            <div style={{ display: "flex", gap: 7 }}><input aria-label={`Cupo de empresas de ${org.name || "partner"}`} data-quota={partner.user_id} style={{ ...input, minHeight: 38 }} type="number" min={Math.max(1, used)} defaultValue={partner.company_limit || 1} /><button disabled={busy === partner.user_id} onClick={e => { const field = e.currentTarget.parentElement.querySelector("input"); changeQuota(partner, field.value); }} style={{ ...button, minHeight: 38 }}>Guardar</button></div>
           </div>;
         })}
       </section>
@@ -105,7 +107,7 @@ function PartnersPanel({ T, data, refresh }) {
 
 function ActivityPanel({ T, events }) {
   const labels = { partner_created: "Partner creado", company_created: "Empresa creada", quota_changed: "Cupo actualizado" };
-  return <div style={{ padding: "22px 24px 60px" }}><h2 style={{ margin: 0, fontFamily: fontDisp, fontSize: 22 }}>Actividad y alertas</h2><p style={{ color: T.txt3, fontSize: 12.5 }}>Registro independiente de Telegram: ningún alta desaparece si el aviso externo falla.</p><div style={{ marginTop: 16, border: `1px solid ${T.border}`, borderRadius: 16, background: T.glass, overflow: "hidden" }}>{!events?.length ? <div style={{ padding: 24, color: T.txt3 }}>Sin eventos todavía.</div> : events.map(event => <div key={event.id} style={{ padding: "13px 16px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}><div><strong style={{ fontSize: 13 }}>{labels[event.event_type] || event.event_type}</strong><div style={{ color: T.txt3, fontSize: 11.5, marginTop: 4 }}>{event.payload?.organization_name || event.payload?.partner_name || "Stratos"} · {dateLabel(event.created_at)}</div></div><span style={{ fontSize: 11.5, color: event.notification_status === "sent" ? T.accent : "#FBBF24" }}>{event.notification_status === "sent" ? "Telegram enviado" : event.notification_status === "not_configured" ? "Telegram por configurar" : event.notification_status}</span></div>)}</div></div>;
+  return <div style={{ padding: "22px 24px 60px" }}><h2 style={{ margin: 0, fontFamily: fontDisp, fontSize: 22 }}>Actividad y alertas</h2><p style={{ color: T.txt3, fontSize: 12.5 }}>Registro independiente de Telegram: ningún alta desaparece si el aviso externo falla.</p><div style={{ marginTop: 16, border: `1px solid ${T.border}`, borderRadius: 16, background: T.glass, overflow: "hidden" }}>{!events?.length ? <div style={{ padding: 24, color: T.txt3 }}>Sin eventos todavía.</div> : events.map(event => <div key={event.id} style={{ padding: "13px 16px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}><div><strong style={{ fontSize: 13 }}>{labels[event.event_type] || event.event_type}</strong><div style={{ color: T.txt3, fontSize: 11.5, marginTop: 4 }}>{event.payload?.organization_name || event.payload?.partner_name || "Stratos"} · {dateLabel(event.created_at)}</div></div><span style={{ fontSize: 11.5, color: event.notification_status === "sent" ? T.accent : T.amber }}>{event.notification_status === "sent" ? "Telegram enviado" : event.notification_status === "not_configured" ? "Telegram por configurar" : event.notification_status}</span></div>)}</div></div>;
 }
 
 function TemporaryAccessPanel({ T, credentials, organizations, partners, loading, error }) {
@@ -119,17 +121,21 @@ function TemporaryAccessPanel({ T, credentials, organizations, partners, loading
     if (next.has(id)) next.delete(id); else next.add(id);
     return next;
   });
+  const [copyError, setCopyError] = useState("");
   const copy = async (credential) => {
-    await navigator.clipboard.writeText(`Usuario: ${credential.login_email}\nContraseña temporal: ${credential.temporary_password}`);
+    setCopyError("");
+    try { await navigator.clipboard.writeText(`Usuario: ${credential.login_email}\nContraseña temporal: ${credential.temporary_password}`);
     setCopied(credential.user_id);
     setTimeout(() => setCopied(""), 1800);
+    } catch { setCopyError("El navegador no permitió copiar. Muestra y selecciona los datos para guardarlos."); }
   };
   return <div style={{ padding: "22px 24px 60px" }}>
     <h2 style={{ margin: 0, fontFamily: fontDisp, fontSize: 22 }}>Accesos temporales</h2>
+    {copyError && <p role="alert" style={{ color: T.rose }}>{copyError}</p>}
     <p style={{ color: T.txt3, fontSize: 12.5, lineHeight: 1.55, maxWidth: 820 }}>
       Aquí aparecen únicamente usuarios que todavía conservan la contraseña inicial. La contraseña está cifrada y su registro desaparece automáticamente cuando la persona la cambia o la recupera.
     </p>
-    {error && <div style={{ marginTop: 14, padding: 13, borderRadius: 12, border: "1px solid rgba(248,113,113,.35)", color: "#FCA5A5" }}>{error}</div>}
+    {error && <div style={{ marginTop: 14, padding: 13, borderRadius: 12, border: "1px solid rgba(248,113,113,.35)", color: T.rose }}>{error}</div>}
     <div style={{ marginTop: 16, border: `1px solid ${T.border}`, borderRadius: 16, background: T.glass, overflow: "hidden" }}>
       {loading ? <div style={{ padding: 24, color: T.txt3 }}>Cargando accesos…</div> : !credentials?.length ? <div style={{ padding: 24, color: T.txt3 }}>No hay contraseñas temporales vigentes.</div> : credentials.map(credential => {
         const isVisible = revealed.has(credential.user_id);
@@ -147,12 +153,13 @@ function TemporaryAccessPanel({ T, credentials, organizations, partners, loading
   </div>;
 }
 
-export default function PlatformAdminConsole({ initialData }) {
+export default function PlatformAdminConsole({ initialData, T: palette = P, theme = "dark", onThemeChange }) {
   const { logout, user } = useAuth();
   const isMobile = useIsMobile();
-  const T = P;
+  const T = { ...palette, accent: palette.accentDark || palette.accent };
+  const [integrationCompany, setIntegrationCompany] = useState("");
   const [data, setData] = useState(initialData || null);
-  const [section, setSection] = useState("home");
+  const [section, setSection] = useState("companies");
   const [menuOpen, setMenuOpen] = useState(false);
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState("");
@@ -181,13 +188,14 @@ export default function PlatformAdminConsole({ initialData }) {
   const used = Number(data?.access?.companiesUsed || 0);
   const limit = data?.access?.companyLimit;
   const nav = useMemo(() => [
-    ["home", "Resumen", LayoutDashboard], ["companies", "Empresas y WhatsApp", Building2],
+    ["home", "Resumen", LayoutDashboard], ["companies", "Empresas", Building2], ["whatsapp", "WhatsApp", MessageCircle],
     ["credentials", "Accesos temporales", KeyRound], ["pipelines", "Pipelines", Waypoints], ["catalogs", "Catálogos", FolderOpen],
     ...(root ? [["setup", "Módulos y licencias", ShieldCheck], ["partners", "Partners y cupos", Users], ["activity", "Actividad", Activity]] : []),
   ], [root]);
   const choose = id => { setSection(id); setMenuOpen(false); if (id === "credentials") refreshCredentials(); };
 
-  const content = section === "companies" ? <WhatsAppOnboardingAdmin T={T} />
+  const content = section === "companies" ? <CompanyOnboarding data={data} refresh={refresh} onIntegrations={id => { setIntegrationCompany(id); choose("whatsapp"); }} />
+    : section === "whatsapp" ? <WhatsAppOnboardingAdmin T={T} initialOrganizationId={integrationCompany} integrationsOnly />
     : section === "credentials" ? <TemporaryAccessPanel T={T} credentials={temporaryCredentials} organizations={data?.organizations || []} partners={data?.partners || []} loading={credentialsLoading} error={credentialsError} />
     : section === "pipelines" ? <PipelineConfiguratorAdmin T={T} onBack={() => choose("home")} />
       : section === "catalogs" ? <CatalogConfiguratorAdmin T={T} onBack={() => choose("home")} />
@@ -196,26 +204,28 @@ export default function PlatformAdminConsole({ initialData }) {
           : section === "activity" && root ? <ActivityPanel T={T} events={data?.events || []} />
             : <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: 18 }}>
               <div><div style={{ color: T.accent, fontSize: 11.5, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".09em" }}>{root ? "Superadministración Stratos" : "Administración partner"}</div><h1 style={{ margin: "6px 0 0", fontFamily: fontDisp, fontSize: 28 }}>Centro de soporte</h1><p style={{ color: T.txt3, fontSize: 13, maxWidth: 720, lineHeight: 1.55 }}>Empresas, usuarios, WhatsApp, pipelines y catálogos en una consola sin módulos comerciales que distraigan.</p></div>
-              {error && <div style={{ padding: 14, border: "1px solid rgba(248,113,113,.35)", borderRadius: 13, color: "#FCA5A5" }}>{error}</div>}
+              {error && <div style={{ padding: 14, border: "1px solid rgba(248,113,113,.35)", borderRadius: 13, color: T.rose }}>{error}</div>}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 12 }}>
                 <Metric T={T} icon={Building2} label="Empresas visibles" value={data?.organizations?.length || 0} hint={root ? "Todo el portafolio administrado" : "Solo tus empresas cliente"} />
                 {root ? <Metric T={T} icon={Users} label="Partners" value={data?.partners?.length || 0} hint="Administradores con alcance aislado" /> : <Metric T={T} icon={Gauge} label="Cupos de empresa" value={`${used}/${limit || 0}`} hint={`${Math.max(0, Number(limit || 0) - used)} disponibles`} />}
                 <Metric T={T} icon={MessageCircle} label="Altas WhatsApp" value={data?.runs?.length || 0} hint="Procesos visibles en tu alcance" />
                 {root && <Metric T={T} icon={Activity} label="Eventos recientes" value={data?.events?.length || 0} hint="Altas y cambios auditados" />}
               </div>
-              {!root && limit != null && used >= limit && <div style={{ padding: 15, borderRadius: 14, border: "1px solid rgba(245,158,11,.35)", background: "rgba(245,158,11,.06)", color: "#FBBF24", fontSize: 13 }}>Ya utilizaste todos tus cupos de empresa. Stratos debe ampliar el límite antes de crear otra.</div>}
+              {!root && limit != null && used >= limit && <div style={{ padding: 15, borderRadius: 14, border: "1px solid rgba(245,158,11,.35)", background: "rgba(245,158,11,.06)", color: T.amber, fontSize: 13 }}>Ya utilizaste todos tus cupos de empresa. Stratos debe ampliar el límite antes de crear otra.</div>}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(230px,1fr))", gap: 12 }}>{nav.filter(([id]) => id !== "home").map(([id, label, icon]) => <button key={id} onClick={() => choose(id)} style={{ border: `1px solid ${T.border}`, borderRadius: 16, background: T.glass, color: T.txt, padding: 18, textAlign: "left", cursor: "pointer", fontFamily: font }}>{createElement(icon, { size: 19, color: T.accent })}<div style={{ fontWeight: 750, marginTop: 13 }}>{label}</div><div style={{ color: T.txt3, fontSize: 11.5, marginTop: 5 }}>Abrir sección</div></button>)}</div>
             </div>;
 
-  return <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: T.bg, color: T.txt, fontFamily: font, display: "flex", overflow: "hidden" }}>
-    {isMobile && <button onClick={() => setMenuOpen(v => !v)} style={{ position: "fixed", top: 14, left: 14, zIndex: 10003, width: 42, height: 42, borderRadius: 12, border: `1px solid ${T.border}`, background: T.surface, color: T.txt, display: "grid", placeItems: "center" }}>{menuOpen ? <X size={18} /> : <Menu size={18} />}</button>}
-    <aside style={{ width: 248, flexShrink: 0, padding: "22px 14px", borderRight: `1px solid ${T.border}`, background: "#0C0C0C", display: isMobile && !menuOpen ? "none" : "flex", flexDirection: "column", position: isMobile ? "fixed" : "relative", inset: isMobile ? 0 : "auto", zIndex: 10002 }}>
+  return <div className="platform-console" data-theme={theme} style={{ "--company-bg": T.bg, "--company-surface": T.surface, "--company-hover": T.glassH, "--company-text": T.txt, "--company-muted": T.txt3, "--company-border": T.borderH, "--company-accent": T.accent, "--company-on-accent": theme === "light" ? T.surface : T.bg, "--company-error": T.rose, position: "fixed", inset: 0, zIndex: 10000, background: T.bg, color: T.txt, fontFamily: font, display: "flex", overflow: "hidden" }}>
+    {isMobile && <button aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"} aria-expanded={menuOpen} aria-controls="platform-navigation" onClick={() => setMenuOpen(v => !v)} style={{ position: "fixed", top: 14, left: 14, zIndex: 10003, width: 42, height: 42, borderRadius: 12, border: `1px solid ${T.border}`, background: T.surface, color: T.txt, display: "grid", placeItems: "center" }}>{menuOpen ? <X size={18} /> : <Menu size={18} />}</button>}
+    {isMobile && menuOpen && <button aria-label="Cerrar navegación" onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, border: 0, background: "rgba(0,0,0,.45)", zIndex: 10001 }} />}
+    <aside style={{ width: 248, flexShrink: 0, padding: isMobile ? "72px 14px 22px" : "22px 14px", borderRight: `1px solid ${T.border}`, background: T.surface, display: isMobile && !menuOpen ? "none" : "flex", flexDirection: "column", position: isMobile ? "fixed" : "relative", inset: isMobile ? 0 : "auto", zIndex: 10002 }}>
       <div style={{ padding: "4px 10px 22px" }}><div style={{ color: T.accent, fontWeight: 800, letterSpacing: ".04em" }}>STRATOS</div><div style={{ color: T.txt3, fontSize: 11.5, marginTop: 4 }}>{root ? "Superadministrador" : "Administrador partner"}</div></div>
-      <nav style={{ display: "flex", flexDirection: "column", gap: 5 }}>{nav.map(([id, label, icon]) => <button key={id} onClick={() => choose(id)} style={{ minHeight: 43, borderRadius: 11, border: `1px solid ${section === id ? T.accentB : "transparent"}`, background: section === id ? T.accentS : "transparent", color: section === id ? T.accent : T.txt2, display: "flex", alignItems: "center", gap: 10, padding: "0 12px", cursor: "pointer", fontFamily: font, fontWeight: 650, textAlign: "left" }}>{createElement(icon, { size: 16 })}{label}</button>)}</nav>
+      <nav id="platform-navigation" className="console-nav" aria-label="Administración de Stratos" style={{ display: "flex", flexDirection: "column", gap: 5 }}>{nav.map(([id, label, icon]) => <button key={id} aria-current={section === id ? "page" : undefined} onClick={() => choose(id)} style={{ minHeight: 43, borderRadius: 11, border: `1px solid ${section === id ? T.accentB : "transparent"}`, background: section === id ? T.accentS : "transparent", color: section === id ? T.accent : T.txt2, display: "flex", alignItems: "center", gap: 10, padding: "0 12px", cursor: "pointer", fontFamily: font, fontWeight: 650, textAlign: "left" }}>{createElement(icon, { size: 16 })}{label}</button>)}</nav>
       <div style={{ marginTop: "auto", borderTop: `1px solid ${T.border}`, paddingTop: 14 }}><div style={{ padding: "0 10px 12px", color: T.txt3, fontSize: 11.5, overflow: "hidden", textOverflow: "ellipsis" }}>{user?.email || user?.name}</div><button onClick={logout} style={{ width: "100%", minHeight: 41, borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.txt2, display: "flex", alignItems: "center", gap: 9, padding: "0 12px", cursor: "pointer" }}><LogOut size={15} /> Cerrar sesión</button></div>
     </aside>
-    <main style={{ flex: 1, minWidth: 0, overflowY: "auto", paddingTop: isMobile ? 68 : 0 }}>
-      <div style={{ minHeight: 62, borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "0 16px 0 66px" : "0 24px" }}><div><strong style={{ fontSize: 13.5 }}>{nav.find(([id]) => id === section)?.[1] || "Centro de soporte"}</strong><div style={{ color: T.txt3, fontSize: 10.5, marginTop: 3 }}>{root ? "Control total de Stratos" : `${used} de ${limit || 0} empresas utilizadas`}</div></div><button onClick={refresh} disabled={loading} style={{ minHeight: 36, borderRadius: 10, border: `1px solid ${T.border}`, background: T.glass, color: T.txt2, padding: "0 12px", display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}><RefreshCw size={14} />{!isMobile && "Actualizar"}</button></div>
+    <main inert={isMobile && menuOpen ? true : undefined} style={{ flex: 1, minWidth: 0, overflowY: "auto", paddingTop: 0 }}>
+      <div style={{ minHeight: 62, borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "0 16px 0 66px" : "0 24px" }}><div><strong style={{ fontSize: 13.5 }}>{nav.find(([id]) => id === section)?.[1] || "Centro de soporte"}</strong><div style={{ color: T.txt3, fontSize: 10.5, marginTop: 3 }}>{root ? "Control total de Stratos" : `${used} de ${limit || 0} empresas utilizadas`}</div></div><div style={{ display: "flex", gap: 8 }}>{onThemeChange && <button aria-label={theme === "light" ? "Activar tema oscuro" : "Activar tema claro"} onClick={() => onThemeChange(theme === "light" ? "dark" : "light")} style={{ width: 44, borderRadius: 10, border: `1px solid ${T.border}`, background: T.surface, color: T.txt2, display: "grid", placeItems: "center", cursor: "pointer" }}>{theme === "light" ? <Moon size={18} /> : <Sun size={18} />}</button>}<button aria-label="Actualizar consola" onClick={() => { refresh(); if (section === "credentials") refreshCredentials(); }} disabled={loading} style={{ minHeight: 36, borderRadius: 10, border: `1px solid ${T.border}`, background: T.glass, color: T.txt2, padding: "0 12px", display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}><RefreshCw size={14} />{!isMobile && "Actualizar"}</button></div></div>
+      {error && section !== "home" && <div className="company-message company-error" role="alert" style={{ margin: 16 }}>{error}</div>}
       {content}
     </main>
   </div>;

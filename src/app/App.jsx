@@ -1960,7 +1960,7 @@ export default function App() {
     return <div style={{ position: "fixed", inset: 0, background: T.bg, color: T.txt, display: "grid", placeItems: "center", fontFamily: font }}><div style={{ textAlign: "center" }}><div style={{ width: 44, height: 44, borderRadius: "50%", border: `2px solid ${T.border}`, borderTopColor: T.accent, animation: "stratosSpin .9s linear infinite", margin: "0 auto 14px" }} /><div style={{ color: T.txt2, fontSize: 12.5 }}>Abriendo centro de soporte…</div><style>{`@keyframes stratosSpin { to { transform: rotate(360deg); } }`}</style></div></div>;
   }
   if (platformConsole.userId === user.id && platformConsole.status === "allowed") {
-    return <Suspense fallback={null}><PlatformAdminConsole initialData={platformConsole.data} /></Suspense>;
+    return <Suspense fallback={null}><PlatformAdminConsole initialData={platformConsole.data} T={T} theme={theme} onThemeChange={setTheme} /></Suspense>;
   }
 
   /* ── Sidebar helpers ── */
