@@ -21,6 +21,7 @@ import {
   hasSupabaseAuthToken,
 } from "../lib/auth";
 import { clearOfflineSession } from "../lib/offline-mode";
+import { portfolioCache } from "../lib/portfolio-cache.js";
 import { subscribeAuthEvents } from "../lib/auth-events.js";
 
 export const AuthContext = createContext(null);
@@ -41,6 +42,7 @@ const HYDRATION_TIMEOUT_MS = 12000;
  * que el siguiente intento de login arranque limpio.
  */
 function clearLocalAuthState() {
+  void portfolioCache.clear();
   try {
     const keys = Object.keys(localStorage);
     for (const k of keys) {
@@ -323,6 +325,7 @@ export function AuthProvider({ children }) {
     setError(null);
     loginSettledRef.current = false; // resetear para permitir nuevo login
     userLogoutRef.current = true;    // marca: el SIGNED_OUT que viene es intencional
+    void portfolioCache.clear();
     await signOut();
     setUser(null);
   }, []);
