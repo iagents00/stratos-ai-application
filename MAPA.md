@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**251 archivos · 81.025 líneas**
+**252 archivos · 81.011 líneas**
 
 ---
 
@@ -40,7 +40,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | **Stratos RH** | `src/app/views/RRHHModule.jsx` | 846 |
 | **Papelera** | `src/app/views/Trash.jsx` | 285 |
 | **Planes** | _sin vista propia (redirige a otra)_ | — |
-| **Perfil** | `src/dental-demo/TenantHuliWorkspace.jsx`<br>`src/app/views/Profile.jsx` | 11<br>1149 |
+| **Perfil** | `src/dental-demo/TenantHuliWorkspace.jsx`<br>`src/app/views/Profile.jsx` | 11<br>1098 |
 | **Usuarios** | `src/app/features/Admin/AdminPanel.jsx` | 644 |
 | **Proceso** | `src/app/features/Admin/RailsSettings.jsx` | 141 |
 
@@ -173,7 +173,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `index.jsx` | 2065 | Generador de landing pages inmobiliarias |
 | `Copilot.jsx` | 2019 | v2 (15-jul) |
 | `index.jsx` | 1223 | Panel "Control de Zooms" — pestaña dentro de Comando Directivo (Duke). |
-| `Profile.jsx` | 1149 | vista de perfil del asesor. |
+| `Profile.jsx` | 1098 | vista de perfil del asesor. |
 | `ComandoDirectivo.jsx` | 962 | _sin describir_ |
 | `LeadWhatsAppChat.jsx` | 945 | _sin describir_ |
 | `RRHHModule.jsx` | 846 | _sin describir_ |
@@ -418,8 +418,8 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `Diagnostico.jsx` | 974 | _sin describir_ |
 | `DeliveryHubCRM.jsx` | 881 | _sin describir_ |
 | `ManualCRM.jsx` | 790 | _sin describir_ |
+| `LoginScreen.jsx` | 719 | Pantalla de autenticación completa para la app |
 | `manual-telegram-content.js` | 714 | Manual del COPILOT / Asistente IA (Duke del Caribe) |
-| `LoginScreen.jsx` | 701 | Pantalla de autenticación completa para la app |
 | `OnboardingCallCenter.jsx` | 687 | _sin describir_ |
 | `DataDeletion.jsx` | 554 | _sin describir_ |
 | `PricingScreen.jsx` | 552 | _sin describir_ |
@@ -436,7 +436,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | Archivo | Líneas | Qué hace |
 |---|---|---|
 | `telegram.js` | 810 | Pareo del bot de Telegram con el perfil del asesor. |
-| `auth.js` | 725 | _sin describir_ |
+| `auth.js` | 702 | _sin describir_ |
 | `push.js` | 416 | Sistema de suscripción a notificaciones Web Push |
 | `next-action-engine.js` | 371 | _sin describir_ |
 | `offline-mode.js` | 351 | _sin describir_ |
@@ -473,11 +473,12 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `form-submit.js` | 71 | Envía un formulario público (sin sesión) a la edge function `form-submit`. |
 | `portfolio-cache.js` | 70 | Complete portfolio snapshots, separate from the localStorage auth quota. |
 | `supabase.js` | 70 | _sin describir_ |
+| `recovery.js` | 62 | Recuperación de contraseña por CÓDIGO al correo de recuperación. |
 | `telefono.js` | 61 | _sin describir_ |
-| `recovery.js` | 58 | Recuperación de contraseña por CÓDIGO al correo de recuperación. |
 | `suggest-actions.js` | 58 | Cliente del agente IA "co-pilot" que sugiere próximas acciones |
 | `rails-store.js` | 51 | _sin describir_ |
 | `financial-data.js` | 41 | _sin describir_ |
+| `password-change.js` | 38 | Change only the authenticated user's password; never trust a cached UI identity. |
 | `read-all-rows.js` | 36 | _sin describir_ |
 | `app-review-access.native.js` | 32 | _sin describir_ |
 | `service-errors.js` | 32 | _sin describir_ |
@@ -550,7 +551,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | ACTIVO | `src/app/views/CRM/components.jsx:5503` |
 | Activos post-Zoom | `src/app/views/ComandoDirectivo.jsx:459` |
 | Activos post-Zoom: | `src/app/views/CRM/ZoomBoard.jsx:170` |
-| Actual: | `src/app/views/Profile.jsx:429` |
+| Actual: | `src/app/views/Profile.jsx:378` |
 | Actualización del sistema | `src/app/components/DynIsland.jsx:408` |
 | Actualización Importante | `src/app/components/DynamicIsland.jsx:132` |
 | Actualizando tu tablero… | `src/app/views/ISpaceBoard.jsx:129` |
@@ -608,7 +609,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Asignar responsable | `src/app/features/MetaPanel/index.jsx:1004` |
 | Asistió (sem.) | `src/app/views/ZoomControl/Resumen.jsx:421` |
 | Atención Inmediata | `src/app/views/Dash.jsx:235` |
-| Aún no configuras un correo de recuperación. | `src/app/views/Profile.jsx:430` |
+| Aún no configuras un correo de recuperación. | `src/app/views/Profile.jsx:379` |
 | Aún no hay documentos | `src/app/features/MetaPanel/index.jsx:1878` |
 | Aún no hay usuarios activos. | `src/app/features/Admin/CajaPermissionsAdmin.jsx:127` |
 | Autor del hito | `src/app/views/CRM/ZoomBoard.jsx:244` |
@@ -660,7 +661,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | CANDIDATO IDENTIFICADO | `src/app/views/RRHHModule.jsx:747` |
 | Características | `src/app/views/LandingPages/index.jsx:705` |
 | Cargando accesos… | `src/app/features/Admin/PlatformAdminConsole.jsx:140` |
-| Cargando actividad… | `src/app/views/Profile.jsx:998` |
+| Cargando actividad… | `src/app/views/Profile.jsx:947` |
 | Cargando conversación… | `src/app/views/Copilot.jsx:1183` |
 | Cargando conversaciones… | `src/app/views/WhatsApp.jsx:263` |
 | Cargando demo dental… | `src/main.jsx:315` |
@@ -721,7 +722,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Compartir presentación | `src/app/views/LandingPages/index.jsx:1325` |
 | Complejidad: | `src/app/views/Marketing.jsx:2190` |
 | Comprobando la agenda de hoy… | `src/app/views/MiDia.jsx:134` |
-| Conectado | `src/app/views/Profile.jsx:751` |
+| Conectado | `src/app/views/Profile.jsx:700` |
 | Conectando tu clínica con Huli… | `src/dental-demo/TenantHuliWorkspace.jsx:8` |
 | Conectando… | `src/app/views/ConectarWhatsApp.jsx:122` |
 | Conectar mi WhatsApp | `src/app/views/ConectarWhatsApp.jsx:123` |
@@ -731,11 +732,12 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Configuración del proceso comercial | `src/app/features/Admin/RailsSettings.jsx:69` |
 | Configurar WhatsApp | `src/app/features/Admin/CompanyOnboarding.jsx:141` |
 | Confirmados | `src/app/views/ZoomControl/Resumen.jsx:450` |
-| Confirmar contraseña | `src/app/views/Profile.jsx:333` |
+| Confirmar contraseña | `src/app/views/Profile.jsx:282` |
 | Confirmas y listo | `src/app/views/ConectarWhatsApp.jsx:107` |
 | Contáctame Ya | `src/app/views/CRM/index.jsx:6183` |
 | Contarlo ahora | `src/app/views/Marketing.jsx:708` |
 | Continuar sin CV | `src/app/features/Portal/index.jsx:425` |
+| Contraseña | `src/app/views/Profile.jsx:276` |
 | Contraseña temporal | `src/app/features/Admin/AdminPanel.jsx:494` |
 | Contraseña: | `src/app/features/Admin/PlatformAdminConsole.jsx:79` |
 | Conversación de demostración | `src/dental-demo/DentalDemo.jsx:54` |
@@ -748,7 +750,6 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Copiar resumen para Telegram | `src/app/views/CRM/components.jsx:4560` |
 | Copiar usuario y contraseña | `src/app/features/Admin/PlatformAdminConsole.jsx:148` |
 | Copilot | `src/app/views/ISpaceBoard.jsx:102` |
-| Copilot AI | `src/app/views/Copilot.jsx:1130` |
 
 
 _(710 textos más — usá `npm run buscar "texto"`)_
@@ -775,8 +776,8 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/Admin/Rails.css` (832 líneas)
 - `src/landing/ManualCRM.jsx` (790 líneas)
 - `src/app/views/InformeAvances.jsx` (747 líneas)
-- `src/lib/auth.js` (725 líneas)
 - `src/app/views/ERP.jsx` (722 líneas)
+- `src/lib/auth.js` (702 líneas)
 - `src/landing/OnboardingCallCenter.jsx` (687 líneas)
 - `src/app/views/WhatsApp.jsx` (667 líneas)
 - `src/app/data/catalogoProyectos.js` (611 líneas)

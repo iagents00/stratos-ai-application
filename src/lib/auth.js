@@ -20,6 +20,7 @@
  *    quedaban en login tras un día sin abrir + una red lenta; 2026-07-17.)
  */
 import { supabase, SUPABASE_REST_URL, SUPABASE_ANON_KEY } from './supabase'
+import { requestRecoveryCode } from './recovery'
 import { logAuthEvent } from './audit'
 import { getAppReviewLogin, readAppReviewSession } from './app-review-access'
 import { isServiceUnavailableError, SERVICE_UNAVAILABLE_MESSAGE } from './service-errors'
@@ -41,12 +42,6 @@ import {
 // <500ms. Los logs de Supabase confirmaron que auth se completa siempre,
 // pero el cliente cortaba a los 18s pensando que había timeout.
 const TIMEOUT_MS         = 8000              // queries normales (read profile, leads)
-// Dominio al que apuntan los correos de recuperación de contraseña.
-// NO usar window.location.origin: dentro de la app nativa vale
-// "capacitor://localhost" y el link del correo llegaría inservible.
-// La recuperación siempre se completa en la web, y después se entra a la app.
-const WEB_ORIGIN = "https://getstratosai.com";
-
 const AUTH_TIMEOUT_MS    = 20000              // signInWithPassword: tolerar redes lentas
 const GETSESSION_TIMEOUT = 3500               // supabase.auth.getSession() — solo lee storage + posible refresh interno
 const PROFILE_TIMEOUT    = 5000               // SELECT profiles.* tras getSession
@@ -372,19 +367,10 @@ export async function signOut() {
 }
 
 export async function resetPassword(email) {
-  try {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${WEB_ORIGIN}/?reset=true`,
-    })
-    if (error) return { data: null, error: error.message }
-    logAuthEvent('PASSWORD_RESET', null, { email })
-    return {
-      data: { message: 'Revisa tu correo — te enviamos el link para restablecer tu contraseña.' },
-      error: null,
-    }
-  } catch (e) {
-    return { data: null, error: 'Error de conexión. Verifica tu internet e inténtalo de nuevo.' }
-  }
+  const result = await requestRecoveryCode(email);
+  return result.ok
+    ? { data: { message: result.message }, error: null }
+    : { data: null, error: result.error };
 }
 
 // ── Una sola lectura de sesión a la vez ────────────────────────────────────
@@ -673,16 +659,7 @@ export async function adminGetTemporaryCredentials() {
  * falta ningún permiso especial ni entrar al Dashboard.
  */
 export async function adminResetPassword(email) {
-  try {
-    if (!email) return { data: null, error: 'Falta el correo.' }
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${WEB_ORIGIN}/`,
-    })
-    if (error) return { data: null, error: error.message }
-    return { data: { sent: true }, error: null }
-  } catch (e) {
-    return { data: null, error: 'Error de conexión al mandar el correo.' }
-  }
+  return resetPassword(email);
 }
 
 /**
