@@ -30,7 +30,7 @@ test('external companies require separate opt-ins and allowed roles for Create a
 });
 
 test('native and localhost portfolios use the public HTTPS site', () => {
-  for (const origin of ['capacitor://localhost', 'http://localhost', 'https://localhost', 'http://127.0.0.1:5174', 'null']) {
+  for (const origin of ['capacitor://localhost', 'http://localhost', 'https://localhost', 'http://127.0.0.1:5174', 'null', 'https://preview-123.vercel.app', 'https://unverified.example.com']) {
     assert.equal(portfolioOrigin(origin), 'https://stratoscapitalgroup.com');
   }
   assert.equal(portfolioOrigin('https://stratoscapitalgroup.com'), 'https://stratoscapitalgroup.com');

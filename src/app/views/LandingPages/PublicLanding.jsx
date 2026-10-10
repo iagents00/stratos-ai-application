@@ -32,7 +32,7 @@ const PublicLanding = () => {
   // resuelve vía la RPC pública resolve_portfolio_link → devuelve el MISMO
   // base64 que el camino 1 → misma decodificación, misma landing.
   const code = useMemo(() => {
-    const m = window.location.pathname.match(/^\/p\/([A-Za-z0-9_-]{4,32})\/?$/);
+    const m = window.location.pathname.match(/^\/p\/([A-Za-z0-9_-]{1,64})\/?$/);
     return m ? m[1] : null;
   }, []);
   const [data, setData] = useState(initial);

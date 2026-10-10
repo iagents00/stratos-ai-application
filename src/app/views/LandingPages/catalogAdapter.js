@@ -114,7 +114,7 @@ export const catalogToLandingProps = (sections = CATALOGO_SECCIONES) => {
       const name = (it.desarrollo || "").trim();
       if (!name || (!it.drive && it.origen !== "app")) return; // solo desarrollos con material de Drive
       if (EXCLUDE_CLASS.has((it.clasificacion || "").trim().toUpperCase())) return;
-      const key = name.toLowerCase();
+      const key = it.id || name.toLowerCase();
       if (seen.has(key)) return; // el mismo desarrollo puede repetirse entre pestañas
       seen.add(key);
       out.push(itemToProp(it, sec.id, idx));
