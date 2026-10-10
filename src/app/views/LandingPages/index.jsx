@@ -17,6 +17,7 @@ import LandingPagePreview from "./LandingPagePreview";
 import { catalogToLandingProps, encodeLanding } from "./catalogAdapter";
 import { useAuth } from "../../../hooks/useAuth";
 import { useIsMobile } from "../../../hooks/useViewport";
+import { portfolioOrigin } from "./portfolio-origin.js";
 import { supabase } from "../../../lib/supabase";
 
 const team = [
@@ -851,7 +852,7 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
               transition: "all 0.2s",
               boxShadow: canSave ? `0 4px 20px ${form.accent}40` : "none",
             }}>
-              {editing ? "Guardar cambios" : "Registrar en catálogo"} {canSave && "→"}
+              {editing ? "Guardar cambios" : "Guardar en este navegador"} {canSave && "→"}
             </button>
           </div>
         </div>
@@ -1002,6 +1003,36 @@ const RivieraMayaMap = ({ properties, T = P }) => {
 };
 
 const LandingPages = ({ T = P }) => {
+  const { user } = useAuth();
+  const orgId = user?.organizationId;
+  const storageKey = (name) => `stratos_create:${orgId}:${user?.id}:${name}`;
+  // Before external-company opt-in, these legacy drafts could only be made
+  // in Duke. Keep them available there without importing them into new tenants.
+  const readDraft = (name, legacyKey, fallback) => {
+    try {
+      const scoped = localStorage.getItem(storageKey(name));
+      const legacy = orgId === "00000000-0000-0000-0000-000000000001" ? localStorage.getItem(legacyKey) : null;
+      return JSON.parse(scoped || legacy || fallback);
+    } catch { return JSON.parse(fallback); }
+  };
+  const publicOrigin = portfolioOrigin(window.location.origin);
+  const [catalogRows, setCatalogRows] = useState([]);
+  const [catalogError, setCatalogError] = useState("");
+  const [agencyName, setAgencyName] = useState("");
+  useEffect(() => {
+    if (!orgId) return;
+    let active = true;
+    Promise.all([
+      supabase.from("catalogo_proyectos").select("*").eq("organization_id", orgId).eq("visible", true).order("created_at", { ascending: false }),
+      supabase.from("organizations").select("name").eq("id", orgId).single(),
+    ]).then(([catalog, organization]) => {
+      if (!active) return;
+      if (catalog.error) setCatalogError("No se pudo cargar el catálogo. Vuelve a abrir Create para reintentar.");
+      else setCatalogRows(catalog.data || []);
+      setAgencyName(organization.data?.name || "");
+    }).catch(() => { if (active) setCatalogError("No se pudo cargar el catálogo. Vuelve a abrir Create para reintentar."); });
+    return () => { active = false; };
+  }, [orgId]);
   const isLight = T?.bg !== P.bg;
   const [step, setStep] = useState(0);
   const [clientName, setClientName] = useState("");
@@ -1012,20 +1043,20 @@ const LandingPages = ({ T = P }) => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const isMobile = useIsMobile();
   const [customProperties, setCustomProperties] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("stratos_custom_props") || "[]"); } catch { return []; }
+    return readDraft("properties", "stratos_custom_props", "[]");
   });
   const [showNewPropModal, setShowNewPropModal] = useState(false);
   const [editingProp, setEditingProp] = useState(null);
   const [showCatalogSection, setShowCatalogSection] = useState(false);
-  const [savedPages, setSavedPages] = useState([
-    { id: 1, client: "Alex Ejemplo", date: "3 Abr 2026", props: 3, status: "Enviada", budget: "$280K-$1.2M", opens: 4, asesor: "Asesor 1 Ejemplo" },
-    { id: 2, client: "Sam Ejemplo", date: "2 Abr 2026", props: 4, status: "Vista", budget: "$180K-$650K", opens: 2, asesor: "Asesor 2 Ejemplo" },
-    { id: 3, client: "Robin Ejemplo", date: "1 Abr 2026", props: 2, status: "Generada", budget: "$300K-$600K", opens: 0, asesor: "Asesor 3 Ejemplo" },
-  ]);
+  const [savedPages, setSavedPages] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(storageKey("pages")) || "[]"); } catch { return []; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(storageKey("pages"), JSON.stringify(savedPages)); } catch { /* storage unavailable */ }
+  }, [savedPages]);
   const [asesor, setAsesor] = useState("");
   const [asesorWA, setAsesorWA] = useState("");
   const [asesorCal, setAsesorCal] = useState("");
-  const { user } = useAuth();
   const isAdmin = ["admin", "super_admin", "owner"].includes(user?.role);
   const [advOpen, setAdvOpen] = useState(false);
   const [mensaje, setMensaje] = useState("");
@@ -1038,20 +1069,20 @@ const LandingPages = ({ T = P }) => {
   const [catSearch, setCatSearch] = useState("");
   // Drive links per property (id → url), persisted in localStorage
   const [driveLinks, setDriveLinks] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("stratos_drive_links") || "{}"); } catch { return {}; }
+    return readDraft("driveLinks", "stratos_drive_links", "{}");
   });
   const [editingLinkId, setEditingLinkId] = useState(null);
   const [editLinkValue, setEditLinkValue] = useState("");
-  const [agencyName, setAgencyName] = useState(() => localStorage.getItem("stratos_agency_name") || "STRATOS REALTY");
+
 
   // Persist drive links to localStorage whenever they change
   useEffect(() => {
-    try { localStorage.setItem("stratos_drive_links", JSON.stringify(driveLinks)); } catch {}
+    try { localStorage.setItem(storageKey("driveLinks"), JSON.stringify(driveLinks)); } catch {}
   }, [driveLinks]);
 
   // Persist custom properties to localStorage whenever they change
   useEffect(() => {
-    try { localStorage.setItem("stratos_custom_props", JSON.stringify(customProperties)); } catch {}
+    try { localStorage.setItem(storageKey("properties"), JSON.stringify(customProperties)); } catch {}
   }, [customProperties]);
 
   const saveCustomProp = (prop) => {
@@ -1103,8 +1134,11 @@ const LandingPages = ({ T = P }) => {
     { key: "boutique", label: "Boutique/Exclusivo", icon: Crown },
   ];
 
-  const catalogProps = useMemo(() => catalogToLandingProps(), []);
-  const allProperties = useMemo(() => [...customProperties, ...catalogProps, ...rivieraProperties], [customProperties, catalogProps]);
+  const catalogProps = useMemo(() => {
+    if (catalogRows.length) return catalogToLandingProps([{ id: "catalogo", items: catalogRows.map(row => ({ ...row, entregaComo: row.entrega_como })) }]);
+    return orgId === "00000000-0000-0000-0000-000000000001" ? catalogToLandingProps() : [];
+  }, [catalogRows, orgId]);
+  const allProperties = useMemo(() => [...customProperties, ...catalogProps, ...(orgId === "00000000-0000-0000-0000-000000000001" ? rivieraProperties : [])], [customProperties, catalogProps, orgId]);
 
   const inBudget = (p) => (!p.priceTo || p.priceTo <= 0) ? true : (p.priceFrom <= clientBudgetMax && p.priceTo >= clientBudgetMin);
   const filteredProperties = useMemo(() => {
@@ -1141,6 +1175,7 @@ const LandingPages = ({ T = P }) => {
     setGeneratedId(newId);
     setSavedPages(prev => [{
       id: newId,
+      url: buildPublicUrl(),
       client: clientName || "Cliente",
       date: new Date().toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }),
       propIds: [...selectedProps],
@@ -1160,8 +1195,8 @@ const LandingPages = ({ T = P }) => {
   const buildPublicUrl = () => {
     const props = allProperties.filter(p => selectedProps.includes(p.id));
     if (props.length === 0) return null;
-    const d = encodeLanding({ client: clientName, mensaje, asesor, asesorWA, asesorCal, properties: props, driveLinks });
-    return `${window.location.origin}/p#d=${d}`;
+    const d = encodeLanding({ client: clientName, mensaje, asesor, asesorWA, asesorCal, agencyName, properties: props, driveLinks });
+    return `${publicOrigin}/p#d=${d}`;
   };
   const [shortUrl, setShortUrl] = useState(null);
   useEffect(() => {
@@ -1169,21 +1204,24 @@ const LandingPages = ({ T = P }) => {
     const props = allProperties.filter(p => selectedProps.includes(p.id));
     if (props.length === 0) return;
     let alive = true;
-    const d = encodeLanding({ client: clientName, mensaje, asesor, asesorWA, asesorCal, properties: props, driveLinks });
+    const d = encodeLanding({ client: clientName, mensaje, asesor, asesorWA, asesorCal, agencyName, properties: props, driveLinks });
     supabase.rpc("create_portfolio_link", { p_payload: d, p_slug: clientName || null })
       .then(({ data: code }) => {
-        if (alive && code && typeof code === "string") setShortUrl(`${window.location.origin}/p/${code}`);
+        if (alive && code && typeof code === "string") setShortUrl(`${publicOrigin}/p/${code}`);
       })
       .catch(() => {}); // sin red / sin sesión → queda el link largo, que siempre funciona
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [previewOpen]);
-  const handleCopyLink = () => {
-    const url = shortUrl || buildPublicUrl() || `${window.location.origin}/p`;
-    navigator.clipboard.writeText(url).catch(() => {});
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+  const copyUrl = async (url) => {
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch { setCatalogError("No se pudo copiar el enlace. Ábrelo para copiarlo desde el navegador."); }
   };
+  const handleCopyLink = () => copyUrl(shortUrl || buildPublicUrl());
 
   const resetForm = () => {
     setStep(0);
@@ -1208,7 +1246,7 @@ const LandingPages = ({ T = P }) => {
           <p style={{ fontSize: 21, fontWeight: 400, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em" }}>
             Create <span style={{ fontWeight: 300, color: isLight ? T.txt3 : "rgba(255,255,255,0.4)" }}>Studio</span>
           </p>
-          <p style={{ fontSize: 12.5, color: T.txt3, fontFamily: font, marginTop: 4 }}>Crea campañas y presentaciones de propiedades con IA en un clic</p>
+          <p style={{ fontSize: 12.5, color: T.txt3, fontFamily: font, marginTop: 4 }}>Crea presentaciones para tus clientes con las propiedades de tu empresa</p>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button onClick={() => setShowNewPropModal(true)} style={{
@@ -1241,12 +1279,13 @@ const LandingPages = ({ T = P }) => {
         </div>
       </div>
 
+      {catalogError && <p role="alert" style={{ color: T.rose }}>{catalogError}</p>}
       {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(150px, 100%), 1fr))", gap: 14 }}>
-        <KPI label="Pages Generadas" value={savedPages.length} sub="total" icon={Globe} color={T.blue} T={T} />
+        <KPI label="Presentaciones guardadas" value={savedPages.length} sub="En este navegador" icon={Globe} color={T.blue} T={T} />
         <KPI label="Propiedades en catálogo" value={allProperties.length} sub={`${catalogProps.length} del inventario`} icon={Building2} color={T.emerald} T={T} />
-        <KPI label="Tasa de Apertura" value="87%" sub="+12%" icon={Eye} color={T.accent} T={T} />
-        <KPI label="Conversión a Zoom" value="34%" sub="+8pp" icon={Target} color={T.violet} T={T} />
+        <KPI label="Tasa de Apertura" value="—" sub="Sin medición" icon={Eye} color={T.accent} T={T} />
+        <KPI label="Conversión a Zoom" value="—" sub="Sin medición" icon={Target} color={T.violet} T={T} />
       </div>
 
       {/* Landing Pages Recientes */}
@@ -1281,9 +1320,9 @@ const LandingPages = ({ T = P }) => {
             <div style={{ display: "flex", minWidth: 0 }}><Pill color={statusColors[pg.status] || T.txt3} s isLight={isLight}>{pg.status}</Pill></div>
             <span style={{ fontSize: 12, color: T.txt2, fontFamily: font, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pg.asesor?.split(" ")[0] || "—"}</span>
             <div style={{ display: "flex", gap: 5 }}>
-              <button onClick={() => { setClientName(pg.client); setSelectedProps(pg.propIds || allProperties.slice(0, pg.props).map(p => p.id)); setPreviewOpen(true); }} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}><Eye size={11} color={T.txt2} /></button>
-              <button onClick={handleCopyLink} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}>{copied ? <Check size={11} color={T.accent} /> : <Copy size={11} color={T.txt2} />}</button>
-              <button style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}><Share2 size={11} color={T.txt2} /></button>
+              <button aria-label="Abrir presentación" onClick={() => { if (pg.url) window.open(pg.url, "_blank", "noopener,noreferrer"); }} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}><Eye size={11} color={T.txt2} /></button>
+              <button aria-label="Copiar presentación" onClick={() => copyUrl(pg.url)} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}>{copied ? <Check size={11} color={T.accent} /> : <Copy size={11} color={T.txt2} />}</button>
+              <button aria-label="Compartir presentación" onClick={() => copyUrl(pg.url)} style={{ padding: "5px 7px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", display: "flex", alignItems: "center" }}><Share2 size={11} color={T.txt2} /></button>
             </div>
           </div>
         ))}
@@ -1299,7 +1338,7 @@ const LandingPages = ({ T = P }) => {
             <div>
               <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>Catálogo de Propiedades</p>
               <p style={{ fontSize: 12, color: T.txt3, marginTop: 1 }}>
-<span style={{ color: T.accent, fontWeight: 500 }}>{catalogProps.length}</span> desarrollos del inventario{customProperties.length > 0 ? ` · ${customProperties.length} del equipo` : ""} · {rivieraProperties.length} demo
+<span style={{ color: T.accent, fontWeight: 500 }}>{catalogProps.length}</span> desarrollos del inventario{customProperties.length > 0 ? ` · ${customProperties.length} locales` : ""}
               </p>
             </div>
           </div>
@@ -1329,7 +1368,7 @@ const LandingPages = ({ T = P }) => {
             {customProperties.length > 0 && (
               <div style={{ marginBottom: 20 }}>
                 <p style={{ fontSize: 12, color: T.accent, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>
-                  Registradas por el equipo ({customProperties.length})
+                  Guardadas en este navegador ({customProperties.length})
                 </p>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
                   {customProperties.map(prop => (
@@ -1461,8 +1500,8 @@ const LandingPages = ({ T = P }) => {
         )}
       </G>
 
-      {/* Quick Market Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))", gap: 14 }}>
+      {/* Legacy market reference applies only to the original tenant. */}
+      {orgId === "00000000-0000-0000-0000-000000000001" && <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))", gap: 14 }}>
         <G T={T}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
             <Ico icon={TrendingUp} sz={32} is={15} c={T.emerald} />
@@ -1517,7 +1556,7 @@ const LandingPages = ({ T = P }) => {
             ))}
           </div>
         </G>
-      </div>
+      </div>}
 
       {/* New Property Modal accessible from step 0 */}
       {showNewPropModal && (
@@ -1999,7 +2038,7 @@ const LandingPages = ({ T = P }) => {
           asesorWA={asesorWA}
           asesorCal={asesorCal}
           mensaje={mensaje}
-          agencyName=""
+          agencyName={agencyName}
           properties={allProperties.filter(p => selectedProps.includes(p.id))}
           driveLinks={driveLinks}
           onClose={() => { setPreviewOpen(false); resetForm(); }}
@@ -2018,4 +2057,8 @@ const LandingPages = ({ T = P }) => {
    LANDING PAGE PREVIEW — FULL SCREEN
    ════════════════════════════════════════ */
 
-export default LandingPages;
+export default function ScopedLandingPages(props) {
+  const { user } = useAuth();
+  if (!user?.organizationId || !user?.id) return null;
+  return <LandingPages key={`${user.organizationId}:${user.id}`} {...props} />;
+}

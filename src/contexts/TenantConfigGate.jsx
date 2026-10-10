@@ -38,6 +38,8 @@ export function TenantConfigGate({ children }) {
           ? data.meta_config.features : {};
         setOrganizationFeatures(organizationId, isManaged ? {
           ...managedTenantFeatures(configuredFeatures),
+          landingPages: configuredFeatures.landingPages === true,
+          erp: configuredFeatures.erp === true,
           // Integraciones: nunca se prenden por defecto. La consola las activa
           // solo cuando el canal supera las pruebas de coexistencia.
           whatsappModule: configuredFeatures.whatsappModule === true,
