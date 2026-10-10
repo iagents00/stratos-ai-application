@@ -94,7 +94,7 @@ export default function CompanyOnboarding({ data, refresh, onIntegrations }) {
     </header>
     {error && <div className="company-message company-error" role="alert">{error}</div>}
     {notice && <div className="company-message" role="status"><Check size={18} />{notice}</div>}
-    {!root && <p className="company-quota">{data?.access?.companiesUsed ?? '—'} de {data?.access?.companyLimit ?? '—'} empresas disponibles en tu plan.{!quotaAvailable && ' Solicita a Stratos una ampliación para crear otra empresa.'}</p>}
+    {!root && <p className="company-quota">{data?.access?.companiesUsed ?? '—'} de {data?.access?.companyLimit ?? '—'} empresas utilizadas en tu plan.{!quotaAvailable && ' Solicita a Stratos una ampliación para crear otra empresa.'}</p>}
 
     {view === 'list' && <>
       <div className="company-toolbar"><label className="company-search"><Search size={17} /><span className="company-sr-only">Buscar empresa</span><input type="search" placeholder="Buscar empresa…" value={query} onChange={event => setQuery(event.target.value)} /></label><span>{managed.length} {managed.length === 1 ? 'empresa' : 'empresas'}</span></div>

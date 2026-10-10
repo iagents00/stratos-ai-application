@@ -5,7 +5,8 @@
 Implementación y backend verificados en **stratos-prod / glulgyhkrqpykxmujodb**
 con la cuenta synergyfornature. Migraciones incrementales 266 y 267 aplicadas,
 ambas Edge Functions publicadas y su fuente descargada comparada con el código
-local. Pendiente la integración del PR y comprobar el SHA del frontend publicado.
+local. PR #786 integrado; los tres dominios sirvieron el SHA `7cb21e6` y
+la consola real se comprobó con una cuenta partner QA aislada.
 
 La inspección activa confirmó que el trigger anterior ya rechazaba metadata de
 usuario para elegir empresa, aunque ese cambio no estaba versionado. Se conservó
@@ -111,7 +112,13 @@ usuarios, canales ni permisos reales de Duke, NSG u otros clientes.
 
 ## Verificación del frontend
 
-Integrar con `Validar Stratos` y `verificar` aprobados, actualizar la carpeta
-principal y comprobar `release.json` de los dominios contra el SHA integrado.
-Las pruebas de apariencia y flujo con API interceptada cubren escritorio/móvil
-y claro/oscuro; no sustituyen las pruebas reales de backend descritas arriba.
+`Validar Stratos` y `verificar` aprobados. CI: 124 pruebas pasan, cero fallos y
+una prueba existente omitida. Build y runtime lint aprobados. Carpeta principal
+actualizada al SHA integrado; `release.json` coincide en getstratosai.com,
+app.stratoscapitalgroup.com y stratos-ai-application.vercel.app.
+
+La consola publicada abre Empresas con la cuenta QA partner y limita la lista
+a su ámbito. Formulario y selector de tema comprobados en negro/claro,
+escritorio y móvil, sin desbordamiento horizontal. Capturas con prefijo
+`production-` en `output/playwright/companies/`. La revisión final también
+aclaró el texto del cupo: muestra empresas utilizadas, no disponibles.
