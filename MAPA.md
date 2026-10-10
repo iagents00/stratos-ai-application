@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**245 archivos · 80.507 líneas**
+**246 archivos · 80.531 líneas**
 
 ---
 
@@ -340,7 +340,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `AuthContext.jsx` | 376 | Estado global de autenticación — conectado a Supabase Auth. |
+| `AuthContext.jsx` | 378 | Estado global de autenticación — conectado a Supabase Auth. |
 | `ClientOrgGuard.jsx` | 79 | _sin describir_ |
 | `ClientContext.jsx` | 63 | _sin describir_ |
 | `TenantConfigGate.jsx` | 62 | _sin describir_ |
@@ -477,6 +477,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `service-errors.js` | 32 | _sin describir_ |
 | `copilot-profile.js` | 29 | A failed profile lookup is not evidence that Copilot is disabled. |
 | `rails-gestion.js` | 24 | Valida el borrador una vez; un envío incierto se reintenta sin alterar su payload. |
+| `auth-events.js` | 22 | _sin describir_ |
 | `project-copilot.js` | 18 | _sin describir_ |
 | `read-all-rows.js` | 18 | _sin describir_ |
 | `copilot-demo.js` | 16 | Demo messages are local examples; they never claim to write to a real account. |
