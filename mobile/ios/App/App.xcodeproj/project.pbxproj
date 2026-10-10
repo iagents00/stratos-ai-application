@@ -307,7 +307,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.6;
+				MARKETING_VERSION = 4.9;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stratoscapitalgroup.crm;
@@ -330,7 +330,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.6;
+				MARKETING_VERSION = 4.9;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stratoscapitalgroup.crm;
 				PRODUCT_NAME = "$(TARGET_NAME)";
