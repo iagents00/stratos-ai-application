@@ -17,6 +17,7 @@ import LandingPagePreview from "./LandingPagePreview";
 import { catalogToLandingProps, encodeLanding } from "./catalogAdapter";
 import { useAuth } from "../../../hooks/useAuth";
 import { useIsMobile } from "../../../hooks/useViewport";
+import { normalizeLinkName } from "./link-name.js";
 import { portfolioOrigin } from "./portfolio-origin.js";
 import { supabase } from "../../../lib/supabase";
 
@@ -52,7 +53,7 @@ const WriterSection = ({ value, onChange, clientName, T = P }) => {
     },
     investment: {
       label: "Inversión",
-      text: `${clientName || "Cliente"}, esta cartera de propiedades representa el mejor análisis de rentabilidad en el mercado actual. Proyecciones de ROI 8-13% anual con plusvalía garantizada en la Riviera Maya.`
+      text: `${clientName || "Cliente"}, esta cartera de propiedades representa el mejor análisis de rentabilidad en el mercado actual. Revisa las características y condiciones de cada propiedad con tu asesor.`
     }
   };
 
@@ -516,7 +517,7 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
   const editing = !!initialData;
   const EMPTY = {
     name: "", brand: "", location: "Tulum", zone: "", type: "Condominios",
-    priceFrom: "", priceTo: "", roi: "8-10%", delivery: "2026",
+    priceFrom: "", priceTo: "", roi: "", delivery: "",
     bedrooms: "1-2 recámaras", sizes: "", badge: "NUEVO",
     description: "", highlights: "", amenities: "",
     accent: "#4ADE80", driveLink: "", unitsAvailable: "", totalUnits: "",
@@ -559,12 +560,12 @@ const NewPropertyModal = ({ onClose, onSave, initialData = null, T = P }) => {
       bedrooms: form.bedrooms.trim() || "—",
       priceFrom: parseInt(form.priceFrom) || 0,
       priceTo: parseInt(form.priceTo) || 0,
-      roi: form.roi.trim() || "8-10%",
-      roiNum: parseFloat(form.roi) || 8,
-      delivery: form.delivery.trim() || "2026",
+      roi: form.roi.trim(),
+      roiNum: parseFloat(form.roi) || 0,
+      delivery: form.delivery.trim(),
       badge: form.badge,
-      unitsAvailable: parseInt(form.unitsAvailable) || 10,
-      totalUnits: parseInt(form.totalUnits) || 10,
+      unitsAvailable: parseInt(form.unitsAvailable) || 0,
+      totalUnits: parseInt(form.totalUnits) || 0,
       featured: initialData?.featured || false,
       accent: form.accent,
       amenities: form.amenities ? form.amenities.split(",").map(s => s.trim()).filter(Boolean) : [],
@@ -1036,6 +1037,10 @@ const LandingPages = ({ T = P }) => {
   const isLight = T?.bg !== P.bg;
   const [step, setStep] = useState(0);
   const [clientName, setClientName] = useState("");
+  const [linkName, setLinkName] = useState(null);
+  const [generating, setGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState("");
+  const [shortUrl, setShortUrl] = useState(null);
   const [clientBudgetMin, setClientBudgetMin] = useState(120000);
   const [clientBudgetMax, setClientBudgetMax] = useState(600000);
   const [clientPrefs, setClientPrefs] = useState({ beach: false, golf: false, marina: false, jungle: false, investment: false, retirement: false, family: false, boutique: false });
@@ -1167,52 +1172,44 @@ const LandingPages = ({ T = P }) => {
   };
 
   const toggleProp = (id) => {
+    if (!selectedProps.includes(id) && selectedProps.length >= 12) {
+      setGenerationError("Puedes incluir hasta 12 propiedades por presentación.");
+      return;
+    }
+    setGenerationError("");
     setSelectedProps(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const handleGenerate = () => {
-    const newId = Date.now();
-    setGeneratedId(newId);
-    setSavedPages(prev => [{
-      id: newId,
-      url: buildPublicUrl(),
-      client: clientName || "Cliente",
-      date: new Date().toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }),
-      propIds: [...selectedProps],
-      props: selectedProps.length,
-      status: "Generada",
-      budget: `$${(clientBudgetMin / 1000).toFixed(0)}K-$${(clientBudgetMax / 1000).toFixed(0)}K`,
-      asesor,
-    }, ...prev]);
-    setPreviewOpen(true);
-  };
-
-  // Link del portafolio. Antes era SOLO auto-contenido (#d=<base64 gigante>, miles
-  // de caracteres — imposible de dictar/pegar). Ahora: al abrir el preview se crea
-  // un LINK CORTO con el dominio propio (/p/<código de 8>) vía la RPC
-  // create_portfolio_link (el payload guardado es el MISMO base64 → PublicLanding
-  // lo decodifica idéntico). El largo queda como fallback si la RPC falla/offline.
-  const buildPublicUrl = () => {
+  const handleGenerate = async () => {
+    if (generating) return;
     const props = allProperties.filter(p => selectedProps.includes(p.id));
-    if (props.length === 0) return null;
-    const d = encodeLanding({ client: clientName, mensaje, asesor, asesorWA, asesorCal, agencyName, properties: props, driveLinks });
-    return `${publicOrigin}/p#d=${d}`;
+    if (!agencyName || !props.length || props.length > 12) {
+      setGenerationError("Espera a que cargue tu empresa y selecciona entre 1 y 12 propiedades.");
+      return;
+    }
+    setGenerating(true);
+    setGenerationError("");
+    try {
+      const d = encodeLanding({ client: clientName, mensaje, asesor, asesorWA, asesorCal, agencyName, properties: props, driveLinks });
+      const { data: code, error } = await supabase.rpc("create_portfolio_link", {
+        p_payload: d, p_slug: normalizeLinkName(linkName ?? agencyName) || "portafolio",
+      });
+      if (error || typeof code !== "string" || !code) throw error || new Error("Sin enlace");
+      const url = `${publicOrigin}/p/${code}`;
+      const newId = Date.now();
+      setShortUrl(url);
+      setGeneratedId(newId);
+      setSavedPages(prev => [{
+        id: newId, url, client: clientName || "Cliente",
+        date: new Date().toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }),
+        propIds: [...selectedProps], props: props.length, status: "Generada",
+        budget: `$${(clientBudgetMin / 1000).toFixed(0)}K-$${(clientBudgetMax / 1000).toFixed(0)}K`, asesor,
+      }, ...prev]);
+      setPreviewOpen(true);
+    } catch {
+      setGenerationError("No se pudo crear el enlace. Revisa tu conexión y vuelve a generar la presentación. Tus datos siguen aquí.");
+    } finally { setGenerating(false); }
   };
-  const [shortUrl, setShortUrl] = useState(null);
-  useEffect(() => {
-    if (!previewOpen) { setShortUrl(null); return; }
-    const props = allProperties.filter(p => selectedProps.includes(p.id));
-    if (props.length === 0) return;
-    let alive = true;
-    const d = encodeLanding({ client: clientName, mensaje, asesor, asesorWA, asesorCal, agencyName, properties: props, driveLinks });
-    supabase.rpc("create_portfolio_link", { p_payload: d, p_slug: clientName || null })
-      .then(({ data: code }) => {
-        if (alive && code && typeof code === "string") setShortUrl(`${publicOrigin}/p/${code}`);
-      })
-      .catch(() => {}); // sin red / sin sesión → queda el link largo, que siempre funciona
-    return () => { alive = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewOpen]);
   const copyUrl = async (url) => {
     if (!url) return;
     try {
@@ -1221,11 +1218,13 @@ const LandingPages = ({ T = P }) => {
       setTimeout(() => setCopied(false), 2500);
     } catch { setCatalogError("No se pudo copiar el enlace. Ábrelo para copiarlo desde el navegador."); }
   };
-  const handleCopyLink = () => copyUrl(shortUrl || buildPublicUrl());
+  const handleCopyLink = () => copyUrl(shortUrl);
 
   const resetForm = () => {
     setStep(0);
     setClientName("");
+    setLinkName(null);
+    setGenerationError("");
     setClientBudgetMin(120000);
     setClientBudgetMax(500000);
     setClientPrefs({ beach: false, golf: false, marina: false, jungle: false, investment: false, retirement: false, family: false, boutique: false });
@@ -1608,6 +1607,22 @@ const LandingPages = ({ T = P }) => {
         </div>
 
 
+        <div style={{ marginBottom: 22 }}>
+          <label htmlFor="create-link-name" style={{ fontSize: 13, color: T.txt, display: "block", marginBottom: 6 }}>Nombre del enlace</label>
+          <input id="create-link-name" value={linkName ?? agencyName} maxLength={80}
+            onChange={e => setLinkName(e.target.value)} aria-describedby="create-link-help"
+            placeholder="Ej. Adoquín Inmobiliaria"
+            style={{ width: "100%", boxSizing: "border-box", padding: "12px 16px", borderRadius: 10, fontSize: 14, background: T.glass, border: `1px solid ${T.border}`, color: T.txt, fontFamily: font }} />
+          <p id="create-link-help" style={{ marginTop: 8, fontSize: 12, color: T.txt2, lineHeight: 1.6, overflowWrap: "anywhere" }}>
+            {publicOrigin}/p/{normalizeLinkName(linkName ?? agencyName) || "portafolio"}-código
+          </p>
+          <p style={{ marginTop: 6, fontSize: 12, color: T.txt2, lineHeight: 1.6 }}>Puedes usar el nombre de tu inmobiliaria o de la selección. Añadimos un código único. No necesitas comprar un dominio. Cualquier persona con el enlace podrá ver la presentación.</p>
+          <details style={{ marginTop: 10, fontSize: 12, color: T.txt2, lineHeight: 1.6 }}>
+            <summary style={{ cursor: "pointer" }}>¿Quieres usar tu propio dominio?</summary>
+            <p>Solicita a tu administrador conectar un subdominio, por ejemplo propiedades.tuinmobiliaria.com. Requiere verificar el dominio y configurar su DNS antes de activarlo. Mientras tanto, este enlace funciona en cualquier dispositivo.</p>
+          </details>
+        </div>
+
         {/* Asesor: se toma de la CUENTA. Solo el admin puede usar otros datos. */}
         <div style={{ marginBottom: 18, padding: "12px 14px", borderRadius: 10, background: T.glass, border: `1px solid ${T.border}` }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
@@ -1738,7 +1753,7 @@ const LandingPages = ({ T = P }) => {
           <p style={{ fontSize: 12, color: T.txt3, fontFamily: font }}>Paso 2 de 2 — Landing page para <span style={{ color: T.accent, fontWeight: 400 }}>{clientName}</span> · Presupuesto: <span style={{ color: T.emerald, fontWeight: 400 }}>${(clientBudgetMin / 1000).toFixed(0)}K – ${(clientBudgetMax / 1000).toFixed(0)}K</span></p>
         </div>
         {selectedProps.length > 0 && (
-          <button onClick={handleGenerate} style={{
+          <button onClick={handleGenerate} disabled={generating || !agencyName} style={{
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 22px",
             flex: isMobile ? "1 1 100%" : "0 0 auto",
             borderRadius: 12, border: "none", cursor: "pointer",
@@ -1751,11 +1766,12 @@ const LandingPages = ({ T = P }) => {
             onMouseEnter={e => { e.currentTarget.style.background = isLight ? (T.accentDark || T.accent) : "#FFFFFF"; e.currentTarget.style.transform = "translateY(-1px)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = isLight ? T.accent : "rgba(255,255,255,0.95)"; e.currentTarget.style.transform = "translateY(0)"; }}
           >
-            <Wand2 size={16} /> Generar Landing Page ({selectedProps.length})
+            <Wand2 size={16} /> {generating ? "Creando enlace…" : `Generar Landing Page (${selectedProps.length})`}
           </button>
         )}
       </div>
 
+      {generationError && <p role="alert" style={{ color: T.rose, fontSize: 13 }}>{generationError}</p>}
       <div style={{ display: "flex", gap: 8 }}>
         <div style={{ flex: 1, height: 3, borderRadius: 2, background: T.accent }} />
         <div style={{ flex: 1, height: 3, borderRadius: 2, background: T.accent, boxShadow: `0 0 8px ${T.accent}40` }} />
@@ -1986,8 +2002,8 @@ const LandingPages = ({ T = P }) => {
       {filteredProperties.length === 0 && (
         <G T={T} style={{ textAlign: "center", padding: 40 }}>
           <Building2 size={40} color={T.txt3} style={{ margin: "0 auto 12px", opacity: 0.4 }} />
-          <p style={{ fontSize: 14, color: T.txt2, fontFamily: fontDisp }}>No hay propiedades en este rango de presupuesto</p>
-          <p style={{ fontSize: 12.5, color: T.txt3, marginTop: 4 }}>Ajusta el rango en el paso anterior</p>
+          <p style={{ fontSize: 14, color: T.txt2, fontFamily: fontDisp }}>No hay propiedades que mostrar</p>
+          <p style={{ fontSize: 12.5, color: T.txt3, marginTop: 4 }}>Revisa tu búsqueda o registra una propiedad</p>
           <button onClick={() => setShowNewPropModal(true)} style={{ marginTop: 14, padding: "10px 20px", borderRadius: 10, border: `1px solid ${T.accent}40`, background: T.accentS, color: T.accent, fontSize: 12.5, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp }}>
             <Plus size={13} style={{ marginRight: 6, verticalAlign: "middle" }} />Registrar propiedad nueva
           </button>
@@ -2005,7 +2021,7 @@ const LandingPages = ({ T = P }) => {
           <div style={{ minWidth: 0 }}>
             <p style={{ fontSize: 13, color: T.txt, fontWeight: 400 }}>{selectedProps.length} propiedad{selectedProps.length > 1 ? "es" : ""} seleccionada{selectedProps.length > 1 ? "s" : ""} <span style={{ color: T.txt3, fontWeight: 400 }}>· para {clientName}</span></p>
           </div>
-          <button onClick={handleGenerate} style={{
+          <button onClick={handleGenerate} disabled={generating || !agencyName} style={{
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 28px",
             flex: isMobile ? "1 1 100%" : "0 0 auto",
             borderRadius: 12, border: "none", cursor: "pointer",
@@ -2014,7 +2030,7 @@ const LandingPages = ({ T = P }) => {
             fontSize: 14, fontWeight: 500, fontFamily: fontDisp,
             boxShadow: isLight ? T.shadowMint || "0 4px 16px rgba(13,154,118,0.25)" : "0 4px 20px rgba(255,255,255,0.15)",
           }}>
-            <Wand2 size={16} /> Generar Landing Page
+            <Wand2 size={16} /> {generating ? "Creando enlace…" : "Generar Landing Page"}
           </button>
         </div>
       )}
@@ -2032,7 +2048,7 @@ const LandingPages = ({ T = P }) => {
       {/* Full-screen Landing Page Preview */}
       {previewOpen && createPortal(
         <LandingPagePreview
-          shareUrl={shortUrl || buildPublicUrl()}
+          shareUrl={shortUrl}
           client={clientName}
           asesor={asesor}
           asesorWA={asesorWA}
