@@ -1,5 +1,6 @@
 import HuliWorkspace from "../dental-demo/TenantHuliWorkspace.jsx";
 import { DENTAL_DEMO_LEADS } from "../dental-demo/profile-data";
+import { portfolioCache } from "../lib/portfolio-cache.js";
 import { readAllRows } from "../lib/read-all-rows.js";
 /**
  * app/App.jsx — Shell principal de Stratos AI
@@ -1117,6 +1118,8 @@ export default function App() {
   const leadsScopeRef = useRef(leadsScope);
   leadsScopeRef.current = leadsScope;
   const leadsRequestRef = useRef(null);
+  const completePortfolioScope = useRef(null);
+  const fullPortfolioCache = useMemo(() => portfolioCache.scope(leadsScope), [leadsScope]);
   const leadsCacheKey = user?.id ? `stratos.leads.cache.${leadsScope}` : null;
 
   const readLeadsCache = useCallback(() => {
@@ -1164,6 +1167,8 @@ export default function App() {
     leadsRequestRef.current = controller;
     const current = () => !controller.signal.aborted && leadsScopeRef.current === leadsScope;
     const cached = !silent ? readLeadsCache() : null;
+    let visibleCount = cached?.length || 0;
+    let networkPainted = false;
     setLeadsLoadError(null);
     setLeadsRefreshing(true);
     try {
@@ -1178,6 +1183,15 @@ export default function App() {
         if (current()) setLeadsData(normalizeLeads(data));
         return;
       }
+      // Read all cached clients without delaying the network. A late disk read
+      // must never overwrite newer network results or another account.
+      if (!silent) void fullPortfolioCache.read().then(rows => {
+        if (rows && current() && !networkPainted) {
+          visibleCount = rows.length;
+          setLeadsData(normalizeLeads(rows));
+          setLeadsLoading(false);
+        }
+      });
       // Discover the server's page cap, then read up to three pages together.
       // Paint completed batches immediately instead of waiting for all 2,000+.
       const { data, error } = await fetchAllPaged(() =>
@@ -1187,14 +1201,18 @@ export default function App() {
           .abortSignal(controller.signal),
         500,
         { concurrency: 3, onProgress: rows => {
-          if (current() && !silent && rows.length > (cached?.length || 0)) {
+          networkPainted = true;
+          if (current() && !silent && rows.length > visibleCount) {
             setLeadsData(normalizeLeads(rows));
             setLeadsLoading(false);
           }
         } },
       );
+      networkPainted = true;
       if (!current()) return;
       if (error) throw error;
+      completePortfolioScope.current = leadsScope;
+      void fullPortfolioCache.write(data);
       setLeadsData(normalizeLeads(data));
       writeLeadsCache(data);
     } catch (error) {
@@ -1209,11 +1227,12 @@ export default function App() {
         leadsRequestRef.current = null;
       }
     }
-  }, [leadsScope, normalizeLeads, readLeadsCache, writeLeadsCache]);
+  }, [leadsScope, fullPortfolioCache, normalizeLeads, readLeadsCache, writeLeadsCache]);
 
   useEffect(() => {
     const user = leadsUserRef.current;
     leadsRequestRef.current?.abort();
+    completePortfolioScope.current = null;
     normalizeCache.current.clear();
     setLeadsData([]);
     setLeadsRefreshing(false);
@@ -1341,6 +1360,14 @@ export default function App() {
     const t = setTimeout(() => writeLeadsCache(leadsData), 800);
     return () => clearTimeout(t);
   }, [leadsData, leadsCacheKey, writeLeadsCache]);
+
+  // Persist realtime/optimistic changes only after a complete successful fetch.
+  // Partial progress and failed refreshes must not replace the full snapshot.
+  useEffect(() => {
+    if (completePortfolioScope.current !== leadsScope || leadsRefreshing || leadsLoadError) return;
+    const timer = setTimeout(() => { void fullPortfolioCache.write(leadsData); }, 800);
+    return () => clearTimeout(timer);
+  }, [leadsData, leadsScope, leadsRefreshing, leadsLoadError, fullPortfolioCache]);
 
   // ══════════════════════════════════════════════════════════════════════
   // SOFT-DELETE / PAPELERA
