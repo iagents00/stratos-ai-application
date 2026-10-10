@@ -13,7 +13,7 @@
     },
     {
       "source": "/p/:code",
-      "destination": "/api/og-landing"
+      "destination": "/api/og-landing?code=:code"
     },
     {
       "source": "/((?!api/).*)",

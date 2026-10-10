@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**253 archivos · 81.033 líneas**
+**253 archivos · 81.042 líneas**
 
 ---
 
@@ -225,9 +225,9 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `command-report.js` | 63 | _sin describir_ |
 | `MiDia.css` | 31 | _sin describir_ |
 | `productivity-metrics.js` | 20 | _sin describir_ |
+| `link-name.js` | 15 | _sin describir_ |
 | `portfolio-origin.js` | 9 | _sin describir_ |
 | `indicators.js` | 6 | _sin describir_ |
-| `link-name.js` | 6 | _sin describir_ |
 | `ISpaceBoard.css` | 5 | _sin describir_ |
 
 ### `src/clients/`
