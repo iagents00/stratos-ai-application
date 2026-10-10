@@ -4,7 +4,7 @@
  *
  * Modos: login | register | forgot | forgot-sent
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, CheckCircle2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { pingSupabase } from "../lib/offline-mode";
@@ -112,6 +112,7 @@ export default function LoginScreen({ onLogin }) {
     return () => { cancelled = true; };
   }, []);
 
+  const recoveryBusy = useRef(false);
   const [mode, setMode]       = useState(initialMode); // login | register | forgot | forgot-code | forgot-done
   const [name, setName]       = useState("");
   const [email, setEmail]     = useState("");
@@ -199,11 +200,14 @@ export default function LoginScreen({ onLogin }) {
 
   // Paso 1 — pedir el código de recuperación (se envía al correo de recuperación).
   const doForgot = async () => {
+    if (recoveryBusy.current) return;
     setError("");
     if (!email.trim()) { setError("Ingresa tu correo."); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError("Correo inválido."); return; }
+    recoveryBusy.current = true;
     setLoad(true);
     const r = await requestRecoveryCode(email.trim().toLowerCase());
+    recoveryBusy.current = false;
     setLoad(false);
     if (r.ok) { setPass(""); setConfirm(""); setCode(""); setError(""); setMode("forgot-code"); }
     else setError(r.error || "No se pudo enviar el código. Intenta de nuevo.");
@@ -211,12 +215,15 @@ export default function LoginScreen({ onLogin }) {
 
   // Paso 2 — validar el código y fijar la nueva contraseña.
   const doVerifyCode = async () => {
+    if (recoveryBusy.current) return;
     setError("");
     if (!/^\d{6}$/.test(code.trim())) { setError("Ingresa el código de 6 dígitos que te llegó."); return; }
     if (password.length < 8) { setError("La nueva contraseña debe tener al menos 8 caracteres."); return; }
     if (password !== confirm) { setError("Las contraseñas no coinciden."); return; }
+    recoveryBusy.current = true;
     setLoad(true);
     const r = await verifyRecoveryCode(email.trim().toLowerCase(), code.trim(), password);
+    recoveryBusy.current = false;
     setLoad(false);
     if (r.ok) { setPass(""); setConfirm(""); setCode(""); setError(""); setMode("forgot-done"); }
     else setError(r.error || "Código incorrecto.");
@@ -229,7 +236,7 @@ export default function LoginScreen({ onLogin }) {
   };
 
   const onKey = (e) => {
-    if (e.key !== "Enter") return;
+    if (e.key !== "Enter" || loading) return;
     if (mode === "login") doLogin();
     else if (mode === "register") doRegister();
     else if (mode === "forgot") doForgot();
@@ -333,7 +340,7 @@ export default function LoginScreen({ onLogin }) {
               </div>
 
               <p style={{ fontSize: 13, color: P.txt2, lineHeight: 1.6, marginBottom: 18 }}>
-                Enviamos un código de 6 dígitos a tu correo de recuperación. Escríbelo aquí y elige tu nueva contraseña. El código vence en 15 minutos.
+                Si la cuenta tiene un correo de recuperación configurado, recibirás un código de 6 dígitos. Revisa también spam. Usa el código más reciente; vence en 15 minutos. Si ya tienes uno, escríbelo aquí.
               </p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
@@ -399,7 +406,7 @@ export default function LoginScreen({ onLogin }) {
                   border: `1px solid ${P.border}`, background: "transparent",
                   color: P.txt2, fontSize: 12, fontFamily: font,
                 }}>Reenviar código</button>
-                <button type="button" onClick={() => go("login")} style={{
+                <button type="button" onClick={() => go("login")} disabled={loading} style={{
                   flex: 1, padding: "10px", borderRadius: 10, cursor: "pointer",
                   border: `1px solid ${P.border}`, background: "transparent",
                   color: P.txt2, fontSize: 12, fontFamily: font,
@@ -633,9 +640,20 @@ export default function LoginScreen({ onLogin }) {
                       mode === "login" ? "Iniciar sesión →" : "Enviar código de recuperación →"}
                   </button>
 
+                  {mode === "forgot" && (
+                    <button type="button" disabled={loading} onClick={() => {
+                      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+                        setError("Ingresa el correo de tu cuenta antes de continuar."); return;
+                      }
+                      setError(""); setPass(""); setConfirm(""); setCode(""); setMode("forgot-code");
+                    }} style={{ width: "100%", padding: "10px", borderRadius: 10, border: `1px solid ${P.border}`, background: "transparent", color: P.txt2, cursor: "pointer", marginBottom: 12 }}>
+                      Ya tengo un código
+                    </button>
+                  )}
+
                   {/* ─ Volver (forgot) ─ */}
                   {mode === "forgot" && (
-                    <button type="button" onClick={() => go("login")} style={{
+                    <button type="button" disabled={loading} onClick={() => go("login")} style={{
                       width: "100%", padding: "10px", borderRadius: 10, cursor: "pointer",
                       border: `1px solid ${P.border}`, background: "transparent",
                       color: P.txt2, fontSize: 12, fontFamily: font, marginBottom: 12,

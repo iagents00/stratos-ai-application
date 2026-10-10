@@ -169,9 +169,9 @@ Servicios de terceros con los que habla el código.
 | `brokers.simca.mx` | 1 archivo |
 | `cal.com` | 1 archivo |
 | `calendly.com` | 1 archivo |
-| `getstratosai.com` | 1 archivo |
 | `ionic.io` | 1 archivo |
 | `maps.app` | 1 archivo |
+| `meet.google.com` | 1 archivo |
 
 ---
 
