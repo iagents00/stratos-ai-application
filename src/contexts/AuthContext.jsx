@@ -21,6 +21,7 @@ import {
   hasSupabaseAuthToken,
 } from "../lib/auth";
 import { clearOfflineSession } from "../lib/offline-mode";
+import { subscribeAuthEvents } from "../lib/auth-events.js";
 
 export const AuthContext = createContext(null);
 
@@ -189,7 +190,7 @@ export function AuthProvider({ children }) {
     // El comportamiento anterior limpiaba en CUALQUIER evento con
     // session=null (incluyendo TOKEN_REFRESHED transitorios) lo que mataba
     // sesiones legítimas durante refresh races entre pestañas o realtime.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const subscription = subscribeAuthEvents(supabase.auth,
       async (event, session) => {
         if (!isMounted) return;
 
@@ -267,7 +268,8 @@ export function AuthProvider({ children }) {
         } catch (e) {
           console.warn('[Stratos] onAuthStateChange refresh perfil falló:', e?.message);
         }
-      }
+      },
+      e => console.warn('[Stratos] Evento de sesión falló:', e?.message),
     );
 
     return () => {
