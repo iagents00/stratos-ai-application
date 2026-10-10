@@ -1,3 +1,4 @@
+import { portfolioCode } from "../src/lib/portfolio-route.js";
 // Public browser credential; RLS and the exact-code RPC enforce access.
 const PUBLIC_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsdWxneWhrcnFweWt4bXVqb2RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNjc0ODQsImV4cCI6MjA5Mjg0MzQ4NH0.GUPRPxZM8G50TVpvTDegzADO8n117clpTgSQpaMJAEk';
 /**
@@ -48,7 +49,7 @@ export default async function handler(req, res) {
   let agency = "Stratos";
   // Fragments (#d) never reach servers. Short codes enable personalized previews.
   const pathname = new URL(req.url || "/p", base).pathname;
-  const code = pathname.match(/^\/p\/([A-Za-z0-9_-]{1,64})\/?$/)?.[1]
+  const code = portfolioCode(pathname)
     || (typeof req.query?.code === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(req.query.code) ? req.query.code : null);
   if (code) {
     try {

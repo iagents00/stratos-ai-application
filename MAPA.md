@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**253 archivos · 81.042 líneas**
+**254 archivos · 81.049 líneas**
 
 ---
 
@@ -73,7 +73,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `main.jsx` | 432 | Entry point de Stratos AI |
+| `main.jsx` | 433 | _sin describir_ |
 | `index.css` | 256 | _sin describir_ |
 | `mobile-perf.css` | 121 | _sin describir_ |
 | `pagina-solo-web.jsx` | 47 | _sin describir_ |
@@ -219,7 +219,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ZoomLista.jsx` | 107 | Lista compacta y clickeable de Zooms — la usan los apartados "Calentitos" y |
 | `command-metrics.js` | 101 | _sin describir_ |
 | `date-range.js` | 97 | _sin describir_ |
-| `PublicLanding.jsx` | 95 | La landing personalizada que abre el CLIENTE FINAL |
+| `PublicLanding.jsx` | 93 | _sin describir_ |
 | `plan-semanal.js` | 91 | la lógica pura del Plan Semanal. |
 | `dates.js` | 76 | Helpers de fecha del Control de Zooms, compartidos entre el panel CRUD |
 | `command-report.js` | 63 | _sin describir_ |
@@ -490,6 +490,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `copilot-demo.js` | 16 | Demo messages are local examples; they never claim to write to a real account. |
 | `app-review-access.js` | 12 | Implementación web: App Review no existe fuera del binario móvil. |
 | `huli.js` | 10 | _sin describir_ |
+| `portfolio-route.js` | 8 | _sin describir_ |
 | `rails-preview.js` | 8 | La vista previa conserva la ruta y el cliente; nunca arrastra el hash de autenticación. |
 
 ---
@@ -665,7 +666,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cargando actividad… | `src/app/views/Profile.jsx:947` |
 | Cargando conversación… | `src/app/views/Copilot.jsx:1183` |
 | Cargando conversaciones… | `src/app/views/WhatsApp.jsx:263` |
-| Cargando demo dental… | `src/main.jsx:315` |
+| Cargando demo dental… | `src/main.jsx:316` |
 | Cargando el plan… | `src/app/views/PlanSemanal.jsx:368` |
 | Cargando el tablero… | `src/app/views/ComandoOps.jsx:127` |
 | Cargando empresas… | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:242` |
@@ -791,6 +792,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/ZoomControl/Resumen.jsx` (490 líneas)
 - `src/app/views/CuentasCobro.jsx` (463 líneas)
 - `src/app/views/FinanzasAdmin.jsx` (443 líneas)
+- `src/main.jsx` (433 líneas)
 - `src/clients/gasil/config.js` (422 líneas)
 - `src/lib/next-action-engine.js` (371 líneas)
 - `src/lib/offline-mode.js` (351 líneas)
@@ -865,6 +867,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/clients/grupo28/config.js` (100 líneas)
 - `src/app/constants/areas.js` (97 líneas)
 - `src/app/views/CRM/date-range.js` (97 líneas)
+- `src/app/views/LandingPages/PublicLanding.jsx` (93 líneas)
 - `src/clients/tgenius/config.js` (90 líneas)
 - `src/lib/whatsapp-admin.js` (87 líneas)
 - `src/app/features/Admin/RailsSettings.css` (86 líneas)

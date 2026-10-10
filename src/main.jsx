@@ -1,3 +1,4 @@
+import { isPortfolioPath } from "./lib/portfolio-route.js";
 /**
  * main.jsx — Entry point de Stratos AI
  * ─────────────────────────────────────────────────────────────────────────────
@@ -173,7 +174,7 @@ const isOnboardingCC = matchPath(ONBOARDING_CC_PATHS);
 // Landing personalizada para el CLIENTE FINAL — pública, sin login. El asesor
 // la genera en el Marketing Studio (Create) y comparte /p#d=<payload>. Todo va
 // en la URL; PublicLanding la decodifica. Nunca expone datos internos del CRM.
-const isPublicLanding = pathname === "/p" || pathname === "/p/" || /^\/p\/[A-Za-z0-9_-]{4,32}\/?$/.test(pathname);
+const isPublicLanding = isPortfolioPath(pathname);
 
 // ─── RESOLUCIÓN DE CLIENTE (multi-tenant) ────────────────────────────────────
 // Se detecta el cliente activo según hostname/path:

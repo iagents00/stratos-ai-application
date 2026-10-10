@@ -1,3 +1,4 @@
+import { portfolioCode } from "../../../lib/portfolio-route.js";
 /**
  * PublicLanding.jsx — La landing personalizada que abre el CLIENTE FINAL
  * ─────────────────────────────────────────────────────────────────────────────
@@ -31,10 +32,7 @@ const PublicLanding = () => {
   // Camino 2 (nuevo, el que se comparte): LINK CORTO /p/<código>. El código se
   // resuelve vía la RPC pública resolve_portfolio_link → devuelve el MISMO
   // base64 que el camino 1 → misma decodificación, misma landing.
-  const code = useMemo(() => {
-    const m = window.location.pathname.match(/^\/p\/([A-Za-z0-9_-]{1,64})\/?$/);
-    return m ? m[1] : null;
-  }, []);
+  const code = useMemo(() => portfolioCode(window.location.pathname), []);
   const [data, setData] = useState(initial);
   const [loading, setLoading] = useState(!initial && !!code);
   useEffect(() => {

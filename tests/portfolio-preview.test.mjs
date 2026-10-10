@@ -36,3 +36,14 @@ test('legacy, missing and unavailable payloads retain a usable generic preview',
   const res=response();await handler({method:'HEAD',url:'/p',headers:{}},res);assert.equal(res.body,undefined);
  }finally{globalThis.fetch=original;}
 });
+
+import { portfolioCode, isPortfolioPath } from '../src/lib/portfolio-route.js';
+test('public routing accepts generated and legacy codes before the login gate', () => {
+ for(const code of ['ab', 'ana-lopez-adoquin-inmobiliaria-'+'a'.repeat(20), 'a'.repeat(53), 'a'.repeat(64)]) {
+  assert.equal(isPortfolioPath('/p/'+code),true);
+  assert.equal(portfolioCode('/p/'+code),code);
+  assert.equal(isPortfolioPath('/p/'+code+'/'),true);
+ }
+ for(const path of ['/p','/p/']) assert.equal(isPortfolioPath(path),true);
+ for(const path of ['/p/'+ 'a'.repeat(65),'/p/../tenant','/p/a/b','/tenant','/p/bad!']) assert.equal(isPortfolioPath(path),false);
+});
