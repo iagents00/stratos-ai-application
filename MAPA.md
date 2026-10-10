@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**247 archivos · 80.668 líneas**
+**250 archivos · 80.957 líneas**
 
 ---
 
@@ -143,14 +143,17 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `index.jsx` | 453 | Portal de Candidatos — Stratos People |
 | `PipelineConfiguratorAdmin.jsx` | 312 | _sin describir_ |
 | `DocsStratos.jsx` | 262 | _sin describir_ |
-| `WhatsAppOnboardingAdmin.jsx` | 237 | _sin describir_ |
-| `PlatformAdminConsole.jsx` | 223 | _sin describir_ |
+| `WhatsAppOnboardingAdmin.jsx` | 234 | _sin describir_ |
+| `PlatformAdminConsole.jsx` | 233 | _sin describir_ |
 | `CatalogConfiguratorAdmin.jsx` | 158 | _sin describir_ |
 | `CajaPermissionsAdmin.jsx` | 154 | _sin describir_ |
+| `CompanyOnboarding.jsx` | 146 | _sin describir_ |
 | `RailsSettings.jsx` | 141 | Configuración de Stratos Rails. Los controles editan un borrador por organización. |
+| `PlatformAdminConsole.css` | 109 | _sin describir_ |
 | `RailsSettings.css` | 86 | _sin describir_ |
 | `CompanySetupAdmin.jsx` | 80 | _sin describir_ |
 | `useBoard.js` | 48 | _sin describir_ |
+| `company-onboarding.js` | 31 | _sin describir_ |
 | `rails-theme.js` | 31 | _sin describir_ |
 | `RoleBadge.jsx` | 29 | Badge de rol de usuario con colores según nivel. |
 
@@ -458,7 +461,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `rails-config.js` | 107 | _sin describir_ |
 | `chunk-recovery.js` | 103 | _sin describir_ |
 | `llamadas.js` | 93 | Consultas y estado local de los avisos de llamada del equipo. |
-| `whatsapp-admin.js` | 91 | _sin describir_ |
+| `whatsapp-admin.js` | 87 | _sin describir_ |
 | `backup.js` | 85 | _sin describir_ |
 | `lead-draft.js` | 85 | Autosave del borrador del modal "Registrar cliente" |
 | `whatsapp-sales.js` | 85 | Contacto comercial de Stratos AI para las experiencias públicas de venta. |
@@ -526,21 +529,22 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Abrir la ficha completa — acá se edita todo | `src/app/views/Marketing.jsx:1373` |
 | Abrir la ficha de la propiedad | `src/app/views/Marketing.jsx:2008` |
 | Abrir perfil | `src/app/views/CRM/index.jsx:5319` |
-| Abrir sección | `src/app/features/Admin/PlatformAdminConsole.jsx:207` |
+| Abrir sección | `src/app/features/Admin/PlatformAdminConsole.jsx:215` |
 | Abrirlo en Drive | `src/app/features/MetaPanel/DocsStratos.jsx:174` |
+| Acceso listo | `src/app/features/Admin/CompanyOnboarding.jsx:124` |
 | Acceso temporal | `src/app/features/Admin/AdminPanel.jsx:491` |
-| Acceso temporal — cópialo ahora | `src/app/features/Admin/PlatformAdminConsole.jsx:77` |
-| Accesos temporales | `src/app/features/Admin/PlatformAdminConsole.jsx:128` |
+| Acceso temporal — cópialo ahora | `src/app/features/Admin/PlatformAdminConsole.jsx:79` |
+| Accesos temporales | `src/app/features/Admin/PlatformAdminConsole.jsx:133` |
 | Acciones | `src/app/views/CRM/index.jsx:4339` |
 | Acciones acumuladas · Asesores vs. iAgents | `src/app/views/Dash.jsx:85` |
 | Acciones de cierre IA | `src/app/views/CRM/components.jsx:5616` |
 | Acciones por bloque | `src/app/features/Admin/RailsSettings.jsx:79` |
 | Activa tu Copilot AI | `src/app/views/Copilot.jsx:1977` |
 | Activar para el equipo | `src/app/features/Admin/RailsSettings.jsx:72` |
-| Activar solo lectura | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:233` |
+| Activar solo lectura | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:230` |
 | Actividad del equipo IA — hoy | `src/app/views/IACRM.jsx:299` |
 | Actividad reciente | `src/app/views/CRM/index.jsx:5904` |
-| Actividad y alertas | `src/app/features/Admin/PlatformAdminConsole.jsx:108` |
+| Actividad y alertas | `src/app/features/Admin/PlatformAdminConsole.jsx:110` |
 | ACTIVO | `src/app/views/CRM/components.jsx:5503` |
 | Activos post-Zoom | `src/app/views/ComandoDirectivo.jsx:459` |
 | Activos post-Zoom: | `src/app/views/CRM/ZoomBoard.jsx:170` |
@@ -549,11 +553,13 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Actualización Importante | `src/app/components/DynamicIsland.jsx:132` |
 | Actualizando tu tablero… | `src/app/views/ISpaceBoard.jsx:129` |
 | Actualizar | `src/app/features/Admin/CatalogConfiguratorAdmin.jsx:117` |
+| Actualizar consola | `src/app/features/Admin/PlatformAdminConsole.jsx:227` |
 | Actualizar tablero | `src/app/views/ISpaceBoard.jsx:102` |
 | Adjuntar | `src/app/views/ChatEquipo.jsx:481` |
 | Adjuntar imagen, audio o archivo | `src/app/views/CRM/LeadWhatsAppChat.jsx:846` |
 | Adjuntar PDF, documento o audio | `src/app/views/CRM/components.jsx:1830` |
-| Administrador | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:199` |
+| Administración de Stratos | `src/app/features/Admin/PlatformAdminConsole.jsx:223` |
+| Administrador | `src/app/features/Admin/CompanyOnboarding.jsx:124` |
 | Administrador de demostración | `src/dental-demo/DentalIdentity.jsx:3` |
 | Agenda (opcional) | `src/app/views/LandingPages/index.jsx:1606` |
 | Agenda dental | `src/dental-demo/DentalDemo.jsx:47` |
@@ -575,7 +581,6 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Ahora no | `src/app/views/Copilot.jsx:1922` |
 | Ajusta el rango en el paso anterior | `src/app/views/LandingPages/index.jsx:1951` |
 | ALDEA ZAMA · TULUM | `src/app/views/LandingPages/index.jsx:305` |
-| Alta de empresas y WhatsApp | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:168` |
 | Alta intención | `src/app/views/ZoomControl/index.jsx:597` |
 | Alta intención — señal de cierre en el Zoom | `src/app/views/ZoomControl/index.jsx:710` |
 | Amenidades (separadas por coma) | `src/app/views/LandingPages/index.jsx:760` |
@@ -593,9 +598,9 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Áreas de atención | `src/app/views/RRHHModule.jsx:793` |
 | Arrastra el CV aquí o haz clic para subir | `src/app/views/RRHHModule.jsx:716` |
 | Arrastra para cambiar la prioridad | `src/app/views/Marketing.jsx:2236` |
-| Asesor | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:199` |
+| Asesor | `src/app/features/Admin/CompanyOnboarding.jsx:135` |
 | Así te ayuda a operar | `src/app/components/CopilotCapabilities.jsx:117` |
-| Asignar a | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:207` |
+| Asignar a | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:204` |
 | Asignar a un asesor | `src/app/features/MetaPanel/index.jsx:1015` |
 | Asignar a… | `src/app/views/Marketing.jsx:863` |
 | Asignar responsable | `src/app/features/MetaPanel/index.jsx:1004` |
@@ -614,6 +619,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Buscar cliente o teléfono… | `src/app/views/WhatsApp.jsx:212` |
 | Buscar cliente, proyecto, liner… | `src/app/views/ZoomControl/index.jsx:512` |
 | Buscar desarrollo o zona… | `src/app/views/LandingPages/index.jsx:1398` |
+| Buscar empresa | `src/app/features/Admin/CompanyOnboarding.jsx:100` |
 | Buscar empresa… | `src/app/features/Admin/CatalogConfiguratorAdmin.jsx:125` |
 | Buscar en las actividades… | `src/app/views/Marketing.jsx:1782` |
 | Buscar en papelera… | `src/app/views/Trash.jsx:99` |
@@ -651,7 +657,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cancelar comentario | `src/app/views/Copilot.jsx:1264` |
 | CANDIDATO IDENTIFICADO | `src/app/views/RRHHModule.jsx:747` |
 | Características | `src/app/views/LandingPages/index.jsx:704` |
-| Cargando accesos… | `src/app/features/Admin/PlatformAdminConsole.jsx:134` |
+| Cargando accesos… | `src/app/features/Admin/PlatformAdminConsole.jsx:140` |
 | Cargando actividad… | `src/app/views/Profile.jsx:998` |
 | Cargando conversación… | `src/app/views/Copilot.jsx:1183` |
 | Cargando conversaciones… | `src/app/views/WhatsApp.jsx:263` |
@@ -675,7 +681,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Centro de Agentes IA | `src/app/views/CRM/index.jsx:5485` |
 | Centro de Inteligencia | `src/app/components/DynamicIsland.jsx:81` |
 | Centro de Inteligencia — Activo | `src/app/components/DynamicIsland.jsx:102` |
-| Centro de soporte | `src/app/features/Admin/PlatformAdminConsole.jsx:198` |
+| Centro de soporte | `src/app/features/Admin/PlatformAdminConsole.jsx:206` |
 | Cerrar | `src/app/App.jsx:3001` |
 | Cerrar (Esc) | `src/app/views/ZoomControl/index.jsx:811` |
 | Cerrar detalle | `src/app/views/ZoomControl/Resumen.jsx:309` |
@@ -684,6 +690,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cerrar guía de funciones | `src/app/components/CopilotCapabilities.jsx:120` |
 | Cerrar menú | `src/app/components/MobileHeaderMenu.jsx:52` |
 | Cerrar Mi Espacio | `src/app/features/MetaPanel/index.jsx:765` |
+| Cerrar navegación | `src/app/features/Admin/PlatformAdminConsole.jsx:220` |
 | Cerrar sesión | `src/app/App.jsx:2770` |
 | Cerrar vista previa | `src/app/views/LandingPages/LandingPagePreview.jsx:202` |
 | Chats | `src/app/views/WhatsApp.jsx:633` |
@@ -719,6 +726,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Configuración | `src/app/App.jsx:3184` |
 | Configuración de empresas nuevas | `src/app/features/Admin/CompanySetupAdmin.jsx:50` |
 | Configuración del proceso comercial | `src/app/features/Admin/RailsSettings.jsx:69` |
+| Configurar WhatsApp | `src/app/features/Admin/CompanyOnboarding.jsx:141` |
 | Confirmados | `src/app/views/ZoomControl/Resumen.jsx:450` |
 | Confirmar contraseña | `src/app/views/Profile.jsx:333` |
 | Confirmas y listo | `src/app/views/ConectarWhatsApp.jsx:107` |
@@ -726,7 +734,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Contarlo ahora | `src/app/views/Marketing.jsx:708` |
 | Continuar sin CV | `src/app/features/Portal/index.jsx:425` |
 | Contraseña temporal | `src/app/features/Admin/AdminPanel.jsx:494` |
-| Contraseña: | `src/app/features/Admin/PlatformAdminConsole.jsx:77` |
+| Contraseña: | `src/app/features/Admin/PlatformAdminConsole.jsx:79` |
 | Conversación de demostración | `src/dental-demo/DentalDemo.jsx:54` |
 | Conversión | `src/app/views/Team.jsx:116` |
 | Copiado | `src/app/views/LandingPages/LandingPagePreview.jsx:119` |
@@ -734,20 +742,15 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Copiar el discovery al portapapeles | `src/app/views/ZoomControl/index.jsx:839` |
 | Copiar prompt | `src/app/views/ISpaceBoard.jsx:125` |
 | Copiar resumen para Telegram | `src/app/views/CRM/components.jsx:4560` |
-| Copiar usuario y contraseña | `src/app/features/Admin/PlatformAdminConsole.jsx:142` |
+| Copiar usuario y contraseña | `src/app/features/Admin/PlatformAdminConsole.jsx:148` |
 | Copilot | `src/app/views/ISpaceBoard.jsx:102` |
 | Copilot AI | `src/app/views/Copilot.jsx:1130` |
 | Copilot dental | `src/dental-demo/DentalDemo.jsx:52` |
 | Corregir lo que escribiste | `src/app/views/Marketing.jsx:1853` |
-| Correo | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:200` |
-| Correo de acceso | `src/app/features/Admin/PlatformAdminConsole.jsx:83` |
-| Correo de recuperación | `src/app/views/Profile.jsx:397` |
-| Correo: | `src/app/features/Admin/PlatformAdminConsole.jsx:77` |
-| Crear | `src/app/views/Marketing.jsx:915` |
-| Crear administrador partner | `src/app/features/Admin/PlatformAdminConsole.jsx:79` |
+| Correo | `src/app/features/Admin/CompanyOnboarding.jsx:129` |
 
 
-_(687 textos más — usá `npm run buscar "texto"`)_
+_(707 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -808,12 +811,12 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/data/chat.js` (249 líneas)
 - `src/landing/ManualLegacy.jsx` (246 líneas)
 - `src/app/views/Nomina.jsx` (238 líneas)
-- `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx` (237 líneas)
 - `src/landing/ManualBrasa.jsx` (235 líneas)
+- `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx` (234 líneas)
+- `src/app/features/Admin/PlatformAdminConsole.jsx` (233 líneas)
 - `src/lib/manual-stratos-doc.js` (230 líneas)
 - `src/app/views/ProductividadTab.jsx` (225 líneas)
 - `src/landing/ManualMuebleria.jsx` (224 líneas)
-- `src/app/features/Admin/PlatformAdminConsole.jsx` (223 líneas)
 - `src/lib/organize-notes.js` (220 líneas)
 - `src/app/constants/intelFeatures.js` (211 líneas)
 - `src/app/views/CRM/zoom-metrics.js` (210 líneas)
@@ -840,6 +843,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/components/DynamicIsland.jsx` (153 líneas)
 - `src/app/views/CRM/LeadChatHistory.jsx` (152 líneas)
 - `src/app/views/ISpaceBoard.jsx` (148 líneas)
+- `src/app/features/Admin/CompanyOnboarding.jsx` (146 líneas)
 - `src/app/views/CRM/ScheduledCallBadge.jsx` (144 líneas)
 - `src/clients/brasa-y-piedra/config.js` (140 líneas)
 - `src/app/components/CopilotCapabilities.jsx` (131 líneas)
@@ -851,14 +855,15 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/ZoomControl/constants.js` (116 líneas)
 - `src/app/components/CopilotMark.jsx` (113 líneas)
 - `src/clients/demo/config.js` (113 líneas)
+- `src/app/features/Admin/PlatformAdminConsole.css` (109 líneas)
 - `src/lib/rails-config.js` (107 líneas)
 - `src/lib/chunk-recovery.js` (103 líneas)
 - `src/app/views/CRM/command-metrics.js` (101 líneas)
 - `src/clients/grupo28/config.js` (100 líneas)
 - `src/app/constants/areas.js` (97 líneas)
 - `src/app/views/CRM/date-range.js` (97 líneas)
-- `src/lib/whatsapp-admin.js` (91 líneas)
 - `src/clients/tgenius/config.js` (90 líneas)
+- `src/lib/whatsapp-admin.js` (87 líneas)
 - `src/app/features/Admin/RailsSettings.css` (86 líneas)
 - `src/lib/backup.js` (85 líneas)
 - `src/app/features/Admin/CompanySetupAdmin.jsx` (80 líneas)

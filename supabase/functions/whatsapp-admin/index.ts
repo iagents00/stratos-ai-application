@@ -1,3 +1,4 @@
+import { createProvisionedUser } from "../_shared/provision-user.ts";
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import * as XLSX from "npm:xlsx@0.18.5";
@@ -336,6 +337,18 @@ Deno.serve(async (req) => {
     return Boolean(data?.id);
   };
 
+  // PostgREST caps each response. Walk every page so license counts and
+  // administrator readiness stay correct after the first 1,000 profiles.
+  const allRows = async (query: any) => {
+    const rows: any[] = [];
+    for (let offset = 0; ; offset += 500) {
+      const result = await query.range(offset, offset + 499);
+      if (result.error) return { data: null, error: result.error };
+      rows.push(...(result.data || []));
+      if ((result.data || []).length < 500) return { data: rows, error: null };
+    }
+  };
+
   const visibleOrganizations = async () => {
     let query = scopeSchemaReady
       ? admin.from("organizations")
@@ -349,7 +362,7 @@ Deno.serve(async (req) => {
       // operadores trabajan únicamente con las empresas cliente que crearon.
       query = query.eq("parent_organization_id", scopeOrganizationId);
     }
-    return await query;
+    return await allRows(query.order("id"));
   };
 
   const visibleTemporaryCredentialRows = async (visibleIds: string[]) => {
@@ -382,7 +395,7 @@ Deno.serve(async (req) => {
       const visibleIds = organizations.map(row => row.id);
       const [profiles, channels, runs, events, partners] = await Promise.all([
         visibleIds.length
-          ? admin.from("profiles").select("id,organization_id,name,role,active,phone").in("organization_id", visibleIds).order("name")
+          ? allRows(admin.from("profiles").select("id,organization_id,name,role,active,phone").in("organization_id", visibleIds).order("name").order("id"))
           : Promise.resolve({ data: [], error: null }),
         visibleIds.length
           ? admin.from("whatsapp_numero_asesor").select("id,organization_id,numero_whatsapp,asesor_id,asesor_name,waba_id,phone_number_id,estado_conexion,quality_rating,active,updated_at").in("organization_id", visibleIds).order("updated_at", { ascending: false })
@@ -695,16 +708,15 @@ Deno.serve(async (req) => {
       if (partnerError?.code === "23505") return respond({ ok: false, error: "Ya existe un partner con ese nombre o identificador." }, 409, origin);
       if (partnerError) throw partnerError;
 
-      const { data: created, error: createError } = await admin.auth.admin.createUser({
+      const { data: created, error: createError } = await createProvisionedUser(admin, {
         email, password, email_confirm: true, user_metadata: { name: adminName },
+        app_metadata: { stratos_organization_id: partnerOrganization.id, stratos_role: "super_admin" },
       });
       if (createError) throw createError;
       const userId = created.user?.id;
       if (!userId) throw new Error("Auth no devolvió el id del administrador partner.");
-      const { error: profileError } = await admin.from("profiles").upsert({
-        id: userId, organization_id: partnerOrganization.id, name: adminName, role: "super_admin", active: true,
-        recovery_email: email,
-      });
+      const { error: profileError } = await admin.from("profiles").update({ recovery_email: email })
+        .eq("id", userId).eq("organization_id", partnerOrganization.id).select("id").single();
       if (profileError) {
         await admin.auth.admin.updateUserById(userId, { ban_duration: "876000h" }).catch(() => null);
         throw profileError;
@@ -903,7 +915,9 @@ Deno.serve(async (req) => {
     if (action === "create_organization") {
       const name = String(body.name ?? "").trim();
       const slug = slugify(String(body.slug || name));
-      const seats = Math.max(1, Math.min(1000, Number(body.seats ?? 30) || 30));
+      const seats = Number(body.seats ?? 5);
+      if (!Number.isInteger(seats) || seats < 1 || seats > 1000) return respond({ ok: false, error: "Elige entre 1 y 1000 licencias, sin decimales." }, 400, origin);
+      if (name.length > 120) return respond({ ok: false, error: "El nombre de la empresa no puede superar 120 caracteres." }, 400, origin);
       if (name.length < 2) return respond({ ok: false, error: "Escribe el nombre de la empresa." }, 400, origin);
       if (!slug) return respond({ ok: false, error: "El nombre debe incluir al menos una letra o un número." }, 400, origin);
       const defaultFeatures = { teamAdmin: true, mktModule: false, comandoDirectivo: false };
@@ -929,24 +943,22 @@ Deno.serve(async (req) => {
           .select("id", { count: "exact", head: true }).eq("parent_organization_id", scopeOrganizationId);
         if (countError) throw countError;
         companiesUsed = count ?? 0;
-        if (companiesUsed >= companyLimit) {
-          return respond({ ok: false, error: `Ya utilizaste tus ${companyLimit} cupos de empresa. Solicita una ampliación a Stratos.` }, 409, origin);
-        }
+
       }
-      const metaConfig = {
-        onboarding: { status: "draft", createdFrom: "whatsapp_admin", createdAt: new Date().toISOString() },
-        features: { crm: true, ...managedFeatures, whatsappSignup: true, whatsappModule: false, whatsappChat: false },
-      };
-      const organizationRow: Record<string, unknown> = {
-        name, slug, seats, plan: "custom", active: true, subscription_status: "trial", meta_config: metaConfig,
-      };
-      if (scopeSchemaReady) organizationRow.parent_organization_id = scopeOrganizationId || null;
-      const { data, error } = await admin.from("organizations").insert(organizationRow)
-        .select("id,name,slug,seats,plan,active,subscription_status,meta_config,created_at").single();
+      const requestId = String(body.request_id || crypto.randomUUID());
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)) {
+        return respond({ ok: false, error: "Identificador de alta inválido." }, 400, origin);
+      }
+      const { data: provision, error } = await admin.rpc("fn_provision_company", {
+        p_actor: callerId, p_request_id: requestId, p_name: name, p_slug: slug,
+        p_seats: seats, p_features: managedFeatures,
+      });
       if (error?.code === "23505") return respond({ ok: false, error: "Ya existe una empresa con ese nombre o identificador." }, 409, origin);
+      if (error?.code === "23514") return respond({ ok: false, error: error.message }, 409, origin);
       if (error) throw error;
+      const data = provision.organization;
       let notificationStatus = "not_required";
-      if (scopeOrganizationId && partnerSchemaReady) {
+      if (scopeOrganizationId && partnerSchemaReady && !provision.replayed) {
         const { data: partnerOrganization } = await admin.from("organizations")
           .select("name").eq("id", scopeOrganizationId).maybeSingle();
         const eventPayload = {
@@ -958,12 +970,7 @@ Deno.serve(async (req) => {
           company_limit: companyLimit, created_by: callerId,
           created_at: new Date().toISOString(),
         };
-        const { data: event } = await admin.from("platform_admin_events").insert({
-          event_type: "company_created", actor_user_id: callerId,
-          partner_organization_id: scopeOrganizationId,
-          organization_id: data.id, payload: eventPayload,
-        }).select("id").single();
-        notificationStatus = event?.id ? await deliverPlatformAlert(admin, event.id, eventPayload) : "failed";
+        notificationStatus = provision.event_id ? await deliverPlatformAlert(admin, provision.event_id, eventPayload) : "failed";
       }
       return respond({ ok: true, organization: data, notification_status: notificationStatus }, 200, origin);
     }
@@ -987,6 +994,7 @@ Deno.serve(async (req) => {
         return respond({ ok: false, error: "Los administradores partner se crean únicamente desde la sección Partners de Stratos." }, 403, origin);
       }
       if (password.length < 12) return respond({ ok: false, error: "La contraseña debe tener al menos 12 caracteres." }, 400, origin);
+      if (name.length > 120 || email.length > 254) return respond({ ok: false, error: "Nombre o correo demasiado largo." }, 400, origin);
       const { data: org } = await admin.from("organizations").select("id,name,seats,meta_config").eq("id", organizationId).eq("active", true).maybeSingle();
       if (!org) return respond({ ok: false, error: "La empresa no existe o está inactiva." }, 404, origin);
       if (org.meta_config?.onboarding?.createdFrom === "whatsapp_admin"
@@ -999,19 +1007,24 @@ Deno.serve(async (req) => {
         .eq("organization_id", organizationId)
         .eq("active", true);
       if (countError) throw countError;
+      if ((activeUsers ?? 0) === 0 && org.meta_config?.onboarding?.createdFrom === "whatsapp_admin" && role !== "admin") {
+        return respond({ ok: false, error: "Crea primero al administrador de la empresa." }, 400, origin);
+      }
       if ((activeUsers ?? 0) >= Number(org.seats || 0)) {
         return respond({ ok: false, error: `${org.name} ya utiliza sus ${org.seats} licencias. Amplía el límite o desactiva un usuario.` }, 409, origin);
       }
-      const { data: created, error: createError } = await admin.auth.admin.createUser({
+      const { data: created, error: createError } = await createProvisionedUser(admin, {
         email, password, email_confirm: true, user_metadata: { name },
+        app_metadata: { stratos_organization_id: organizationId, stratos_role: role },
       });
-      if (createError) throw createError;
+      if (createError) {
+        if (/already|registered|exists/i.test(createError.message)) return respond({ ok: false, error: "Ya existe una cuenta con ese correo. Revisa Accesos temporales si el intento anterior terminó sin respuesta. No se cambió su empresa." }, 409, origin);
+        throw createError;
+      }
       const userId = created.user?.id;
       if (!userId) throw new Error("Auth no devolvió el id del usuario.");
-      const { error: profileError } = await admin.from("profiles").upsert({
-        id: userId, organization_id: organizationId, name, role, active: true,
-        recovery_email: email,
-      });
+      const { error: profileError } = await admin.from("profiles").update({ recovery_email: email })
+        .eq("id", userId).eq("organization_id", organizationId).select("id").single();
       if (profileError) {
         // No borrar automáticamente una identidad si falla el perfil. Se
         // bloquea para que quede auditable y pueda repararse manualmente.
@@ -1223,7 +1236,7 @@ Deno.serve(async (req) => {
 
     return respond({ ok: false, error: "Acción no reconocida." }, 400, origin);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = error && typeof error === "object" && "message" in error ? String(error.message) : String(error);
     return respond({ ok: false, error: message }, 500, origin);
   }
 });

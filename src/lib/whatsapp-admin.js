@@ -17,13 +17,9 @@ function withTimeout(promise, ms, message) {
 // ningún tercero y el servidor sigue validando firma, expiración y permisos.
 function readStoredAccessToken() {
   try {
-    for (let index = 0; index < localStorage.length; index += 1) {
-      const key = localStorage.key(index);
-      if (!key?.startsWith("sb-") || !key.endsWith("-auth-token")) continue;
-      const stored = JSON.parse(localStorage.getItem(key) || "null");
-      const token = stored?.access_token || stored?.currentSession?.access_token;
-      if (token) return token;
-    }
+    const project = new URL(SUPABASE_REST_URL).hostname.split(".")[0];
+    const stored = JSON.parse(localStorage.getItem(`sb-${project}-auth-token`) || "null");
+    return stored?.access_token || stored?.currentSession?.access_token || null;
   } catch { /* storage bloqueado o valor incompleto: se trata como sesión vencida */ }
   return null;
 }
