@@ -9,7 +9,7 @@
 //   POST { action: "request", email }
 //        -> busca el usuario (por email de login o recovery_email), genera código de
 //           6 dígitos, lo hashea y guarda (fn_recovery_prepare), y dispara el correo
-//           via webhook n8n (Gmail). SIEMPRE responde { ok: true } (no revela si existe).
+//           via webhook n8n (Gmail). Respuesta genérica; fallos de servicio usan HTTP 503.
 //   POST { action: "verify", email, code, password }
 //        -> valida el código (fn_recovery_confirm) y, si es correcto, cambia la
 //           contraseña con la Admin API. Responde { ok: true } o { ok: false, error }.
@@ -29,10 +29,12 @@ const SERVICE_ROLE =
 const N8N_WEBHOOK_URL =
   Deno.env.get("N8N_RECOVERY_WEBHOOK") ??
   "https://personal-n8n.suwsiw.easypanel.host/webhook/stratos-password-recovery";
-// El secreto REAL está embebido en la función desplegada (Supabase) y en el flujo
-// n8n; NO se comitea al repo. Idealmente migrarlo a un Supabase edge secret.
+// Secreto compartido configurado en Supabase secrets y n8n; nunca en el código.
 const N8N_RECOVERY_SECRET =
-  Deno.env.get("N8N_RECOVERY_SECRET") ?? "__SET_IN_DEPLOYED_FUNCTION__";
+  Deno.env.get("N8N_RECOVERY_SECRET") ?? "";
+
+// Stable across Edge deploys and service-role JWT rotation.
+const CODE_PEPPER = Deno.env.get("RECOVERY_CODE_PEPPER") ?? SERVICE_ROLE;
 
 const CODE_TTL_MINUTES = 15;
 const MIN_PASSWORD = 8;
@@ -41,10 +43,10 @@ const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-// Hash = sha256(code + user_email + pepper). El pepper (service role key) solo existe
+// Hash = sha256(code + user_email + pepper). El pepper estable solo existe
 // en el servidor => aunque alguien lea la tabla, no puede revertir el código.
 async function hashCode(code: string, email: string): Promise<string> {
-  const data = new TextEncoder().encode(`${code}:${email.toLowerCase().trim()}:${SERVICE_ROLE}`);
+  const data = new TextEncoder().encode(`${code}:${email.toLowerCase().trim()}:${CODE_PEPPER}`);
   const buf = await crypto.subtle.digest("SHA-256", data);
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
@@ -76,7 +78,10 @@ Deno.serve(async (req) => {
   if (!SERVICE_ROLE) return json({ ok: false, error: "server_misconfigured" }, 500, origin);
 
   let payload: Record<string, unknown> = {};
-  try { payload = await req.json(); } catch { return json({ ok: false, error: "bad_json" }, 400, origin); }
+  try {
+    payload = await req.json();
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new Error("bad_json");
+  } catch { return json({ ok: false, error: "bad_json" }, 400, origin); }
 
   const action = String(payload.action ?? "");
   const email = String(payload.email ?? "").trim().toLowerCase();
@@ -85,6 +90,7 @@ Deno.serve(async (req) => {
   // ── REQUEST: generar código y enviarlo ─────────────────────────────────
   if (action === "request") {
     if (!emailOk) return json({ ok: false, error: "Ingresa un correo válido." }, 200, origin);
+    if (!N8N_RECOVERY_SECRET) return json({ ok: false, error: "La recuperación no está disponible temporalmente. Intenta más tarde." }, 503, origin);
     try {
       const code = sixDigitCode();
       const code_hash = await hashCode(code, email);
@@ -93,27 +99,26 @@ Deno.serve(async (req) => {
       const { data, error } = await admin.rpc("fn_recovery_prepare", {
         p_email: email, p_code_hash: code_hash, p_ip: ip, p_ttl_minutes: CODE_TTL_MINUTES,
       });
-      if (error) { console.error("[recovery] prepare error:", error.message); }
+      if (error) throw new Error("prepare_failed");
 
       // Solo enviamos si la cuenta existe y tiene correo de recuperación.
       if (data && (data as any).sent === true) {
         const recovery_email = (data as any).recovery_email as string;
         const name = ((data as any).name as string) || "";
-        try {
-          const r = await fetch(N8N_WEBHOOK_URL, {
-            method: "POST",
-            headers: { "content-type": "application/json", "x-recovery-secret": N8N_RECOVERY_SECRET },
-            body: JSON.stringify({ recovery_email, code, name, ttl_minutes: CODE_TTL_MINUTES }),
-          });
-          if (!r.ok) console.error("[recovery] n8n webhook status:", r.status);
-        } catch (e) {
-          console.error("[recovery] n8n webhook failed:", (e as Error).message);
-        }
+        const r = await fetch(N8N_WEBHOOK_URL, {
+          method: "POST",
+          headers: { "content-type": "application/json", "x-recovery-secret": N8N_RECOVERY_SECRET },
+          body: JSON.stringify({ recovery_email, code, name, ttl_minutes: CODE_TTL_MINUTES }),
+          signal: AbortSignal.timeout(12000),
+        });
+        const receipt = await r.json().catch(() => null);
+        if (!r.ok || receipt?.ok !== true) throw new Error("mail_delivery_failed");
       }
     } catch (e) {
-      console.error("[recovery] request fatal:", (e as Error).message);
+      console.error("[recovery] request failed");
+      return json({ ok: false, error: "No se pudo enviar el código. Intenta más tarde." }, 503, origin);
     }
-    // SIEMPRE genérico (no revelamos si el correo existe o tiene recovery configurado).
+    // Respuesta genérica para cuentas inexistentes, sin correo o limitadas.
     return json({ ok: true, message: "Si la cuenta tiene un correo de recuperación configurado, enviamos un código." }, 200, origin);
   }
 
@@ -145,8 +150,8 @@ Deno.serve(async (req) => {
       }
 
       const userId = res.user_id as string;
-      const { error: upErr } = await admin.auth.admin.updateUserById(userId, { password });
-      if (upErr) { console.error("[recovery] updateUser error:", upErr.message); return json({ ok: false, error: "No se pudo actualizar la contraseña. Intenta de nuevo." }, 500, origin); }
+      const { data: updated, error: upErr } = await admin.auth.admin.updateUserById(userId, { password });
+      if (upErr || updated?.user?.id !== userId) { console.error("[recovery] updateUser failed"); return json({ ok: false, error: "No se pudo actualizar la contraseña. Pide un código nuevo e intenta de nuevo." }, 500, origin); }
 
       // Auditoría best-effort
       try {

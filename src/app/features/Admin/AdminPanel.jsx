@@ -164,7 +164,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
     setFormErr(""); setFormOk("");
     const { error } = await adminResetPassword(correo);
     if (error) { setFormErr(error); return; }
-    setFormOk(`Le mandé el correo a ${correo} para que ponga una contraseña nueva.`);
+    setFormOk("Solicitud procesada. Si la cuenta tiene correo de recuperación, recibirá un código. Debe ingresarlo en «¿Olvidaste tu contraseña?» del acceso a Stratos.");
     setTimeout(() => setModal(null), 2200);
   };
 

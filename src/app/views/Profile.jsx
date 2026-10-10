@@ -26,6 +26,7 @@ import { useClient } from "../../hooks/useClient";
 import { supabase } from "../../lib/supabase";
 import { logAuthEvent } from "../../lib/audit";
 import { deleteMyAccount } from "../../lib/auth";
+import { changeOwnPassword } from "../../lib/password-change";
 import {
   getPairingStatus,
   requestPairingCode,
@@ -249,72 +250,20 @@ function PasswordPanel({ T = P, isLight = false, user }) {
     setMessage("");
     setErrorMsg("");
     if (disabled) return setErrorMsg("Conéctate a Supabase para cambiar la contraseña.");
-    if (password.length < 8) return setErrorMsg("Usa minimo 8 caracteres.");
+    if (password.length < 8) return setErrorMsg("Usa mínimo 8 caracteres.");
     if (password !== confirmPassword) return setErrorMsg("Las contraseñas no coinciden.");
 
     setBusy(true);
 
-    // ── Asegurar una sesion VIVA antes de tocar la contraseña ──────────────
-    // En movil / redes lentas la app corre con la sesion cacheada de 24h
-    // (_fromCache): la UI se ve logueada pero el SDK NO tiene un token vivo en
-    // memoria. En ese estado supabase.auth.updateUser() falla ("Auth session
-    // missing") o no llega al servidor → la contraseña NUNCA cambia y la vieja
-    // sigue sirviendo.
-    //
-    // OBJETIVO: que un asesor pueda cambiar su clave desde CUALQUIER lugar
-    // (incluido el iPhone). Por eso no nos rendimos al primer intento:
-    //   1. Leemos la sesion en memoria (getSession, rapido).
-    //   2. Si no hay token vivo, FORZAMOS un refresh (refreshSession): el
-    //      refresh_token sigue en storage mientras la sesion no haya expirado,
-    //      asi que esto reconstruye un token valido sin re-login.
-    //   3. Solo si el refresh tambien falla (sesion realmente vencida/revocada)
-    //      pedimos volver a iniciar sesion.
-    // Como es una accion deliberada (el boton muestra "Actualizando..."),
-    // damos timeouts generosos en vez de cortar a los 3.5s de la hidratacion.
-    const raceTimeout = (promise, ms) => Promise.race([
-      promise,
-      new Promise((resolve) => setTimeout(() => resolve({ data: { session: null } }), ms)),
-    ]);
-
-    let liveSession = null;
-    try {
-      const { data } = await raceTimeout(supabase.auth.getSession(), 4000);
-      liveSession = data?.session ?? null;
-    } catch (_) { /* intentamos refresh abajo */ }
-
-    if (!liveSession) {
-      try {
-        const { data } = await raceTimeout(supabase.auth.refreshSession(), 12000);
-        liveSession = data?.session ?? null;
-      } catch (_) { /* se maneja abajo */ }
-    }
-
-    if (!liveSession) {
-      setBusy(false);
-      return setErrorMsg(
-        "Tu sesión expiró. Vuelve a iniciar sesión y cambia tu contraseña de nuevo.",
-      );
-    }
-
-    const { data: updated, error } = await supabase.auth.updateUser({ password });
+    const result = await changeOwnPassword(supabase, password);
     setBusy(false);
-
-    if (error) {
-      logAuthEvent("PASSWORD_UPDATE", liveSession.user?.id || null, {
-        email: liveSession.user?.email, success: false, reason: error.message,
-      });
-      return setErrorMsg(error.message || "No se pudo actualizar la contraseña.");
-    }
-    // Solo declarar exito si el servidor devolvio el usuario actualizado.
-    if (!updated?.user) {
-      return setErrorMsg("No se pudo confirmar el cambio. Intenta de nuevo.");
-    }
-    logAuthEvent("PASSWORD_UPDATE", updated.user.id, {
-      email: updated.user.email, success: true,
+    if (!result.ok) return setErrorMsg(result.error);
+    logAuthEvent("PASSWORD_UPDATE", result.user.id, {
+      email: result.user.email, success: true,
     });
     setPassword("");
     setConfirmPassword("");
-    setMessage("Contrasena actualizada correctamente.");
+    setMessage("Contraseña actualizada correctamente.");
   };
 
   return (
@@ -324,13 +273,13 @@ function PasswordPanel({ T = P, isLight = false, user }) {
           <Lock size={18} color={T.accent} strokeWidth={1.9} />
         </div>
         <div>
-          <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 400, color: T.txt, fontFamily: fontDisp }}>System</h2>
+          <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 400, color: T.txt, fontFamily: fontDisp }}>Contraseña</h2>
           <p style={{ margin: 0, fontSize: 12.5, color: T.txt2 }}>Cambia tu contraseña de acceso sin pedir soporte.</p>
         </div>
       </div>
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 10 }}>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Nueva contraseña" autoComplete="new-password" disabled={disabled || busy} style={inputStyle(T, isLight)} />
-        <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirmar contraseña" autoComplete="new-password" disabled={disabled || busy} style={inputStyle(T, isLight)} />
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} aria-label="Nueva contraseña" placeholder="Nueva contraseña" autoComplete="new-password" disabled={disabled || busy} style={inputStyle(T, isLight)} />
+        <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} aria-label="Confirmar contraseña" placeholder="Confirmar contraseña" autoComplete="new-password" disabled={disabled || busy} style={inputStyle(T, isLight)} />
         <button type="submit" disabled={disabled || busy} style={{ height: 40, borderRadius: 11, border: "none", background: disabled || busy ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: disabled || busy ? T.txt3 : "#06120E", fontWeight: 500, fontFamily: fontDisp, cursor: disabled || busy ? "not-allowed" : "pointer" }}>
           {busy ? "Actualizando..." : "Actualizar contraseña"}
         </button>

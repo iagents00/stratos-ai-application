@@ -6,11 +6,29 @@
  * email de login (que puede ser un placeholder): el usuario lo configura en su
  * Perfil. Ver supabase/functions/password-recovery/index.ts.
  *
- * La Edge Function responde 200 para todos los casos de negocio con { ok, error?, message? },
- * así que aquí basta con leer `data.ok` — no hay que parsear errores HTTP.
+ * Los rechazos de negocio usan { ok, error?, message? }; los fallos de servicio
+ * usan HTTP 5xx. Ambos deben mostrarse sin confirmar un envío inexistente.
  */
 import { supabase } from "./supabase";
 import { logAuthEvent } from "./audit";
+
+async function invokeRecovery(body) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 25000);
+  try {
+    const { data, error } = await supabase.functions.invoke("password-recovery", {
+      body, signal: controller.signal,
+    });
+    if (error) {
+      const response = await error.context?.json?.().catch(() => null);
+      return { ok: false, error: response?.error || "No se pudo procesar la solicitud. Intenta de nuevo." };
+    }
+    return data?.ok ? { ok: true, message: data.message }
+      : { ok: false, error: data?.error || "No se pudo procesar la solicitud." };
+  } catch {
+    return { ok: false, error: "Error de conexión. Verifica tu internet e inténtalo de nuevo." };
+  } finally { clearTimeout(timer); }
+}
 
 const normalize = (e) => String(e || "").trim().toLowerCase();
 
@@ -24,17 +42,9 @@ export async function requestRecoveryCode(email) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
     return { ok: false, error: "Ingresa un correo válido." };
   }
-  try {
-    const { data, error } = await supabase.functions.invoke("password-recovery", {
-      body: { action: "request", email: clean },
-    });
-    if (error) return { ok: false, error: "No se pudo procesar la solicitud. Intenta de nuevo." };
-    logAuthEvent("PASSWORD_RESET", null, { email: clean, phase: "request" });
-    if (data?.ok) return { ok: true, message: data.message };
-    return { ok: false, error: data?.error || "No se pudo procesar la solicitud." };
-  } catch (e) {
-    return { ok: false, error: "Error de conexión. Verifica tu internet e inténtalo de nuevo." };
-  }
+  const result = await invokeRecovery({ action: "request", email: clean });
+  if (result.ok) logAuthEvent("PASSWORD_RESET", null, { email: clean, phase: "request" });
+  return result;
 }
 
 /**
@@ -44,14 +54,8 @@ export async function requestRecoveryCode(email) {
 export async function verifyRecoveryCode(email, code, password) {
   const clean = normalize(email);
   const cleanCode = String(code || "").trim();
-  try {
-    const { data, error } = await supabase.functions.invoke("password-recovery", {
-      body: { action: "verify", email: clean, code: cleanCode, password },
-    });
-    if (error) return { ok: false, error: "No se pudo validar el código. Intenta de nuevo." };
-    if (data?.ok) return { ok: true, message: data.message };
-    return { ok: false, error: data?.error || "Código incorrecto." };
-  } catch (e) {
-    return { ok: false, error: "Error de conexión. Verifica tu internet e inténtalo de nuevo." };
-  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) return { ok: false, error: "Ingresa un correo válido." };
+  if (!/^\d{6}$/.test(cleanCode)) return { ok: false, error: "El código debe tener 6 dígitos." };
+  if (typeof password !== "string" || password.length < 8) return { ok: false, error: "La contraseña debe tener al menos 8 caracteres." };
+  return invokeRecovery({ action: "verify", email: clean, code: cleanCode, password });
 }
