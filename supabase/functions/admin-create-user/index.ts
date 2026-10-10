@@ -1,3 +1,4 @@
+import { createProvisionedUser } from "../_shared/provision-user.ts";
 // admin-create-user — dar de alta a alguien del equipo desde el propio CRM.
 // ─────────────────────────────────────────────────────────────────────────────
 // Pedido de Ángel (27-jul): «yo puedo agregar ahí en el grupo otro desarrollador,
@@ -146,7 +147,7 @@ Deno.serve(async (req) => {
 
   // 3) Crear la cuenta con una clave temporal.
   const clave = claveTemporal();
-  const { data: creado, error: eCrear } = await admin.auth.admin.createUser({
+  const { data: creado, error: eCrear } = await createProvisionedUser(admin, {
     email,
     password: clave,
     email_confirm: true,

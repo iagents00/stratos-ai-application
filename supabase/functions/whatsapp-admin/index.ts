@@ -1,3 +1,4 @@
+import { createProvisionedUser } from "../_shared/provision-user.ts";
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import * as XLSX from "npm:xlsx@0.18.5";
@@ -707,7 +708,7 @@ Deno.serve(async (req) => {
       if (partnerError?.code === "23505") return respond({ ok: false, error: "Ya existe un partner con ese nombre o identificador." }, 409, origin);
       if (partnerError) throw partnerError;
 
-      const { data: created, error: createError } = await admin.auth.admin.createUser({
+      const { data: created, error: createError } = await createProvisionedUser(admin, {
         email, password, email_confirm: true, user_metadata: { name: adminName },
         app_metadata: { stratos_organization_id: partnerOrganization.id, stratos_role: "super_admin" },
       });
@@ -1012,7 +1013,7 @@ Deno.serve(async (req) => {
       if ((activeUsers ?? 0) >= Number(org.seats || 0)) {
         return respond({ ok: false, error: `${org.name} ya utiliza sus ${org.seats} licencias. Amplía el límite o desactiva un usuario.` }, 409, origin);
       }
-      const { data: created, error: createError } = await admin.auth.admin.createUser({
+      const { data: created, error: createError } = await createProvisionedUser(admin, {
         email, password, email_confirm: true, user_metadata: { name },
         app_metadata: { stratos_organization_id: organizationId, stratos_role: role },
       });

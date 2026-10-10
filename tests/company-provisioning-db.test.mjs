@@ -22,6 +22,7 @@ test('company provisioning, auth assignment and database guards isolate tenants'
   `);
   await db.exec(readFileSync('supabase/migrations/247_managed_company_limits.sql','utf8'));
   await db.exec(readFileSync('supabase/migrations/266_company_provisioning_isolation.sql','utf8'));
+  await db.exec(readFileSync('supabase/migrations/267_auth_provisioning_tickets.sql','utf8'));
   await db.exec('create trigger on_auth_user_created after insert on auth.users for each row execute function public.handle_new_user()');
   for(const [org,name] of [[parent,'Partner'],[duke,'Duke'],[nsg,'NSG']]) await db.query('insert into organizations(id,name,slug) values($1,$2,$3)',[org,name,name.toLowerCase()]);
   await db.query('insert into platform_admins(user_id,scope_organization_id,company_limit) values($1,null,null),($2,$3,1)',[root,partner,parent]);
@@ -39,6 +40,11 @@ test('company provisioning, auth assignment and database guards isolate tenants'
   await assert.rejects(provision(root,id(8),'Third',2,{...features,procesoGuiado:true}),/Módulos/);
   assert.equal((await db.query('select count(*)::int n from platform_admin_events')).rows[0].n,2,'one durable event per company, including root');
   const newAuth=async(user,org,role,meta={})=>db.query('insert into auth.users(id,email,raw_user_meta_data,raw_app_meta_data) values($1,$2,$3::jsonb,$4::jsonb)',[user,`${user}@example.com`,JSON.stringify({name:'Test',...meta}),JSON.stringify(org?{stratos_organization_id:org,stratos_role:role}:{})]);
+  await db.query("insert into auth_provisioning_tickets(token,email,organization_id,role) values($1,'ticket@example.com',$2,'asesor')",[id(30),duke]);
+  await db.query("insert into auth.users(id,email,raw_user_meta_data) values($1,'ticket@example.com',$2::jsonb)",[id(31),JSON.stringify({stratos_provisioning_ticket:id(30)})]);
+  assert.equal((await db.query('select organization_id from profiles where id=$1',[id(31)])).rows[0].organization_id,duke);
+  assert.equal((await db.query('select count(*)::int n from auth_provisioning_tickets')).rows[0].n,0);
+  await assert.rejects(db.query("insert into auth.users(id,email,raw_user_meta_data) values($1,'ticket@example.com',$2::jsonb)",[id(32),JSON.stringify({stratos_provisioning_ticket:id(30)})]),/inválida/);
   const before=(await db.query('select count(*)::int n from organizations')).rows[0].n;
   await newAuth(id(10),a,'admin',{organization_id:duke,role:'super_admin'});
   await newAuth(id(11),b,'admin');
@@ -50,6 +56,8 @@ test('company provisioning, auth assignment and database guards isolate tenants'
   assert.equal((await db.query('select recovery_email from profiles where id=$1',[id(13)])).rows[0].recovery_email,'recovery@example.com');
   const forged=(await db.query('select organization_id,role from profiles where id=$1',[id(13)])).rows[0];
   assert.notEqual(forged.organization_id,duke); assert.equal(forged.role,'admin');
+  await db.query("insert into auth.users(id,email,raw_app_meta_data) values($1,'legacy@example.com',$2::jsonb)",[id(15),JSON.stringify({organization_id:a,role:'asesor'})]);
+  assert.deepEqual((await db.query('select organization_id,role from profiles where id=$1',[id(15)])).rows[0],{organization_id:a,role:'asesor'},'trusted legacy metadata remains compatible');
   await db.exec("select set_config('request.jwt.claim.role','authenticated',false)");
   await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id(10)]);
   await assert.rejects(db.query('update profiles set organization_id=$1 where id=$2',[duke,id(10)]),/cambiar de empresa/);

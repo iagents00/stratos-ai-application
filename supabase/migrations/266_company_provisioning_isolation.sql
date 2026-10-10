@@ -14,12 +14,16 @@ declare
 begin
   v_name := coalesce(nullif(btrim(new.raw_user_meta_data->>'name'), ''), split_part(new.email, '@', 1));
   v_recovery := coalesce(nullif(lower(btrim(new.raw_user_meta_data->>'recovery_email')), ''), lower(new.email));
-  v_org := nullif(new.raw_app_meta_data->>'stratos_organization_id', '')::uuid;
+  -- Compatibilidad con altas de servidor anteriores ya activas en producción.
+  v_org := coalesce(nullif(new.raw_app_meta_data->>'stratos_organization_id', ''),
+                    nullif(new.raw_app_meta_data->>'organization_id', ''))::uuid;
   if v_org is not null then
     if not exists(select 1 from public.organizations where id = v_org and active is true) then
       raise exception 'La empresa de destino no está activa.' using errcode = '23514';
     end if;
-    v_role := new.raw_app_meta_data->>'stratos_role';
+    v_role := coalesce(nullif(new.raw_app_meta_data->>'stratos_role', ''),
+                       nullif(new.raw_app_meta_data->>'role', ''),
+                       case when exists(select 1 from public.profiles where organization_id=v_org) then 'asesor' else 'admin' end);
     if v_role is null or v_role not in ('admin','director','asesor','super_admin','ceo','marketing','colaborador') then
       raise exception 'Rol de alta inválido.' using errcode = '23514';
     end if;
@@ -112,3 +116,38 @@ end;
 $$;
 revoke all on function public.fn_provision_company(uuid,uuid,text,text,integer,jsonb) from public,anon,authenticated;
 grant execute on function public.fn_provision_company(uuid,uuid,text,text,integer,jsonb) to service_role;
+
+-- Dependencia de approve_tests: sólo instala la RPC si aún no está aplicada 265.
+-- No activa ni cambia ningún canal o empresa durante esta migración.
+create or replace function public.fn_activate_whatsapp_readonly(
+  p_organization_id uuid
+)
+returns void
+language plpgsql
+security definer
+set search_path to 'public', 'pg_temp'
+as $function$
+begin
+  update public.organizations
+     set meta_config = jsonb_set(
+       coalesce(meta_config, '{}'::jsonb),
+       '{features}',
+       coalesce(meta_config->'features', '{}'::jsonb) || jsonb_build_object(
+         'whatsappModule', true,
+         'whatsappChat', true,
+         'whatsappReadOnly', true
+       ),
+       true
+     )
+   where id = p_organization_id;
+
+  if not found then
+    raise exception 'Organization not found' using errcode = 'P0002';
+  end if;
+end;
+$function$;
+
+revoke all on function public.fn_activate_whatsapp_readonly(uuid)
+  from public, anon, authenticated;
+grant execute on function public.fn_activate_whatsapp_readonly(uuid)
+  to service_role;

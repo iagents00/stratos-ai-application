@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { stripTypeScriptTypes } from 'node:module';
 import vm from 'node:vm';
 import { webcrypto } from 'node:crypto';
+const provisioningSource=stripTypeScriptTypes(readFileSync('supabase/functions/_shared/provision-user.ts','utf8').replace('export async function','async function'));
 const source=stripTypeScriptTypes(readFileSync('supabase/functions/whatsapp-admin/index.ts','utf8').replace(/^import .*;\n/gm,''));
 
 function harness({operator=true,disabled=false}={}) {
@@ -16,7 +17,7 @@ function harness({operator=true,disabled=false}={}) {
  const creates=[];
  const from=table=>{
   let list=[...(rows[table]||[])];let count=false;let one=false;let update=null;let start=0,end=Infinity;
-  const query={select(_fields,options){count=options?.count==='exact';return this;},eq(key,value){list=list.filter(row=>row[key]===value);return this;},in(key,values){list=list.filter(row=>values.includes(row[key]));return this;},or(expression){const clauses=expression.split(",").map(part=>part.split(".eq."));list=list.filter(row=>clauses.some(([key,value])=>row[key]===value));return this;},order(){return this;},range(a,b){start=a;end=b;return this;},limit(n){end=n-1;return this;},maybeSingle(){one=true;return this;},single(){one=true;return this;},update(value){update=value;return this;},then(resolve){if(update)list.forEach(row=>Object.assign(row,update));return Promise.resolve({data:one?list[0]||null:list.slice(start,end+1),error:null,count:count?list.length:null}).then(resolve);}};
+  const query={insert(value){(rows[table]??=[]).push(value);return this;},delete(){return this;},select(_fields,options){count=options?.count==='exact';return this;},eq(key,value){list=list.filter(row=>row[key]===value);return this;},in(key,values){list=list.filter(row=>values.includes(row[key]));return this;},or(expression){const clauses=expression.split(",").map(part=>part.split(".eq."));list=list.filter(row=>clauses.some(([key,value])=>row[key]===value));return this;},order(){return this;},range(a,b){start=a;end=b;return this;},limit(n){end=n-1;return this;},maybeSingle(){one=true;return this;},single(){one=true;return this;},update(value){update=value;return this;},then(resolve){if(update)list.forEach(row=>Object.assign(row,update));return Promise.resolve({data:one?list[0]||null:list.slice(start,end+1),error:null,count:count?list.length:null}).then(resolve);}};
   return query;
  };
  const admin={from,auth:{admin:{createUser:async value=>{creates.push(value);const id='created';rows.profiles.push({id,organization_id:value.app_metadata.stratos_organization_id,active:true});return {data:{user:{id}},error:null};},updateUserById:async()=>({})}}};
@@ -26,6 +27,7 @@ function harness({operator=true,disabled=false}={}) {
   saveTemporaryCredential:async()=>{},decryptCredentialRows:async()=>[],XLSX:{},
   Deno:{env:{get:key=>({SB_URL:'https://stratos.example',SB_SERVICE_ROLE_KEY:'service',SB_ANON_KEY:'anon'}[key])},serve:fn=>{handler=fn;}},
  });
+ vm.runInContext(provisioningSource,context);
  vm.runInContext(source,context);
  const call=async payload=>{const response=await handler(new Request('https://stratos.example/functions/v1/whatsapp-admin',{method:'POST',headers:{authorization:'Bearer qa'},body:JSON.stringify(payload)}));return {status:response.status,body:await response.json()};};
  return {call,creates,rows};

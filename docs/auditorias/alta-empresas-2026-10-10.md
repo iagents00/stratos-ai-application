@@ -2,12 +2,14 @@
 
 ## Estado
 
-Implementación y pruebas locales completas. Pendiente comprobar y desplegar el
-backend en **stratos-prod / glulgyhkrqpykxmujodb**, integrar el PR y comprobar los
-SHA de producción. No presentar esta auditoría como una certificación de la base
-activa: la sesión CLI disponible sólo enumeró los dos proyectos Amistad; el
-navegador abrió el inicio de sesión de Supabase. El usuario identificó la cuenta
-correcta como **synergyfornature**.
+Implementación y backend verificados en **stratos-prod / glulgyhkrqpykxmujodb**
+con la cuenta synergyfornature. Migraciones incrementales 266 y 267 aplicadas,
+ambas Edge Functions publicadas y su fuente descargada comparada con el código
+local. Pendiente la integración del PR y comprobar el SHA del frontend publicado.
+
+La inspección activa confirmó que el trigger anterior ya rechazaba metadata de
+usuario para elegir empresa, aunque ese cambio no estaba versionado. Se conservó
+compatibilidad con sus claves seguras `organization_id`/`role`.
 
 ## Alcance y hallazgos corregidos
 
@@ -18,8 +20,9 @@ correcta como **synergyfornature**.
   opcional y separado. Las empresas de configuración histórica no se editan en
   esta nueva pantalla.
 - P1: el trigger Auth versionado tomaba organización y rol de `user_metadata`,
-  controlada por el usuario. La migración nueva sólo acepta una asignación a
-  empresa existente desde `app_metadata`, escrita por el servidor. Un signup
+  controlada por el usuario. Las migraciones aceptan una asignación a
+  empresa existente desde metadata de servidor o un ticket de un solo uso
+  emitido exclusivamente por el servidor. Un signup
   independiente recibe su propia organización y nunca adopta Duke, NSG u otra.
   Véase [la guía oficial de usuarios de Supabase](https://supabase.com/docs/guides/auth/users).
 - P1: las funciones creaban Auth sin destino y luego movían el perfil. La
@@ -49,7 +52,7 @@ correcta como **synergyfornature**.
   transporte Supabase simulado; operadores desactivados/no autorizados, scope
   partner y rechazo de altas dirigidas a Duke, NSG u otro partner.
 - `tests/company-provisioning-db.test.mjs`: PostgreSQL aislado (PGlite),
-  migraciones 247 y 266 reales, trigger Auth, rollback al agotar licencias,
+  migraciones 247, 266 y 267 reales, trigger Auth, rollback al agotar licencias,
   metadata manipulada, idempotencia, permisos de RPC, límites de cupo, cambio
   prohibido de empresa/rol y consultas/escrituras cruzadas con las políticas
   RLS versionadas de perfiles/leads. No conecta con producción. No prueba
@@ -75,25 +78,40 @@ Su referencia DESIGN.md describe exclusivamente Rails; las diferencias de
 escalas, bordes y colores de esta consola se revisaron contra los tokens actuales
 y la captura live. No se reemplazó la guía global de diseño con reglas del alta.
 
-## Publicación pendiente: orden y verificaciones
+## Backend y pruebas en producción
 
-1. Acceder a la cuenta indicada y comprobar el ID del proyecto. Descargar fuera
-   de `src`, `public` y `dist` las versiones activas de `whatsapp-admin`,
-   `admin-create-user` y `pg_get_functiondef('public.handle_new_user()'::regprocedure)`.
-   Compararlas con la base del cambio; conciliar cualquier diferencia antes de
-   aplicar nada. Comprobar también los triggers de `auth.users` y las guardas 247.
-2. Aplicar exclusivamente `266_company_provisioning_isolation.sql`. No ejecutar
-   el historial completo. Esta migración no modifica registros existentes.
-3. Publicar **ambas** Edge Functions: `whatsapp-admin` y `admin-create-user`.
-   La migración debe existir primero. Verificar su versión activa; un build o
-   preview Vercel no sustituye estos pasos. Evitar altas durante esta ventana.
-4. Con cuentas QA explícitas del proyecto, probar empresa/administrador/login,
-   cupos, duplicado de correo, reintento, permisos partner y aislamiento con
-   consultas autenticadas. Revisar la política efectiva de tablas dependientes
-   y credenciales temporales; comprobar que no se creó una organización extra.
-5. Integrar sólo con `Validar Stratos` y `verificar` aprobados. Actualizar la
-   carpeta principal y comprobar `release.json` de los dominios contra el SHA
-   integrado, además del flujo y ambos temas en producción.
+- Respaldo previo fuera del repositorio de las dos Edge Functions, trigger Auth,
+  guardas de licencias/permisos, triggers y políticas RLS efectivas.
+- 266 registrada como `20261010130000`, 267 como `20261010133000`.
+  Se instaló exclusivamente la RPC faltante `fn_activate_whatsapp_readonly`
+  de 265, requerida por la pantalla vigente; no se reprodujo 265 completa ni
+  se activó WhatsApp para ninguna organización.
+- La prueba real descubrió que Auth Admin escribe custom `app_metadata` después
+  del INSERT. 267 y `provision-user.ts` corrigen ese orden con tickets UUID de
+  un solo uso, vinculados a correo/empresa/rol, expiración de cinco minutos,
+  RLS y ausencia de permisos para anon/authenticated. El trigger consume el
+  ticket dentro de la transacción de Auth. Duplicados/fallos limpian el ticket.
+- `tests/sql/company-provisioning-live-rollback.sql` pasó contra la base activa:
+  alta, asignación de perfil, reintentos, licencias, roles, consultas y escrituras
+  cruzadas de leads/perfiles/organizaciones, RPC privada y credenciales. Todo se
+  revierte por transacción; las políticas de producción están presentes.
+- Prueba HTTP contra las Edge Functions activas: empresa, primer administrador,
+  login real, correo duplicado, lectura aislada, destino manipulado ignorado por
+  admin-create-user, permisos partner y credenciales temporales cifradas.
+- Dos altas HTTP concurrentes para la última licencia: exactamente una terminó
+  correctamente y el total quedó en tres perfiles para tres licencias.
+- Las cuatro cuentas y dos empresas del recorrido final se eliminaron. También
+  se limpió la cuenta/espacio provisional de la prueba inicial fallida. Consulta
+  posterior: cero cuentas QA, cero empresas QA y cero tickets pendientes.
+- La prueba no envió correos ni avisos de partner, no conectó canales y no accedió
+  al contenido de leads de clientes. Conservó la auditoría normal del sistema.
 
 Rails permanece desactivado. No se han cambiado contactos, organizaciones,
 usuarios, canales ni permisos reales de Duke, NSG u otros clientes.
+
+## Verificación del frontend
+
+Integrar con `Validar Stratos` y `verificar` aprobados, actualizar la carpeta
+principal y comprobar `release.json` de los dominios contra el SHA integrado.
+Las pruebas de apariencia y flujo con API interceptada cubren escritorio/móvil
+y claro/oscuro; no sustituyen las pruebas reales de backend descritas arriba.
