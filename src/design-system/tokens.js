@@ -17,11 +17,11 @@
 // ─── PALETA — PLATAFORMA (app.stratoscapitalgroup.com) ───────────────────────
 export const P = {
   // Navy casi negro; paneles apenas elevados sobre el lienzo, sin tinte verde.
-  bg:      "#030916",
-  bg2:     "#040B19",
-  bg3:     "#0A162A",
-  surface: "#050D1D",
-  surfaceG: "linear-gradient(180deg, #061020 0%, #050D1D 100%)",
+  bg:      "#01040A",
+  bg2:     "#02060D",
+  bg3:     "#060D1A",
+  surface: "#020710",
+  surfaceG: "linear-gradient(180deg, #030A15 0%, #020710 100%)",
 
   // Vidrio (glassmorphism)
   glass:   "rgba(126,161,220,0.025)",
@@ -44,7 +44,7 @@ export const P = {
   accentS: "rgba(0,209,255,0.08)",
   accentB: "rgba(0,209,255,0.22)",
   accentG: "linear-gradient(135deg, #00D1FF 0%, #7EE9FF 100%)",
-  actionG: "linear-gradient(180deg, #0A2140 0%, #081A32 100%)",
+  actionG: "linear-gradient(180deg, #081A31 0%, #061326 100%)",
   actionInk: "#EDEDED",
   actionBorder: "rgba(0,209,255,0.32)",
   success: "#6DD4A8",
