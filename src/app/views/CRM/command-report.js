@@ -34,7 +34,7 @@ export function createCommandReport({ leads, range, series, buckets, clientName,
         { label: "Activos post-Zoom", value: String(snapshotTotals.activePostZoom), sub: "estado actual",   color: colors.activePostZoom },
       ],
       rangeCards: [
-        { label: "Leads nuevos",         value: String(totalLeads),     sub: "creados en el rango",        color: "#6EE7C2" },
+        { label: "Leads nuevos",         value: String(totalLeads),     sub: "creados en el rango",        color: "#00D1FF" },
         { label: "En seguimiento+", value: `${formatRate(tasaCalif)}`,        sub: `${rangeTotals.qualified} de ${totalLeads || 0}`, color: "#0EA5E9" },
         { label: "Cohorte con Zoom",    value: `${formatRate(tasaZoomSobreCal)}`, sub: "sobre leads nuevos",   color: "#2563EB" },
         { label: "Seguim. por lead",     value: String(promedioSeguim), sub: "acumulado de la cohorte",         color: "#EA580C" },

@@ -13,7 +13,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { FileText, Download, RefreshCw, BookOpen, Eye, Cloud, Check } from "lucide-react";
-import { font, fontDisp } from "../../../design-system/tokens";
+import { P, LP, font, fontDisp } from "../../../design-system/tokens";
 import { supabase } from "../../../lib/supabase";
 import { descargarDocx, buildDocx } from "../../../lib/docx";
 import { MANUAL, manualEnBloques } from "../../../lib/manual-stratos-doc";
@@ -59,7 +59,8 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG", isGue
   const txt    = T?.txt    || (isLight ? "#0B1220" : "#E2E8F0");
   const txt2   = T?.txt2   || (isLight ? "#3B4A61" : "#8B99AE");
   const txt3   = T?.txt3   || (isLight ? "#7A8699" : "#4A5568");
-  const accent = T?.accent || (isLight ? "#0D9A76" : "#6EE7C2");
+  const accent = T?.accent || (isLight ? LP.accent : P.accent);
+  const success = T?.success || (isLight ? LP.success : P.success);
   const bd     = T?.border || (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)");
 
   const [docs, setDocs] = useState([]);
@@ -172,7 +173,7 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG", isGue
         </button>
         {subido.manual ? (
           <a href={subido.manual} target="_blank" rel="noreferrer" title="Abrirlo en Drive"
-            style={{ ...btn, borderColor: `${accent}55`, color: accent, textDecoration: "none" }}>
+            style={{ ...btn, borderColor: `${success}55`, color: success, textDecoration: "none" }}>
             <Check size={14} /> En Drive
           </a>
         ) : (
@@ -215,7 +216,7 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG", isGue
           </button>
           {subido[d.id] ? (
             <a href={subido[d.id]} target="_blank" rel="noreferrer" title="Abrirlo en Drive"
-              style={{ ...btn, borderColor: `${accent}55`, color: accent, textDecoration: "none" }}>
+              style={{ ...btn, borderColor: `${success}55`, color: success, textDecoration: "none" }}>
               <Check size={14} />
             </a>
           ) : (
@@ -241,7 +242,7 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG", isGue
           style={{ position: "fixed", inset: 0, zIndex: 99990, background: isLight ? "rgba(15,23,42,0.5)" : "rgba(0,0,0,0.82)", display: "flex", alignItems: "center", justifyContent: "center", padding: 18 }}>
           <div onClick={(e) => e.stopPropagation()} style={{
             width: "min(760px, 96vw)", maxHeight: "86dvh", overflowY: "auto",
-            background: isLight ? "#FFFFFF" : "#0C0C0C", border: `1px solid ${bd}`,
+            background: isLight ? "#FFFFFF" : P.surface, border: `1px solid ${bd}`,
             borderRadius: 18, padding: 24,
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 14, paddingBottom: 12, borderBottom: `1px solid ${bd}` }}>

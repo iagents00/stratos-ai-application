@@ -153,8 +153,8 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
               }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: 11,
-                  background: isLight ? "rgba(13,154,118,0.10)" : "rgba(255,255,255,0.06)",
-                  border: `1px solid ${isLight ? "rgba(13,154,118,0.22)" : T.border}`,
+                  background: isLight ? "rgba(0,111,145,0.10)" : "rgba(255,255,255,0.06)",
+                  border: `1px solid ${isLight ? "rgba(0,111,145,0.22)" : T.border}`,
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 14, fontWeight: 500,
                   color: isLight ? T.accentDark || T.accent : T.txt2,
@@ -236,7 +236,7 @@ export default function Trash({ trashedLeads = [], onRestore, onHardDelete, onRe
             style={{
               width: "min(420px, 100%)",
               padding: 22, borderRadius: 16,
-              background: isLight ? "#FFFFFF" : "#0C0C0C",
+              background: T.surface,
               border: `1px solid ${T.borderH}`,
               boxShadow: "0 24px 60px rgba(0,0,0,0.45)",
             }}>

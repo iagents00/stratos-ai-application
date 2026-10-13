@@ -52,7 +52,7 @@ export default function ProFeatureGate({
           background: P.bg2,
           border: `1px solid ${P.accentB}`,
           borderRadius: 18,
-          boxShadow: "0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(110,231,194,0.08)",
+          boxShadow: "0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(var(--stratos-accent-rgb),0.08)",
           overflow: "hidden",
           fontFamily: font,
         }}
@@ -84,7 +84,7 @@ export default function ProFeatureGate({
             marginBottom: 14,
             boxShadow: `0 8px 30px ${P.accent}55`,
           }}>
-            <Sparkles size={24} color="#0B1220" strokeWidth={2.4} />
+            <Sparkles size={24} color={P.onAccent} strokeWidth={2.4} />
           </div>
 
           <div style={{

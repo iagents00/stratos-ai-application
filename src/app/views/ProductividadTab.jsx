@@ -88,7 +88,7 @@ export default function ProductividadTab({ T, isLight, dateFilter = null }) {
 
   // Mapa de presentación por estado. Colores desde el theme (sin hardcodear).
   const STATE_META = {
-    done:        { label: "Completada", color: T.accent },
+    done:        { label: "Completada", color: T.success },
     in_progress: { label: "En proceso", color: T.amber },
     not_done:    { label: "No la hice", color: T.rose },
     pending:     { label: "Pendiente",  color: T.txt3 },

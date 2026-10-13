@@ -192,7 +192,7 @@ export default function InformeAvances({ T }) {
   const txt    = T?.txt    || (isLight ? "#0B1220" : "#E2E8F0");
   const txt2   = T?.txt2   || (isLight ? "#3B4A61" : "#8B99AE");
   const txt3   = T?.txt3   || (isLight ? "#7A8699" : "#4A5568");
-  const accent = T?.accent || (isLight ? "#0D9A76" : "#6EE7C2");
+  const accent = T?.accent || (isLight ? "#006F91" : "#00D1FF");
   const glass  = T?.glass  || (isLight ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.032)");
   const bd     = T?.border || (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)");
 
@@ -582,10 +582,10 @@ export default function InformeAvances({ T }) {
                   ? "Quedó solo en Mi Espacio → Documentos, y al equipo le llegó el aviso"
                   : "Guardarlo en Stratos y avisarle al equipo"}
                 style={{
-                  background: guardado ? `${accent}14` : "transparent",
-                  border: `1px solid ${guardado ? `${accent}55` : bd}`, borderRadius: 10,
+                  background: guardado ? T.successS : "transparent",
+                  border: `1px solid ${guardado ? T.successB : bd}`, borderRadius: 10,
                   padding: "10px 14px", cursor: (guardando || guardado) ? "default" : "pointer",
-                  color: guardado ? accent : txt2, fontSize: 12.5, fontFamily: font,
+                  color: guardado ? T.success : txt2, fontSize: 12.5, fontFamily: font,
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
                 }}>
                 {guardando ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} />

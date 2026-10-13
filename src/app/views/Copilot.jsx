@@ -1073,12 +1073,12 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   };
 
   /* ── Colores burbujas ── */
-  const bubbleUserBg = isLight ? "linear-gradient(135deg, #0D9A76 0%, #067A5E 100%)" : "linear-gradient(135deg, #6EE7C2 0%, #34D399 100%)";
-  const bubbleUserTxt = isLight ? "#FFFFFF" : "#041016";
-  const bubbleAiBg = isLight ? "#FFFFFF" : "rgba(20,20,20,0.82)";
+  const bubbleUserBg = `linear-gradient(135deg, ${T.accent} 0%, ${isLight ? T.accentDark : T.accentSoft} 100%)`;
+  const bubbleUserTxt = T.onAccent;
+  const bubbleAiBg = isLight ? "#FFFFFF" : `${T.bg3}D1`;
   const bubbleAiBd = isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)";
   const bgArea = isLight ? "#F8FAFC" : T.bg;
-  const composerBg = isLight ? "#FFFFFF" : "rgba(12,12,12,0.95)";
+  const composerBg = isLight ? "#FFFFFF" : `${T.surface}F2`;
 
   // El motion del avatar solo vive en la ÚLTIMA respuesta del asistente (la
   // más reciente); las burbujas anteriores quedan estáticas. Se recalcula en
@@ -1096,7 +1096,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
         // Header inmersivo (estilo WhatsApp): reemplaza al header de la app en
         // móvil → lleva el safe-area-top para no quedar bajo el reloj del iPhone.
         paddingTop: "calc(10px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px)))",
-        background: isLight ? "#FFFFFF" : "rgba(12,12,12,0.95)",
+        background: isLight ? "#FFFFFF" : `${T.surface}F2`,
         borderBottom: `1px solid ${T.border}`, zIndex: 10,
         boxShadow: isLight ? "0 1px 3px rgba(15,23,42,0.06)" : "0 1px 3px rgba(0,0,0,0.3)"
       }}>
@@ -1110,18 +1110,18 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
             background: "transparent", border: "none", cursor: "pointer", flexShrink: 0,
             WebkitTapHighlightColor: "transparent",
           }}>
-            <ChevronLeft size={26} strokeWidth={2.4} color={isLight ? "#0D9A76" : "#FFFFFF"} />
+            <ChevronLeft size={26} strokeWidth={2.4} color={isLight ? T.accent : "#FFFFFF"} />
             {Number.isFinite(score) && score > 0 && (
               <span title="Score de tu cartera" style={{
                 fontSize: 13, fontWeight: 700, fontFamily: fontDisp, lineHeight: 1,
-                color: isLight ? "#0D9A76" : "#FFFFFF", minWidth: 18, textAlign: "center",
+                color: isLight ? T.accent : "#FFFFFF", minWidth: 18, textAlign: "center",
               }}>{score}</span>
             )}
           </button>
         )}
         <div style={{
           width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-          background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.22) 0%, rgba(52,211,153,0.12) 100%)",
+          background: `linear-gradient(135deg, ${T.accent}38 0%, ${T.accent}1F 100%)`,
           border: `1px solid ${T.accent}4D`, display: "flex", alignItems: "center", justifyContent: "center"
         }}>
           <CopilotMark size={22} isLight={isLight} />
@@ -1132,11 +1132,11 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
                 los errores, así que un fallo del micrófono apagaba el indicador
                 del asistente. Se pone en gris solo cuando el asistente está de
                 verdad inalcanzable — sin activar, o el mensaje no llegó. */}
-            <div style={{ fontSize: chatType.meta, color: asistenteCaido ? T.txt3 : T.accent, fontFamily: font, marginTop: 1, display: "flex", alignItems: "center", gap: 4 }}>
+            <div style={{ fontSize: chatType.meta, color: asistenteCaido ? T.txt3 : T.success, fontFamily: font, marginTop: 1, display: "flex", alignItems: "center", gap: 4 }}>
               <span style={{
                 width: 6, height: 6, borderRadius: "50%",
-                background: asistenteCaido ? T.txt3 : T.accent,
-                boxShadow: asistenteCaido ? "none" : `0 0 6px ${T.accent}`,
+                background: asistenteCaido ? T.txt3 : T.success,
+                boxShadow: asistenteCaido ? "none" : `0 0 6px ${T.success}`,
               }} />{isDemo ? "Demostración" : asistenteCaido ? "Sin conexión con el asistente" : "En línea"}
           </div>
         </div>
@@ -1192,7 +1192,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
                 onClick={() => { setErrorCarga(false); setLoading(true); reload(); }}
                 style={{
                   padding: "9px 20px", borderRadius: 999, border: "none", cursor: "pointer",
-                  background: T.accent, color: isLight ? "#FFFFFF" : "#041016",
+                  background: T.accent, color: T.onAccent,
                   fontSize: 13, fontWeight: 600, fontFamily: font,
                 }}>
                 Reintentar
@@ -1299,7 +1299,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
               onKeyDown={(e) => { if (e.key === "Enter") guardarCaja(); }}
               style={{ flex: 1, minWidth: 130, height: 36, padding: "0 11px", borderRadius: 10, border: `1px solid ${T.border}`, background: isLight ? "#FFF" : "rgba(255,255,255,0.05)", color: T.txt, fontSize: 13.5, fontFamily: font, outline: "none" }} />
             <button onClick={guardarCaja} disabled={sending}
-              style={{ height: 36, padding: "0 16px", borderRadius: 10, border: "none", background: T.accent, color: isLight ? "#FFF" : "#04211A", fontSize: 13, fontWeight: 700, fontFamily: font, cursor: sending ? "wait" : "pointer" }}>
+              style={{ height: 36, padding: "0 16px", borderRadius: 10, border: "none", background: T.accent, color: T.onAccent, fontSize: 13, fontWeight: 700, fontFamily: font, cursor: sending ? "wait" : "pointer" }}>
               Registrar
             </button>
           </div>
@@ -1353,7 +1353,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           style={{
             width: 36, height: 36, borderRadius: 10, flexShrink: 0, border: "none",
             background: (sending || !input.trim()) ? "transparent" : T.accent,
-            color: (sending || !input.trim()) ? T.txt3 : (isLight ? "#FFF" : "#041016"),
+            color: (sending || !input.trim()) ? T.txt3 : T.onAccent,
             cursor: (sending || !input.trim()) ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center",
             transition: "all .15s"
           }}>
@@ -1671,7 +1671,7 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
                 style={{
                   padding: "4px 10px", borderRadius: 7, border: btn.primary ? "none" : `1px solid ${T.border}`,
                   background: btn.primary ? T.accent : (isLight ? "#FFFFFF" : "rgba(255,255,255,0.06)"),
-                  color: btn.primary ? (isLight ? "#FFF" : "#041016") : T.txt, fontSize: chatType.chip, fontWeight: btn.primary ? 600 : 500,
+                  color: btn.primary ? T.onAccent : T.txt, fontSize: chatType.chip, fontWeight: btn.primary ? 600 : 500,
                   fontFamily: font, cursor: (sending && !btn.isUrl) ? "default" : "pointer"
                 }}>{btn.label}</button>
             ))}
@@ -1740,7 +1740,7 @@ function VoiceNote({ url, transcript, T, isLight, onDiscard, onSend }) {
   return (
     <div style={{
       margin: "0 14px 4px", padding: "10px 12px", borderRadius: 14, flexShrink: 0,
-      background: isLight ? "rgba(13,154,118,0.055)" : "rgba(110,231,194,0.06)",
+      background: isLight ? "rgba(0,111,145,0.055)" : "rgba(0,209,255,0.06)",
       border: `1px solid ${accent}33`,
     }}>
       <audio
@@ -1756,8 +1756,8 @@ function VoiceNote({ url, transcript, T, isLight, onDiscard, onSend }) {
           type="button" onClick={toggle} aria-label={playing ? "Pausar" : "Reproducir"}
           style={{
             width: 36, height: 36, borderRadius: "50%", flexShrink: 0, border: "none", cursor: "pointer",
-            background: `linear-gradient(135deg, ${accent}, #0D9A76)`,
-            color: isLight ? "#FFFFFF" : "#041016",
+            background: `linear-gradient(135deg, ${accent}, ${isLight ? T.accentDark : T.accentSoft})`,
+            color: T.onAccent,
             display: "flex", alignItems: "center", justifyContent: "center",
             boxShadow: `0 4px 12px ${accent}44`,
           }}
@@ -1804,7 +1804,7 @@ function VoiceNote({ url, transcript, T, isLight, onDiscard, onSend }) {
             <span style={{ flex: 1, minWidth: 0, fontSize: 12, color: T.txt3, fontFamily: font }}>Nota de voz lista para enviar</span>
           )}
           <button type="button" onClick={onSend}
-            style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 9, border: "none", background: accent, color: isLight ? "#FFF" : "#041016", fontSize: 12.5, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer" }}>
+            style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 9, border: "none", background: accent, color: T.onAccent, fontSize: 12.5, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer" }}>
             <Send size={13} strokeWidth={2.4} /> Enviar
           </button>
         </div>
@@ -1834,7 +1834,7 @@ function Typing({ T, isLight, aiBg, aiBd }) {
 function EmptyState({ T, isLight, onPick, guidance, suggestions = SUGGESTIONS }) {
   return (
     <div style={{ margin: "auto", textAlign: "center", maxWidth: 340, padding: 12 }}>
-      <div style={{ width: 48, height: 48, borderRadius: 14, margin: "0 auto 12px", background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.15) 0%, rgba(52,211,153,0.08) 100%)", border: `1px solid ${T.accent}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ width: 48, height: 48, borderRadius: 14, margin: "0 auto 12px", background: `linear-gradient(135deg, ${T.accent}26 0%, ${T.accent}14 100%)`, border: `1px solid ${T.accent}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <CopilotMark size={30} isLight={isLight} />
       </div>
       <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>{guidance?.title || "Tu Asistente Operativo"}</h3>
@@ -1902,7 +1902,7 @@ function NotifBanner({ T, isLight, message }) {
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: 10, padding: "9px 14px", flexShrink: 0,
-      background: isLight ? "rgba(13,154,118,0.07)" : "rgba(110,231,194,0.07)",
+      background: isLight ? "rgba(0,111,145,0.07)" : "rgba(0,209,255,0.07)",
       borderBottom: `1px solid ${T.accent}22`,
     }}>
       <Bell size={16} color={T.accent} strokeWidth={2} style={{ flexShrink: 0 }} />
@@ -1915,7 +1915,7 @@ function NotifBanner({ T, isLight, message }) {
       </div>
       {!needsInstall && (
         <button type="button" onClick={enable} disabled={busy}
-          style={{ flexShrink: 0, padding: "6px 12px", borderRadius: 8, border: "none", background: busy ? `${T.accent}66` : T.accent, color: isLight ? "#FFF" : "#041016", fontSize: 12.5, fontWeight: 600, fontFamily: fontDisp, cursor: busy ? "default" : "pointer" }}>
+          style={{ flexShrink: 0, padding: "6px 12px", borderRadius: 8, border: "none", background: busy ? `${T.accent}66` : T.accent, color: T.onAccent, fontSize: 12.5, fontWeight: 600, fontFamily: fontDisp, cursor: busy ? "default" : "pointer" }}>
           {busy ? "Activando…" : "Activar"}
         </button>
       )}
@@ -1967,11 +1967,11 @@ function ConnectPrompt({ T, isLight, botUsername, manualPairing, onPaired, onBac
           width: 40, height: 40, borderRadius: 12, background: "transparent", border: "none", cursor: "pointer",
           display: "flex", alignItems: "center", justifyContent: "center", WebkitTapHighlightColor: "transparent",
         }}>
-          <ChevronLeft size={26} strokeWidth={2.4} color={isLight ? "#0D9A76" : "#FFFFFF"} />
+          <ChevronLeft size={26} strokeWidth={2.4} color={isLight ? T.accent : "#FFFFFF"} />
         </button>
       )}
       <G T={T} style={{ padding: 28, textAlign: "center", borderRadius: 18, maxWidth: 400, width: "100%", boxShadow: isLight ? "0 8px 32px rgba(15,23,42,0.06)" : "0 12px 40px rgba(0,0,0,0.3)" }}>
-        <div style={{ width: 52, height: 52, borderRadius: 14, margin: "0 auto 16px", background: isLight ? "linear-gradient(135deg, #E8F8F4 0%, #D1F2E8 100%)" : "linear-gradient(135deg, rgba(110,231,194,0.15) 0%, rgba(52,211,153,0.08) 100%)", border: `1px solid ${T.accent}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: 52, height: 52, borderRadius: 14, margin: "0 auto 16px", background: `linear-gradient(135deg, ${T.accent}26 0%, ${T.accent}14 100%)`, border: `1px solid ${T.accent}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <CopilotMark size={32} isLight={isLight} />
         </div>
         <h2 style={{ margin: "0 0 6px", fontSize: 19, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>Activa tu Copilot AI</h2>
@@ -1989,7 +1989,7 @@ function ConnectPrompt({ T, isLight, botUsername, manualPairing, onPaired, onBac
               </div>
             )}
             <button type="button" onClick={connect} disabled={busy}
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 24px", borderRadius: 12, background: busy ? `${T.accent}44` : T.accent, border: "none", color: isLight ? "#FFF" : "#041016", fontSize: 14, fontWeight: 600, fontFamily: fontDisp, cursor: busy ? "default" : "pointer" }}>
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 24px", borderRadius: 12, background: busy ? `${T.accent}44` : T.accent, border: "none", color: T.onAccent, fontSize: 14, fontWeight: 600, fontFamily: fontDisp, cursor: busy ? "default" : "pointer" }}>
               {busy ? "Conectando…" : "Conectar mi Telegram"}
             </button>
           </>

@@ -50,7 +50,7 @@ import {
 import "./App.css";
 
 /* ── Design system ── */
-import { P, font, fontDisp } from "../design-system/tokens";
+import { P, LP, font, fontDisp } from "../design-system/tokens";
 
 /* ── Feature components ── */
 import { StratosAtomHex } from "./components/Logo";
@@ -239,31 +239,6 @@ const PREFETCH_VIEWS = [
 
 /* ── Mock data (demo fallback) ── */
 import { leads } from "./data/leads";
-
-/* ════════════════════════════════════════
-   DESIGN TOKENS — Dark & Light palettes
-   ════════════════════════════════════════ */
-const LP = {
-  // Canvas Apple neutro (ver design-system/tokens.js). Gris frío luminoso, sin
-  // tinte verde: el lienzo queda limpio y las tarjetas blancas "flotan".
-  bg: "#F1F3F6", bgSoft: "#F6F7F9", bgCool: "#EBEEF2",
-  glass: "rgba(255,255,255,0.70)", glassH: "rgba(255,255,255,0.92)",
-  glassStrong: "rgba(255,255,255,0.96)",
-  glassMint: "rgba(236,251,246,0.75)",
-  border: "rgba(15,23,42,0.07)", borderH: "rgba(15,23,42,0.14)",
-  borderMint: "rgba(15,158,122,0.18)", surface: "#FFFFFF",
-  accent: "#0D9A76", accentDark: "#067A5E",
-  accentS: "rgba(13,154,118,0.08)", accentB: "rgba(13,154,118,0.28)",
-  accentG: "linear-gradient(135deg, #0D9A76 0%, #14B892 50%, #34D4AA 100%)",
-  blue: "#2563EB", violet: "#7C3AED", amber: "#D97706",
-  rose: "#E11D48", emerald: "#059669", cyan: "#0891B2",
-  txt: "#0B1220", txt2: "#3B4A61", txt3: "#5C6B82",
-  shadow1: "0 1px 1.5px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)",
-  shadow2: "0 1px 2px rgba(15,23,42,0.05), 0 4px 12px rgba(15,23,42,0.08), 0 18px 40px rgba(15,23,42,0.10)",
-  shadow3: "0 2px 6px rgba(15,23,42,0.07), 0 12px 32px rgba(15,23,42,0.12), 0 32px 72px rgba(15,23,42,0.14)",
-  shadowMint: "0 2px 8px rgba(13,154,118,0.12), 0 10px 30px rgba(13,154,118,0.10)",
-  r: 16, rs: 10, rx: 6,
-};
 
 /**
  * fetchAllPaged — Trae TODAS las filas de una query de Supabase paginando.
@@ -2023,9 +1998,9 @@ export default function App() {
     const a = n.id === "miespacio" ? metaOpen : (v === n.id && !metaOpen);
     const isAdmin = n.adminOnly;
     const hasAccess = canAccessModule(n.id, user, clientConfig);
-    const mintC = isAdmin ? "#A78BFA" : "#6EE7C2";
+    const mintC = isAdmin ? "#A78BFA" : T.accent;
     const activeColor = isAdmin ? "#A78BFA" : (isLight ? T.accent : mintC);
-    const activeIcon  = isLight ? activeColor : (isAdmin ? "#ECE6FF" : "#E9FCF4");
+    const activeIcon  = isLight ? activeColor : (isAdmin ? "#ECE6FF" : "#E6FAFF");
     const iconSize = n.id === "d" ? 23 : n.id === "ia" ? 22 : n.id === "lp" ? 22 : n.id === "e" ? 21 : n.id === "c" ? 22 : 20;
     return (
       <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3, width:56, padding:0 }}>
@@ -2038,7 +2013,7 @@ export default function App() {
             cursor: hasAccess ? "pointer" : "not-allowed",
             opacity: hasAccess ? 1 : 0.32,
             outline:"none",
-            background: a ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.68))" : "linear-gradient(180deg, rgba(255,255,255,0.065), rgba(110,231,194,0.022))") : "transparent",
+            background: a ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.68))" : "linear-gradient(180deg, rgba(255,255,255,0.065), rgba(0,209,255,0.022))") : "transparent",
             border: a ? (isLight ? "1px solid rgba(15,23,42,0.10)" : "1px solid rgba(190,245,225,0.16)") : "1px solid transparent",
             boxShadow: a ? (isLight ? "0 3px 10px rgba(15,23,42,0.06)" : "0 3px 10px rgba(0,0,0,0.24)") : "none",
             display:"flex", alignItems:"center", justifyContent:"center",
@@ -2238,15 +2213,15 @@ export default function App() {
             alignItems:"center",
             justifyContent:"center",
             backfaceVisibility:"hidden",
-            filter: isLight ? "drop-shadow(0 0 5px rgba(13,154,118,0.45)) drop-shadow(0 0 12px rgba(52,211,153,0.18))" : "drop-shadow(0 0 4px rgba(255,255,255,0.40)) drop-shadow(0 0 10px rgba(255,255,255,0.10))",
+            filter: isLight ? "drop-shadow(0 0 5px rgba(0,111,145,0.45)) drop-shadow(0 0 12px rgba(0,111,145,0.18))" : "drop-shadow(0 0 4px rgba(255,255,255,0.40)) drop-shadow(0 0 10px rgba(255,255,255,0.10))",
           }}>
-            <StratosAtomHex size={30} color={isLight ? "#0D9A76" : "#FFFFFF"} edge={isLight ? "#34D399" : "#C8DED8"} motion />
+            <StratosAtomHex size={30} color={isLight ? T.accent : "#FFFFFF"} edge={isLight ? T.accent : P.accentSoft} motion />
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:4 }}>
             <div style={{ width:4, height:4, borderRadius:"50%", background:"#34D399", boxShadow:"0 0 5px rgba(52,211,153,0.80), 0 0 10px rgba(52,211,153,0.30)", animation:"pulse 2.2s ease-in-out infinite", willChange:"transform, opacity" }} />
             <span style={{ fontSize:8.5, fontFamily:fontDisp, fontWeight:500, letterSpacing:"0.18em", textTransform:"uppercase", color: isLight ? "rgba(15,23,42,0.32)" : "rgba(255,255,255,0.28)", lineHeight:1 }}>Live</span>
           </div>
-          <div style={{ width:28, height:1, background: isLight ? "linear-gradient(90deg, transparent, rgba(13,154,118,0.18), transparent)" : "linear-gradient(90deg, transparent, rgba(110,231,194,0.12), transparent)" }} />
+          <div style={{ width:28, height:1, background: isLight ? "linear-gradient(90deg, transparent, rgba(0,111,145,0.18), transparent)" : "linear-gradient(90deg, transparent, rgba(0,209,255,0.12), transparent)" }} />
         </div>
 
         {/* Nav items */}
@@ -2255,18 +2230,18 @@ export default function App() {
           <div style={{ display:"flex", flexDirection:"column", alignItems:"center", paddingBottom:10, width:"100%" }}>
             <div onClick={() => setMetaOpen(true)} style={{
               position:"relative", width:"calc(100% - 14px)", borderRadius:19, overflow:"hidden", cursor:"pointer",
-              background: isLight ? "rgba(255,255,255,0.62)" : "linear-gradient(155deg, #0C0C0C 0%, #000000 55%, #000000 100%)",
+              background: isLight ? "rgba(255,255,255,0.62)" : P.surfaceG,
               backdropFilter: isLight ? "blur(32px) saturate(180%)" : "none",
               WebkitBackdropFilter: isLight ? "blur(32px) saturate(180%)" : "none",
-              border: metaOpen ? (isLight ? "1.5px solid rgba(13,154,118,0.55)" : "1.5px solid rgba(110,231,194,0.5)") : (isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(110,231,194,0.17)"),
+              border: metaOpen ? (isLight ? "1.5px solid rgba(0,111,145,0.55)" : "1.5px solid rgba(0,209,255,0.5)") : (isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(0,209,255,0.17)"),
               boxShadow: isLight
-                ? (metaOpen ? "0 0 0 3px rgba(13,154,118,0.14), inset 0 1.5px 0 rgba(255,255,255,1), 0 6px 28px rgba(13,154,118,0.18)" : "inset 0 1.5px 0 rgba(255,255,255,1), 0 6px 28px rgba(13,154,118,0.10)")
-                : (metaOpen ? "0 0 0 3px rgba(110,231,194,0.18), inset 0 1px 0 rgba(198,251,238,0.09), 0 14px 40px rgba(0,0,0,0.55)" : ["inset 0 1px 0 rgba(198,251,238,0.09)","inset 0 -1px 0 rgba(0,0,0,0.30)","0 14px 40px rgba(0,0,0,0.55)"].join(", ")),
+                ? (metaOpen ? "0 0 0 3px rgba(0,111,145,0.14), inset 0 1.5px 0 rgba(255,255,255,1), 0 6px 28px rgba(0,111,145,0.18)" : "inset 0 1.5px 0 rgba(255,255,255,1), 0 6px 28px rgba(0,111,145,0.10)")
+                : (metaOpen ? "0 0 0 3px rgba(0,209,255,0.18), inset 0 1px 0 rgba(126,233,255,0.09), 0 14px 40px rgba(0,0,0,0.55)" : ["inset 0 1px 0 rgba(126,233,255,0.09)","inset 0 -1px 0 rgba(0,0,0,0.30)","0 14px 40px rgba(0,0,0,0.55)"].join(", ")),
               padding:"11px 9px 12px",
             }}>
-              <div style={{ position:"absolute", top:0, left:0, right:0, height:"45%", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.65) 0%, transparent 100%)" : "linear-gradient(180deg, rgba(52,211,153,0.07) 0%, transparent 100%)", pointerEvents:"none", borderRadius:"20px 20px 0 0" }} />
+              <div style={{ position:"absolute", top:0, left:0, right:0, height:"45%", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.65) 0%, transparent 100%)" : "linear-gradient(180deg, rgba(0,209,255,0.07) 0%, transparent 100%)", pointerEvents:"none", borderRadius:"20px 20px 0 0" }} />
               {isLight && <div className="widget-shimmer" style={{ position:"absolute", top:0, bottom:0, left:0, width:"60%", background:"linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.07) 50%, transparent 100%)", pointerEvents:"none" }} />}
-              <div style={{ position:"absolute", bottom:-6, left:"50%", transform:"translateX(-50%)", width:72, height:40, background: isLight ? "radial-gradient(ellipse, rgba(13,154,118,0.18) 0%, transparent 70%)" : "radial-gradient(ellipse, rgba(52,211,153,0.12) 0%, transparent 70%)", filter:"blur(12px)", pointerEvents:"none" }} />
+              <div style={{ position:"absolute", bottom:-6, left:"50%", transform:"translateX(-50%)", width:72, height:40, background: isLight ? "radial-gradient(ellipse, rgba(0,111,145,0.18) 0%, transparent 70%)" : "radial-gradient(ellipse, rgba(0,209,255,0.12) 0%, transparent 70%)", filter:"blur(12px)", pointerEvents:"none" }} />
               <div style={{ display:"flex", justifyContent:"center", position:"relative", zIndex:1, marginBottom:8 }}>
                 {/* Solo los números, SIN píldora gris detrás (Iván 29-jul: «quita la
                     cosa gris… nada más deja los números»). Centrados, sin cortes. */}
@@ -2288,23 +2263,23 @@ export default function App() {
                   <span style={{
                     fontSize: tam, fontWeight: pc >= 100 ? 400 : 200, fontFamily: fontDisp,
                     letterSpacing: pcTxt.length >= 2 ? "-0.04em" : "0", lineHeight: 1,
-                    color: isLight ? (pc >= 100 ? "#0D9A76" : "#082818") : (pc >= 100 ? "#34D399" : "#FFFFFF"),
+                    color: isLight ? (pc >= 100 ? T.success : T.txt) : (pc >= 100 ? T.success : "#FFFFFF"),
                     display: "block", textAlign: "center", width: "100%",
                     position: "relative", zIndex: 1, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums",
                   }}>{pcTxt}</span>
                 );
               })()}
-              <div style={{ width:"100%", height:2.5, borderRadius:99, background: isLight ? "rgba(13,154,118,0.09)" : "rgba(255,255,255,0.08)", marginTop:9, overflow:"hidden", position:"relative", zIndex:1 }}>
-                <div style={{ width:`${pc}%`, height:"100%", borderRadius:99, background: isLight ? "linear-gradient(90deg, #0D9A76, #34D399)" : "linear-gradient(90deg, #34D399, #6EE7C2)", boxShadow: isLight ? "none" : "0 0 8px rgba(52,211,153,0.55)", transition:"width 1.1s cubic-bezier(0.4,0,0.2,1)" }} />
+              <div style={{ width:"100%", height:2.5, borderRadius:99, background: isLight ? "rgba(0,111,145,0.09)" : "rgba(255,255,255,0.08)", marginTop:9, overflow:"hidden", position:"relative", zIndex:1 }}>
+                <div style={{ width:`${pc}%`, height:"100%", borderRadius:99, background: T.accentG, boxShadow: isLight ? "none" : "0 0 8px rgba(0,209,255,0.25)", transition:"width 1.1s cubic-bezier(0.4,0,0.2,1)" }} />
               </div>
               {/* Una sola palabra: en el riel de 58px «Mi Espacio» partía en dos
                   renglones (Iván, 31-jul: «que quepa en un solo renglón»). */}
-              <span style={{ fontSize:7, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.08em", textTransform:"uppercase", textAlign:"center", lineHeight:1.5, whiteSpace:"nowrap", color: isLight ? "rgba(13,154,118,0.48)" : "rgba(52,211,153,0.36)", display:"block", marginTop:8, position:"relative", zIndex:1 }}>Espacio</span>
+              <span style={{ fontSize:7, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.08em", textTransform:"uppercase", textAlign:"center", lineHeight:1.5, whiteSpace:"nowrap", color: isLight ? "rgba(0,111,145,0.48)" : "rgba(0,209,255,0.66)", display:"block", marginTop:8, position:"relative", zIndex:1 }}>Espacio</span>
             </div>
             <div style={{ width:32, height:1, marginTop:10, background: isLight ? "linear-gradient(90deg, transparent, rgba(15,23,42,0.07), transparent)" : "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)" }} />
           </div>
 
-          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6, width:58, padding:"5px 0", borderRadius:19, background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.58), rgba(255,255,255,0.40))" : "linear-gradient(180deg, rgba(12,12,12,0.50) 0%, rgba(0,0,0,0.60) 100%)", backdropFilter:"blur(26px) saturate(185%)", WebkitBackdropFilter:"blur(26px) saturate(185%)", border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(255,255,255,0.07)", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.10)" : "inset 0 1px 0 rgba(190,245,225,0.09), inset 0 -1px 0 rgba(0,0,0,0.30), inset 0 0 24px rgba(0,0,0,0.22), 0 18px 44px rgba(0,0,0,0.55)" }}>
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6, width:58, padding:"5px 0", borderRadius:19, background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.58), rgba(255,255,255,0.40))" : "linear-gradient(180deg, rgba(12,12,12,0.50) 0%, rgba(0,0,0,0.60) 100%)", backdropFilter:"blur(26px) saturate(185%)", WebkitBackdropFilter:"blur(26px) saturate(185%)", border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(255,255,255,0.07)", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.10)" : "inset 0 1px 0 rgba(126,233,255,0.09), inset 0 -1px 0 rgba(0,0,0,0.30), inset 0 0 24px rgba(0,0,0,0.22), 0 18px 44px rgba(0,0,0,0.55)" }}>
           {sidebarTop.map(n => <NavBtn key={n.id} n={n} />)}
 
           {hasMoreApps && (
@@ -2315,9 +2290,9 @@ export default function App() {
               onMouseEnter={e => { if(!appsActive){ e.currentTarget.style.background = isLight ? "rgba(255,255,255,0.42)" : "rgba(255,255,255,0.045)"; e.currentTarget.style.borderColor = isLight ? "rgba(255,255,255,0.72)" : "rgba(190,245,225,0.09)"; } }}
               onMouseLeave={e => { e.currentTarget.style.background = appsActive ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.50))" : "rgba(255,255,255,0.05)") : "transparent"; e.currentTarget.style.borderColor = appsActive ? (isLight ? "rgba(255,255,255,0.92)" : "rgba(190,245,225,0.14)") : "transparent"; }}
             >
-              <IosIcon name="menu" filled={appsActive} size={19} color={appsActive ? (isLight ? T.accent : "#E9FCF4") : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
+              <IosIcon name="menu" filled={appsActive} size={19} color={appsActive ? (isLight ? T.accent : "#E6FAFF") : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
             </button>
-            <span style={{ fontSize:9, fontFamily:fontDisp, fontWeight: appsActive ? 650 : 430, letterSpacing:"0.01em", userSelect:"none", color: appsActive ? (isLight ? T.accent : "#E9FCF4") : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"), transition:"color 0.18s ease" }}>Apps</span>
+            <span style={{ fontSize:9, fontFamily:fontDisp, fontWeight: appsActive ? 650 : 430, letterSpacing:"0.01em", userSelect:"none", color: appsActive ? (isLight ? T.accent : "#E6FAFF") : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"), transition:"color 0.18s ease" }}>Apps</span>
           </div>
           )}
           </div>
@@ -2325,7 +2300,7 @@ export default function App() {
 
         {/* Bottom: System button */}
         <div style={{ width:"100%", display:"flex", flexDirection:"column", alignItems:"center", paddingBottom:12 }}>
-          <div style={{ height:1, width:34, background: isLight ? "rgba(13,154,118,0.10)" : "rgba(255,255,255,0.06)", margin:"4px auto 8px" }} />
+          <div style={{ height:1, width:34, background: isLight ? "rgba(0,111,145,0.10)" : "rgba(255,255,255,0.06)", margin:"4px auto 8px" }} />
           <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
             <button title={canAccessModule("admin", user, clientConfig) ? "Gestión de Usuarios" : "System — contraseña y soporte"}
               onClick={() => { setMetaOpen(false); canAccessModule("admin", user, clientConfig) ? setV("admin") : setV("perfil"); }}
@@ -2334,7 +2309,7 @@ export default function App() {
                 background: v==="admin"
                   ? "rgba(167,139,250,0.14)"
                   : v==="perfil"
-                    ? (isLight ? `${T.accent}14` : "rgba(110,231,194,0.10)")
+                    ? (isLight ? `${T.accent}14` : "rgba(0,209,255,0.10)")
                     : (isLight ? "rgba(255,255,255,0.62)" : "rgba(255,255,255,0.038)"),
                 border: v==="admin"
                   ? "1px solid rgba(167,139,250,0.28)"
@@ -2351,7 +2326,7 @@ export default function App() {
                 e.currentTarget.style.background = v==="admin"
                   ? "rgba(167,139,250,0.14)"
                   : v==="perfil"
-                    ? (isLight ? `${T.accent}14` : "rgba(110,231,194,0.10)")
+                    ? (isLight ? `${T.accent}14` : "rgba(0,209,255,0.10)")
                     : (isLight ? "rgba(255,255,255,0.62)" : "rgba(255,255,255,0.038)");
                 e.currentTarget.style.transform="scale(1)";
               }}
@@ -2374,7 +2349,7 @@ export default function App() {
         {/* HEADER */}
         {(() => {
           const hBg = isLight ? "linear-gradient(180deg,rgba(255,255,255,0.82) 0%,rgba(249,250,252,0.70) 100%)" : "linear-gradient(180deg, rgba(12,12,12,0.72) 0%, rgba(0,0,0,0.60) 100%)";
-          const hBorder = isLight ? "rgba(13,154,118,0.10)" : "rgba(255,255,255,0.06)";
+          const hBorder = isLight ? "rgba(0,111,145,0.10)" : "rgba(255,255,255,0.06)";
           const iBtnBase = { width:32, height:32, borderRadius:8, border:"none", background:"transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"background 0.14s ease" };
           const iBtnHoverBg  = isLight ? `${T.accent}0D` : "rgba(255,255,255,0.07)";
           const iBtnActiveBg = isLight ? `${T.accent}18` : "rgba(255,255,255,0.12)";
@@ -2483,8 +2458,8 @@ export default function App() {
                       <div style={{
                         position:"absolute", top:-2, right:-2,
                         minWidth:14, height:14, padding:"0 3.5px", borderRadius:99,
-                        background:T.accent, color:"#041016",
-                        border:`1.5px solid ${isLight ? "#F5FAF8" : "#000000"}`,
+                        background:T.accent, color:T.onAccent,
+                        border:`1.5px solid ${isLight ? "#F5FAF8" : P.bg}`,
                         fontSize:10, fontWeight:500, fontFamily:fontDisp,
                         display:"flex", alignItems:"center", justifyContent:"center",
                         lineHeight:1,
@@ -2494,13 +2469,13 @@ export default function App() {
                         position:"absolute", top:-2, right:-2,
                         minWidth:14, height:14, padding:"0 3.5px", borderRadius:99,
                         background:"#F59E0B", color:"#0B1220",
-                        border:`1.5px solid ${isLight ? "#F5FAF8" : "#000000"}`,
+                        border:`1.5px solid ${isLight ? "#F5FAF8" : P.bg}`,
                         fontSize:10, fontWeight:500, fontFamily:fontDisp,
                         display:"flex", alignItems:"center", justifyContent:"center",
                         lineHeight:1,
                       }}>{pendingSync > 99 ? "99+" : pendingSync}</div>
                     ) : (
-                      <div style={{ position:"absolute", top:6, right:6, width:5, height:5, borderRadius:"50%", background:T.rose, border:`1.5px solid ${isLight ? "#F5FAF8" : "#000000"}` }} />
+                      <div style={{ position:"absolute", top:6, right:6, width:5, height:5, borderRadius:"50%", background:T.rose, border:`1.5px solid ${isLight ? "#F5FAF8" : P.bg}` }} />
                     )}
                   </button>
 
@@ -2522,7 +2497,7 @@ export default function App() {
                       <div className="stratos-bell-dropdown" style={{
                         position:"fixed", top:ddTop, right:ddRight, zIndex:99991,
                         width:300, padding:14, borderRadius:14,
-                        background: isLight ? "#FFFFFF" : "#0C0C0C",
+                        background: isLight ? "#FFFFFF" : P.surface,
                         border:`1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.10)"}`,
                         boxShadow: isLight ? "0 18px 48px rgba(15,23,42,0.20)" : "0 20px 56px rgba(0,0,0,0.66)",
                         display:"flex", flexDirection:"column", gap:10,
@@ -2549,12 +2524,12 @@ export default function App() {
                                   style={{
                                     display:"flex", alignItems:"center", gap:9, textAlign:"left",
                                     padding:"8px 9px", borderRadius:9, cursor:"pointer", width:"100%",
-                                    background: isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.06)",
-                                    border:`1px solid ${isLight ? "rgba(13,154,118,0.22)" : "rgba(110,231,194,0.18)"}`,
+                                    background: isLight ? "rgba(0,111,145,0.06)" : "rgba(0,209,255,0.06)",
+                                    border:`1px solid ${isLight ? "rgba(0,111,145,0.22)" : "rgba(0,209,255,0.18)"}`,
                                     transition:"background 0.14s",
                                   }}
-                                  onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(13,154,118,0.11)" : "rgba(110,231,194,0.11)"; }}
-                                  onMouseLeave={e => { e.currentTarget.style.background = isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.06)"; }}
+                                  onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(0,111,145,0.11)" : "rgba(0,209,255,0.11)"; }}
+                                  onMouseLeave={e => { e.currentTarget.style.background = isLight ? "rgba(0,111,145,0.06)" : "rgba(0,209,255,0.06)"; }}
                                 >
                                   <div style={{ flex:1, minWidth:0 }}>
                                     <div style={{ fontSize:12.5, fontWeight:500, color:T.txt, fontFamily:fontDisp, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
@@ -2566,7 +2541,7 @@ export default function App() {
                                   </div>
                                   <span style={{
                                     minWidth:16, height:16, padding:"0 5px", borderRadius:99, flexShrink:0,
-                                    background:T.accent, color:"#041016",
+                                    background:T.accent, color:T.onAccent,
                                     fontSize:10.5, fontWeight:500, fontFamily:fontDisp,
                                     display:"flex", alignItems:"center", justifyContent:"center",
                                   }}>{u > 99 ? "99+" : u}</span>
@@ -2598,12 +2573,12 @@ export default function App() {
                               style={{
                                 display:"flex", alignItems:"center", gap:9, textAlign:"left",
                                 padding:"8px 9px", borderRadius:9, cursor:"pointer", width:"100%",
-                                background: isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.06)",
-                                border:`1px solid ${isLight ? "rgba(13,154,118,0.22)" : "rgba(110,231,194,0.18)"}`,
+                                background: isLight ? "rgba(0,111,145,0.06)" : "rgba(0,209,255,0.06)",
+                                border:`1px solid ${isLight ? "rgba(0,111,145,0.22)" : "rgba(0,209,255,0.18)"}`,
                                 transition:"background 0.14s",
                               }}
-                              onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(13,154,118,0.11)" : "rgba(110,231,194,0.11)"; }}
-                              onMouseLeave={e => { e.currentTarget.style.background = isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.06)"; }}
+                              onMouseEnter={e => { e.currentTarget.style.background = isLight ? "rgba(0,111,145,0.11)" : "rgba(0,209,255,0.11)"; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = isLight ? "rgba(0,111,145,0.06)" : "rgba(0,209,255,0.06)"; }}
                             >
                               <div style={{ flex:1, minWidth:0 }}>
                                 <div style={{ fontSize:12.5, fontWeight:500, color:T.txt, fontFamily:fontDisp, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
@@ -2615,7 +2590,7 @@ export default function App() {
                               </div>
                               <span style={{
                                 minWidth:16, height:16, padding:"0 5px", borderRadius:99, flexShrink:0,
-                                background:T.accent, color:"#041016",
+                                background:T.accent, color:T.onAccent,
                                 fontSize:10.5, fontWeight:500, fontFamily:fontDisp,
                                 display:"flex", alignItems:"center", justifyContent:"center",
                               }}>{copilotUnread > 99 ? "99+" : copilotUnread}</span>
@@ -2726,7 +2701,7 @@ export default function App() {
                 )}
                 <button onClick={() => setTheme(isLight ? "dark" : "light")} title={isLight ? "Modo oscuro" : "Modo claro"}
                   className="stratos-theme-toggle"
-                  style={{ width:42, height:24, borderRadius:12, border:"none", padding:0, flexShrink:0, background: isLight ? `linear-gradient(135deg, ${T.accent} 0%, #12B48A 100%)` : "rgba(255,255,255,0.09)", cursor:"pointer", position:"relative", transition:"background 0.28s ease", boxShadow: isLight ? `0 2px 8px ${T.accent}40, inset 0 1px 0 rgba(255,255,255,0.28)` : "inset 0 1px 3px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.08)" }}>
+                  style={{ width:42, height:24, borderRadius:12, border:"none", padding:0, flexShrink:0, background: isLight ? `linear-gradient(135deg, ${T.accent} 0%, #005B78 100%)` : "rgba(255,255,255,0.09)", cursor:"pointer", position:"relative", transition:"background 0.28s ease", boxShadow: isLight ? `0 2px 8px ${T.accent}40, inset 0 1px 0 rgba(255,255,255,0.28)` : "inset 0 1px 3px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.08)" }}>
                   <div style={{ position:"absolute", top:3, left: isLight ? 21 : 3, width:18, height:18, borderRadius:"50%", background:"#FFFFFF", boxShadow:"0 1px 4px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.12)", transition:"left 0.28s cubic-bezier(0.34,1.56,0.64,1)", display:"flex", alignItems:"center", justifyContent:"center" }}>
                     {isLight ? <Sun size={9} color={T.accent} strokeWidth={2.4} /> : <Moon size={8} color="#64748B" strokeWidth={2} fill="#64748B" />}
                   </div>
@@ -2745,16 +2720,16 @@ export default function App() {
                     height:32, borderRadius:8, cursor:"pointer", transition:"background 0.14s",
                     flexShrink:0, border:"none",
                     background: v === "perfil"
-                      ? (isLight ? `${T.accent}1A` : "rgba(110,231,194,0.10)")
+                      ? (isLight ? `${T.accent}1A` : "rgba(0,209,255,0.10)")
                       : "transparent",
                     fontFamily: font,
                   }}
                   onMouseEnter={e => { if (v !== "perfil") e.currentTarget.style.background = iBtnHoverBg; }}
                   onMouseLeave={e => { e.currentTarget.style.background = v === "perfil"
-                    ? (isLight ? `${T.accent}1A` : "rgba(110,231,194,0.10)")
+                    ? (isLight ? `${T.accent}1A` : "rgba(0,209,255,0.10)")
                     : "transparent"; }}
                 >
-                  <div style={{ width:26, height:26, borderRadius:"50%", flexShrink:0, background: isLight ? `linear-gradient(135deg, ${T.accent} 0%, #10B48A 100%)` : `linear-gradient(145deg, rgba(110,231,194,0.28) 0%, rgba(52,211,153,0.12) 100%)`, border: isLight ? "1.5px solid rgba(255,255,255,0.30)" : `1.5px solid rgba(110,231,194,0.24)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11.5, fontWeight:500, fontFamily:fontDisp, color: isLight ? "#FFFFFF" : T.accent, boxShadow: isLight ? `0 2px 8px ${T.accent}45` : `inset 0 1px 0 rgba(110,231,194,0.22)` }}>
+                  <div style={{ width:26, height:26, borderRadius:"50%", flexShrink:0, background: isLight ? `linear-gradient(135deg, ${T.accent} 0%, #005B78 100%)` : `linear-gradient(145deg, rgba(0,209,255,0.28) 0%, rgba(0,209,255,0.12) 100%)`, border: isLight ? "1.5px solid rgba(255,255,255,0.30)" : `1.5px solid rgba(0,209,255,0.24)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11.5, fontWeight:500, fontFamily:fontDisp, color: isLight ? "#FFFFFF" : T.accent, boxShadow: isLight ? `0 2px 8px ${T.accent}45` : `inset 0 1px 0 rgba(0,209,255,0.22)` }}>
                     {user?.name?.charAt(0).toUpperCase() || "U"}
                   </div>
                   <div className="stratos-userpill-text" style={{ display:"flex", flexDirection:"column", alignItems:"flex-start" }}>
@@ -2829,7 +2804,7 @@ export default function App() {
                       // pricing (oscuro por diseño) ocupe TODA la pantalla y no
                       // parezca un bloque negro flotando sobre el lienzo claro.
                       margin: "-20px -16px calc(-92px - var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))) -16px",
-                      background: "#000000",
+                      background: P.bg,
                       minHeight: "100dvh",
                       paddingBottom: "calc(96px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))",
                     }}>
@@ -2873,13 +2848,13 @@ export default function App() {
         }}>
           {mobilePrimaryBar.map(n => {
             const a = (n.id === "miespacio" ? metaOpen : v === n.id && !metaOpen) && !plusOpen;
-            const activeColor = isLight ? T.accent : "#E9FCF4";
+            const activeColor = isLight ? T.accent : "#E6FAFF";
             return (
               <button key={n.id} onClick={() => { setPlusOpen(false); if (n.id === "miespacio") { setMetaOpen(true); return; } setMetaOpen(false); setV(n.id); }} style={{
                 display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3,
                 flex:1, minWidth:0, padding:"7px 4px", borderRadius:14, cursor:"pointer",
                 border: a ? (isLight ? "1px solid rgba(15,23,42,0.10)" : "1px solid rgba(190,245,225,0.16)") : "1px solid transparent",
-                background: a ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.68))" : "linear-gradient(180deg, rgba(255,255,255,0.065), rgba(110,231,194,0.022))") : "transparent",
+                background: a ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.68))" : "linear-gradient(180deg, rgba(255,255,255,0.065), rgba(0,209,255,0.022))") : "transparent",
                 boxShadow: a ? (isLight ? "0 3px 10px rgba(15,23,42,0.06)" : "0 3px 10px rgba(0,0,0,0.24)") : "none",
                 outline:"none", WebkitTapHighlightColor:"transparent",
                 transition:"background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
@@ -2896,13 +2871,13 @@ export default function App() {
           {(() => {
             const inBar = mobilePrimaryBar.some(n => n.id === v);
             const a = plusOpen || !inBar;
-            const activeColor = isLight ? T.accent : "#E9FCF4";
+            const activeColor = isLight ? T.accent : "#E6FAFF";
             return (
               <button onClick={() => setPlusOpen(p => !p)} aria-label="Menú — todas las opciones" style={{
                 display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3,
                 flex:1, minWidth:0, padding:"7px 4px", borderRadius:14, cursor:"pointer",
                 border: a ? (isLight ? "1px solid rgba(15,23,42,0.10)" : "1px solid rgba(190,245,225,0.16)") : "1px solid transparent",
-                background: a ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.68))" : "linear-gradient(180deg, rgba(255,255,255,0.065), rgba(110,231,194,0.022))") : "transparent",
+                background: a ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.68))" : "linear-gradient(180deg, rgba(255,255,255,0.065), rgba(0,209,255,0.022))") : "transparent",
                 boxShadow: a ? (isLight ? "0 3px 10px rgba(15,23,42,0.06)" : "0 3px 10px rgba(0,0,0,0.24)") : "none",
                 outline:"none", WebkitTapHighlightColor:"transparent",
                 transition:"background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
@@ -2922,9 +2897,9 @@ export default function App() {
             style={{
               width:46, height:46, borderRadius:999, border:"none", cursor:"pointer", flexShrink:0,
               alignSelf:"center", marginLeft:6, marginRight:2,
-              background: isLight ? `linear-gradient(135deg, ${T.accent}, ${T.accent}CC)` : "linear-gradient(135deg, #6EE7C2, #34D399)",
+              background: isLight ? `linear-gradient(135deg, ${T.accent}, ${T.accent}CC)` : P.accentG,
               display:"flex", alignItems:"center", justifyContent:"center",
-              boxShadow: isLight ? `0 6px 16px ${T.accent}50, 0 2px 6px rgba(15,23,42,0.12)` : "0 6px 18px rgba(52,211,153,0.35), 0 2px 8px rgba(0,0,0,0.35)",
+              boxShadow: isLight ? `0 6px 16px ${T.accent}50, 0 2px 6px rgba(15,23,42,0.12)` : "0 6px 18px rgba(0,209,255,0.25), 0 2px 8px rgba(0,0,0,0.35)",
               outline:"none", WebkitTapHighlightColor:"transparent",
             }}
             onTouchStart={e => { e.currentTarget.style.transform = "scale(0.93)"; }}
@@ -2948,8 +2923,8 @@ export default function App() {
       {callPushPrompt && createPortal(
         <div style={{ position: "fixed", left: 12, right: 12, bottom: "calc(96px + env(safe-area-inset-bottom, 0px))", zIndex: 99960, display: "flex", justifyContent: "center", pointerEvents: "none" }}>
           <div style={{ pointerEvents: "auto", width: "100%", maxWidth: 430, borderRadius: 18, padding: "14px 16px", fontFamily: font,
-            background: isLight ? "#FFFFFF" : "#0C0C0C",
-            border: `1px solid ${callPushPrompt === "done" ? "rgba(52,211,153,0.55)" : (isLight ? "rgba(15,23,42,0.14)" : "rgba(110,231,194,0.28)")}`,
+            background: isLight ? "#FFFFFF" : P.surface,
+            border: `1px solid ${callPushPrompt === "done" ? "rgba(52,211,153,0.55)" : (isLight ? "rgba(15,23,42,0.14)" : "rgba(0,209,255,0.28)")}`,
             boxShadow: isLight ? "0 18px 50px rgba(15,23,42,0.25)" : "0 18px 50px rgba(0,0,0,0.55)" }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
               <div style={{ width: 38, height: 38, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
@@ -3023,7 +2998,7 @@ export default function App() {
            Por eso acá el velo es un color SÓLIDO, sin alfa y sin filtro: no depende
            de ningún efecto que el modo seguro pueda apagar. Si alguien le vuelve a
            poner blur, vuelve el bug. */
-        <div style={{ position: "fixed", inset: 0, zIndex: 99995, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, background: "#000000", padding: 24 }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 99995, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, background: P.bg, padding: 24 }}>
           <div style={{ width: 92, height: 92, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: `${P.accent}1c`, border: `2px solid ${P.accent}66`, animation: "stratosNewLeadPulse 1.6s ease-in-out infinite" }}>
             <PhoneCall size={38} color={P.accent} />
           </div>
@@ -3052,7 +3027,7 @@ export default function App() {
             position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", zIndex:203,
             width:"min(92vw, 400px)", maxHeight:"min(76dvh, 620px)", overflowY:"auto",
             borderRadius:26, padding:"16px 16px 18px",
-            background: isLight ? "#FFFFFF" : "#0C0C0C",
+            background: isLight ? "#FFFFFF" : P.surface,
             border:`1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.09)"}`,
             boxShadow: isLight ? "0 24px 70px rgba(15,23,42,0.28)" : "0 24px 80px rgba(0,0,0,0.72), 0 0 0 1px rgba(255,255,255,0.03)",
             animation:"modalIn 0.24s cubic-bezier(0.16,1,0.3,1) both",
@@ -3074,7 +3049,7 @@ export default function App() {
             <button onClick={() => { setPlusOpen(false); setMetaOpen(true); }} style={{
               width:"100%", display:"flex", alignItems:"center", gap:11, padding:"12px 13px",
               borderRadius:16, marginBottom:12, cursor:"pointer", textAlign:"left",
-              background: isLight ? "linear-gradient(135deg, rgba(37,99,235,0.10), rgba(13,154,118,0.05))" : "linear-gradient(135deg, rgba(126,184,240,0.12), rgba(110,231,194,0.05))",
+              background: isLight ? "linear-gradient(135deg, rgba(37,99,235,0.10), rgba(0,111,145,0.05))" : "linear-gradient(135deg, rgba(126,184,240,0.12), rgba(0,209,255,0.05))",
               border:`1px solid ${isLight ? "rgba(37,99,235,0.22)" : "rgba(126,184,240,0.25)"}`,
             }}>
               <div style={{ width:36, height:36, borderRadius:11, background: isLight ? "rgba(37,99,235,0.10)" : "rgba(126,184,240,0.14)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
@@ -3090,13 +3065,13 @@ export default function App() {
             <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:8 }}>
               {mobileAllNav.filter(n => n.id !== "admin").map(n => {
                 const a = v === n.id;
-                const activeColor = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#E9FCF4");
+                const activeColor = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#E6FAFF");
                 return (
                   <button key={n.id} onClick={() => { setPlusOpen(false); if (n.id === "miespacio") { setMetaOpen(true); return; } setMetaOpen(false); setV(n.id); }} style={{
                     display:"flex", flexDirection:"column", alignItems:"center", gap:6, padding:"13px 4px 11px",
                     borderRadius:16, border: a ? (isLight ? `1px solid ${activeColor}45` : "1px solid rgba(190,245,225,0.16)") : (isLight ? "1px solid rgba(15,23,42,0.06)" : "1px solid rgba(255,255,255,0.05)"),
                     cursor:"pointer", minWidth:0,
-                    background: a ? (isLight ? `linear-gradient(180deg, rgba(255,255,255,0.95), ${activeColor}12)` : "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(110,231,194,0.03))") : (isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.025)"),
+                    background: a ? (isLight ? `linear-gradient(180deg, rgba(255,255,255,0.95), ${activeColor}12)` : "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,209,255,0.03))") : (isLight ? "rgba(15,23,42,0.02)" : "rgba(255,255,255,0.025)"),
                   }}>
                     {n.id === "copilot"
                       ? <CopilotMark size={22} isLight={isLight} animated={false} style={{ opacity: a ? 1 : 0.85 }} />
@@ -3153,12 +3128,12 @@ export default function App() {
             <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:12 }}>
               {accessibleAll.filter(n => n.id !== "admin").map(n => {
                 const act = v === n.id;
-                const acol = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#E9FCF4");
+                const acol = n.adminOnly ? "#A78BFA" : (isLight ? T.accent : "#E6FAFF");
                 return (
                   <button key={n.id} onClick={() => { if (n.id === "miespacio") { setMetaOpen(true); setSidebarMore(false); return; } setV(n.id); setSidebarMore(false); setMetaOpen(false); }} style={{
                     display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:9, padding:"18px 6px", borderRadius:18, cursor:"pointer",
                     border: act ? (isLight ? `1.5px solid ${acol}` : "1px solid rgba(190,245,225,0.20)") : (isLight ? "1px solid rgba(15,23,42,0.08)" : "1px solid rgba(255,255,255,0.06)"),
-                    background: act ? (isLight ? `linear-gradient(180deg, #FFFFFF, ${acol}14)` : "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(110,231,194,0.04))") : (isLight ? "#F8FAFC" : "rgba(255,255,255,0.03)"),
+                    background: act ? (isLight ? `linear-gradient(180deg, #FFFFFF, ${acol}14)` : "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,209,255,0.04))") : (isLight ? "#F8FAFC" : "rgba(255,255,255,0.03)"),
                     boxShadow: act ? (isLight ? `0 6px 16px ${acol}22` : "0 4px 12px rgba(0,0,0,0.3)") : "none",
                     transition:"all 0.16s ease",
                   }}

@@ -1,3 +1,27 @@
+:root {
+  --stratos-bg: #000407;
+  --stratos-bg2: #02090E;
+  --stratos-bg3: #071721;
+  --stratos-surface: #030D13;
+  --stratos-accent: #00D1FF;
+  --stratos-accent-soft: #7EE9FF;
+  --stratos-accent-rgb: 0,209,255;
+  --stratos-accent-hover: #00B8E0;
+  --stratos-on-accent: #0A1B2E;
+}
+
+html[data-theme="light"] {
+  --stratos-bg: #F1F3F6;
+  --stratos-bg2: #F6F7F9;
+  --stratos-bg3: #EBEEF2;
+  --stratos-surface: #FFFFFF;
+  --stratos-accent: #006F91;
+  --stratos-accent-soft: #7EE9FF;
+  --stratos-accent-rgb: 0,111,145;
+  --stratos-accent-hover: #005B78;
+  --stratos-on-accent: #FFFFFF;
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -20,7 +44,7 @@ html, body {
    · Firefox: scrollbar-width + scrollbar-color */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(110,231,194,0.32) transparent;
+  scrollbar-color: rgba(var(--stratos-accent-rgb),0.32) transparent;
 }
 *::-webkit-scrollbar {
   width: 10px;
@@ -30,25 +54,18 @@ html, body {
   background: transparent;
 }
 *::-webkit-scrollbar-thumb {
-  background: rgba(110,231,194,0.22);
+  background: rgba(var(--stratos-accent-rgb),0.22);
   border-radius: 8px;
   border: 2px solid transparent;
   background-clip: content-box;
   transition: background 0.18s;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: rgba(110,231,194,0.42);
+  background: rgba(var(--stratos-accent-rgb),0.42);
   background-clip: content-box;
 }
 *::-webkit-scrollbar-corner {
   background: transparent;
-}
-
-/* Light mode — scrollbar más oscuro para contraste sobre fondos claros */
-@media (prefers-color-scheme: light) {
-  * { scrollbar-color: rgba(13,154,118,0.32) transparent; }
-  *::-webkit-scrollbar-thumb { background: rgba(13,154,118,0.22); background-clip: content-box; }
-  *::-webkit-scrollbar-thumb:hover { background: rgba(13,154,118,0.42); background-clip: content-box; }
 }
 
 /* En dispositivos TÁCTILES (celulares/tablets) el scroll es por gesto: la barra
@@ -109,7 +126,7 @@ button, [role="button"], input[type="submit"], input[type="button"] {
     font-size: 16px !important;
   }
   button, a, [role="button"] {
-    -webkit-tap-highlight-color: rgba(110,231,194,0.18);
+    -webkit-tap-highlight-color: rgba(var(--stratos-accent-rgb),0.18);
     touch-action: manipulation; /* elimina delay de 300ms en mobile */
   }
   html, body {
@@ -140,9 +157,14 @@ button, [role="button"], input[type="submit"], input[type="button"] {
    con un focus-visible accesible y on-brand */
 :focus { outline: none; }
 :focus-visible {
-  outline: 2px solid rgba(110,231,194,0.55);
+  outline: 2px solid var(--stratos-accent);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+::selection {
+  background: var(--stratos-accent);
+  color: var(--stratos-on-accent);
 }
 
 /* Inputs nativos en Windows tienen estilos de OS — los normalizamos */
@@ -249,7 +271,7 @@ html.stratos-native [contenteditable="true"] {
 html.stratos-native *::-webkit-scrollbar { width: 0; height: 0; }
 
 /* Match the app canvas, including overscroll and portals. */
-:root:not([data-theme="light"]) { color-scheme: dark; background: #000000; }
-:root:not([data-theme="light"]) body { background: #000000; }
+:root:not([data-theme="light"]) { color-scheme: dark; background: var(--stratos-bg); }
+:root:not([data-theme="light"]) body { background: var(--stratos-bg); }
 :root[data-theme="light"] { color-scheme: light; background: #F1F3F6; }
 :root[data-theme="light"] body { background: #F1F3F6; }

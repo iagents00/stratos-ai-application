@@ -69,7 +69,7 @@ export default function CompanySetupAdmin({ T, data, refresh }) {
             <button onClick={refresh} disabled={saving} style={{ ...input, display: "inline-flex", alignItems: "center", gap: 7, cursor: "pointer" }}><RefreshCw size={14} />Actualizar</button>
           </div>
           {error && <div role="alert" style={{ color: "#FCA5A5", fontSize: 12.5 }}>{error}</div>}
-          {success && <div role="status" style={{ color: T.accent, fontSize: 12.5 }}>{success}</div>}
+          {success && <div role="status" style={{ color: T.success, fontSize: 12.5 }}>{success}</div>}
           <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 12, color: T.txt3, fontSize: 11.5, lineHeight: 1.5 }}><ShieldCheck size={14} style={{ marginRight: 6, verticalAlign: "middle" }} />Cada cambio conserva quién lo hizo, cuándo y qué cupo o módulo cambió. Otras organizaciones no reciben esta configuración.</div>
         </div>}
         {selected && <CajaPermissionsAdmin key={selected.id} T={T} organization={selected}

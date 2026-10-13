@@ -16,29 +16,40 @@
 
 // ─── PALETA — PLATAFORMA (app.stratoscapitalgroup.com) ───────────────────────
 export const P = {
-  // Negro puro para el lienzo; grises neutros para elevación y campos.
-  bg:      "#000000",
-  bg2:     "#080808",
-  bg3:     "#141414",
-  surface: "#0C0C0C",
+  // Azul casi negro: superficies más oscuras que la referencia de marca.
+  bg:      "#000407",
+  bg2:     "#02090E",
+  bg3:     "#071721",
+  surface: "#030D13",
+  surfaceG: "linear-gradient(180deg, #04131D 0%, #030D13 100%)",
 
   // Vidrio (glassmorphism)
-  glass:   "rgba(255,255,255,0.035)",
-  glassH:  "rgba(255,255,255,0.055)",
+  glass:   "rgba(0,209,255,0.025)",
+  glassH:  "rgba(0,209,255,0.045)",
 
   // Bordes
-  border:  "rgba(255,255,255,0.07)",
-  borderH: "rgba(255,255,255,0.12)",
+  border:  "rgba(0,209,255,0.12)",
+  borderH: "rgba(0,209,255,0.22)",
 
   // Texto — blanco dominante, siempre legible sobre fondos oscuros
   txt:     "#EDEDED",
-  txt2:    "#A3A3A3",
-  txt3:    "#858585",
+  txt2:    "#A3B2BF",
+  txt3:    "#8197A8",
 
-  // Accent — verde menta, usar con moderación
-  accent:  "#6EE7C2",
-  accentS: "rgba(110,231,194,0.08)",
-  accentB: "rgba(110,231,194,0.14)",
+  // Marca Stratos: el cian indica acción y selección, no éxito.
+  accent:  "#00D1FF",
+  accentDark: "#00B8E0",
+  accentSoft: "#7EE9FF",
+  onAccent: "#0A1B2E",
+  accentS: "rgba(0,209,255,0.08)",
+  accentB: "rgba(0,209,255,0.22)",
+  accentG: "linear-gradient(135deg, #00D1FF 0%, #7EE9FF 100%)",
+  actionG: "linear-gradient(180deg, #0B2A40 0%, #061B2B 100%)",
+  actionInk: "#EDEDED",
+  actionBorder: "rgba(0,209,255,0.32)",
+  success: "#6DD4A8",
+  successS: "rgba(109,212,168,0.08)",
+  successB: "rgba(109,212,168,0.22)",
 
   // Colores semánticos
   blue:    "#7EB8F0",
@@ -72,9 +83,11 @@ export const PL = {
   txt3:    "#858585",
   w:       "#FFFFFF",
 
-  accent:  "#52D9B8",       // Ligeramente más apagado que la app
-  accentS: "rgba(82,217,184,0.07)",
-  accentB: "rgba(82,217,184,0.13)",
+  accent:  "#00D1FF",
+  accentSoft: "#7EE9FF",
+  onAccent: "#0A1B2E",
+  accentS: "rgba(0,209,255,0.07)",
+  accentB: "rgba(0,209,255,0.20)",
 
   blue:    "#6BAED6",
   blueS:   "rgba(107,174,214,0.08)",
@@ -89,19 +102,22 @@ export const PL = {
 // ─── PALETA — LIGHT MODE (modo blanco premium de la plataforma) ──────────────
 export const LP = {
   // Canvas estilo Apple (systemGroupedBackground): gris frío NEUTRO y luminoso,
-  // sin tinte verde. El brand (menta) vive en acentos/tarjetas, NO en el lienzo.
+  // El azul vive en los acentos; conservar los blancos y grises del lienzo.
   // Auditoría 2026-07-11: antes #E8EEEC/#E3EAE7 arrastraban un verde apagado que
   // "ensuciaba" el fondo. Ahora #F1F3F6 → tarjetas blancas flotan con las sombras.
   bg: "#F1F3F6", bgSoft: "#F6F7F9", bgCool: "#EBEEF2",
   glass: "rgba(255,255,255,0.70)", glassH: "rgba(255,255,255,0.92)",
   glassStrong: "rgba(255,255,255,0.96)",
-  glassMint: "rgba(236,251,246,0.75)",
+  glassMint: "rgba(236,247,251,0.75)",
   border: "rgba(15,23,42,0.07)", borderH: "rgba(15,23,42,0.14)",
-  borderMint: "rgba(15,158,122,0.18)",
+  borderMint: "rgba(0,111,145,0.18)",
   surface: "#FFFFFF",
-  accent: "#0D9A76", accentDark: "#067A5E",
-  accentS: "rgba(13,154,118,0.08)", accentB: "rgba(13,154,118,0.28)",
-  accentG: "linear-gradient(135deg, #0D9A76 0%, #14B892 50%, #34D4AA 100%)",
+  accent: "#006F91", accentDark: "#005B78", accentSoft: "#7EE9FF", onAccent: "#FFFFFF",
+  accentS: "rgba(0,111,145,0.08)", accentB: "rgba(0,111,145,0.28)",
+  accentG: "linear-gradient(135deg, #006F91 0%, #005B78 100%)",
+  actionG: "linear-gradient(135deg, #006F91 0%, #005B78 100%)",
+  actionInk: "#FFFFFF", actionBorder: "rgba(0,111,145,0.32)",
+  success: "#047857", successS: "rgba(5,150,105,0.08)", successB: "rgba(5,150,105,0.22)",
   blue: "#2563EB", violet: "#7C3AED", amber: "#D97706",
   rose: "#E11D48", emerald: "#059669", cyan: "#0891B2",
   txt: "#0B1220", txt2: "#3B4A61", txt3: "#5C6B82",
@@ -111,7 +127,7 @@ export const LP = {
   shadow1: "0 1px 1.5px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)",
   shadow2: "0 1px 2px rgba(15,23,42,0.05), 0 4px 12px rgba(15,23,42,0.08), 0 18px 40px rgba(15,23,42,0.10)",
   shadow3: "0 2px 6px rgba(15,23,42,0.07), 0 12px 32px rgba(15,23,42,0.12), 0 32px 72px rgba(15,23,42,0.14)",
-  shadowMint: "0 2px 8px rgba(13,154,118,0.12), 0 10px 30px rgba(13,154,118,0.10)",
+  shadowMint: "0 2px 8px rgba(0,111,145,0.12), 0 10px 30px rgba(0,111,145,0.10)",
   r: 16, rs: 10, rx: 6,
 };
 
@@ -218,7 +234,7 @@ export const STAGE_COLORS = {
   "Largo Plazo":      "#818CF8",
   "Apartó":           "#4ADE80",
   "Visita Agendada":  P.cyan,
-  "Cierre":           P.accent,
+  "Cierre":           "#6EE7C2", // verde comercial independiente de la marca
   "Postventa":        "#64748B",
 };
 

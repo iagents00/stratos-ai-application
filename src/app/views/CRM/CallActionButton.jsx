@@ -89,11 +89,9 @@ export default function CallActionButton({
   const isCompact = variant === "compact";
 
   // Cuando warnZoom=true, downgradeamos a un look "secondary" — outline en
-  // lugar de gradient verde — para que no compita con la card de Zoom.
-  const primaryBg = isLight
-    ? `linear-gradient(135deg, ${T.accent} 0%, #14B892 100%)`
-    : "rgba(255,255,255,0.92)";
-  const primaryFg = isLight ? "#FFFFFF" : "#0C0C0C";
+  // lugar del relleno principal — para que no compita con la card de Zoom.
+  const primaryBg = T.actionG;
+  const primaryFg = T.actionInk;
   const secondaryBg = "transparent";
   const secondaryBd = isLight ? `1px solid ${T.accent}66` : `1px solid rgba(255,255,255,0.22)`;
   const secondaryFg = isLight ? (T.accentDark || T.accent) : T.accent;

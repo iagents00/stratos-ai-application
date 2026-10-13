@@ -92,9 +92,9 @@ export default function ScheduledCallBadge({
       fg: isLight ? "#1D4ED8" : "#60A5FA",
     };
     return {  // today / later
-      bg: isLight ? "rgba(13,154,118,0.08)" : "rgba(110,231,194,0.08)",
-      bd: isLight ? "rgba(13,154,118,0.30)" : "rgba(110,231,194,0.22)",
-      fg: isLight ? "#0D9A76" : "#6EE7C2",
+      bg: isLight ? "rgba(0,111,145,0.08)" : "rgba(0,209,255,0.08)",
+      bd: isLight ? "rgba(0,111,145,0.30)" : "rgba(0,209,255,0.22)",
+      fg: isLight ? "#006F91" : "#00D1FF",
     };
   })();
 

@@ -358,7 +358,7 @@ const Chat = ({ open, onClose, msgs, setMsgs, inp, setInp }) => {
     }}>
       <div style={{ padding: "14px 18px", borderBottom: `1px solid ${P.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 9, background: "rgba(110,231,194,0.06)", border: `1px solid ${P.accentB}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 32, height: 32, borderRadius: 9, background: `${P.accent}0F`, border: `1px solid ${P.accentB}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <StratosAtom size={18} color={P.accent} />
           </div>
           <div>
@@ -412,7 +412,7 @@ const Chat = ({ open, onClose, msgs, setMsgs, inp, setInp }) => {
             ) : (
               <div style={{ maxWidth: "95%" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                  <div style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(110,231,194,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}><StratosAtom size={14} color={P.accent} /></div>
+                  <div style={{ width: 22, height: 22, borderRadius: 6, background: `${P.accent}14`, display: "flex", alignItems: "center", justifyContent: "center" }}><StratosAtom size={14} color={P.accent} /></div>
                   <span style={{ fontSize: 11, color: P.txt2, fontWeight: 400, letterSpacing: "0.04em" }}>Agente Stratos</span>
                 </div>
                 <div style={{ padding: "12px 14px", borderRadius: "4px 14px 14px 14px", background: P.glass, border: `1px solid ${P.border}`, boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>

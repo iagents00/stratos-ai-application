@@ -18,7 +18,7 @@ export const G = ({ children, style, hover, onClick, np, T: Tprop }) => {
       onClick={onClick} style={{
         background: isLight
           ? (h ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.78)")
-          : (h ? T.glassH : T.glass),
+          : (h ? T.bg3 : T.surfaceG),
         backdropFilter: "blur(40px) saturate(160%)",
         WebkitBackdropFilter: "blur(40px) saturate(160%)",
         border: `1px solid ${h ? T.borderH : T.border}`,
@@ -86,10 +86,10 @@ export const KPI = ({ label, value, sub, icon: I, color, T: Tprop }) => {
         borderRadius: 20,
         background: isLight
           ? "rgba(255,255,255,0.90)"
-          : "rgba(12,12,12,0.85)",
+          : T.surfaceG,
         backdropFilter: "blur(28px) saturate(110%)",
         WebkitBackdropFilter: "blur(28px) saturate(110%)",
-        border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : `${c}0C`}`,
+        border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : T.border}`,
         boxShadow: isLight
           ? `inset 0 1px 0 rgba(255,255,255,0.95), 0 2px 16px rgba(15,23,42,0.06)`
           : `inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 32px rgba(0,0,0,0.40), 0 0 0 0.5px rgba(255,255,255,0.04)`,
@@ -132,7 +132,7 @@ export const KPI = ({ label, value, sub, icon: I, color, T: Tprop }) => {
         margin: isMobile ? "0 0 10px" : "0 0 14px",
         fontSize: 10.5, fontFamily: fontDisp, fontWeight: 400,
         letterSpacing: "0.14em", textTransform: "uppercase",
-        color: isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)",
+        color: isLight ? "rgba(15,23,42,0.38)" : T.txt3,
         whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
         paddingRight: isMobile ? 22 : 28,
       }}>{label}</p>
@@ -158,7 +158,7 @@ export const KPI = ({ label, value, sub, icon: I, color, T: Tprop }) => {
           <span style={{
             fontSize: 11.5, fontFamily: fontDisp, fontWeight: 500,
             letterSpacing: "-0.008em",
-            color: isLight ? "rgba(15,23,42,0.44)" : "rgba(255,255,255,0.36)",
+            color: isLight ? "rgba(15,23,42,0.44)" : T.txt2,
             whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
           }}>{sub}</span>
         </div>
@@ -247,7 +247,7 @@ export const ChipSelect = ({ value, onChange, options = [], onAddNew, placeholde
       {open && (
         <div style={{
           position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 600,
-          background: "#0C0C0C", border: `1px solid ${P.borderH}`, borderRadius: 12,
+          background: P.surface, border: `1px solid ${P.borderH}`, borderRadius: 12,
           boxShadow: "0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.02)",
           overflow: "hidden", animation: "fadeIn 0.14s ease",
           fontFamily: font,

@@ -472,9 +472,9 @@ export default function MetaPanel({
     shadowRow: "0 1px 1.5px rgba(15,23,42,0.04), 0 3px 10px rgba(15,23,42,0.035)",
     shadowPop: "0 2px 6px rgba(15,23,42,0.10), 0 24px 60px rgba(15,23,42,0.18)",
   } : {
-    row:   "#050505",
-    card:  "#080808",
-    inset: "#101010",
+    row:   T.surface,
+    card:  T.bg2,
+    inset: T.bg3,
     line:  "rgba(255,255,255,0.075)",
     lineS: "rgba(255,255,255,0.145)",
     hair:  "rgba(255,255,255,0.06)",
@@ -635,7 +635,7 @@ export default function MetaPanel({
   const ownPendingCount = (marketingMode ? agendaActions : metaActions.filter(_isOwnAction)).filter(a => !a.done).length;
   const teamPendingCount = metaActions.filter(a => !a.done).length;
   const chevron  = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='${isLight ? "%235C6B82" : "%238B99AE"}' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>")`;
-  const panelBg = isLight ? "#F1F3F6" : "#000000";
+  const panelBg = T.bg;
   const mpVars = {
     "--mp-txt": T.txt, "--mp-txt2": T.txt2, "--mp-txt3": T.txt3,
     "--mp-accent": T.accent, "--mp-border": T.border, "--mp-borderH": T.borderH,
@@ -812,7 +812,7 @@ export default function MetaPanel({
                           {/* Un solo verde, plano. El degradado #0D9A76 → accent metía
                               dos verdes en una barra de 7px: no se percibe como riqueza,
                               se percibe como que el color no está decidido. */}
-                          <div style={{ width:"100%", transform:`scaleX(${pct / 100})`, transformOrigin:"left", height:"100%", borderRadius:99, background:T.accent }} />
+                          <div style={{ width:"100%", transform:`scaleX(${pct / 100})`, transformOrigin:"left", height:"100%", borderRadius:99, background:T.success }} />
                         </div>
                         <span style={{ fontSize:13.5, fontWeight:500, fontFamily:fontDisp, ...TY.num, color:T.txt2, whiteSpace:"nowrap", minWidth:38, textAlign:"right" }}>{pct}%</span>
                       </div>
@@ -1205,7 +1205,7 @@ export default function MetaPanel({
                                     borderRadius:11,
                                     border:`1px solid ${isSelected ? `${T.accent}88` : isToday ? `${T.accent}35` : "transparent"}`,
                                     background:isSelected ? T.accent : isToday ? `${T.accent}14` : "transparent",
-                                    color:isSelected ? "#041016" : inMonth ? T.txt : T.txt3,
+                                    color:isSelected ? T.onAccent : inMonth ? T.txt : T.txt3,
                                     opacity:inMonth ? 1 : 0.38,
                                     fontSize:13,
                                     fontWeight:isSelected || isToday ? 800 : 650,
@@ -1335,7 +1335,7 @@ export default function MetaPanel({
                                     borderRadius:13,
                                     border:`1px solid ${isSelected ? `${T.accent}88` : T.border}`,
                                     background:isSelected ? T.accent : S.inset,
-                                    color:isSelected ? "#041016" : T.txt,
+                                    color:isSelected ? T.onAccent : T.txt,
                                     fontSize:13,
                                     fontWeight:500,
                                     fontFamily:fontDisp,
@@ -1384,8 +1384,8 @@ export default function MetaPanel({
               {/* Empty state */}
               {pendingAgendaActions.length === 0 && (
                 <div style={{ textAlign:"center", padding:"56px 20px 44px" }}>
-                  <div style={{ width:56, height:56, borderRadius:16, background:`${T.accent}0D`, border:`1px solid ${T.accent}1F`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px" }}>
-                    <Check size={24} color={T.accent} strokeWidth={1.8} style={{ opacity:0.8 }} />
+                  <div style={{ width:56, height:56, borderRadius:16, background:T.successS, border:`1px solid ${T.successB}`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px" }}>
+                    <Check size={24} color={T.success} strokeWidth={1.8} style={{ opacity:0.8 }} />
                   </div>
                   <p style={{ margin:"0 0 5px", fontSize:15, fontWeight:400, fontFamily:fontDisp, letterSpacing:"-0.02em", color:T.txt }}>Todo al día</p>
                   <p style={{ margin:0, fontSize:12.5, color:T.txt3, fontFamily:font }}>
@@ -1780,8 +1780,8 @@ export default function MetaPanel({
                       <button
                         onClick={() => { persistDone(a, false); setMetaActions(p => p.map(x => x.id===a.id ? {...x,done:false,status:'pending'} : x)); }}
                         title="Marcar como pendiente"
-                        style={{ width:20, height:20, borderRadius:"50%", border:`1.5px solid ${T.accent}`, background:T.accent, cursor:"pointer", flexShrink:0, marginTop:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                        <Check size={11} strokeWidth={3} color="#041016" />
+                        style={{ width:20, height:20, borderRadius:"50%", border:`1.5px solid ${T.success}`, background:T.success, cursor:"pointer", flexShrink:0, marginTop:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        <Check size={11} strokeWidth={3} color={T.onAccent} />
                       </button>
                       <div style={{ flex:1, minWidth:0 }}>
                         <span style={{ fontSize:13.5, color:T.txt3, fontFamily:font, textDecoration:"line-through", lineHeight:1.45 }}>{a.text}</span>
@@ -1850,11 +1850,11 @@ export default function MetaPanel({
                     onClick={addDoc}
                     style={{
                       display:"flex", alignItems:"center", justifyContent:"center", gap:7,
-                      padding:"0 24px", borderRadius:14, border:"none",
+                      padding:"0 24px", borderRadius:14, border:`1px solid ${T.actionBorder}`,
                       background: canAdd
-                        ? `linear-gradient(135deg,#0D9A76,${T.accent})`
+                        ? T.actionG
                         : (isLight?"rgba(0,0,0,0.05)":"rgba(255,255,255,0.06)"),
-                      color: canAdd ? "#041016" : T.txt3,
+                      color: canAdd ? T.actionInk : T.txt3,
                       fontSize:13.5, fontWeight:500, fontFamily:fontDisp,
                       cursor: canAdd ? "pointer" : "default",
                       flexShrink:0, letterSpacing:"-0.02em",
@@ -1948,7 +1948,7 @@ export default function MetaPanel({
               </div>
 
               {/* CORE */}
-              <div style={{ background:isLight?"#F7FBF9":"rgba(52,211,153,0.025)", border:`1px solid ${isLight?"rgba(13,154,118,0.12)":"rgba(52,211,153,0.09)"}`, borderRadius:14, padding:"14px 16px", marginBottom:10 }}>
+              <div style={{ background:`${T.accent}06`, border:`1px solid ${T.accent}1F`, borderRadius:14, padding:"14px 16px", marginBottom:10 }}>
                 {sectionHd("CORE — Por qué existimos", T.accent)}
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1.1fr", gap:14 }}>
                   <div>
@@ -2009,7 +2009,7 @@ export default function MetaPanel({
                     {colHd("Brand Promise")}
                     {metaPlan.brandPromises.map((bp, i) => (
                       <div key={i} style={{ marginBottom:7, padding:"8px 10px", borderRadius:9, background:`${T.accent}07`, border:`1px solid ${T.accent}14` }}>
-                        <E val={bp.title} onSave={v => setMetaPlan(p => { const b=[...p.brandPromises]; b[i]={...b[i],title:v}; return {...p,brandPromises:b}; })} style={{ fontSize:12, fontWeight:500, color:isLight?"#082818":T.accent, fontFamily:fontDisp, marginBottom:2 }} />
+                        <E val={bp.title} onSave={v => setMetaPlan(p => { const b=[...p.brandPromises]; b[i]={...b[i],title:v}; return {...p,brandPromises:b}; })} style={{ fontSize:12, fontWeight:500, color:T.accent, fontFamily:fontDisp, marginBottom:2 }} />
                         <E val={bp.sub}   onSave={v => setMetaPlan(p => { const b=[...p.brandPromises]; b[i]={...b[i],sub:v};   return {...p,brandPromises:b}; })} style={{ fontSize:11, color:T.txt2, fontFamily:font, lineHeight:1.4 }} />
                       </div>
                     ))}
@@ -2044,7 +2044,7 @@ export default function MetaPanel({
                       { label:"Leads Activos",  value:`${aLeads.length}`, target:"15", pct:Math.round((aLeads.length/15)*100), type:"people" },
                       { label:"Tasa de Cierre", value:"18.4%",     target:"25%",   pct:Math.round((18.4/25)*100), type:"result" },
                     ].map((k, i) => {
-                      const kCol = k.type==="leading"?T.blue:k.type==="people"?T.violet:T.accent;
+                      const kCol = k.type==="leading"?T.blue:k.type==="people"?T.violet:T.success;
                       return (
                         <div key={i} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 10px", borderRadius:9, marginBottom:6, background:isLight?"rgba(255,255,255,0.80)":"rgba(255,255,255,0.04)", border:`1px solid ${T.border}` }}>
                           <div style={{ flex:1 }}>
@@ -2065,13 +2065,13 @@ export default function MetaPanel({
                   </div>
                   <div>
                     {colHd("Meta Anual 2026")}
-                    <div style={{ padding:"12px", borderRadius:11, background:`${T.accent}07`, border:`1px solid ${T.accent}16`, marginBottom:12 }}>
+                    <div style={{ padding:"12px", borderRadius:11, background:`${T.success}07`, border:`1px solid ${T.success}16`, marginBottom:12 }}>
                       <p style={{ margin:"0 0 1px", fontSize:24, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.045em", color:T.txt }}>{fmtM(metaPlan.goal)}</p>
                       <p style={{ margin:"0 0 9px", fontSize:11, color:T.txt2, fontFamily:font }}>Pipeline · 12 cierres/trimestre</p>
                       <div style={{ height:5, borderRadius:99, background:isLight?"rgba(13,154,118,0.09)":"rgba(255,255,255,0.08)", overflow:"hidden", marginBottom:5 }}>
                         <div style={{ width:`${pct2}%`, height:"100%", background:"linear-gradient(90deg,#0D9A76,#34D399,#6EE7C2)", borderRadius:99 }} />
                       </div>
-                      <p style={{ margin:0, fontSize:12, fontWeight:500, color:T.accent, fontFamily:fontDisp }}>{pct2}% · {fmtM(pipe2)}</p>
+                      <p style={{ margin:0, fontSize:12, fontWeight:500, color:T.success, fontFamily:fontDisp }}>{pct2}% · {fmtM(pipe2)}</p>
                     </div>
                     {colHd("Tema 2026")}
                     <div style={{ padding:"10px 11px", borderRadius:10, background:isLight?"#FFFCF0":"rgba(251,191,36,0.05)", border:"1px solid rgba(251,191,36,0.22)" }}>
@@ -2089,7 +2089,7 @@ export default function MetaPanel({
             <div>
 
               {/* ── Hero Header ── */}
-              <div style={{ marginBottom:14, padding:"18px 20px", borderRadius:15, background:isLight?"linear-gradient(135deg,rgba(110,231,194,0.08),rgba(126,184,240,0.06))":"linear-gradient(135deg,rgba(110,231,194,0.06),rgba(126,184,240,0.04))", border:`1px solid ${T.accent}20`, display:"flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent:"space-between", gap:16 }}>
+              <div style={{ marginBottom:14, padding:"18px 20px", borderRadius:15, background:isLight?`linear-gradient(135deg,${T.accent}14,rgba(126,184,240,0.06))`:`linear-gradient(135deg,${T.accent}0F,rgba(126,184,240,0.04))`, border:`1px solid ${T.accent}20`, display:"flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent:"space-between", gap:16 }}>
                 <div>
                   <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:5 }}>
                     <div style={{ width:3, height:18, borderRadius:2, background:`linear-gradient(180deg,${T.accent},${T.blue})` }} />
@@ -2122,7 +2122,7 @@ export default function MetaPanel({
               <div style={{ display:"grid", gridTemplateColumns:"1.1fr 1fr 1fr", gap:10, marginBottom:10 }}>
 
                 {/* Objetivo */}
-                <div style={{ padding:"14px 15px", borderRadius:13, background:isLight?"rgba(110,231,194,0.06)":"rgba(110,231,194,0.04)", border:`1px solid ${T.accent}22` }}>
+                <div style={{ padding:"14px 15px", borderRadius:13, background:isLight?`${T.accent}0F`:`${T.accent}0A`, border:`1px solid ${T.accent}22` }}>
                   {sectionHd("1. Objetivo", T.accent)}
                   <E val={metaProtocol.objetivo} onSave={v=>setMetaProtocol(p=>({...p,objetivo:v}))} multi style={{ fontSize:12.5, fontWeight:400, color:T.txt, fontFamily:font, lineHeight:1.6, marginBottom:10 }} />
                   <div style={{ padding:"8px 10px", borderRadius:8, background:`${T.accent}08`, border:`1px solid ${T.accent}18` }}>
@@ -2313,7 +2313,7 @@ export default function MetaPanel({
                 </div>
 
                 {/* Principio Final */}
-                <div style={{ padding:"13px 14px", borderRadius:13, background:isLight?"rgba(110,231,194,0.08)":"rgba(110,231,194,0.04)", border:`1px solid ${T.accent}25`, display:"flex", flexDirection:"column", justifyContent:"center" }}>
+                <div style={{ padding:"13px 14px", borderRadius:13, background:isLight?`${T.accent}14`:`${T.accent}0A`, border:`1px solid ${T.accent}25`, display:"flex", flexDirection:"column", justifyContent:"center" }}>
                   {sectionHd("13. Principio Final", T.accent)}
                   <div style={{ textAlign:"center", padding:"10px 0" }}>
                     <p style={{ margin:"0 0 8px", fontSize:12, color:T.txt3, fontFamily:font, lineHeight:1.6 }}>No gana el que más leads tiene.</p>

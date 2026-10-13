@@ -548,8 +548,8 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
   const subC = isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.45)";
   const inBg = isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)";
   const inBd = isLight ? "rgba(15,23,42,0.08)" : T.border;
-  const outBg = isLight ? "rgba(13,154,118,0.07)" : "rgba(110,231,194,0.07)";
-  const outBd = isLight ? "rgba(13,154,118,0.2)" : "rgba(110,231,194,0.18)";
+  const outBg = isLight ? "rgba(0,111,145,0.07)" : "rgba(0,209,255,0.07)";
+  const outBd = isLight ? "rgba(0,111,145,0.2)" : "rgba(0,209,255,0.18)";
   const accentStrong = isLight ? T.accentDark || T.accent : T.accent;
 
   if (!enabled) return null;
@@ -592,7 +592,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
               padding: "3px 8px", borderRadius: 999,
               color: windowOpen ? (isLight ? "#067A5E" : T.accent) : T.amber,
               background: windowOpen
-                ? (isLight ? "rgba(13,154,118,0.08)" : "rgba(110,231,194,0.08)")
+                ? (isLight ? "rgba(0,111,145,0.08)" : "rgba(0,209,255,0.08)")
                 : "rgba(251,191,36,0.1)",
               border: `1px solid ${windowOpen ? outBd : "rgba(251,191,36,0.25)"}`,
             }}
@@ -763,7 +763,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                   style={{
                     display: "flex", alignItems: "center", gap: 8, marginBottom: 8,
                     padding: "6px 10px", borderRadius: 9,
-                    background: isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.06)",
+                    background: isLight ? "rgba(0,111,145,0.06)" : "rgba(0,209,255,0.06)",
                     border: `1px solid ${outBd}`,
                   }}
                 >
@@ -900,7 +900,7 @@ export default function LeadWhatsAppChat({ lead, T = P, isLight = false, threadM
                         width: 38, height: 38, borderRadius: 9, flexShrink: 0,
                         background: active ? T.accent : T.border,
                         border: "none",
-                        color: active ? "#041016" : T.txt3,
+                        color: active ? T.onAccent : T.txt3,
                         cursor: active ? "pointer" : "default",
                       }}
                     >

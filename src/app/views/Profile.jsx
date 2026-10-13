@@ -280,12 +280,12 @@ function PasswordPanel({ T = P, isLight = false, user }) {
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 10 }}>
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} aria-label="Nueva contraseña" placeholder="Nueva contraseña" autoComplete="new-password" disabled={disabled || busy} style={inputStyle(T, isLight)} />
         <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} aria-label="Confirmar contraseña" placeholder="Confirmar contraseña" autoComplete="new-password" disabled={disabled || busy} style={inputStyle(T, isLight)} />
-        <button type="submit" disabled={disabled || busy} style={{ height: 40, borderRadius: 11, border: "none", background: disabled || busy ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: disabled || busy ? T.txt3 : "#06120E", fontWeight: 500, fontFamily: fontDisp, cursor: disabled || busy ? "not-allowed" : "pointer" }}>
+        <button type="submit" disabled={disabled || busy} style={{ height: 40, borderRadius: 11, border: "none", background: disabled || busy ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: disabled || busy ? T.txt3 : T.onAccent, fontWeight: 500, fontFamily: fontDisp, cursor: disabled || busy ? "not-allowed" : "pointer" }}>
           {busy ? "Actualizando..." : "Actualizar contraseña"}
         </button>
       </form>
       {(message || errorMsg) && (
-        <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 10, fontSize: 12.5, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : (isLight ? "#047857" : "#6EE7C2"), background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : `${T.accent}12`, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : `${T.accent}2A`}` }}>
+        <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 10, fontSize: 12.5, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : T.success, background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : T.successS, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : T.successB}` }}>
           {errorMsg || message}
         </div>
       )}
@@ -368,7 +368,7 @@ function RecoveryEmailPanel({ T = P, isLight = false, user }) {
               type="button"
               onClick={save}
               disabled={disabled || busy || !dirty}
-              style={{ height: 40, padding: "0 16px", borderRadius: 11, border: "none", background: (disabled || busy || !dirty) ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: (disabled || busy || !dirty) ? T.txt3 : "#06120E", fontWeight: 500, fontFamily: fontDisp, fontSize: 13, cursor: (disabled || busy || !dirty) ? "not-allowed" : "pointer" }}
+              style={{ height: 40, padding: "0 16px", borderRadius: 11, border: "none", background: (disabled || busy || !dirty) ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: (disabled || busy || !dirty) ? T.txt3 : T.onAccent, fontWeight: 500, fontFamily: fontDisp, fontSize: 13, cursor: (disabled || busy || !dirty) ? "not-allowed" : "pointer" }}
             >
               {busy ? "Guardando..." : "Guardar"}
             </button>
@@ -382,7 +382,7 @@ function RecoveryEmailPanel({ T = P, isLight = false, user }) {
       )}
 
       {(message || errorMsg) && (
-        <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 10, fontSize: 12.5, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : (isLight ? "#047857" : "#6EE7C2"), background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : `${T.accent}12`, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : `${T.accent}2A`}` }}>
+        <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 10, fontSize: 12.5, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : T.success, background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : T.successS, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : T.successB}` }}>
           {errorMsg || message}
         </div>
       )}
@@ -420,7 +420,7 @@ function inputStyle(T, isLight) {
 }
 
 function supportButtonStyle(T, isLight, primary) {
-  return { display: "inline-flex", alignItems: "center", gap: 8, height: 38, padding: "0 13px", borderRadius: 11, textDecoration: "none", fontSize: 13, fontWeight: 500, fontFamily: fontDisp, color: primary ? "#06120E" : T.txt, background: primary ? T.accent : (isLight ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.055)"), border: primary ? "none" : `1px solid ${T.border}` };
+  return { display: "inline-flex", alignItems: "center", gap: 8, height: 38, padding: "0 13px", borderRadius: 11, textDecoration: "none", fontSize: 13, fontWeight: 500, fontFamily: fontDisp, color: primary ? T.onAccent : T.txt, background: primary ? T.accent : (isLight ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.055)"), border: primary ? "none" : `1px solid ${T.border}` };
 }
 
 /* ─────────────────────────────────────────────────────────────────────── */
@@ -538,7 +538,7 @@ function TimezonePanel({ T = P, isLight = false, user }) {
         }}
       >
         {options.map(o => (
-          <option key={o.value} value={o.value} style={{ background: isLight ? "#FFFFFF" : "#141414", color: T.txt }}>
+          <option key={o.value} value={o.value} style={{ background: isLight ? "#FFFFFF" : T.bg3, color: T.txt }}>
             {o.label}
           </option>
         ))}
@@ -552,14 +552,14 @@ function TimezonePanel({ T = P, isLight = false, user }) {
           type="button"
           onClick={() => save(draftTz)}
           disabled={disabled || busy || draftTz === currentTz}
-          style={{ height: 36, padding: "0 16px", borderRadius: 10, border: "none", background: (disabled || busy || draftTz === currentTz) ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: (disabled || busy || draftTz === currentTz) ? T.txt3 : "#06120E", fontWeight: 500, fontFamily: fontDisp, fontSize: 12.5, cursor: (disabled || busy || draftTz === currentTz) ? "not-allowed" : "pointer" }}
+          style={{ height: 36, padding: "0 16px", borderRadius: 10, border: "none", background: (disabled || busy || draftTz === currentTz) ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: (disabled || busy || draftTz === currentTz) ? T.txt3 : T.onAccent, fontWeight: 500, fontFamily: fontDisp, fontSize: 12.5, cursor: (disabled || busy || draftTz === currentTz) ? "not-allowed" : "pointer" }}
         >
           {busy ? "Guardando..." : "Guardar zona horaria"}
         </button>
       </div>
 
       {(message || errorMsg) && (
-        <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 10, fontSize: 12.5, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : (isLight ? "#047857" : "#6EE7C2"), background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : `${T.accent}12`, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : `${T.accent}2A`}` }}>
+        <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 10, fontSize: 12.5, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : T.success, background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : T.successS, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : T.successB}` }}>
           {errorMsg || message}
         </div>
       )}
@@ -751,7 +751,7 @@ function NotPairedView({ onConnect, busy, T = P, botUsername = "", deepLinkMode 
           padding: "12px 22px", borderRadius: 12,
           background: busy ? `${T.accent}30` : T.accent,
           border: "none",
-          color: "#FFFFFF",
+          color: T.onAccent,
           fontSize: 14, fontWeight: 500, fontFamily: fontDisp, letterSpacing: "0.005em",
           cursor: busy ? "default" : "pointer",
           transition: "all 0.2s",
@@ -875,7 +875,7 @@ function PairedView({ pairedAt, onUnpair, unpairing, T = P, isLight = false, bot
               display: "inline-flex", alignItems: "center", gap: 7,
               padding: "10px 16px", borderRadius: 11,
               background: T.accent, border: "none",
-              color: "#FFFFFF",
+              color: T.onAccent,
               fontSize: 13, fontWeight: 500, fontFamily: fontDisp,
               cursor: "pointer", transition: "all 0.2s",
               boxShadow: `0 4px 12px ${T.accent}44`,

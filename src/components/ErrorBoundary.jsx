@@ -4,6 +4,7 @@
  * en vez de dejar la pantalla en blanco.
  */
 import { Component } from "react";
+import { P } from "../design-system/tokens";
 import { isStaleChunkError, recoverFromStaleChunk, hardRecover } from "../lib/chunk-recovery.js";
 
 export default class ErrorBoundary extends Component {
@@ -37,7 +38,7 @@ export default class ErrorBoundary extends Component {
         alignItems: "center",
         justifyContent: "center",
         minHeight: "100vh",
-        background: "#000000",
+        background: P.bg,
         color: "#E2E8F0",
         fontFamily: `-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif`,
         gap: 16,
@@ -61,10 +62,10 @@ export default class ErrorBoundary extends Component {
           style={{
             marginTop: 8,
             padding: "10px 24px",
-            background: "rgba(110,231,194,0.12)",
-            border: "1px solid rgba(110,231,194,0.3)",
+            background: `${P.accent}1F`,
+            border: `1px solid ${P.accent}4D`,
             borderRadius: 8,
-            color: "#6EE7C2",
+            color: P.accent,
             cursor: "pointer",
             fontSize: 14,
             fontWeight: 500,

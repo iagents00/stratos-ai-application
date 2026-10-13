@@ -9,7 +9,7 @@
  * sin tener strings hardcoded acá.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { fontDisp } from "../../design-system/tokens";
+import { P, LP, fontDisp } from "../../design-system/tokens";
 import { L } from "../constants/labels";
 import { IS_CUSTOM_PIPELINE } from "../constants/pipeline";
 import { resolveClientFromLocation } from "../../clients";
@@ -56,9 +56,9 @@ export default function IAOSIsland({ leadsData = [], isLight, idx, brandLabel = 
        acceso SIEMPRE visible (la pill del DynIsland está oculta ahí). */
     <div className="stratos-iaos-pill" onClick={onOpen} role={onOpen ? "button" : undefined} style={{
       display: "flex", alignItems: "center", gap: 0,
-      background: isLight ? "rgba(13,154,118,0.06)" : "rgba(110,231,194,0.05)",
+      background: isLight ? "rgba(0,111,145,0.06)" : "rgba(0,209,255,0.05)",
       borderRadius: 10, padding: "5px 10px",
-      border: `1px solid ${isLight ? "rgba(13,154,118,0.14)" : "rgba(110,231,194,0.10)"}`,
+      border: `1px solid ${isLight ? "rgba(0,111,145,0.14)" : "rgba(0,209,255,0.10)"}`,
       flexShrink: 0, overflow: "hidden",
       cursor: onOpen ? "pointer" : "default",
     }}>
@@ -66,12 +66,12 @@ export default function IAOSIsland({ leadsData = [], isLight, idx, brandLabel = 
       <span style={{
         fontSize: 10.5, fontFamily: fontDisp, fontWeight: 500,
         letterSpacing: "0.16em", textTransform: "uppercase", lineHeight: 1,
-        color: isLight ? "rgba(13,154,118,0.70)" : "rgba(110,231,194,0.60)",
+        color: isLight ? LP.accent : P.accent,
         flexShrink: 0, marginRight: 8,
       }}>IAOS</span>
 
       {/* Separator */}
-      <div style={{ width: 1, height: 10, background: isLight ? "rgba(13,154,118,0.20)" : "rgba(110,231,194,0.15)", flexShrink: 0, marginRight: 8 }} />
+      <div style={{ width: 1, height: 10, background: isLight ? "rgba(0,111,145,0.20)" : "rgba(0,209,255,0.15)", flexShrink: 0, marginRight: 8 }} />
 
       {/* Slide text left→right — key on idx re-mounts span triggering CSS animation */}
       <div className="stratos-iaos-ticker" style={{ overflow: "hidden", height: 14, width: 118, flexShrink: 0 }}>

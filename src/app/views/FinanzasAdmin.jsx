@@ -73,7 +73,7 @@ const FinanzasAdmin = ({ T: _T }) => {
 
   const POS = T.emerald || "#34D399";  // ingreso
   const NEG = T.rose || "#F87171";     // egreso
-  const ACC = T.accent || "#6EE7C2";   // balance / saldo
+  const ACC = T.accent || "#00D1FF";   // balance / saldo
 
   // ─── Carga de datos reales (mismo origen que la Caja) ───
   const load = useCallback(async () => {

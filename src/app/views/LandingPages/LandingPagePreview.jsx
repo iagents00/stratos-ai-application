@@ -53,7 +53,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
     hi:    "#F6F8FB", mid: "rgba(246,248,251,0.66)", lo: "rgba(246,248,251,0.42)",
     pad:   "clamp(22px, 5vw, 44px)", sec: "clamp(76px, 12vw, 136px)", maxW: 1080,
   };
-  const acc = currentProp.accent || (T.accent || "#6EE7C2");
+  const acc = currentProp.accent || (T.accent || "#00D1FF");
   const primaryHref = calUrl || waUrl || null;
   const primaryLabel = calUrl ? "Agendar llamada" : (waUrl ? "Escríbeme por WhatsApp" : "Contactar asesor");
   const sPrimary = {
@@ -113,7 +113,7 @@ const LandingPagePreview = ({ client, asesor, asesorWA = "", asesorCal = "", men
                 <input readOnly value={demoShareUrl} style={{ flex: 1, minWidth: 0, padding: "10px 14px", borderRadius: 9, fontSize: 12, background: T.glass, border: `1px solid ${T.border}`, color: T.txt3, fontFamily: font, outline: "none" }} onClick={e => e.target.select()} />
                 <button onClick={onCopyLink} style={{
                   padding: "10px 18px", borderRadius: 9, border: "none",
-                  background: copied ? T.emerald : T.accent, color: "#000",
+                  background: copied ? T.success : T.accent, color: T.onAccent,
                   fontSize: 12.5, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp,
                   display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap",
                   transition: "background 0.2s",

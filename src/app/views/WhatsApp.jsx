@@ -248,9 +248,9 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
             height: 40, padding: "0 12px", borderRadius: 10, cursor: "pointer",
             flexShrink: 0, fontSize: 12, fontWeight: 500, fontFamily: font,
             background: unreadOnly
-              ? (isLight ? "rgba(13,154,118,0.10)" : "rgba(110,231,194,0.10)")
+              ? (isLight ? "rgba(0,111,145,0.10)" : "rgba(0,209,255,0.10)")
               : (isLight ? "rgba(255,255,255,0.85)" : T.glass),
-            border: `1px solid ${unreadOnly ? (isLight ? "rgba(13,154,118,0.35)" : "rgba(110,231,194,0.3)") : T.border}`,
+            border: `1px solid ${unreadOnly ? (isLight ? "rgba(0,111,145,0.35)" : "rgba(0,209,255,0.3)") : T.border}`,
             color: unreadOnly ? accentStrong : T.txt2,
           }}
         >
@@ -299,9 +299,9 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
                   display: "flex", alignItems: "center", gap: 10, textAlign: "left",
                   padding: "10px 12px", borderRadius: 12, cursor: "pointer",
                   background: active
-                    ? (isLight ? "rgba(13,154,118,0.08)" : "rgba(110,231,194,0.08)")
+                    ? (isLight ? "rgba(0,111,145,0.08)" : "rgba(0,209,255,0.08)")
                     : cardBg,
-                  border: `1px solid ${active ? (isLight ? "rgba(13,154,118,0.3)" : "rgba(110,231,194,0.25)") : T.border}`,
+                  border: `1px solid ${active ? (isLight ? "rgba(0,111,145,0.3)" : "rgba(0,209,255,0.25)") : T.border}`,
                   transition: "border-color 0.15s, background 0.15s",
                 }}
               >
@@ -309,7 +309,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
                   style={{
                     width: 34, height: 34, borderRadius: 10, flexShrink: 0,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    background: isLight ? "rgba(13,154,118,0.10)" : "rgba(110,231,194,0.09)",
+                    background: isLight ? "rgba(0,111,145,0.10)" : "rgba(0,209,255,0.09)",
                     color: accentStrong, fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
                   }}
                 >
@@ -358,7 +358,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
                       <span
                         style={{
                           minWidth: 17, height: 17, padding: "0 5px", borderRadius: 99, flexShrink: 0,
-                          background: T.accent, color: "#041016",
+                          background: T.accent, color: T.onAccent,
                           fontSize: 10.5, fontWeight: 500, fontFamily: fontDisp,
                           display: "flex", alignItems: "center", justifyContent: "center",
                         }}
@@ -410,12 +410,12 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
           // border/radius/sombra ni padding lateral), borde a borde y a pantalla
           // completa. El header interno trae su safe-area-top y el composer su
           // safe-area-bottom. Antes tenía un recuadro que lo hacía ver "entrecortado".
-          ? { background: isLight ? "#F8FAFC" : "#000000", overflow: "hidden" }
+          ? { background: isLight ? "#F8FAFC" : T.bg, overflow: "hidden" }
           : {
               // Desktop: FLUSH como el Copilot — SIN marco de tarjeta (nada de
               // border/radio/sombra/padding externo). El fondo del área de chat +
               // los insets internos (header y hilo) lo dejan limpio, no "encajonado".
-              background: isLight ? "#F8FAFC" : "#000000", overflow: "hidden",
+              background: isLight ? "#F8FAFC" : T.bg, overflow: "hidden",
             }),
       }}
     >
@@ -427,7 +427,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
             ...(isMobile
               // Header inmersivo tipo Copilot: su propio padding + safe-area-top
               // (es lo más alto de la pantalla) + fondo de barra; pegado al hilo.
-              ? { padding: "calc(10px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 14px 12px", background: isLight ? "#FFFFFF" : "rgba(12,12,12,0.95)" }
+              ? { padding: "calc(10px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 14px 12px", background: isLight ? "#FFFFFF" : `${T.surface}F2` }
               : { padding: "12px 16px" }),
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -443,7 +443,7 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
                 style={{
                   width: 34, height: 34, borderRadius: 10, flexShrink: 0,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  background: isLight ? "rgba(13,154,118,0.10)" : "rgba(110,231,194,0.09)",
+                  background: isLight ? "rgba(0,111,145,0.10)" : "rgba(0,209,255,0.09)",
                   color: accentStrong, fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
                 }}
               >
@@ -476,8 +476,8 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0,
                   padding: "5px 10px", borderRadius: 8, cursor: "pointer",
-                  background: isLight ? "rgba(13,154,118,0.07)" : "rgba(110,231,194,0.07)",
-                  border: `1px solid ${isLight ? "rgba(13,154,118,0.25)" : "rgba(110,231,194,0.2)"}`,
+                  background: isLight ? "rgba(0,111,145,0.07)" : "rgba(0,209,255,0.07)",
+                  border: `1px solid ${isLight ? "rgba(0,111,145,0.25)" : "rgba(0,209,255,0.2)"}`,
                   color: accentStrong, fontSize: 11.5, fontWeight: 500, fontFamily: font,
                 }}
               >
@@ -628,9 +628,9 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
               background: "transparent", border: "none", cursor: "pointer", flexShrink: 0,
               WebkitTapHighlightColor: "transparent",
             }}>
-              <ChevronLeft size={26} strokeWidth={2.4} color={isLight ? "#0D9A76" : "#FFFFFF"} />
+              <ChevronLeft size={26} strokeWidth={2.4} color={isLight ? T.accent : "#FFFFFF"} />
               {chatCount > 0 && (
-                <span title="Chats" style={{ fontSize: 13, fontWeight: 700, fontFamily: fontDisp, lineHeight: 1, color: isLight ? "#0D9A76" : "#FFFFFF", minWidth: 16, textAlign: "center" }}>{chatCount}</span>
+                <span title="Chats" style={{ fontSize: 13, fontWeight: 700, fontFamily: fontDisp, lineHeight: 1, color: isLight ? T.accent : "#FFFFFF", minWidth: 16, textAlign: "center" }}>{chatCount}</span>
               )}
             </button>
           )}
@@ -638,8 +638,8 @@ export default function WhatsAppInbox({ T = P, isLight = false, inbox, openLead,
             style={{
               width: 34, height: 34, borderRadius: 10, flexShrink: 0,
               display: "flex", alignItems: "center", justifyContent: "center",
-              background: isLight ? "rgba(13,154,118,0.10)" : "rgba(110,231,194,0.08)",
-              border: `1px solid ${isLight ? "rgba(13,154,118,0.25)" : "rgba(110,231,194,0.18)"}`,
+              background: isLight ? "rgba(0,111,145,0.10)" : "rgba(0,209,255,0.08)",
+              border: `1px solid ${isLight ? "rgba(0,111,145,0.25)" : "rgba(0,209,255,0.18)"}`,
             }}
           >
             <MessageCircle size={16} color={accentStrong} />

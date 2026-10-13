@@ -78,7 +78,7 @@ const RRHHModule = ({ T: _T, initialTab = "panel" }) => {
   ];
 
   const etapas = ["Postulado", "Screening", "Entrevista", "Assessment", "Oferta", "Contratado", "Rechazado"];
-  const etapaColor = { Postulado: T.txt3, Screening: T.blue, Entrevista: T.violet, Assessment: T.amber, Oferta: T.emerald, Contratado: T.accent, Rechazado: T.rose };
+  const etapaColor = { Postulado: T.txt3, Screening: T.blue, Entrevista: T.violet, Assessment: T.amber, Oferta: T.emerald, Contratado: T.success, Rechazado: T.rose };
   const prioColor = { Alta: T.rose, Media: T.amber, Baja: T.blue };
   const scoreColor = (s) => s >= 85 ? T.emerald : s >= 70 ? T.accent : s >= 55 ? T.amber : T.rose;
   const scoreLabel = (s) => s >= 85 ? "Excelente" : s >= 70 ? "Bueno" : s >= 55 ? "Regular" : "No apto";
@@ -259,7 +259,7 @@ const RRHHModule = ({ T: _T, initialTab = "panel" }) => {
               navigator.clipboard?.writeText(url).then(() => {}).catch(() => {});
               window.open(url, "_blank");
             }}
-            style={{ flex: isMobile ? "1 1 46%" : "0 0 auto", justifyContent: "center", display: "flex", alignItems: "center", gap: 8, padding: "12px 18px", borderRadius: 14, border: `1px solid ${T.accent}24`, background: isLight ? "rgba(13,154,118,0.07)" : "rgba(110,231,194,0.07)", cursor: "pointer", color: T.accent, fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp }}
+            style={{ flex: isMobile ? "1 1 46%" : "0 0 auto", justifyContent: "center", display: "flex", alignItems: "center", gap: 8, padding: "12px 18px", borderRadius: 14, border: `1px solid ${T.accent}24`, background: isLight ? "rgba(0,111,145,0.07)" : "rgba(0,209,255,0.07)", cursor: "pointer", color: T.accent, fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp }}
           >
             <ExternalLink size={13} /> Portal Candidatos
           </button>

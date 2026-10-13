@@ -148,6 +148,6 @@ export default function CajaPermissionsAdmin({ T, organization, users, refresh }
         Duke y los clientes con configuración histórica no cambian desde esta pantalla.</div>
     </>}
     {error && <div role="alert" style={{ color: "#FCA5A5", fontSize: 12 }}>{error}</div>}
-    {success && <div role="status" style={{ color: T.accent, fontSize: 12 }}>{success}</div>}
+    {success && <div role="status" style={{ color: T.success, fontSize: 12 }}>{success}</div>}
   </section>;
 }

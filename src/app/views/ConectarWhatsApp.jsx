@@ -33,7 +33,7 @@ export default function ConectarWhatsApp({ T }) {
   const configurado = isSignupConfigured(config);
   const txt    = T?.txt    || "#E2E8F0";
   const dim    = T?.dim    || "rgba(226,232,240,0.55)";
-  const accent = T?.accent || "#6EE7C2";
+  const accent = T?.accent || "#00D1FF";
   const border = T?.border || "rgba(255,255,255,0.07)";
   const card   = T?.card   || "rgba(255,255,255,0.03)";
 
@@ -111,7 +111,7 @@ export default function ConectarWhatsApp({ T }) {
               disabled={estado === "conectando"}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
-                background: accent, color: "#000000", border: "none",
+                background: accent, color: T.onAccent, border: "none",
                 borderRadius: 10, padding: "11px 18px", fontFamily: font,
                 fontSize: 14, fontWeight: 600,
                 cursor: estado === "conectando" ? "wait" : "pointer",
@@ -127,7 +127,7 @@ export default function ConectarWhatsApp({ T }) {
 
         {estado === "listo" && (
           <div style={{ display: "flex", gap: 12 }}>
-            <Check size={18} style={{ color: accent, flexShrink: 0, marginTop: 2 }} />
+            <Check size={18} style={{ color: T.success, flexShrink: 0, marginTop: 2 }} />
             <div>
               <div style={{ fontWeight: 600, marginBottom: 6 }}>Número conectado</div>
               <p style={{ color: dim, fontSize: 13, lineHeight: 1.6, margin: 0 }}>

@@ -2,7 +2,7 @@
  * app/components/CopilotMark.jsx
  * ─────────────────────────────────────────────────────────────────────────────
  * Marca animada de "Copilot AI" — un anillo hexagonal de esquinas redondeadas con la
- * PALETA DE MARCA STRATOS (verde menta → emerald → teal).
+ * PALETA DE MARCA STRATOS (cian → azul suave).
  *
  * MOVIMIENTO: gira fluido y en su lugar, con la misma técnica y ritmo que el
  * "átomo" del header (DynIsland.jsx):
@@ -24,6 +24,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { useId } from "react";
+import { P, LP } from "../../design-system/tokens";
 
 // ANILLO HEXAGONAL redondeado — el ícono verde del Copilot que Ángel identificó
 // como el correcto (2026-07-17, con captura: "el verde que parecía un círculo o
@@ -50,9 +51,10 @@ if (typeof document !== "undefined" && !document.getElementById(KEYFRAMES_ID)) {
 export default function CopilotMark({ size = 24, animated = true, isLight = false, style, title }) {
   const uid = useId().replace(/[:]/g, "");
   const gradId = `cpg-${uid}`;
+  const palette = isLight ? LP : P;
   // Glow suave estilo "átomo" (drop-shadow, NO backdrop-filter), escalado al tamaño.
   const glow = Math.max(2, Math.round(size * 0.22));
-  const glowColor = isLight ? "rgba(13,154,118,0.30)" : "rgba(110,231,194,0.38)";
+  const glowColor = `${palette.accent}${isLight ? "4D" : "61"}`;
 
   return (
     <span
@@ -92,9 +94,9 @@ export default function CopilotMark({ size = 24, animated = true, isLight = fals
         >
           <defs>
             <linearGradient id={gradId} x1="4" y1="10" x2="44" y2="38" gradientUnits="userSpaceOnUse">
-              <stop offset="0" stopColor="#6EE7C2" />
-              <stop offset="0.5" stopColor="#34D399" />
-              <stop offset="1" stopColor="#2DD4BF" />
+              <stop offset="0" stopColor={palette.accent} />
+              <stop offset="0.5" stopColor={isLight ? palette.accentDark : palette.accentSoft} />
+              <stop offset="1" stopColor={palette.accent} />
             </linearGradient>
           </defs>
           <polygon

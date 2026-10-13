@@ -248,9 +248,10 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   const txt    = T?.txt    || (isLight ? "#0B1220" : "#E2E8F0");
   const txt2   = T?.txt2   || (isLight ? "#3B4A61" : "#8B99AE");
   const txt3   = T?.txt3   || (isLight ? "#7A8699" : "#4A5568");
-  const accent = T?.accent || (isLight ? "#0D9A76" : "#6EE7C2");
+  const accent = T?.accent || (isLight ? "#006F91" : "#00D1FF");
   const glass  = T?.glass  || (isLight ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.032)");
   const bd     = T?.border || (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)");
+  const success = T?.success || (isLight ? "#047857" : "#6DD4A8");
   const RED    = isLight ? "#E02424" : "#F87171";
   const AMBER  = isLight ? "#D97706" : "#FBBF24";
 
@@ -580,8 +581,8 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     return (
       <span style={{
         padding: "3px 10px", borderRadius: 999, fontSize: 12, fontFamily: font, whiteSpace: "nowrap",
-        color: done ? accent : txt2, background: done ? `${accent}14` : (isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)"),
-        border: `1px solid ${done ? `${accent}40` : bd}`,
+        color: done ? success : txt2, background: done ? `${success}14` : (isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)"),
+        border: `1px solid ${done ? `${success}40` : bd}`,
       }}>{l}</span>
     );
   };
@@ -983,7 +984,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
        ver el contenido pasando por debajo). */
     congelada: {
       position: "sticky", left: 0, zIndex: 2,
-      background: isLight ? "#FBFCFE" : "#0C0C0C",
+      background: isLight ? "#FBFCFE" : T.surface,
       borderRight: `1px solid ${bd}`,
     },
   };
@@ -1530,7 +1531,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
               {colsVista.map((c, i) => (
                 <th key={c.extra ? `x-${c.key}` : c.key}
                   style={i === 0
-                    ? { ...hoja.th, ...hoja.congelada, top: 0, zIndex: 4, background: isLight ? "#EEF2F7" : "#141414" }
+                    ? { ...hoja.th, ...hoja.congelada, top: 0, zIndex: 4, background: isLight ? "#EEF2F7" : T.bg3 }
                     : hoja.th}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                     {c.l}
@@ -2397,8 +2398,8 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
             <button onClick={() => setRepVista("espacio2")} title="Ver la bitácora del equipo" style={{
               fontSize: 11.5, whiteSpace: "nowrap", padding: "4px 11px", borderRadius: 999, cursor: "pointer",
               fontFamily: font, background: "transparent",
-              color: reportaron === equipoHoy.length ? accent : reportaron === 0 ? txt3 : AMBER,
-              border: `1px solid ${reportaron === equipoHoy.length ? `${accent}44` : reportaron === 0 ? bd : `${AMBER}44`}`,
+              color: reportaron === equipoHoy.length ? success : reportaron === 0 ? txt3 : AMBER,
+              border: `1px solid ${reportaron === equipoHoy.length ? `${success}44` : reportaron === 0 ? bd : `${AMBER}44`}`,
             }}>{reportaron} de {equipoHoy.length} reportaron</button>
           )}
           <button onClick={() => { setRepAbierto(o => !o); if (yaReporte) setRepOtro(true); }} style={{
@@ -2543,8 +2544,8 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
               <div style={{ fontSize: 14, fontWeight: 600, color: txt, fontFamily: fontDisp }}>Tu equipo hoy</div>
               <div style={{
                 fontSize: 12, whiteSpace: "nowrap", padding: "2px 9px", borderRadius: 999,
-                color: reportaron === equipoHoy.length ? accent : reportaron === 0 ? txt3 : AMBER,
-                border: `1px solid ${reportaron === equipoHoy.length ? `${accent}44` : reportaron === 0 ? bd : `${AMBER}44`}`,
+                color: reportaron === equipoHoy.length ? success : reportaron === 0 ? txt3 : AMBER,
+                border: `1px solid ${reportaron === equipoHoy.length ? `${success}44` : reportaron === 0 ? bd : `${AMBER}44`}`,
               }}>{reportaron} de {equipoHoy.length} reportaron</div>
             </div>
             {equipoHoy.map(({ m, rs }) => (
@@ -2921,7 +2922,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           display: "flex", alignItems: "center", justifyContent: "center", padding: 18,
         }}>
           <div onClick={e => e.stopPropagation()} style={{
-            background: isLight ? "#FFFFFF" : "#0C0C0C", border: `1px solid ${bd}`, borderRadius: 16,
+            background: T.surface, border: `1px solid ${bd}`, borderRadius: 16,
             padding: 14, maxWidth: "min(92vw, 860px)", maxHeight: "88vh", display: "flex", flexDirection: "column", gap: 10,
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -2948,7 +2949,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           display: "flex", alignItems: "center", justifyContent: "center", padding: 18,
         }}>
           <div onClick={e => e.stopPropagation()} style={{
-            background: isLight ? "#FFFFFF" : "#0C0C0C", border: `1px solid ${bd}`, borderRadius: 16,
+            background: T.surface, border: `1px solid ${bd}`, borderRadius: 16,
             padding: 16, width: "min(94vw, 620px)", maxHeight: "88vh", overflowY: "auto",
             display: "flex", flexDirection: "column", gap: 12,
           }}>

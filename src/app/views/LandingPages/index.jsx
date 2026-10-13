@@ -1264,14 +1264,14 @@ const LandingPages = ({ T = P }) => {
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 22px",
             flex: "1 1 auto",
             borderRadius: 11, border: isLight ? "none" : "none", cursor: "pointer",
-            background: isLight ? T.accent : "rgba(255,255,255,0.95)",
-            color: isLight ? "#FFFFFF" : "#0A0F18",
+            background: T.accent,
+            color: T.onAccent,
             fontSize: 13, fontWeight: 500, fontFamily: fontDisp,
-            boxShadow: isLight ? T.shadowMint || "0 4px 16px rgba(13,154,118,0.25)" : "0 4px 20px rgba(255,255,255,0.15)",
+            boxShadow: isLight ? T.shadowMint || "0 4px 16px rgba(0,111,145,0.25)" : `0 4px 20px ${T.accent}26`,
             transition: "all 0.25s",
           }}
-            onMouseEnter={e => { e.currentTarget.style.background = isLight ? (T.accentDark || T.accent) : "#FFFFFF"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = isLight ? T.accent : "rgba(255,255,255,0.95)"; e.currentTarget.style.transform = "translateY(0)"; }}
+            onMouseEnter={e => { e.currentTarget.style.background = isLight ? (T.accentDark || T.accent) : T.accentSoft; e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = T.accent; e.currentTarget.style.transform = "translateY(0)"; }}
           >
             Nueva Landing Page
           </button>
@@ -1727,10 +1727,10 @@ const LandingPages = ({ T = P }) => {
       <button onClick={() => setStep(2)} disabled={!clientName.trim()} style={{
         display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
         padding: "14px 28px", borderRadius: 12, border: "none", cursor: clientName.trim() ? "pointer" : "not-allowed",
-        background: clientName.trim() ? (isLight ? T.accent : "rgba(255,255,255,0.95)") : T.glass,
-        color: clientName.trim() ? (isLight ? "#FFFFFF" : "#0A0F18") : T.txt3,
+        background: clientName.trim() ? T.accent : T.glass,
+        color: clientName.trim() ? T.onAccent : T.txt3,
         fontSize: 14, fontWeight: 500, fontFamily: fontDisp,
-        boxShadow: clientName.trim() ? (isLight ? T.shadowMint || "0 4px 16px rgba(13,154,118,0.25)" : "0 4px 20px rgba(255,255,255,0.15)") : "none",
+        boxShadow: clientName.trim() ? (isLight ? T.shadowMint || "0 4px 16px rgba(0,111,145,0.25)" : `0 4px 20px ${T.accent}26`) : "none",
         transition: "all 0.25s", width: "100%",
       }}>
         Seleccionar Propiedades <ArrowRight size={16} />
@@ -1757,14 +1757,14 @@ const LandingPages = ({ T = P }) => {
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 22px",
             flex: isMobile ? "1 1 100%" : "0 0 auto",
             borderRadius: 12, border: "none", cursor: "pointer",
-            background: isLight ? T.accent : "rgba(255,255,255,0.95)",
-            color: isLight ? "#FFFFFF" : "#0A0F18",
+            background: T.accent,
+            color: T.onAccent,
             fontSize: 13, fontWeight: 500, fontFamily: fontDisp,
-            boxShadow: isLight ? T.shadowMint || "0 4px 16px rgba(13,154,118,0.25)" : "0 4px 20px rgba(255,255,255,0.15)",
+            boxShadow: isLight ? T.shadowMint || "0 4px 16px rgba(0,111,145,0.25)" : `0 4px 20px ${T.accent}26`,
             transition: "all 0.25s",
           }}
-            onMouseEnter={e => { e.currentTarget.style.background = isLight ? (T.accentDark || T.accent) : "#FFFFFF"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = isLight ? T.accent : "rgba(255,255,255,0.95)"; e.currentTarget.style.transform = "translateY(0)"; }}
+            onMouseEnter={e => { e.currentTarget.style.background = isLight ? (T.accentDark || T.accent) : T.accentSoft; e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = T.accent; e.currentTarget.style.transform = "translateY(0)"; }}
           >
             <Wand2 size={16} /> {generating ? "Creando enlace…" : `Generar Landing Page (${selectedProps.length})`}
           </button>
@@ -1817,9 +1817,9 @@ const LandingPages = ({ T = P }) => {
           return (
             <div key={prop.id} style={{
               borderRadius: 16, overflow: "visible", cursor: "pointer",
-              border: `2px solid ${selected ? prop.accent + "80" : T.border}`,
+              border: `2px solid ${selected ? T.accent : T.border}`,
               background: T.glass, transition: "all 0.3s",
-              boxShadow: selected ? `0 0 24px ${prop.accent}20` : "none",
+              boxShadow: selected ? `0 0 24px ${T.accent}20` : "none",
               transform: selected ? "scale(1.01)" : "scale(1)",
               position: "relative",
               opacity: matchesBudget ? 1 : 0.75,
@@ -1849,10 +1849,10 @@ const LandingPages = ({ T = P }) => {
                     <div style={{
                       position: "absolute", top: 12, right: 12,
                       width: 28, height: 28, borderRadius: "50%",
-                      background: prop.accent, display: "flex", alignItems: "center", justifyContent: "center",
-                      boxShadow: `0 0 12px ${prop.accent}60`,
+                      background: T.accent, display: "flex", alignItems: "center", justifyContent: "center",
+                      boxShadow: `0 0 12px ${T.accent}60`,
                     }}>
-                      <Check size={16} color="#000" strokeWidth={3} />
+                      <Check size={16} color={T.onAccent} strokeWidth={3} />
                     </div>
                   )}
                   {!selected && !matchesBudget && (
@@ -1938,7 +1938,7 @@ const LandingPages = ({ T = P }) => {
                         fontFamily: font, outline: "none",
                       }}
                     />
-                    <button onClick={() => saveDriveLink(prop.id)} style={{ padding: "6px 12px", borderRadius: 7, border: "none", background: T.accent, color: "#000", fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp, whiteSpace: "nowrap" }}>
+                    <button onClick={() => saveDriveLink(prop.id)} style={{ padding: "6px 12px", borderRadius: 7, border: "none", background: T.accent, color: T.onAccent, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp, whiteSpace: "nowrap" }}>
                       Guardar
                     </button>
                     <button onClick={() => { setEditingLinkId(null); setEditLinkValue(""); }} style={{ padding: "6px 8px", borderRadius: 7, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt3 }}>
@@ -2013,7 +2013,7 @@ const LandingPages = ({ T = P }) => {
       {selectedProps.length > 0 && (
         <div style={{
           position: "sticky", bottom: 0, padding: isMobile ? "12px 14px" : "14px 20px",
-          background: isLight ? "rgba(255,255,255,0.98)" : "rgba(6,10,17,0.95)", backdropFilter: "blur(16px)",
+          background: isLight ? "rgba(255,255,255,0.98)" : `${T.surface}F2`, backdropFilter: "blur(16px)",
           borderRadius: 14, border: `1px solid ${T.border}`,
           display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10,
           boxShadow: isLight ? T.shadow2 || "0 -4px 20px rgba(15,23,42,0.10)" : "0 -8px 32px rgba(0,0,0,0.4)",
@@ -2025,10 +2025,10 @@ const LandingPages = ({ T = P }) => {
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 28px",
             flex: isMobile ? "1 1 100%" : "0 0 auto",
             borderRadius: 12, border: "none", cursor: "pointer",
-            background: isLight ? T.accent : "rgba(255,255,255,0.95)",
-            color: isLight ? "#FFFFFF" : "#0A0F18",
+            background: T.accent,
+            color: T.onAccent,
             fontSize: 14, fontWeight: 500, fontFamily: fontDisp,
-            boxShadow: isLight ? T.shadowMint || "0 4px 16px rgba(13,154,118,0.25)" : "0 4px 20px rgba(255,255,255,0.15)",
+            boxShadow: isLight ? T.shadowMint || "0 4px 16px rgba(0,111,145,0.25)" : `0 4px 20px ${T.accent}26`,
           }}>
             <Wand2 size={16} /> {generating ? "Creando enlace…" : "Generar Landing Page"}
           </button>

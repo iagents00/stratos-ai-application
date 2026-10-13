@@ -149,7 +149,7 @@ export default function LoginScreen({ onLogin }) {
     if (/[0-9!@#$%^&*]/.test(password)) s++;
     return s;
   })();
-  const strengthColor = ["#E8818C","#F59E0B","#67B7D1","#6EE7C2"][pw - 1] || P.txt3;
+  const strengthColor = ["#E8818C","#F59E0B","#67B7D1",P.success][pw - 1] || P.txt3;
   const strengthLabel = ["Muy débil","Débil","Buena","Fuerte"][pw - 1] || "";
 
   const reset = () => { setName(""); setEmail(""); setPass(""); setConfirm(""); setCode(""); setRecoveryEmail(""); setError(""); };
@@ -259,7 +259,7 @@ export default function LoginScreen({ onLogin }) {
       <div style={{
         flex: 1, display: "flex", flexDirection: "column", justifyContent: "center",
         padding: "60px 80px", borderRight: `1px solid ${P.border}`,
-        background: "linear-gradient(145deg, rgba(110,231,194,0.02) 0%, transparent 60%)",
+        background: `linear-gradient(145deg, ${P.accent}05 0%, transparent 60%)`,
       }} className="brand-panel">
         <div style={{ maxWidth: 420 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 56 }}>
@@ -309,11 +309,11 @@ export default function LoginScreen({ onLogin }) {
             <div style={{ textAlign: "center" }}>
               <div style={{
                 width: 60, height: 60, borderRadius: "50%",
-                background: P.accentS, border: `1px solid ${P.accentB}`,
+                background: P.successS, border: `1px solid ${P.successB}`,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 margin: "0 auto 20px",
               }}>
-                <CheckCircle2 size={28} color={P.accent} />
+                <CheckCircle2 size={28} color={P.success} />
               </div>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: fontD, marginBottom: 8 }}>¡Listo!</h2>
               <p style={{ fontSize: 13, color: P.txt2, lineHeight: 1.7, marginBottom: 6 }}>
@@ -323,9 +323,9 @@ export default function LoginScreen({ onLogin }) {
                 Ya puedes iniciar sesión con tu nueva contraseña.
               </p>
               <button onClick={() => go("login")} style={{
-                width: "100%", padding: "12px", borderRadius: 10, border: "none",
-                background: "linear-gradient(135deg, #6EE7C2 0%, #3BC9A8 100%)",
-                color: "#04080F", fontSize: 13, fontWeight: 700, fontFamily: fontD, cursor: "pointer",
+                width: "100%", padding: "12px", borderRadius: 10, border: `1px solid ${P.actionBorder}`,
+                background: P.actionG,
+                color: P.actionInk, fontSize: 13, fontWeight: 700, fontFamily: fontD, cursor: "pointer",
               }}>Ir al inicio de sesión →</button>
             </div>
           ) : mode === "forgot-code" ? (
@@ -392,10 +392,10 @@ export default function LoginScreen({ onLogin }) {
               )}
 
               <button type="button" onClick={doVerifyCode} disabled={loading} style={{
-                width: "100%", padding: "13px 0", borderRadius: 11, border: "none",
+                width: "100%", padding: "13px 0", borderRadius: 11, border: `1px solid ${P.actionBorder}`,
                 cursor: loading ? "not-allowed" : "pointer",
-                background: loading ? "rgba(110,231,194,0.25)" : "linear-gradient(135deg, #6EE7C2 0%, #3BC9A8 100%)",
-                color: "#04080F", fontSize: 14, fontWeight: 700, fontFamily: fontD, marginBottom: 12,
+                background: loading ? P.bg3 : P.actionG,
+                color: P.actionInk, fontSize: 14, fontWeight: 700, fontFamily: fontD, marginBottom: 12,
               }}>
                 {loading ? loadingLabel : "Cambiar contraseña →"}
               </button>
@@ -531,18 +531,18 @@ export default function LoginScreen({ onLogin }) {
                     onClick={doRegister}
                     disabled={loading}
                     style={{
-                      width: "100%", padding: "13px 0", borderRadius: 11, border: "none",
+                      width: "100%", padding: "13px 0", borderRadius: 11, border: `1px solid ${P.actionBorder}`,
                       cursor: loading ? "not-allowed" : "pointer",
                       background: loading
-                        ? "rgba(110,231,194,0.25)"
-                        : "linear-gradient(135deg, #6EE7C2 0%, #3BC9A8 100%)",
-                      color: "#04080F", fontSize: 14, fontWeight: 700, fontFamily: fontD,
+                        ? P.bg3
+                        : P.actionG,
+                      color: P.actionInk, fontSize: 14, fontWeight: 700, fontFamily: fontD,
                       transition: "all 0.2s", marginBottom: 12,
-                      boxShadow: loading ? "none" : "0 4px 20px rgba(110,231,194,0.20)",
+                      boxShadow: loading ? "none" : `0 4px 20px ${P.accent}33`,
                       letterSpacing: "0.01em",
                     }}
-                    onMouseEnter={e => !loading && (e.currentTarget.style.boxShadow = "0 6px 26px rgba(110,231,194,0.32)")}
-                    onMouseLeave={e => (e.currentTarget.style.boxShadow = loading ? "none" : "0 4px 20px rgba(110,231,194,0.20)")}
+                    onMouseEnter={e => !loading && (e.currentTarget.style.boxShadow = `0 6px 26px ${P.accent}52`)}
+                    onMouseLeave={e => (e.currentTarget.style.boxShadow = loading ? "none" : `0 4px 20px ${P.accent}33`)}
                   >
                     {loading ? loadingLabel : "Crear cuenta →"}
                   </button>
@@ -623,18 +623,18 @@ export default function LoginScreen({ onLogin }) {
                     onClick={mode === "login" ? doLogin : doForgot}
                     disabled={loading}
                     style={{
-                      width: "100%", padding: "13px 0", borderRadius: 11, border: "none",
+                      width: "100%", padding: "13px 0", borderRadius: 11, border: `1px solid ${P.actionBorder}`,
                       cursor: loading ? "not-allowed" : "pointer",
                       background: loading
-                        ? "rgba(110,231,194,0.25)"
-                        : "linear-gradient(135deg, #6EE7C2 0%, #3BC9A8 100%)",
-                      color: "#04080F", fontSize: 14, fontWeight: 700, fontFamily: fontD,
+                        ? P.bg3
+                        : P.actionG,
+                      color: P.actionInk, fontSize: 14, fontWeight: 700, fontFamily: fontD,
                       transition: "all 0.2s", marginBottom: 12,
-                      boxShadow: loading ? "none" : "0 4px 20px rgba(110,231,194,0.20)",
+                      boxShadow: loading ? "none" : `0 4px 20px ${P.accent}33`,
                       letterSpacing: "0.01em",
                     }}
-                    onMouseEnter={e => !loading && (e.currentTarget.style.boxShadow = "0 6px 26px rgba(110,231,194,0.32)")}
-                    onMouseLeave={e => (e.currentTarget.style.boxShadow = loading ? "none" : "0 4px 20px rgba(110,231,194,0.20)")}
+                    onMouseEnter={e => !loading && (e.currentTarget.style.boxShadow = `0 6px 26px ${P.accent}52`)}
+                    onMouseLeave={e => (e.currentTarget.style.boxShadow = loading ? "none" : `0 4px 20px ${P.accent}33`)}
                   >
                     {loading ? loadingLabel :
                       mode === "login" ? "Iniciar sesión →" : "Enviar código de recuperación →"}
@@ -697,10 +697,10 @@ export default function LoginScreen({ onLogin }) {
                       esas páginas viven en el sitio y no se empaquetan en el binario. */}
                   Al continuar aceptas los{" "}
                   <a href="https://stratoscapitalgroup.com/terminos" target="_blank" rel="noopener noreferrer"
-                     style={{ color: "rgba(110,231,194,0.6)", textDecoration: "none" }}>Términos de Servicio</a>{" "}
+                     style={{ color: `${P.accent}99`, textDecoration: "none" }}>Términos de Servicio</a>{" "}
                   y la{" "}
                   <a href="https://stratoscapitalgroup.com/politica-de-privacidad" target="_blank" rel="noopener noreferrer"
-                     style={{ color: "rgba(110,231,194,0.6)", textDecoration: "none" }}>Política de Privacidad</a>.
+                     style={{ color: `${P.accent}99`, textDecoration: "none" }}>Política de Privacidad</a>.
               </p>
             </>
           )}

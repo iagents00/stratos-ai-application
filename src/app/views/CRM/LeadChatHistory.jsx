@@ -70,8 +70,8 @@ export default function LeadChatHistory({ lead, T = P, isLight = false }) {
 
   const headerC   = isLight ? "rgba(15,23,42,0.62)" : "rgba(255,255,255,0.62)";
   const subC      = isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.45)";
-  const bubbleBg  = isLight ? "rgba(110,231,194,0.05)" : "rgba(110,231,194,0.04)";
-  const bubbleBd  = isLight ? "rgba(13,154,118,0.18)"  : "rgba(110,231,194,0.16)";
+  const bubbleBg  = isLight ? "rgba(0,209,255,0.05)" : "rgba(0,209,255,0.04)";
+  const bubbleBd  = isLight ? "rgba(0,111,145,0.18)"  : "rgba(0,209,255,0.16)";
 
   return (
     <div>

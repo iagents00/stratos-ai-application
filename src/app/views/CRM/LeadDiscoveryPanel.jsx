@@ -101,8 +101,8 @@ export default function LeadDiscoveryPanel({ lead, T = P, isLight = false }) {
   if (entries.length === 0) return null;
 
   const headerC      = isLight ? "rgba(15,23,42,0.62)" : "rgba(255,255,255,0.62)";
-  const cardBg       = isLight ? "rgba(110,231,194,0.05)" : "rgba(110,231,194,0.04)";
-  const cardBorder   = `1px solid ${isLight ? "rgba(13,154,118,0.22)" : "rgba(110,231,194,0.18)"}`;
+  const cardBg       = isLight ? "rgba(0,209,255,0.05)" : "rgba(0,209,255,0.04)";
+  const cardBorder   = `1px solid ${isLight ? "rgba(0,111,145,0.22)" : "rgba(0,209,255,0.18)"}`;
   const labelC       = isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.45)";
 
   return (
