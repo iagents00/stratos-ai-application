@@ -104,7 +104,7 @@ export const KPI = ({ label, value, sub, icon: I, color, T: Tprop }) => {
         width: 88, height: 88, borderRadius: "50%",
         background: isLight
           ? `radial-gradient(circle, ${c}0E 0%, transparent 70%)`
-          : `radial-gradient(circle, ${c}10 0%, transparent 70%)`,
+          : `radial-gradient(circle, ${c}06 0%, transparent 70%)`,
         pointerEvents: "none",
       }} />
 

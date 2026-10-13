@@ -2721,9 +2721,9 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                   {(() => {
                     const restBorder = isLight
                       ? `${meta.color}26`
-                      : `rgba(255,255,255,0.07)`;
+                      : P.border;
                     const restShadow = isLight ? "none" : "inset 0 1px 0 rgba(255,255,255,0.06)";
-                    const hoverBorder = isLight ? `${meta.color}68` : `rgba(255,255,255,0.14)`;
+                    const hoverBorder = isLight ? `${meta.color}68` : P.borderH;
                     const hoverShadow = isLight ? "none" : "inset 0 1px 0 rgba(255,255,255,0.08)";
                     const droppedBorder = isLight ? `${meta.color}80` : `rgba(255,255,255,0.20)`;
                     const droppedShadow = isLight
@@ -2935,7 +2935,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                             borderRadius: 12,
                             background: isLight
                               ? "rgba(255,255,255,0.85)"
-                              : "rgba(255,255,255,0.05)",
+                              : P.bg3,
                             border: `1px solid ${isEditingAction
                               ? (meta.color + (isLight ? "60" : "50"))
                               : (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.09)")}`,
@@ -4025,7 +4025,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         borderRadius: 12,
         overflow: isMobile ? "auto" : "hidden",
         border: `1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.06)"}`,
-        background: isLight ? "#FFFFFF" : "rgba(3,13,19,0.92)",
+        background: isLight ? "#FFFFFF" : P.surface,
         backdropFilter: isLight ? "none" : "blur(40px) saturate(150%)",
         WebkitBackdropFilter: isLight ? "none" : "blur(40px) saturate(150%)",
         boxShadow: isLight
@@ -4330,7 +4330,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             {/* Column headers — solo visibles en desktop. En mobile cada fila
                 es una "card" vertical sin necesidad de encabezados. */}
             {!isMobile && (
-              <div style={{ display: "grid", gridTemplateColumns: cols, gap: 14, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", background: isLight ? "rgba(15,23,42,0.015)" : "rgba(255,255,255,0.012)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: cols, gap: 14, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", background: isLight ? "rgba(15,23,42,0.015)" : P.bg2 }}>
                 <SH label={LB.entityCap} field="n" />
                 <SH label="Presupuesto" field="presupuesto" align="right" />
                 <SH label="Etapa" field="st" align="center" />
@@ -6067,7 +6067,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           transform: "translateX(-50%)", zIndex: 600,
           display: "flex", alignItems: "center", gap: 10,
           padding: "9px 10px 9px 14px", borderRadius: 14, maxWidth: "94vw",
-          background: isLight ? "rgba(255,255,255,0.94)" : "rgba(12,12,12,0.94)",
+          background: isLight ? "rgba(255,255,255,0.94)" : P.surface,
           border: `1px solid ${isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)"}`,
           boxShadow: isLight
             ? "0 10px 30px rgba(15,23,42,0.16), 0 28px 70px rgba(15,23,42,0.14)"

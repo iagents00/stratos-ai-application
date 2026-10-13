@@ -2196,7 +2196,7 @@ export default function App() {
         borderRight:`1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(190,245,225,0.075)"}`,
         display:"flex", flexDirection:"column", alignItems:"center",
         paddingTop:0, paddingBottom:0, position:"relative", overflow:"hidden",
-        background: isLight ? "linear-gradient(180deg, rgba(253,253,255,0.82), rgba(249,250,252,0.64))" : "linear-gradient(180deg, rgba(12,12,12,0.66), rgba(0,0,0,0.58))",
+        background: isLight ? "linear-gradient(180deg, rgba(253,253,255,0.82), rgba(249,250,252,0.64))" : P.bg2,
         backdropFilter:"blur(30px) saturate(165%)", WebkitBackdropFilter:"blur(30px) saturate(165%)",
         transition:"background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease",
         boxShadow: isLight ? "4px 0 18px rgba(15,23,42,0.035)" : "6px 0 22px rgba(0,0,0,0.22)",
@@ -2279,7 +2279,7 @@ export default function App() {
             <div style={{ width:32, height:1, marginTop:10, background: isLight ? "linear-gradient(90deg, transparent, rgba(15,23,42,0.07), transparent)" : "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)" }} />
           </div>
 
-          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6, width:58, padding:"5px 0", borderRadius:19, background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.58), rgba(255,255,255,0.40))" : "linear-gradient(180deg, rgba(12,12,12,0.50) 0%, rgba(0,0,0,0.60) 100%)", backdropFilter:"blur(26px) saturate(185%)", WebkitBackdropFilter:"blur(26px) saturate(185%)", border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(255,255,255,0.07)", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.10)" : "inset 0 1px 0 rgba(126,233,255,0.09), inset 0 -1px 0 rgba(0,0,0,0.30), inset 0 0 24px rgba(0,0,0,0.22), 0 18px 44px rgba(0,0,0,0.55)" }}>
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6, width:58, padding:"5px 0", borderRadius:19, background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.58), rgba(255,255,255,0.40))" : P.surfaceG, backdropFilter:"blur(26px) saturate(185%)", WebkitBackdropFilter:"blur(26px) saturate(185%)", border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(255,255,255,0.07)", boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.10)" : "inset 0 1px 0 rgba(126,233,255,0.09), inset 0 -1px 0 rgba(0,0,0,0.30), inset 0 0 24px rgba(0,0,0,0.22), 0 18px 44px rgba(0,0,0,0.55)" }}>
           {sidebarTop.map(n => <NavBtn key={n.id} n={n} />)}
 
           {hasMoreApps && (
@@ -2348,7 +2348,7 @@ export default function App() {
       <div style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0 }}>
         {/* HEADER */}
         {(() => {
-          const hBg = isLight ? "linear-gradient(180deg,rgba(255,255,255,0.82) 0%,rgba(249,250,252,0.70) 100%)" : "linear-gradient(180deg, rgba(12,12,12,0.72) 0%, rgba(0,0,0,0.60) 100%)";
+          const hBg = isLight ? "linear-gradient(180deg,rgba(255,255,255,0.82) 0%,rgba(249,250,252,0.70) 100%)" : P.bg2;
           const hBorder = isLight ? "rgba(0,111,145,0.10)" : "rgba(255,255,255,0.06)";
           const iBtnBase = { width:32, height:32, borderRadius:8, border:"none", background:"transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"background 0.14s ease" };
           const iBtnHoverBg  = isLight ? `${T.accent}0D` : "rgba(255,255,255,0.07)";
@@ -2406,7 +2406,7 @@ export default function App() {
                     {callOpen && createPortal(
                       <>
                         <div onClick={() => setCallOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 99980 }} />
-                        <div style={{ position: "fixed", top: 56, right: 14, zIndex: 99981, minWidth: 236, borderRadius: 14, padding: 6, background: "rgba(12,12,12,0.98)", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "0 18px 44px rgba(0,0,0,0.5)" }}>
+                        <div style={{ position: "fixed", top: 56, right: 14, zIndex: 99981, minWidth: 236, borderRadius: 14, padding: 6, background: P.surface, border: "1px solid rgba(255,255,255,0.10)", boxShadow: "0 18px 44px rgba(0,0,0,0.5)" }}>
                           <div style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: "0.08em", color: "rgba(255,255,255,0.45)", padding: "8px 10px 6px" }}>LLAMAR A…</div>
                           {callTargets === null && (
                             <div style={{ padding: "8px 10px", fontSize: 12.5, color: "rgba(255,255,255,0.6)" }}>Cargando equipo…</div>
@@ -2839,11 +2839,11 @@ export default function App() {
           // completa para no chocar con el gesto de inicio de iOS.
           padding:"6px 8px calc(3px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))",
           borderRadius:"18px 18px 0 0",
-          background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.97))" : "linear-gradient(180deg, rgba(12,12,12,0.98) 0%, rgba(0,0,0,0.99) 100%)",
+          background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.97))" : P.surfaceG,
           borderTop:`1px solid ${isLight ? "rgba(15,23,42,0.07)" : "rgba(255,255,255,0.08)"}`,
           boxShadow: isLight
             ? "inset 0 1px 0 rgba(255,255,255,1), 0 -8px 26px rgba(15,23,42,0.10)"
-            : "inset 0 1px 0 rgba(190,245,225,0.07), 0 -10px 32px rgba(0,0,0,0.50)",
+            : "inset 0 1px 0 rgba(126,161,220,0.07), 0 -10px 32px rgba(0,0,0,0.50)",
           backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)",
         }}>
           {mobilePrimaryBar.map(n => {
@@ -3118,7 +3118,7 @@ export default function App() {
       {sidebarMore && createPortal(
         <>
           <div onClick={() => setSidebarMore(false)} style={{ position:"fixed", inset:0, zIndex:760, background: isLight ? "rgba(15,23,42,0.30)" : "rgba(0,0,0,0.68)", backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)", animation:"fadeIn 0.18s ease both" }} />
-          <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", zIndex:761, width:"min(90vw, 560px)", maxHeight:"min(78vh, 720px)", overflowY:"auto", borderRadius:26, padding:"22px 22px 24px", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))" : "linear-gradient(180deg, rgba(12,12,12,0.94), rgba(0,0,0,0.96))", backdropFilter:"blur(34px) saturate(190%)", WebkitBackdropFilter:"blur(34px) saturate(190%)", border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(190,245,225,0.10)", boxShadow: isLight ? "0 34px 90px rgba(15,23,42,0.30)" : "inset 0 1px 0 rgba(190,245,225,0.10), inset 0 -1px 0 rgba(0,0,0,0.48), 0 34px 100px rgba(0,0,0,0.78)", animation:"modalIn 0.24s cubic-bezier(0.16,1,0.3,1) both" }}>
+          <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", zIndex:761, width:"min(90vw, 560px)", maxHeight:"min(78vh, 720px)", overflowY:"auto", borderRadius:26, padding:"22px 22px 24px", background: isLight ? "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88))" : P.surfaceG, backdropFilter:"blur(34px) saturate(190%)", WebkitBackdropFilter:"blur(34px) saturate(190%)", border: isLight ? "1px solid rgba(255,255,255,0.92)" : "1px solid rgba(126,161,220,0.10)", boxShadow: isLight ? "0 34px 90px rgba(15,23,42,0.30)" : "inset 0 1px 0 rgba(126,161,220,0.10), inset 0 -1px 0 rgba(0,0,0,0.48), 0 34px 100px rgba(0,0,0,0.78)", animation:"modalIn 0.24s cubic-bezier(0.16,1,0.3,1) both" }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18 }}>
               <span style={{ fontSize:15, fontWeight:600, fontFamily:fontDisp, letterSpacing:"-0.02em", color: isLight ? T.txt : "#FFFFFF" }}>Aplicaciones</span>
               <button onClick={() => setSidebarMore(false)} aria-label="Cerrar" style={{ width:30, height:30, borderRadius:10, border:"none", cursor:"pointer", background: isLight ? "#F1F5F9" : "rgba(255,255,255,0.06)", display:"flex", alignItems:"center", justifyContent:"center" }}>
