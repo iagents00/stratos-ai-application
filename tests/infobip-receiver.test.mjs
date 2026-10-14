@@ -40,7 +40,8 @@ test("Incremental migration protects existing channels and preserves legacy cont
   assert.match(sql, /Existing production channel is protected/);
   assert.match(sql, /route\.enabled and not route\.protected/);
   assert.match(sql, /where provider_message_id is not null and channel_id is not null/);
-  assert.match(sql, /provider <> 'chatwoot' or chatwoot_conversation_id is not null/);
+  assert.match(sql, /provider = 'infobip' or chatwoot_conversation_id is not null/);
+  assert.match(sql, /Advisor assignment changed unexpectedly/);
   assert.doesNotMatch(sql, /create or replace function public\.fn_activate_whatsapp_readonly/);
   assert.doesNotMatch(sql, /\b(delete from|truncate|drop table|drop function)\b/i);
 });

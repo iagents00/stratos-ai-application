@@ -43,6 +43,11 @@ begin
                     and p.organization_id=p_organization_id and p.active)) then
     raise exception 'Verified active channel, advisor and read-only organization required' using errcode='22023';
   end if;
+  if p_enabled and (select count(*) from public.whatsapp_numero_asesor c
+      where c.active and c.proveedor='infobip'
+        and public.fn_phone_canon(c.numero_whatsapp)=public.fn_phone_canon(v_channel.numero_whatsapp))<>1 then
+    raise exception 'Ambiguous business number; route not enabled' using errcode='22023';
+  end if;
   insert into public.whatsapp_readonly_ingestion_routes(channel_id,enabled)
   values(p_channel_id,p_enabled)
   on conflict(channel_id) do update set enabled=excluded.enabled,updated_at=now();
@@ -89,7 +94,7 @@ create index if not exists whatsapp_messages_channel_created_idx
 -- Preserve the original not-null contract for every legacy Chatwoot writer.
 -- Only explicitly labeled Infobip rows may omit its Chatwoot conversation ID.
 alter table public.whatsapp_messages add constraint whatsapp_messages_legacy_conversation_required
-  check(provider <> 'chatwoot' or chatwoot_conversation_id is not null) not valid;
+  check(provider = 'infobip' or chatwoot_conversation_id is not null) not valid;
 
 create or replace function public.fn_ingest_infobip_multitenant(payload jsonb)
 returns jsonb
@@ -385,6 +390,12 @@ begin
         v_stage, v_advisor, v_advisor_name,
         v_time, v_time::text, true, jsonb_build_array(v_event)
       ) returning id into v_lead;
+      -- Production assignment triggers remain untouched. If an ambiguous name
+      -- changes the explicit advisor, abort rather than accepting a wrong owner.
+      if not exists(select 1 from public.leads where id=v_lead
+                    and organization_id=v_org and asesor_id=v_advisor) then
+        raise exception 'Advisor assignment changed unexpectedly' using errcode='22023';
+      end if;
       v_created := v_created + 1;
     else
       update public.leads
