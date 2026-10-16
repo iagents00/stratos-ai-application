@@ -6,7 +6,7 @@
  * su variante SOLID (relleno) y OUTLINE, para replicar el patrón de iOS/Apple
  * Music: el tab/opción ACTIVO se muestra relleno; el inactivo, en outline.
  *
- * Uso:  <IosIcon name="c" filled={activo} size={23} color="#6EE7C2" />
+ * Uso:  <IosIcon name="c" filled={activo} size={23} color="#00D1FF" />
  * 'name' = id de módulo del nav (c, wa, d, caja, e, ia, a, fa, rrhh, trash,
  * planes, perfil, admin) o alias (menu, add, intel, plan, sun, moon, exit,
  * search, bell). Reversible: borrar este archivo y volver a los íconos Lucide.

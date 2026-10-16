@@ -8,12 +8,11 @@
 .stratos-rails .rails-pedir { color:var(--rails-accent); font-weight:500; }
 .rails-botones { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
 .stratos-rails button,.stratos-rails a { min-height:44px; padding:10px 14px; box-sizing:border-box; display:inline-flex; justify-content:center; align-items:center; gap:7px; background:transparent; color:var(--rails-text); border:1px solid var(--rails-border); border-radius:10px; cursor:pointer; font:inherit; font-size:13px; line-height:1.4; text-decoration:none; }
-.stratos-rails .rails-primary { background:var(--rails-accent); color:#08251b; border-color:transparent; font-weight:600; }
-.rails-light .rails-primary { color:white; }
+.stratos-rails .rails-primary { background:var(--rails-accent); color:var(--rails-on-accent); border-color:transparent; font-weight:600; }
 .stratos-rails button:hover,.stratos-rails a:hover { border-color:var(--rails-accent); }
 .stratos-rails button:disabled { opacity:.55; cursor:wait; }
-.stratos-rails :focus-visible { outline:2px solid var(--rails-accent,#087252); outline-offset:3px; }
-.stratos-rails ::selection { color:var(--rails-field); background:var(--rails-accent); }
+.stratos-rails :focus-visible { outline:2px solid var(--rails-accent,#006F91); outline-offset:3px; }
+.stratos-rails ::selection { color:var(--rails-on-accent); background:var(--rails-accent); }
 .rails-gestion { border-top:1px solid var(--rails-border); margin-top:18px; padding-top:20px; }
 .rails-gestion fieldset { border:0; padding:0; margin:0 0 16px; min-width:0; }
 .rails-gestion label { display:block; margin:14px 0 6px; font-size:14px; font-weight:500; }
@@ -25,6 +24,6 @@
 .rails-error { color:#fca5a5; border:1px solid currentColor; padding:14px; border-radius:10px; }
 .rails-light .rails-error { color:#a32121; }
 .rails-aviso { color:var(--rails-secondary); padding:12px 0; }
-.rails-confirmacion { color:var(--rails-accent); }
+.rails-confirmacion { color:var(--rails-success); }
 .rails-confirmacion:empty { margin:0; }
 @media (max-width:480px) { .rails-tarjeta { padding:16px; } .stratos-rails h3 { font-size:22px; } .rails-gestion .rails-primary { width:100%; } }

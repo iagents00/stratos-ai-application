@@ -14,8 +14,8 @@ const tenantConfig = {
   brand: {
     logoText: "Stratos",
     appWordmark: "Stratos",
-    accent: "#6EE7C2",
-    accentLight: "#A7F3D0",
+    accent: "#00D1FF",
+    accentLight: "#7EE9FF",
     favicon: "/favicon.ico",
     intelligenceCenterLabel: "Centro de Inteligencia",
   },

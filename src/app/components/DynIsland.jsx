@@ -16,7 +16,7 @@ import {
   Mic, FileText, Video, MapPin, TrendingUp, Search, BarChart3, Bell, BellRing, Sparkles, ClipboardList, Zap, Flame, ListChecks, Bot,
   Home, FolderOpen, UserPlus, Users,
 } from "lucide-react";
-import { P, font, fontDisp } from "../../design-system/tokens";
+import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { StratosAtom } from "./Logo";
 import { AgentIcons } from "../constants/agents";
 import { useClient } from "../../hooks/useClient";
@@ -66,7 +66,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
 
   // Panel expandido — colores tema-aware (antes estaba hardcodeado en oscuro).
   const D = {
-    bg:   isLight ? "#FFFFFF" : "#000000",
+    bg:   isLight ? "#FFFFFF" : P.surface,
     bd:   isLight ? "rgba(15,23,42,0.09)" : "rgba(255,255,255,0.08)",
     line: isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.05)",
     sh:   isLight ? "0 28px 80px rgba(15,23,42,0.22), 0 8px 24px rgba(15,23,42,0.10), 0 0 0 0.5px rgba(15,23,42,0.06)" : "0 24px 80px rgba(0,0,0,0.75), 0 0 0 0.5px rgba(255,255,255,0.04)",
@@ -88,12 +88,12 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
     hov:  isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.03)",
     btn:  isLight ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.06)",
     btnH: isLight ? "rgba(15,23,42,0.10)" : "rgba(255,255,255,0.12)",
-    acc:  isLight ? "#0D9A76" : "#6EE7C2",
-    cardG2: isLight ? "#FFFFFF" : "rgba(255,255,255,0.02)",
-    ctaBg:  isLight ? "#0D9A76" : "rgba(255,255,255,0.92)",
+    acc:  isLight ? LP.accent : P.accent,
+    cardG2: isLight ? "#FFFFFF" : P.surface,
+    ctaBg:  isLight ? LP.accent : "rgba(255,255,255,0.92)",
     ctaTxt: isLight ? "#FFFFFF" : "#000000",
-    ctaSh:  isLight ? "0 4px 16px rgba(13,154,118,0.30)" : "0 2px 10px rgba(255,255,255,0.12)",
-    ctaHov: isLight ? "#0B8A69" : "#FFFFFF",
+    ctaSh:  isLight ? "0 4px 16px rgba(0,111,145,0.30)" : "0 2px 10px rgba(255,255,255,0.12)",
+    ctaHov: isLight ? LP.accentDark : "#FFFFFF",
   };
   const featureCardBg = (color) => isLight
     ? `linear-gradient(180deg, #FFFFFF 0%, ${color}08 100%)`
@@ -140,9 +140,9 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
         style={{
           position: "relative",
           height: 30, borderRadius: 50,
-          background: isLight ? "rgba(255,255,255,0.94)" : "#000000",
+          background: isLight ? "rgba(255,255,255,0.94)" : P.bg,
           border: isLight
-            ? "1px solid rgba(13,154,118,0.13)"
+            ? "1px solid rgba(0,111,145,0.13)"
             : "1px solid rgba(255,255,255,0.07)",
           boxShadow: isLight
             ? "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,1)"
@@ -162,8 +162,8 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
         <div data-brand-motion="true" style={{
           position: "absolute", inset: -18, borderRadius: "50%",
           background: isLight
-            ? "conic-gradient(from 0deg, transparent 0deg, rgba(13,154,118,0.00) 128deg, rgba(13,154,118,0.06) 182deg, rgba(255,255,255,0.30) 204deg, rgba(13,154,118,0.00) 238deg, transparent 360deg)"
-            : "conic-gradient(from 0deg, transparent 0deg, rgba(52,211,153,0.00) 128deg, rgba(52,211,153,0.11) 182deg, rgba(255,255,255,0.14) 204deg, rgba(52,211,153,0.00) 238deg, transparent 360deg)",
+            ? "conic-gradient(from 0deg, transparent 0deg, rgba(0,111,145,0.00) 128deg, rgba(0,111,145,0.06) 182deg, rgba(255,255,255,0.30) 204deg, rgba(0,111,145,0.00) 238deg, transparent 360deg)"
+            : "conic-gradient(from 0deg, transparent 0deg, rgba(0,209,255,0.00) 128deg, rgba(0,209,255,0.11) 182deg, rgba(255,255,255,0.14) 204deg, rgba(0,209,255,0.00) 238deg, transparent 360deg)",
           filter: "blur(10px)",
           animation: "stratosIntelAuraLoop 8.5s linear infinite",
           willChange: "transform, opacity",
@@ -172,8 +172,8 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
         <div data-brand-motion="true" style={{
           position: "absolute", top: -1, bottom: -1, left: 0, width: 72,
           background: isLight
-            ? "linear-gradient(90deg, transparent, rgba(13,154,118,0.045), rgba(255,255,255,0.30), rgba(13,154,118,0.045), transparent)"
-            : "linear-gradient(90deg, transparent, rgba(110,231,194,0.045), rgba(255,255,255,0.12), rgba(110,231,194,0.045), transparent)",
+            ? "linear-gradient(90deg, transparent, rgba(0,111,145,0.045), rgba(255,255,255,0.30), rgba(0,111,145,0.045), transparent)"
+            : "linear-gradient(90deg, transparent, rgba(0,209,255,0.045), rgba(255,255,255,0.12), rgba(0,209,255,0.045), transparent)",
           animation: "stratosIntelSweepLoop 6.2s cubic-bezier(0.16,1,0.3,1) infinite",
           willChange: "transform, opacity",
           pointerEvents: "none",
@@ -184,7 +184,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
         <div key={beamIdx} style={{
           position: "absolute", top: 0, bottom: 0, left: 0, width: "52%",
           background: isLight
-            ? "linear-gradient(90deg, transparent 0%, rgba(13,154,118,0.11) 50%, transparent 100%)"
+            ? "linear-gradient(90deg, transparent 0%, rgba(0,111,145,0.11) 50%, transparent 100%)"
             : "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.22) 50%, transparent 100%)",
           animation: "pillBeamOnce 1.8s ease-in-out both",
           willChange: "transform, opacity",
@@ -194,7 +194,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
         {/* Content */}
         <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
           <div style={{ position: "relative", flexShrink: 0 }}>
-            <div data-brand-motion="true" style={{ width: 6, height: 6, borderRadius: "50%", background: "#34D399", boxShadow: "0 0 5px rgba(52,211,153,0.42)", animation: "stratosIntelPulseDot 3.4s ease-in-out infinite", willChange: "transform, opacity" }} />
+            <div data-brand-motion="true" style={{ width: 6, height: 6, borderRadius: "50%", background: D.acc, boxShadow: "0 0 5px rgba(0,209,255,0.42)", animation: "stratosIntelPulseDot 3.4s ease-in-out infinite", willChange: "transform, opacity" }} />
           </div>
           <span className="dyn-lbl-desk" style={{
             fontSize: 12.5, fontWeight: 400, letterSpacing: "-0.025em", fontFamily: fontDisp,
@@ -243,7 +243,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                 {/* Header */}
                 <div style={{ padding: "0 20px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${D.line}` }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                    <div data-brand-motion="true" style={{ animation: "stratosAtomSpin 20s linear infinite", transformOrigin: "center", display: "flex", filter: "drop-shadow(0 0 5px rgba(110,231,194,0.35))" }}>
+                    <div data-brand-motion="true" style={{ animation: "stratosAtomSpin 20s linear infinite", transformOrigin: "center", display: "flex", filter: "drop-shadow(0 0 5px rgba(0,209,255,0.35))" }}>
                       <StratosAtom size={14} color={D.acc} />
                     </div>
                     <div>
@@ -292,9 +292,9 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                     <p style={{ margin: 0, fontSize: 10.5, color: D.t34, fontFamily: font }}>Toca una función para ver cómo se usa</p>
                   </div>
                   <button onClick={() => setShowAll(true)}
-                    style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 4, background: "rgba(110,231,194,0.10)", border: "1px solid rgba(110,231,194,0.22)", color: D.acc, borderRadius: 8, padding: "6px 10px", fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer", whiteSpace: "nowrap", transition: "background 0.16s" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(110,231,194,0.18)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(110,231,194,0.10)"; }}
+                    style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 4, background: "rgba(0,209,255,0.10)", border: "1px solid rgba(0,209,255,0.22)", color: D.acc, borderRadius: 8, padding: "6px 10px", fontSize: 11.5, fontWeight: 500, fontFamily: fontDisp, cursor: "pointer", whiteSpace: "nowrap", transition: "background 0.16s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,209,255,0.18)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,209,255,0.10)"; }}
                   >Ver todas <span style={{ opacity: 0.7 }}>({FEATURES.length})</span><ChevronRight size={12} strokeWidth={2.4} /></button>
                 </div>
                 <div className="intel-scroll" style={{ overflowX: "auto", overflowY: "hidden", padding: "10px 20px 16px", WebkitOverflowScrolling: "touch", scrollSnapType: "x proximity", overscrollBehaviorX: "contain" }}>
@@ -325,7 +325,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                             <div style={{ width: 34, height: 34, borderRadius: 10, background: `${f.color}1E`, border: `1px solid ${f.color}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                               <Ic size={17} color={f.color} strokeWidth={2} />
                             </div>
-                            <span style={{ fontSize: 9.5, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? D.acc : D.t46, background: isAgent ? "rgba(110,231,194,0.10)" : D.btn, border: `1px solid ${isAgent ? "rgba(110,231,194,0.22)" : D.bd}`, borderRadius: 6, padding: "3px 6px" }}>
+                            <span style={{ fontSize: 9.5, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? D.acc : D.t46, background: isAgent ? "rgba(0,209,255,0.10)" : D.btn, border: `1px solid ${isAgent ? "rgba(0,209,255,0.22)" : D.bd}`, borderRadius: 6, padding: "3px 6px" }}>
                               {isAgent ? "Auto" : "Tú pides"}
                             </span>
                           </div>
@@ -379,7 +379,7 @@ const DynIsland = ({ onExpand, onOpenLead, notifications = [], theme = "dark", b
                           <div style={{ width: 32, height: 32, borderRadius: 9, background: `${f.color}1E`, border: `1px solid ${f.color}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <Ic size={16} color={f.color} strokeWidth={2} />
                           </div>
-                          <span style={{ fontSize: 9.5, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? D.acc : D.t46, background: isAgent ? "rgba(110,231,194,0.10)" : D.btn, border: `1px solid ${isAgent ? "rgba(110,231,194,0.22)" : D.bd}`, borderRadius: 6, padding: "3px 6px" }}>
+                          <span style={{ fontSize: 9.5, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", color: isAgent ? D.acc : D.t46, background: isAgent ? "rgba(0,209,255,0.10)" : D.btn, border: `1px solid ${isAgent ? "rgba(0,209,255,0.22)" : D.bd}`, borderRadius: 6, padding: "3px 6px" }}>
                             {isAgent ? "Auto" : "Tú pides"}
                           </span>
                         </div>

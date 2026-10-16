@@ -88,7 +88,7 @@ export default function CompanySetupAdmin({ T, data, refresh, initialOrganizatio
             <button onClick={refresh} disabled={saving} style={{ ...input, display: "inline-flex", alignItems: "center", gap: 7, cursor: "pointer" }}><RefreshCw size={14} />Actualizar</button>
           </div></> : <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: T.txt3 }}>Este cliente conserva sus módulos personalizados. Sus usuarios y roles se administran desde Usuarios; los datos generales y las licencias se guardan arriba.</p>}
           {error && <div role="alert" style={{ color: T.rose, fontSize: 13 }}>{error}</div>}
-          {success && <div role="status" style={{ color: T.accent, fontSize: 12.5 }}>{success}</div>}
+          {success && <div role="status" style={{ color: T.success, fontSize: 12.5 }}>{success}</div>}
           <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 12, color: T.txt3, fontSize: 11.5, lineHeight: 1.5 }}><ShieldCheck size={14} style={{ marginRight: 6, verticalAlign: "middle" }} />Cada cambio conserva quién lo hizo, cuándo y qué cupo o módulo cambió. Otras organizaciones no reciben esta configuración.</div>
         </div>}
         {selected && <CajaPermissionsAdmin key={selected.id} T={T} organization={selected}

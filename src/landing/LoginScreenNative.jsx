@@ -21,7 +21,7 @@ export default function LoginScreenNative({ onLogin }) {
   const [error, setError] = useState("");
 
   const brandName = config?.name || "Stratos AI";
-  const accent = config?.brand?.accent || "#6EE7C2";
+  const accent = config?.brand?.accent || P.accent;
 
   const submit = async (event) => {
     event?.preventDefault();
@@ -83,7 +83,7 @@ export default function LoginScreenNative({ onLogin }) {
 
           {error && <p role="alert" style={styles.error}>{error}</p>}
 
-          <button type="submit" disabled={loading} style={{ ...styles.button, background: accent }}>
+          <button type="submit" disabled={loading} style={{ ...styles.button, background: config?.brand?.accent ? accent : P.actionG, color: config?.brand?.accent ? P.onAccent : P.actionInk, border: `1px solid ${config?.brand?.accent ? accent : P.actionBorder}` }}>
             <LogIn size={18} />
             {loading ? "Entrando…" : "Entrar"}
           </button>
@@ -171,7 +171,7 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     gap: 9,
-    color: "#07120F",
+    color: P.onAccent,
     fontSize: 16,
     fontWeight: 750,
     fontFamily: font,

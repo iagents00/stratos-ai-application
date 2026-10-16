@@ -317,7 +317,7 @@ const IACRM = ({ oc, T: _T, theme = "dark" }) => {
                     <stop offset="95%" stopColor={TG} stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
-                <Tooltip contentStyle={{ background: isLight ? "#FFFFFF" : "#0C0C0C", border: `1px solid ${T.border}`, borderRadius: 10, color: T.txt, fontSize: 12 }} />
+                <Tooltip contentStyle={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: T.txt, fontSize: 12 }} />
                 <Area type="monotone" dataKey="wa" stroke={WA} strokeWidth={2} fill="url(#waGrad)" name="WhatsApp" />
                 <Area type="monotone" dataKey="tg" stroke={TG} strokeWidth={2} fill="url(#tgGrad)" name="Telegram" />
               </AreaChart>

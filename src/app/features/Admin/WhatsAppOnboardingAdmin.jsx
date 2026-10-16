@@ -175,7 +175,7 @@ export default function WhatsAppOnboardingAdmin({ T, onBack, initialOrganization
         </div>
       )}
       {error && <div role="alert" style={{ ...card, marginBottom: 14, color: T.rose, borderColor: "rgba(248,113,113,.35)" }}>{error}</div>}
-      {success && <div role="status" style={{ ...card, marginBottom: 14, color: T.accent, borderColor: T.accentB }}>{success}</div>}
+      {success && <div role="status" style={{ ...card, marginBottom: 14, color: T.success, borderColor: T.successB }}>{success}</div>}
 
       {!data?.access?.root && data?.access?.companyLimit != null && <div style={{ ...card, marginBottom: 16, display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap" }}><div><strong style={{ fontSize: 13 }}>Cupos de empresas</strong><div style={{ color: T.txt3, fontSize: 11.5, marginTop: 4 }}>Cada empresa nueva consume un cupo; los usuarios internos se controlan por separado.</div></div><div style={{ color: T.accent, fontFamily: fontDisp, fontSize: 20, fontWeight: 750 }}>{data.access.companiesUsed || 0}/{data.access.companyLimit}</div></div>}
 

@@ -297,7 +297,7 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false, autoSt
                 display: "inline-flex", alignItems: "center", gap: 6,
                 padding: "7px 14px", borderRadius: 9,
                 background: saving || !draft.trim() ? `${T.accent}55` : T.accent,
-                border: "none", color: "#041016",
+                border: "none", color: T.onAccent,
                 fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
                 cursor: saving || !draft.trim() ? "default" : "pointer",
                 transition: "all 0.15s",
@@ -413,7 +413,7 @@ export default function LeadNotesTimeline({ lead, T = P, isLight = false, autoSt
                         Cancelar
                       </button>
                       <button type="button" onClick={() => saveEdit(n)} disabled={savingEdit || !editDraft.trim()}
-                        style={{ padding: "5px 14px", borderRadius: 8, background: editDraft.trim() ? T.accent : T.border, border: "none", color: editDraft.trim() ? "#041016" : T.txt3, cursor: editDraft.trim() ? "pointer" : "default", fontSize: 12.5, fontWeight: 500, fontFamily: font }}>
+                        style={{ padding: "5px 14px", borderRadius: 8, background: editDraft.trim() ? T.accent : T.border, border: "none", color: editDraft.trim() ? T.onAccent : T.txt3, cursor: editDraft.trim() ? "pointer" : "default", fontSize: 12.5, fontWeight: 500, fontFamily: font }}>
                         {savingEdit ? "Guardando…" : "Guardar"}
                       </button>
                     </div>

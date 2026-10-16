@@ -1,5 +1,9 @@
 # Historial de versiones del Service Worker (CACHE_VERSION)
 
+## v440 — Azul Stratos y tema casi negro
+
+Acentos cian de marca, superficies navy casi negras y azul profundo legible en el tema claro. Conserva los verdes de éxito y WhatsApp. Renueva el caché estático sin forzar recargas; no requiere cambios nuevos en Supabase.
+
 ## v426 — Stratos Rails
 
 Gestiones confirmadas, configuración atómica y Proceso a ancho completo en ambos temas. Requiere la migración 245. Renueva el caché estático en la próxima navegación; conserva el caché de assets y no fuerza recargas.

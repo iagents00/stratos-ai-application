@@ -32,7 +32,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
   // "#FFFFFF" hardcodeado → invisibles sobre el lienzo claro). Fallback a T.
   const isLight = isLightProp ?? (T !== P);
   const wTxt = isLight ? T.txt : "#FFFFFF";           // texto fuerte (nombres, títulos)
-  const cardBg = isLight ? T.surface : "#0C0C0C";     // fondo de modales/opciones
+  const cardBg = T.surface;     // fondo de modales/opciones
   // BUG-FIX: adminGetAllUsers() es async (devuelve Promise). Antes lo
   // pasabamos crudo a useState con useState(() => adminGetAllUsers()), lo
   // que dejaba a `users` como una Promise. Cuando users.filter(...) corria
@@ -298,13 +298,13 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
               flex: isMobile ? 1 : "none", justifyContent: "center", whiteSpace: "nowrap",
               display: "flex", alignItems: "center", gap: 7, padding: "10px 20px",
               borderRadius: 11,
-              background: isLight ? T.accent : "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))",
+              background: isLight ? T.accent : `linear-gradient(135deg, ${T.accent}29, ${T.accent}12)`,
               border: `1px solid ${isLight ? T.accent : T.accentB}`, color: isLight ? "#FFFFFF" : T.accent, fontSize: 12.5, fontWeight: isLight ? 600 : 500,
               fontFamily: fontDisp, cursor: "pointer", transition: "all 0.2s",
               boxShadow: isLight ? T.shadowMint : "none",
             }}
-              onMouseEnter={e => { e.currentTarget.style.background = isLight ? T.accentDark : "linear-gradient(135deg, rgba(110,231,194,0.24), rgba(110,231,194,0.12))"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = isLight ? T.accent : "linear-gradient(135deg, rgba(110,231,194,0.16), rgba(110,231,194,0.07))"; }}
+              onMouseEnter={e => { e.currentTarget.style.background = isLight ? T.accentDark : `linear-gradient(135deg, ${T.accent}3D, ${T.accent}1F)`; }}
+              onMouseLeave={e => { e.currentTarget.style.background = isLight ? T.accent : `linear-gradient(135deg, ${T.accent}29, ${T.accent}12)`; }}
             ><Plus size={14} /> Nuevo Usuario</button>
           </div>
         )}
@@ -403,7 +403,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
                   onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
                 ><User size={12} color={T.blue} /></button>
                 <button onClick={() => handleToggleActive(u)} title={active ? "Desactivar" : "Activar"} style={{ width: 40, height: 40, borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = active ? "rgba(232,129,140,0.1)" : "rgba(110,231,194,0.1)"; e.currentTarget.style.borderColor = active ? "rgba(232,129,140,0.35)" : "rgba(110,231,194,0.35)"; }}
+                  onMouseEnter={e => { e.currentTarget.style.background = active ? "rgba(232,129,140,0.1)" : T.successS; e.currentTarget.style.borderColor = active ? "rgba(232,129,140,0.35)" : T.successB; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
                 >{active ? <X size={12} color={T.rose} /> : <CheckCircle2 size={12} color={T.emerald} />}</button>
                 {!isMe && (

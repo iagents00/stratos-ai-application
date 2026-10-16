@@ -117,7 +117,7 @@ export default function CatalogConfiguratorAdmin({ T, onBack }) {
         <button onClick={() => loadCatalog(selectedId)} disabled={!selectedId || busy === "load"} style={button}><RefreshCw size={14} /> Actualizar</button>
       </div>
 
-      {message && <div style={{ ...card, padding: "12px 14px", marginBottom: 14, display: "flex", gap: 9, color: message.type === "success" ? T.accent : "#FCA5A5", borderColor: message.type === "success" ? T.accentB : "rgba(248,113,113,.35)" }}>{message.type === "success" ? <CheckCircle2 size={17} /> : <ShieldCheck size={17} />}<span style={{ fontSize: 12.5, lineHeight: 1.5 }}>{message.text}</span></div>}
+      {message && <div style={{ ...card, padding: "12px 14px", marginBottom: 14, display: "flex", gap: 9, color: message.type === "success" ? T.success : "#FCA5A5", borderColor: message.type === "success" ? T.successB : "rgba(248,113,113,.35)" }}>{message.type === "success" ? <CheckCircle2 size={17} /> : <ShieldCheck size={17} />}<span style={{ fontSize: 12.5, lineHeight: 1.5 }}>{message.text}</span></div>}
 
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(230px,290px) minmax(0,1fr)", gap: 14, alignItems: "start" }}>
         <aside style={{ ...card, padding: 14, position: isMobile ? "static" : "sticky", top: 0 }}>

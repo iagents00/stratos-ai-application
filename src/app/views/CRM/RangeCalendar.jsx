@@ -7,7 +7,7 @@
  * segundo extremo, el hover muestra una vista previa del rango.
  *
  * Diseño: popover premium TEMA-AWARE (claro en tema claro, oscuro en oscuro).
- * Los días seleccionados y el botón "Ver métricas" usan un verde profundo con
+ * Los días seleccionados y el botón "Ver métricas" usan azul de marca con
  * texto BLANCO (resalta bien en ambos temas). No usa librerías externas: grilla
  * mensual propia con inicio en lunes. Las fechas futuras se deshabilitan.
  * Comunica con onPick(fromYMD, toYMD).
@@ -15,7 +15,7 @@
  */
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
-import { fontDisp } from "../../../design-system/tokens";
+import { P, LP, fontDisp } from "../../../design-system/tokens";
 import { dateInputValue, parseDateInput, dateRangeLabel, resolveDateRange } from "./date-range";
 
 const WEEKDAYS = ["L", "M", "M", "J", "V", "S", "D"];
@@ -24,23 +24,20 @@ const MONTHS_FULL = [
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
 ];
 
-// Relleno verde profundo + su sombra: funcionan en ambos temas (texto blanco).
-const FILL    = "linear-gradient(135deg, #18B795 0%, #0A7C5D 100%)";
-const FILL_SH = "0 6px 16px rgba(10,124,93,0.55)";
 
 // Paleta tema-aware del popover.
 const palette = (isLight) => isLight ? {
   panelBg:     "linear-gradient(180deg, #FFFFFF 0%, #F4F7FA 100%)",
   panelBorder: "rgba(15,23,42,0.10)",
   panelShadow: "0 22px 55px rgba(15,23,42,0.18), 0 0 0 1px rgba(15,23,42,0.03), inset 0 1px 0 rgba(255,255,255,0.85)",
-  mint:      "#0D9A76",
+  accent:      "#006F91",
   txtMonth:  "#0B1220",
   txtDay:    "#334155",
   txtOut:    "#94A3B8",
   txtFut:    "#CBD5E1",
   txtMute:   "#64748B",
-  bandBg:    "rgba(13,154,118,0.12)",
-  inRange:   "#0B3B2E",
+  bandBg:    "rgba(0,111,145,0.12)",
+  inRange:   "#0A1B2E",
   hoverBg:   "rgba(15,23,42,0.05)",
   navBg:     "rgba(15,23,42,0.04)",
   navBorder: "rgba(15,23,42,0.10)",
@@ -48,16 +45,16 @@ const palette = (isLight) => isLight ? {
   applyBg:   "rgba(15,23,42,0.05)",
   applyBd:   "rgba(15,23,42,0.08)",
 } : {
-  panelBg:     "linear-gradient(165deg, #141414 0%, #0C0C0C 100%)",
-  panelBorder: "rgba(110,231,194,0.20)",
-  panelShadow: "0 22px 55px rgba(0,0,0,0.55), 0 0 0 1px rgba(110,231,194,0.05), inset 0 1px 0 rgba(255,255,255,0.05)",
-  mint:      "#6EE7C2",
+  panelBg:     P.surfaceG,
+  panelBorder: "rgba(0,209,255,0.20)",
+  panelShadow: "0 22px 55px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,209,255,0.05), inset 0 1px 0 rgba(255,255,255,0.05)",
+  accent:      "#00D1FF",
   txtMonth:  "#F1F5F9",
   txtDay:    "#CBD5E1",
   txtOut:    "#8B99AE",
   txtFut:    "#333C49",
   txtMute:   "#AEBAC8",
-  bandBg:    "rgba(110,231,194,0.16)",
+  bandBg:    "rgba(0,209,255,0.16)",
   inRange:   "#EAF2F7",
   hoverBg:   "rgba(255,255,255,0.07)",
   navBg:     "rgba(255,255,255,0.05)",
@@ -73,6 +70,8 @@ const ymd = (d) => dateInputValue(d);
 
 export default function RangeCalendar({ isLight = false, fromStr, toStr, onPick, onApply, allowFuture = false }) {
   const C = palette(isLight);
+  const FILL = isLight ? LP.actionG : P.actionG;
+  const FILL_SH = isLight ? LP.shadowMint : "0 6px 16px rgba(0,0,0,0.28)";
   const today = startOfDay(new Date());
   const fromD = parseDateInput(fromStr);
   const toD = parseDateInput(toStr);
@@ -187,7 +186,7 @@ export default function RangeCalendar({ isLight = false, fromStr, toStr, onPick,
           let textShadow = "none";
 
           if (inRange && !endpoint) { bg = C.bandBg; color = C.inRange; }
-          if (isToday && !endpoint) boxShadow = `inset 0 0 0 1.5px ${C.mint}88`;
+          if (isToday && !endpoint) boxShadow = `inset 0 0 0 1.5px ${C.accent}88`;
           if (isHovered) bg = C.hoverBg;
           if (endpoint) { bg = FILL; color = "#FFFFFF"; fontWeight = 700; boxShadow = FILL_SH; textShadow = "0 1px 2px rgba(0,0,0,0.35)"; }
           if (isFuture) { color = C.txtFut; }
@@ -238,13 +237,13 @@ export default function RangeCalendar({ isLight = false, fromStr, toStr, onPick,
             style={{
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               width: "100%", marginTop: 2, padding: "12px 14px", borderRadius: 13,
-              border: ready ? "1px solid rgba(110,231,194,0.30)" : `1px solid ${C.applyBd}`,
+              border: ready ? "1px solid rgba(0,209,255,0.30)" : `1px solid ${C.applyBd}`,
               cursor: ready ? "pointer" : "not-allowed",
               background: ready ? FILL : C.applyBg,
               color: ready ? "#FFFFFF" : C.txtMute,
               fontFamily: fontDisp, fontWeight: 500, fontSize: 13,
               textShadow: ready ? "0 1px 2px rgba(0,0,0,0.3)" : "none",
-              boxShadow: ready ? "0 8px 22px rgba(16,160,120,0.45)" : "none",
+              boxShadow: ready ? "0 8px 22px rgba(0,111,145,0.22)" : "none",
               transition: "background 0.15s, box-shadow 0.15s",
             }}
           >

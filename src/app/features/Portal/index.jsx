@@ -9,6 +9,7 @@
 import { useState, useRef } from "react";
 import { CheckCircle2, Bell, X, Check, FileText, Download } from "lucide-react";
 import { StratosAtom } from "../../../design-system/primitives";
+import { P } from "../../../design-system/tokens";
 
 const pf  = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
 const pfb = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
@@ -116,25 +117,25 @@ const CandidatePortal = () => {
     });
   };
 
-  const progColors = ["#A78BFA", "#7EB8F0", "#6EE7C2", "#6EE7C2"];
+  const progColors = ["#A78BFA", "#7EB8F0", P.accent, P.accent];
   const stepLabels = ["Tus datos", "Posición", "Tu CV", "Preguntas IA"];
 
   const PortalInp = ({ label, type = "text", placeholder = "", error, val, onChange, required }) => (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       <label style={{ fontSize: 12.5, fontWeight: 400, color: error ? "#E8818C" : "rgba(255,255,255,0.55)", fontFamily: pfb }}>
-        {label}{required && <span style={{ color: "#6EE7C2", marginLeft: 3 }}>*</span>}
+        {label}{required && <span style={{ color: P.accent, marginLeft: 3 }}>*</span>}
       </label>
       <input type={type} value={val} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        style={{ padding: "12px 16px", borderRadius: 10, fontSize: 13, fontFamily: pfb, background: "rgba(255,255,255,0.04)", border: `1px solid ${error ? "#E8818C50" : val ? "#6EE7C230" : "rgba(255,255,255,0.08)"}`, color: "#E2E8F0", outline: "none", transition: "border 0.2s" }}
-        onFocus={e => e.target.style.borderColor = error ? "#E8818C80" : "#6EE7C240"}
-        onBlur={e => e.target.style.borderColor = error ? "#E8818C50" : val ? "#6EE7C230" : "rgba(255,255,255,0.08)"}
+        style={{ padding: "12px 16px", borderRadius: 10, fontSize: 13, fontFamily: pfb, background: "rgba(255,255,255,0.04)", border: `1px solid ${error ? "#E8818C50" : val ? `${P.accent}30` : "rgba(255,255,255,0.08)"}`, color: "#E2E8F0", outline: "none", transition: "border 0.2s" }}
+        onFocus={e => e.target.style.borderColor = error ? "#E8818C80" : `${P.accent}40`}
+        onBlur={e => e.target.style.borderColor = error ? "#E8818C50" : val ? `${P.accent}30` : "rgba(255,255,255,0.08)"}
       />
       {error && <span style={{ fontSize: 11, color: "#E8818C", fontWeight: 400 }}>{error}</span>}
     </div>
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: `radial-gradient(ellipse at 50% 0%, rgba(52,211,153,0.03) 0%, transparent 55%), #0C0C0C`, display: "flex", flexDirection: "column", fontFamily: pfb }}>
+    <div style={{ minHeight: "100vh", background: `radial-gradient(ellipse at 50% 0%, ${P.accent}08 0%, transparent 55%), ${P.bg}`, display: "flex", flexDirection: "column", fontFamily: pfb }}>
       <style>{`
         @keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
@@ -148,17 +149,17 @@ const CandidatePortal = () => {
       {/* Topbar */}
       <div style={{ padding: "16px 28px", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)", position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 38, height: 38, borderRadius: 11, background: "rgba(110,231,194,0.1)", border: "1px solid rgba(110,231,194,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <StratosAtom size={21} color="#6EE7C2" />
+          <div style={{ width: 38, height: 38, borderRadius: 11, background: `${P.accent}1A`, border: `1px solid ${P.accent}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <StratosAtom size={21} color={P.accent} />
           </div>
           <div>
-            <p style={{ fontSize: 15, fontWeight: 500, color: "#FFF", fontFamily: pf, letterSpacing: "-0.02em" }}>Stratos <span style={{ color: "#6EE7C2" }}>People</span></p>
+            <p style={{ fontSize: 15, fontWeight: 500, color: "#FFF", fontFamily: pf, letterSpacing: "-0.02em" }}>Stratos <span style={{ color: P.accent }}>People</span></p>
             <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 1 }}>Portal de Candidatos · Riviera Maya 2026</p>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "6px 14px", borderRadius: 8, background: "rgba(110,231,194,0.05)", border: "1px solid rgba(110,231,194,0.12)" }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#6EE7C2", animation: "pulse 2s infinite" }} />
-          <span style={{ fontSize: 12, color: "#6EE7C2", fontWeight: 400 }}>{PORTAL_VACANTES.length} vacantes abiertas</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "6px 14px", borderRadius: 8, background: `${P.accent}0D`, border: `1px solid ${P.accent}1F` }}>
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: P.accent, animation: "pulse 2s infinite" }} />
+          <span style={{ fontSize: 12, color: P.accent, fontWeight: 400 }}>{PORTAL_VACANTES.length} vacantes abiertas</span>
         </div>
       </div>
 
@@ -167,11 +168,11 @@ const CandidatePortal = () => {
         {/* ─── STEP 5 CONFIRMACIÓN ─── */}
         {step === 5 && (
           <div style={{ textAlign: "center", padding: "48px 24px", animation: "fadeIn 0.5s ease" }}>
-            <div style={{ width: 80, height: 80, borderRadius: "50%", background: "rgba(110,231,194,0.1)", border: "2px solid rgba(110,231,194,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 28px", boxShadow: "0 0 48px rgba(110,231,194,0.12)" }}>
-              <CheckCircle2 size={36} color="#6EE7C2" />
+            <div style={{ width: 80, height: 80, borderRadius: "50%", background: `${P.success}1A`, border: `2px solid ${P.success}4C`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 28px", boxShadow: `0 0 48px ${P.success}1F` }}>
+              <CheckCircle2 size={36} color={P.success} />
             </div>
             <p style={{ fontSize: 28, fontWeight: 300, color: "#FFF", fontFamily: pf, letterSpacing: "-0.04em", marginBottom: 10 }}>
-              ¡Aplicación <span style={{ fontWeight: 500, color: "#6EE7C2" }}>enviada!</span>
+              ¡Aplicación <span style={{ fontWeight: 500, color: P.success }}>enviada!</span>
             </p>
             <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, marginBottom: 36 }}>
               Recibimos tu aplicación para <strong style={{ color: "rgba(255,255,255,0.75)" }}>{form.vacante?.titulo}</strong>.<br />
@@ -185,9 +186,9 @@ const CandidatePortal = () => {
             <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 360, margin: "0 auto" }}>
               {[
                 { icon: <AIAtom size={18} color="#A78BFA" />, t: "Análisis IA en proceso", s: "Tu perfil está siendo evaluado automáticamente", c: "#A78BFA" },
-                { icon: <Bell size={16} color="#6EE7C2" />, t: "Respuesta en 2–5 días hábiles", s: `Te avisaremos a ${form.email}`, c: "#6EE7C2" },
+                { icon: <Bell size={16} color={P.success} />, t: "Respuesta en 2–5 días hábiles", s: `Te avisaremos a ${form.email}`, c: P.success },
               ].map((item, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 12, background: `${i === 0 ? "rgba(167,139,250,0.05)" : "rgba(110,231,194,0.04)"}`, border: `1px solid ${i === 0 ? "rgba(167,139,250,0.12)" : "rgba(110,231,194,0.1)"}` }}>
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 12, background: `${i === 0 ? "rgba(167,139,250,0.05)" : `${P.success}0A`}`, border: `1px solid ${i === 0 ? "rgba(167,139,250,0.12)" : `${P.success}1A`}` }}>
                   <div style={{ flexShrink: 0 }}>{item.icon}</div>
                   <div style={{ textAlign: "left" }}>
                     <p style={{ fontSize: 12.5, fontWeight: 500, color: "rgba(255,255,255,0.8)" }}>{item.t}</p>
@@ -216,7 +217,7 @@ const CandidatePortal = () => {
               <div style={{ textAlign: "center", padding: "60px 24px" }}>
                 <div style={{ position: "relative", width: 72, height: 72, margin: "0 auto 28px" }}>
                   <div style={{ position: "absolute", inset: 0, borderRadius: "50%", border: "2px solid rgba(167,139,250,0.2)", borderTop: "2px solid #A78BFA", animation: "spin 1s linear infinite" }} />
-                  <div style={{ position: "absolute", inset: 10, borderRadius: "50%", border: "2px solid rgba(110,231,194,0.12)", borderTop: "2px solid #6EE7C2", animation: "spin 1.6s linear infinite reverse" }} />
+                  <div style={{ position: "absolute", inset: 10, borderRadius: "50%", border: `2px solid ${P.accent}1F`, borderTop: `2px solid ${P.accent}`, animation: "spin 1.6s linear infinite reverse" }} />
                   <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <AIAtom size={28} color="#A78BFA" spin />
                   </div>
@@ -262,8 +263,8 @@ const CandidatePortal = () => {
                         {pregActual.opts.map(opt => {
                           const sel = (multiSel[pregActual.id] || []).includes(opt);
                           return (
-                            <button key={opt} onClick={() => toggleMulti(pregActual.id, opt)} style={{ padding: "9px 16px", borderRadius: 9, cursor: "pointer", border: `1.5px solid ${sel ? "#6EE7C250" : "rgba(255,255,255,0.07)"}`, background: sel ? "rgba(110,231,194,0.08)" : "rgba(255,255,255,0.02)", color: sel ? "#6EE7C2" : "rgba(255,255,255,0.55)", fontSize: 12.5, fontFamily: pfb, fontWeight: sel ? 700 : 400, transition: "all 0.18s", display: "flex", alignItems: "center", gap: 6 }}>
-                              {sel && <Check size={11} color="#6EE7C2" />} {opt}
+                            <button key={opt} onClick={() => toggleMulti(pregActual.id, opt)} style={{ padding: "9px 16px", borderRadius: 9, cursor: "pointer", border: `1.5px solid ${sel ? `${P.accent}50` : "rgba(255,255,255,0.07)"}`, background: sel ? `${P.accent}14` : "rgba(255,255,255,0.02)", color: sel ? P.accent : "rgba(255,255,255,0.55)", fontSize: 12.5, fontFamily: pfb, fontWeight: sel ? 700 : 400, transition: "all 0.18s", display: "flex", alignItems: "center", gap: 6 }}>
+                              {sel && <Check size={11} color={P.accent} />} {opt}
                             </button>
                           );
                         })}
@@ -284,13 +285,13 @@ const CandidatePortal = () => {
                   {pregIdx > 0 && <button onClick={() => setPregIdx(i => i - 1)} style={{ padding: "13px 20px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", fontFamily: pfb }}>← Anterior</button>}
                   <button onClick={handleNextPreg}
                     disabled={!respuestas[pregActual?.id] && !(multiSel[pregActual?.id]?.length > 0)}
-                    style={{ flex: 1, padding: "14px 24px", borderRadius: 11, border: "none", fontSize: 14, fontWeight: 500, cursor: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "pointer" : "default", fontFamily: pf, background: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "#FFF" : "rgba(255,255,255,0.07)", color: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "#0C0C0C" : "rgba(255,255,255,0.2)", transition: "all 0.2s" }}>
+                    style={{ flex: 1, padding: "14px 24px", borderRadius: 11, border: `1px solid ${P.actionBorder}`, fontSize: 14, fontWeight: 500, cursor: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? "pointer" : "default", fontFamily: pf, background: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? P.actionG : "rgba(255,255,255,0.07)", color: (respuestas[pregActual?.id] || multiSel[pregActual?.id]?.length > 0) ? P.actionInk : "rgba(255,255,255,0.2)", transition: "all 0.2s" }}>
                     {pregIdx === totalPregs - 1 ? "Enviar aplicación →" : "Siguiente →"}
                   </button>
                 </div>
 
                 <div style={{ display: "flex", gap: 4, justifyContent: "center", marginTop: 18 }}>
-                  {preguntas.map((_, i) => <div key={i} style={{ width: i === pregIdx ? 22 : 6, height: 4, borderRadius: 3, background: i < pregIdx ? "#6EE7C2" : i === pregIdx ? "#A78BFA" : "rgba(255,255,255,0.1)", transition: "all 0.3s" }} />)}
+                  {preguntas.map((_, i) => <div key={i} style={{ width: i === pregIdx ? 22 : 6, height: 4, borderRadius: 3, background: i < pregIdx ? P.success : i === pregIdx ? "#A78BFA" : "rgba(255,255,255,0.1)", transition: "all 0.3s" }} />)}
                 </div>
               </div>
             )}
@@ -307,12 +308,12 @@ const CandidatePortal = () => {
                 return (
                   <div key={n} style={{ display: "flex", alignItems: "center", flex: i < stepLabels.length - 1 ? 1 : "none" }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                      <div style={{ width: 30, height: 30, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: `2px solid ${done ? "#6EE7C2" : active ? progColors[i] : "rgba(255,255,255,0.1)"}`, background: done ? "rgba(110,231,194,0.12)" : active ? `${progColors[i]}14` : "transparent", transition: "all 0.35s" }}>
-                        {done ? <Check size={13} color="#6EE7C2" /> : <span style={{ fontSize: 12, fontWeight: 500, color: active ? progColors[i] : "rgba(255,255,255,0.2)" }}>{n}</span>}
+                      <div style={{ width: 30, height: 30, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: `2px solid ${done ? P.success : active ? progColors[i] : "rgba(255,255,255,0.1)"}`, background: done ? `${P.success}1F` : active ? `${progColors[i]}14` : "transparent", transition: "all 0.35s" }}>
+                        {done ? <Check size={13} color={P.success} /> : <span style={{ fontSize: 12, fontWeight: 500, color: active ? progColors[i] : "rgba(255,255,255,0.2)" }}>{n}</span>}
                       </div>
-                      <span style={{ fontSize: 10.5, fontWeight: 500, color: active ? progColors[i] : done ? "rgba(110,231,194,0.5)" : "rgba(255,255,255,0.18)", whiteSpace: "nowrap", letterSpacing: "0.03em" }}>{label}</span>
+                      <span style={{ fontSize: 10.5, fontWeight: 500, color: active ? progColors[i] : done ? `${P.success}80` : "rgba(255,255,255,0.18)", whiteSpace: "nowrap", letterSpacing: "0.03em" }}>{label}</span>
                     </div>
-                    {i < stepLabels.length - 1 && <div style={{ flex: 1, height: 1, background: done ? "rgba(110,231,194,0.25)" : "rgba(255,255,255,0.06)", margin: "0 6px", marginBottom: 18, transition: "background 0.4s" }} />}
+                    {i < stepLabels.length - 1 && <div style={{ flex: 1, height: 1, background: done ? `${P.success}40` : "rgba(255,255,255,0.06)", margin: "0 6px", marginBottom: 18, transition: "background 0.4s" }} />}
                   </div>
                 );
               })}
@@ -336,7 +337,7 @@ const CandidatePortal = () => {
                   <PortalInp label="Teléfono (WhatsApp)" type="tel" placeholder="+52 55 1234 5678" required val={form.telefono} onChange={v => setF("telefono", v)} error={errors.telefono} />
                   <PortalInp label="LinkedIn (opcional)" placeholder="linkedin.com/in/tu-perfil" val={form.linkedin} onChange={v => setF("linkedin", v)} />
                 </div>
-                <button onClick={() => { if (validateStep1()) setStep(2); }} style={{ marginTop: 24, width: "100%", padding: "15px", borderRadius: 12, border: "none", background: "#FFF", color: "#0C0C0C", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: pf }}>
+                <button onClick={() => { if (validateStep1()) setStep(2); }} style={{ marginTop: 24, width: "100%", padding: "15px", borderRadius: 12, border: `1px solid ${P.actionBorder}`, background: P.actionG, color: P.actionInk, fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: pf }}>
                   Continuar →
                 </button>
               </div>
@@ -362,7 +363,7 @@ const CandidatePortal = () => {
                         </div>
                         <div style={{ display: "flex", gap: 14 }}>
                           <span style={{ fontSize: 12, color: "rgba(255,255,255,0.38)" }}>{v.dept} · {v.ubicacion}</span>
-                          <span style={{ fontSize: 12, color: sel ? "#6EE7C2" : "rgba(110,231,194,0.55)", fontWeight: 400 }}>{v.salario}</span>
+                          <span style={{ fontSize: 12, color: sel ? P.success : `${P.success}8C`, fontWeight: 400 }}>{v.salario}</span>
                         </div>
                       </button>
                     );
@@ -370,7 +371,7 @@ const CandidatePortal = () => {
                 </div>
                 <div style={{ display: "flex", gap: 10 }}>
                   <button onClick={() => setStep(1)} style={{ padding: "14px 20px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "rgba(255,255,255,0.38)", fontSize: 13, cursor: "pointer", fontFamily: pfb }}>← Atrás</button>
-                  <button onClick={() => { if (form.vacante) setStep(3); }} style={{ flex: 1, padding: "14px", borderRadius: 11, border: "none", background: form.vacante ? "#FFF" : "rgba(255,255,255,0.07)", color: form.vacante ? "#0C0C0C" : "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 500, cursor: form.vacante ? "pointer" : "default", fontFamily: pf }}>
+                  <button onClick={() => { if (form.vacante) setStep(3); }} style={{ flex: 1, padding: "14px", borderRadius: 11, border: `1px solid ${P.actionBorder}`, background: form.vacante ? P.actionG : "rgba(255,255,255,0.07)", color: form.vacante ? P.actionInk : "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 500, cursor: form.vacante ? "pointer" : "default", fontFamily: pf }}>
                     Continuar →
                   </button>
                 </div>
@@ -382,7 +383,7 @@ const CandidatePortal = () => {
               <div style={{ animation: "fadeIn 0.3s ease" }}>
                 <div style={{ marginBottom: 24 }}>
                   <p style={{ fontSize: 26, fontWeight: 300, color: "#FFF", fontFamily: pf, letterSpacing: "-0.03em", marginBottom: 8 }}>
-                    Sube tu <span style={{ fontWeight: 500, color: "#6EE7C2" }}>CV</span>
+                    Sube tu <span style={{ fontWeight: 500, color: P.accent }}>CV</span>
                   </p>
                   <p style={{ fontSize: 13, color: "rgba(255,255,255,0.38)" }}>La IA lo analiza automáticamente para agilizar tu proceso.</p>
                 </div>
@@ -391,17 +392,17 @@ const CandidatePortal = () => {
                   onDragLeave={() => setCvDragging(false)}
                   onDrop={handleCvDrop}
                   onClick={() => !cvFile && fileRef.current?.click()}
-                  style={{ padding: cvFile ? "22px" : "48px 28px", borderRadius: 18, textAlign: "center", border: `2px dashed ${cvDragging ? "#6EE7C2" : cvFile ? "#6EE7C250" : "rgba(255,255,255,0.1)"}`, background: cvDragging ? "rgba(110,231,194,0.05)" : cvFile ? "rgba(110,231,194,0.03)" : "rgba(255,255,255,0.01)", cursor: cvFile ? "default" : "pointer", transition: "all 0.25s", marginBottom: 16 }}
+                  style={{ padding: cvFile ? "22px" : "48px 28px", borderRadius: 18, textAlign: "center", border: `2px dashed ${cvDragging ? P.accent : cvFile ? `${P.success}50` : "rgba(255,255,255,0.1)"}`, background: cvDragging ? `${P.accent}0D` : cvFile ? `${P.success}08` : "rgba(255,255,255,0.01)", cursor: cvFile ? "default" : "pointer", transition: "all 0.25s", marginBottom: 16 }}
                 >
                   <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={handleCvDrop} style={{ display: "none" }} />
                   {cvFile ? (
                     <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                      <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(110,231,194,0.1)", border: "1px solid rgba(110,231,194,0.22)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        <FileText size={20} color="#6EE7C2" />
+                      <div style={{ width: 44, height: 44, borderRadius: 12, background: `${P.success}1A`, border: `1px solid ${P.success}38`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <FileText size={20} color={P.success} />
                       </div>
                       <div style={{ flex: 1, textAlign: "left" }}>
                         <p style={{ fontSize: 13, fontWeight: 500, color: "#FFF", marginBottom: 3 }}>{cvFile.name}</p>
-                        <p style={{ fontSize: 12, color: "rgba(110,231,194,0.7)" }}>{(cvFile.size / 1024).toFixed(0)} KB · Listo para analizar con IA</p>
+                        <p style={{ fontSize: 12, color: `${P.success}B2` }}>{(cvFile.size / 1024).toFixed(0)} KB · Listo para analizar con IA</p>
                       </div>
                       <button onClick={e => { e.stopPropagation(); setCvFile(null); }} style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <X size={12} color="rgba(255,255,255,0.4)" />
@@ -409,13 +410,13 @@ const CandidatePortal = () => {
                     </div>
                   ) : (
                     <>
-                      <div style={{ width: 56, height: 56, borderRadius: 16, background: "rgba(110,231,194,0.07)", border: "1px solid rgba(110,231,194,0.18)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-                        <Download size={24} color="#6EE7C2" style={{ transform: "rotate(180deg)" }} />
+                      <div style={{ width: 56, height: 56, borderRadius: 16, background: `${P.accent}12`, border: `1px solid ${P.accent}2E`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                        <Download size={24} color={P.accent} style={{ transform: "rotate(180deg)" }} />
                       </div>
                       <p style={{ fontSize: 15, fontWeight: 500, color: "#FFF", fontFamily: pf, marginBottom: 8 }}>{cvDragging ? "¡Suelta aquí!" : "Arrastra tu CV o haz clic"}</p>
                       <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.3)", marginBottom: 14 }}>PDF, Word o imagen JPG/PNG · Máx. 10 MB</p>
                       <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
-                        {["PDF", "DOC / DOCX", "JPG / PNG"].map(f => <span key={f} style={{ fontSize: 11, color: "rgba(110,231,194,0.55)", background: "rgba(110,231,194,0.05)", border: "1px solid rgba(110,231,194,0.12)", padding: "3px 10px", borderRadius: 5, fontWeight: 400 }}>{f}</span>)}
+                        {["PDF", "DOC / DOCX", "JPG / PNG"].map(f => <span key={f} style={{ fontSize: 11, color: `${P.accent}8C`, background: `${P.accent}0D`, border: `1px solid ${P.accent}1F`, padding: "3px 10px", borderRadius: 5, fontWeight: 400 }}>{f}</span>)}
                       </div>
                     </>
                   )}
@@ -426,7 +427,7 @@ const CandidatePortal = () => {
                 </p>
                 <div style={{ display: "flex", gap: 10 }}>
                   <button onClick={() => setStep(2)} style={{ padding: "14px 20px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "rgba(255,255,255,0.38)", fontSize: 13, cursor: "pointer", fontFamily: pfb }}>← Atrás</button>
-                  <button onClick={() => setStep(4)} style={{ flex: 1, padding: "14px", borderRadius: 11, border: "none", background: cvFile ? "#FFF" : "rgba(255,255,255,0.07)", color: cvFile ? "#0C0C0C" : "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: pf }}>
+                  <button onClick={() => setStep(4)} style={{ flex: 1, padding: "14px", borderRadius: 11, border: `1px solid ${P.actionBorder}`, background: cvFile ? P.actionG : "rgba(255,255,255,0.07)", color: cvFile ? P.actionInk : "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: pf }}>
                     {cvFile ? "Analizar y continuar →" : "Continuar sin CV →"}
                   </button>
                 </div>

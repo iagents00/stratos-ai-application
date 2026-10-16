@@ -195,7 +195,7 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
     <div style={{ padding: isMobile ? "12px 10px 48px" : "22px 24px 60px", color: T.txt, fontFamily: font, overflowY: "auto", height: "100%", boxSizing: "border-box" }}>
       <button onClick={onBack} style={{ ...button, marginBottom: 16, background: "transparent" }}><ArrowLeft size={14} /> Usuarios</button>
 
-      <div style={{ position: "sticky", top: 0, zIndex: 20, display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap", marginBottom: 18, padding: "10px 0 12px", background: T.bg || "#0C0C0C", borderBottom: dirty ? `1px solid ${T.accentB}` : "1px solid transparent" }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 20, display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap", marginBottom: 18, padding: "10px 0 12px", background: T.bg, borderBottom: dirty ? `1px solid ${T.accentB}` : "1px solid transparent" }}>
         <div>
           <h2 style={{ margin: 0, fontFamily: fontDisp, fontSize: 22, fontWeight: 650 }}>Pipelines por empresa</h2>
           <p style={{ color: T.txt3, fontSize: 12.5, margin: "6px 0 0", maxWidth: 760, lineHeight: 1.55 }}>
@@ -215,7 +215,7 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
       </div>
 
       {message && (
-        <div style={{ ...card, padding: "11px 14px", marginBottom: 14, display: "flex", gap: 9, alignItems: "flex-start", color: message.type === "success" ? T.accent : message.type === "warning" ? "#FBBF24" : "#FCA5A5", borderColor: message.type === "success" ? T.accentB : message.type === "warning" ? "rgba(251,191,36,.35)" : "rgba(248,113,113,.35)" }}>
+        <div style={{ ...card, padding: "11px 14px", marginBottom: 14, display: "flex", gap: 9, alignItems: "flex-start", color: message.type === "success" ? T.success : message.type === "warning" ? "#FBBF24" : "#FCA5A5", borderColor: message.type === "success" ? T.successB : message.type === "warning" ? "rgba(251,191,36,.35)" : "rgba(248,113,113,.35)" }}>
           {message.type === "success" ? <CheckCircle2 size={17} /> : <AlertTriangle size={17} />}
           <span style={{ fontSize: 12.5, lineHeight: 1.5 }}>{message.text}</span>
           {message.retry && <button onClick={loadOrganizations} style={{ ...button, minHeight: 30, marginLeft: "auto", padding: "0 11px" }}>Reintentar</button>}

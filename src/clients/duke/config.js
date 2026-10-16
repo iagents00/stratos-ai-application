@@ -19,7 +19,7 @@ const dukeConfig = {
 
   brand: {
     logoText:    "Stratos",
-    accent:      null,   // usa el accent del design system (verde menta #6EE7C2)
+    accent:      null,   // usa el accent del design system (cian Stratos #00D1FF)
     accentLight: null,
     favicon:     "/favicon.ico",
     // El pill del header (DynIsland): en ESCRITORIO "Centro de Inteligencia" (default),

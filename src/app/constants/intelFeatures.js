@@ -28,7 +28,7 @@ export const ASSISTANT_BOT = "@Strato_sasistente_crm_bot";
 export const INTEL_FEATURES = [
   /* ─── Lo que tú le PIDES al asistente (Copilot; Telegram opcional) ─────────── */
   {
-    id: "registrar-voz", label: "Registrar por voz", icon: "Mic", color: "#6EE7C2", kind: "pedis",
+    id: "registrar-voz", label: "Registrar por voz", icon: "Mic", color: "#00D1FF", kind: "pedis",
     chan: "Copilot",
     where: "En el Copilot del CRM (o en Telegram, si lo conectás)",
     tagline: "Crea un cliente con un audio o un texto, sin llenar formularios.",
@@ -152,7 +152,7 @@ export const INTEL_FEATURES = [
 
   /* ─── Lo que los AGENTES hacen SOLOS ─────────────────────────────────────── */
   {
-    id: "avisos-telefono", label: "Avisos al teléfono", icon: "BellRing", color: "#6EE7C2", kind: "agente",
+    id: "avisos-telefono", label: "Avisos al teléfono", icon: "BellRing", color: "#00D1FF", kind: "agente",
     chan: "Automático",
     where: "Automático → notificación al teléfono (con la app cerrada)",
     tagline: "Los avisos del asistente te llegan al celular aunque tengas la app cerrada.",
@@ -162,7 +162,7 @@ export const INTEL_FEATURES = [
     ],
   },
   {
-    id: "briefing", label: "Briefing pre-Zoom", icon: "ClipboardList", color: "#6EE7C2", kind: "agente",
+    id: "briefing", label: "Briefing pre-Zoom", icon: "ClipboardList", color: "#00D1FF", kind: "agente",
     chan: "Automático",
     where: "Automático → te llega al Copilot y al teléfono",
     tagline: "Antes de cada Zoom te llega la ficha del cliente para llegar preparado.",

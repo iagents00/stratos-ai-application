@@ -38,8 +38,8 @@ const DynIsland = ({ onExpand, notifications = [] }) => {
           100% { transform: rotate(360deg); opacity: 0.38; }
         }
         @keyframes stratosIntelDot {
-          0%, 100% { transform: scale(0.92); box-shadow: 0 0 0 0 rgba(52,211,153,0.26), 0 0 9px rgba(52,211,153,0.82); }
-          50% { transform: scale(1.12); box-shadow: 0 0 0 6px rgba(52,211,153,0), 0 0 15px rgba(52,211,153,0.95); }
+          0%, 100% { transform: scale(0.92); box-shadow: 0 0 0 0 rgba(var(--stratos-accent-rgb),0.26), 0 0 9px rgba(var(--stratos-accent-rgb),0.82); }
+          50% { transform: scale(1.12); box-shadow: 0 0 0 6px rgba(var(--stratos-accent-rgb),0), 0 0 15px rgba(var(--stratos-accent-rgb),0.95); }
         }
       `}</style>
       {/* Collapsed pill */}
@@ -48,12 +48,12 @@ const DynIsland = ({ onExpand, notifications = [] }) => {
         style={{
           position: "relative",
           height: 38, width: 220, borderRadius: 50,
-          background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%), #000000",
+          background: `linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%), ${P.bg}`,
           border: "0.5px solid rgba(255,255,255,0.12)",
           display: expanded ? "none" : "flex", alignItems: "center", justifyContent: "center",
           padding: "0 14px", gap: 8, overflow: "hidden",
           cursor: "pointer",
-          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 0 0 1px rgba(110,231,194,0.035), 0 10px 28px rgba(0,0,0,0.34)",
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 0 0 1px rgba(var(--stratos-accent-rgb),0.035), 0 10px 28px rgba(0,0,0,0.34)",
         }}>
         <div style={{
           position: "absolute", inset: 0, pointerEvents: "none", borderRadius: "inherit", overflow: "hidden"
@@ -61,14 +61,14 @@ const DynIsland = ({ onExpand, notifications = [] }) => {
           <div style={{
             position: "absolute", inset: -24,
             borderRadius: "50%",
-            background: "conic-gradient(from 0deg, transparent 0deg, rgba(52,211,153,0.00) 120deg, rgba(52,211,153,0.26) 178deg, rgba(255,255,255,0.34) 204deg, rgba(52,211,153,0.00) 244deg, transparent 360deg)",
+            background: "conic-gradient(from 0deg, transparent 0deg, rgba(var(--stratos-accent-rgb),0.00) 120deg, rgba(var(--stratos-accent-rgb),0.26) 178deg, rgba(255,255,255,0.34) 204deg, rgba(var(--stratos-accent-rgb),0.00) 244deg, transparent 360deg)",
             filter: "blur(8px)",
             animation: "stratosIntelHalo 6.5s linear infinite",
             willChange: "transform, opacity",
           }} />
           <div style={{
             position: "absolute", top: -1, left: 0, width: "42%", height: "calc(100% + 2px)",
-            background: "linear-gradient(90deg, transparent, rgba(110,231,194,0.08), rgba(255,255,255,0.24), rgba(110,231,194,0.08), transparent)",
+            background: "linear-gradient(90deg, transparent, rgba(var(--stratos-accent-rgb),0.08), rgba(255,255,255,0.24), rgba(var(--stratos-accent-rgb),0.08), transparent)",
             filter: "blur(0.3px)",
             animation: "stratosIntelBeam 4.2s cubic-bezier(0.16,1,0.3,1) infinite",
             willChange: "transform, opacity",
@@ -90,7 +90,7 @@ const DynIsland = ({ onExpand, notifications = [] }) => {
             position: "fixed", top: 70, left: "50%", transform: "translateX(-50%)", zIndex: 99999,
             width: selectedNotif ? 540 : 500,
             borderRadius: selectedNotif ? 20 : 22,
-            background: selectedNotif ? `radial-gradient(ellipse at top, ${selectedNotif.c}14 0%, #000000 80%)` : "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%), #000000",
+            background: selectedNotif ? `radial-gradient(ellipse at top, ${selectedNotif.c}14 0%, ${P.surface} 80%)` : `linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%), ${P.surface}`,
             border: "0.5px solid rgba(255,255,255,0.12)",
             boxShadow: "0 20px 80px rgba(0,0,0,0.7)",
             overflow: "hidden",

@@ -201,7 +201,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
           background: P.bg2,
           border: `1px solid ${P.accentB}`,
           borderRadius: P.r,
-          boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(110,231,194,0.06)",
+          boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(var(--stratos-accent-rgb),0.06)",
           display: "flex", flexDirection: "column",
           fontFamily: font,
         }}
@@ -333,7 +333,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
                         background: isSel ? P.accent : "transparent",
                         display: "flex", alignItems: "center", justifyContent: "center",
                       }}>
-                        {isSel && <Plus size={12} color="#0B1220" strokeWidth={3} style={{ transform: "rotate(45deg)" }} />}
+                        {isSel && <Plus size={12} color={P.onAccent} strokeWidth={3} style={{ transform: "rotate(45deg)" }} />}
                       </div>
                     </div>
 
@@ -401,7 +401,7 @@ export default function SuggestActionsModal({ open, onClose, lead, onAddTasks })
                 padding: "9px 18px", borderRadius: 9,
                 background: selected.size > 0 ? P.accent : P.glass,
                 border: `1px solid ${selected.size > 0 ? P.accent : P.border}`,
-                color: selected.size > 0 ? "#0B1220" : P.txt3,
+                color: selected.size > 0 ? P.onAccent : P.txt3,
                 cursor: selected.size > 0 ? "pointer" : "not-allowed",
                 fontSize: 12.5, fontFamily: fontDisp, fontWeight: 500,
                 display: "flex", alignItems: "center", gap: 6,

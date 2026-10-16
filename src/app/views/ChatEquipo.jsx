@@ -61,7 +61,7 @@ export default function ChatEquipo({ T, onInmersivo }) {
   const txt    = T?.txt    || (isLight ? "#0B1220" : "#E2E8F0");
   const txt2   = T?.txt2   || (isLight ? "#3B4A61" : "#8B99AE");
   const txt3   = T?.txt3   || (isLight ? "#7A8699" : "#4A5568");
-  const accent = T?.accent || (isLight ? "#0D9A76" : "#6EE7C2");
+  const accent = T?.accent || (isLight ? "#006F91" : "#00D1FF");
   const glass  = T?.glass  || (isLight ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.032)");
   const bd     = T?.border || (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)");
 
