@@ -1,0 +1,19 @@
+{
+  "scope": "Refinamiento existente del sitio público; sistema de marketing propio, no Rails.",
+  "passes": {
+    "detector.json": [
+      "FeatureMotion.jsx",
+      "FeatureMotion.css",
+      "LandingMarketing.jsx",
+      "LandingMarketing.css"
+    ],
+    "detector-module.json": [
+      "ModuleShowcase.css"
+    ]
+  },
+  "errors": 0,
+  "warnings": [
+    "Switzer e Inter se comparan con el DESIGN.md global de Rails; declaradas en docs/diseno/marketing/DESIGN.md."
+  ],
+  "assets": "No se producen ni modifican rasters de producto; se preservan los seis WebP reales y sus metadatos."
+}

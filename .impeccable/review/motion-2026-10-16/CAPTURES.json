@@ -1,0 +1,606 @@
+{
+  "completed": true,
+  "previewUrl": "http://127.0.0.1:5304/",
+  "capturedAt": "2026-10-16T19:31:48.869Z",
+  "browserSession": "motion-captures",
+  "captureRound": 2,
+  "confirmation": "Final SVG branches start at y202 below hub labels; layout and behavior unchanged",
+  "captureMethod": "Playwright CLI fullPage from scrollY=0; section crops derived from fullPage document coordinates",
+  "reducedMotion": "reduce",
+  "blockedBeforeNavigation": "**supabase.co**",
+  "selectedModule": "CRM",
+  "fonts": {
+    "display": "\"Stratos Switzer\", \"Stratos Inter\", sans-serif",
+    "body": "\"Stratos Inter\", sans-serif",
+    "switzerLoaded": true,
+    "interLoaded": true,
+    "faces": [
+      {
+        "family": "Stratos Switzer",
+        "weight": "100 900",
+        "style": "normal",
+        "status": "loaded"
+      },
+      {
+        "family": "Stratos Inter",
+        "weight": "100 900",
+        "style": "normal",
+        "status": "loaded"
+      }
+    ],
+    "files": [
+      "http://127.0.0.1:5304/fonts/marketing/switzer-variable.woff2",
+      "http://127.0.0.1:5304/fonts/marketing/inter-variable.woff2"
+    ]
+  },
+  "sources": [
+    {
+      "url": "http://127.0.0.1:5304/branding/stratos-logo-web-20261016.webp",
+      "width": 192,
+      "height": 192,
+      "loaded": true
+    },
+    {
+      "url": "http://127.0.0.1:5304/marketing/modules/framed-20261016/copilot.webp",
+      "width": 1440,
+      "height": 1020,
+      "loaded": true
+    },
+    {
+      "url": "http://127.0.0.1:5304/marketing/modules/framed-20261016/crm.webp",
+      "width": 1440,
+      "height": 1020,
+      "loaded": true
+    },
+    {
+      "url": "http://127.0.0.1:5304/marketing/modules/framed-20261016/mi-espacio.webp",
+      "width": 1440,
+      "height": 1020,
+      "loaded": true
+    },
+    {
+      "url": "http://127.0.0.1:5304/marketing/modules/framed-20261016/metricas.webp",
+      "width": 1440,
+      "height": 1020,
+      "loaded": true
+    },
+    {
+      "url": "http://127.0.0.1:5304/marketing/modules/framed-20261016/comando.webp",
+      "width": 1440,
+      "height": 1020,
+      "loaded": true
+    },
+    {
+      "url": "http://127.0.0.1:5304/marketing/modules/framed-20261016/iagents.webp",
+      "width": 1440,
+      "height": 1020,
+      "loaded": true
+    },
+    {
+      "url": "http://127.0.0.1:5304/marketing/modules/framed-20261016/copilot.webp",
+      "width": 1440,
+      "height": 1020,
+      "loaded": true
+    },
+    {
+      "url": "http://127.0.0.1:5304/branding/stratos-logo-web-20261016.webp",
+      "width": 192,
+      "height": 192,
+      "loaded": true
+    },
+    {
+      "url": "http://127.0.0.1:5304/branding/stratos-logo-web-20261016.webp",
+      "width": 192,
+      "height": 192,
+      "loaded": true
+    },
+    {
+      "url": "http://127.0.0.1:5304/branding/stratos-logo-web-20261016.webp",
+      "width": 192,
+      "height": 192,
+      "loaded": true
+    }
+  ],
+  "views": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "path": "/Users/ivanrodriguezruelas/stratos-ai-application/.impeccable/review/motion-2026-10-16/desktop.png",
+      "scrollX": 0,
+      "scrollY": 0,
+      "documentWidth": 1440,
+      "documentHeight": 8815,
+      "headlinePaused": "true",
+      "galleryPaused": "true",
+      "selectedModule": "CRM",
+      "sections": {
+        "feature-motion": {
+          "x": 160,
+          "y": 2928,
+          "width": 1120,
+          "height": 1022
+        },
+        "gallery": {
+          "x": 160,
+          "y": 460,
+          "width": 1120,
+          "height": 926
+        }
+      },
+      "labelConfirmation": [
+        {
+          "hub": "Copilot",
+          "verticalVisible": false,
+          "labelBottom": 3621.34375,
+          "branchTop": null,
+          "clearance": null,
+          "paths": [
+            "M150 202C150 220 47 220 47 245",
+            "M150 202V245",
+            "M150 202C150 220 253 220 253 245"
+          ],
+          "clear": null
+        },
+        {
+          "hub": "Comando",
+          "verticalVisible": false,
+          "labelBottom": 3621.34375,
+          "branchTop": null,
+          "clearance": null,
+          "paths": [
+            "M150 202C150 220 47 220 47 245",
+            "M150 202V245",
+            "M150 202C150 220 253 220 253 245"
+          ],
+          "clear": null
+        }
+      ]
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "height": 844,
+      "path": "/Users/ivanrodriguezruelas/stratos-ai-application/.impeccable/review/motion-2026-10-16/mobile.png",
+      "scrollX": 0,
+      "scrollY": 0,
+      "documentWidth": 390,
+      "documentHeight": 12749,
+      "headlinePaused": "true",
+      "galleryPaused": "true",
+      "selectedModule": "CRM",
+      "sections": {
+        "feature-motion": {
+          "x": 0,
+          "y": 3394,
+          "width": 390,
+          "height": 1674
+        },
+        "gallery": {
+          "x": 0,
+          "y": 565,
+          "width": 390,
+          "height": 1248
+        }
+      },
+      "labelConfirmation": [
+        {
+          "hub": "Copilot",
+          "verticalVisible": true,
+          "labelBottom": 4076.296875,
+          "branchTop": 4083.109375,
+          "clearance": 6.8125,
+          "paths": [
+            "M150 202C150 220 47 220 47 245",
+            "M150 202V245",
+            "M150 202C150 220 253 220 253 245"
+          ],
+          "clear": true
+        },
+        {
+          "hub": "Comando",
+          "verticalVisible": true,
+          "labelBottom": 4705.109375,
+          "branchTop": 4711.921875,
+          "clearance": 6.8125,
+          "paths": [
+            "M150 202C150 220 47 220 47 245",
+            "M150 202V245",
+            "M150 202C150 220 253 220 253 245"
+          ],
+          "clear": true
+        }
+      ]
+    },
+    {
+      "name": "user-320",
+      "width": 320,
+      "height": 812,
+      "path": "/Users/ivanrodriguezruelas/stratos-ai-application/.impeccable/review/motion-2026-10-16/user-320.png",
+      "scrollX": 0,
+      "scrollY": 0,
+      "documentWidth": 320,
+      "documentHeight": 13272,
+      "headlinePaused": "true",
+      "galleryPaused": "true",
+      "selectedModule": "CRM",
+      "sections": {
+        "feature-motion": {
+          "x": 0,
+          "y": 3373,
+          "width": 320,
+          "height": 1772
+        },
+        "gallery": {
+          "x": 0,
+          "y": 546,
+          "width": 320,
+          "height": 1198
+        }
+      },
+      "labelConfirmation": [
+        {
+          "hub": "Copilot",
+          "verticalVisible": true,
+          "labelBottom": 4124.609375,
+          "branchTop": 4131.421875,
+          "clearance": 6.8125,
+          "paths": [
+            "M150 202C150 220 47 220 47 245",
+            "M150 202V245",
+            "M150 202C150 220 253 220 253 245"
+          ],
+          "clear": true
+        },
+        {
+          "hub": "Comando",
+          "verticalVisible": true,
+          "labelBottom": 4786.671875,
+          "branchTop": 4793.484375,
+          "clearance": 6.8125,
+          "paths": [
+            "M150 202C150 220 47 220 47 245",
+            "M150 202V245",
+            "M150 202C150 220 253 220 253 245"
+          ],
+          "clear": true
+        }
+      ]
+    },
+    {
+      "name": "tablet",
+      "width": 834,
+      "height": 1112,
+      "path": "/Users/ivanrodriguezruelas/stratos-ai-application/.impeccable/review/motion-2026-10-16/tablet.png",
+      "scrollX": 0,
+      "scrollY": 0,
+      "documentWidth": 834,
+      "documentHeight": 9171,
+      "headlinePaused": "true",
+      "galleryPaused": "true",
+      "selectedModule": "CRM",
+      "sections": {
+        "feature-motion": {
+          "x": 0,
+          "y": 3062,
+          "width": 834,
+          "height": 1047
+        },
+        "gallery": {
+          "x": 0,
+          "y": 460,
+          "width": 834,
+          "height": 1210
+        }
+      },
+      "labelConfirmation": [
+        {
+          "hub": "Copilot",
+          "verticalVisible": true,
+          "labelBottom": 3746.140625,
+          "branchTop": 3752.953125,
+          "clearance": 6.8125,
+          "paths": [
+            "M150 202C150 220 47 220 47 245",
+            "M150 202V245",
+            "M150 202C150 220 253 220 253 245"
+          ],
+          "clear": true
+        },
+        {
+          "hub": "Comando",
+          "verticalVisible": true,
+          "labelBottom": 3746.140625,
+          "branchTop": 3752.953125,
+          "clearance": 6.8125,
+          "paths": [
+            "M150 202C150 220 47 220 47 245",
+            "M150 202V245",
+            "M150 202C150 220 253 220 253 245"
+          ],
+          "clear": true
+        }
+      ]
+    }
+  ],
+  "buildManifest": {
+    "project": "stratos-ai-application",
+    "projectId": "prj_Epv30SFnQmJGnxy3LdYLKV8NwDLi",
+    "repository": "iagents00/stratos-ai-application",
+    "schemaVersion": 1,
+    "commit": "8ac2168ef41cbe854ca1b7e3c70f40d8f98a95dd",
+    "builtAt": "2026-10-16T19:29:16.200Z",
+    "serviceWorker": "stratos-v445",
+    "dirty": true,
+    "deployment": null
+  },
+  "buildIndexSHA256": "0ef95752e002f5b1ebf3f4ec1478b2181ecae19c152e1f3f60bab6bef681ea03",
+  "artifacts": [
+    {
+      "file": "desktop.png",
+      "path": "/Users/ivanrodriguezruelas/stratos-ai-application/.impeccable/review/motion-2026-10-16/desktop.png",
+      "official": true,
+      "kind": "fullPage",
+      "width": 1440,
+      "height": 8815,
+      "documentBounds": null,
+      "meanRGB": [
+        238.0178746770026,
+        239.7697907606983,
+        241.50968149303586
+      ],
+      "standardDeviationRGB": [
+        54.52719289299944,
+        50.33240153500435,
+        46.00436870099194
+      ],
+      "notBlank": true,
+      "sha256": "132cd31b1f3117d15d6db543169299082df9e578cfa53690370bfba931354ab3",
+      "visuallyVerified": true
+    },
+    {
+      "file": "desktop-feature-motion.png",
+      "path": "/Users/ivanrodriguezruelas/stratos-ai-application/.impeccable/review/motion-2026-10-16/desktop-feature-motion.png",
+      "official": true,
+      "kind": "documentCrop",
+      "width": 1120,
+      "height": 1022,
+      "documentBounds": [
+        160,
+        2928,
+        1280,
+        3950
+      ],
+      "meanRGB": [
+        242.33957925636008,
+        243.5472331912217,
+        244.77035574503773
+      ],
+      "standardDeviationRGB": [
+        39.21483499794163,
+        36.103645979604536,
+        32.864084416696535
+      ],
+      "notBlank": true,
+      "sha256": "98a21929f227acf12da31f1cab569c7fa83e879b363a001a5926582b2ffe541a",
+      "visuallyVerified": true
+    },
+    {
+      "file": "desktop-gallery.png",
+      "path": "/Users/ivanrodriguezruelas/stratos-ai-application/.impeccable/review/motion-2026-10-16/desktop-gallery.png",
+      "official": true,
+      "kind": "documentCrop",
+      "width": 1120,
+      "height": 926,
+      "documentBounds": [
+        160,
+        460,
+        1280,
+        1386
+      ],
+      "meanRGB": [
+        244.2791152422092,
+        246.2034441530392,
+        247.43431811169393
+      ],
+      "standardDeviationRGB": [
+        39.87103301637605,
+        32.52210721445985,
+        28.848433537134163
+      ],
+      "notBlank": true,
+      "sha256": "85472cfc4901db6e6064e268608fff08b7c2e0d2d19c05394974f57dc72c5fb3",
+      "visuallyVerified": true
+    },
+    {
+      "file": "mobile.png",
+      "path": "/Users/ivanrodriguezruelas/stratos-ai-application/.impeccable/review/motion-2026-10-16/mobile.png",
+      "official": true,
+      "kind": "fullPage",
+      "width": 390,
+      "height": 12749,
+      "documentBounds": null,
+      "meanRGB": [
+        231.683199486737,
+        233.82972219037794,
+        236.04180860841777
+      ],
+      "standardDeviationRGB": [
+        64.0562010403302,
+        59.204525166685016,
+        54.07176345510401
+      ],
+      "notBlank": true,
+      "sha256": "15f0e8ed651f628e29151b7d17de924596fcdefa797bb210efdd30d9a6c1fd0d",
+      "visuallyVerified": true
+    },
+    {
+      "file": "mobile-feature-motion.png",
+      "path": "/Users/ivanrodriguezruelas/stratos-ai-application/.impeccable/review/motion-2026-10-16/mobile-feature-motion.png",
+      "official": true,
+      "kind": "documentCrop",
+      "width": 390,
+      "height": 1674,
+      "documentBounds": [
+        0,
+        3394,
+        390,
+        5068
+      ],
+      "meanRGB": [
+        239.29336764390527,
+        240.8277364212848,
+        242.3615767545875
+      ],
+      "standardDeviationRGB": [
+        43.79119212370867,
+        40.1683269468012,
+        36.48062202599648
+      ],
+      "notBlank": true,
+      "sha256": "b4c4603f1bce7ac5f9e248131053c3a666788401f84340d7071c2c057adcc9e1",
+      "visuallyVerified": true
+    },
+    {
+      "file": "mobile-gallery.png",
+      "path": "/Users/ivanrodriguezruelas/stratos-ai-application/.impeccable/review/motion-2026-10-16/mobile-gallery.png",
+      "official": true,
+      "kind": "documentCrop",
+      "width": 390,
+      "height": 1248,
+      "documentBounds": [
+        0,
+        565,
+        390,
+        1813
+      ],
+      "meanRGB": [
+        242.1675254766601,
+        243.88865055884287,
+        245.21846441485866
+      ],
+      "standardDeviationRGB": [
+        44.77226499000234,
+        39.14305735679729,
+        35.230739006569344
+      ],
+      "notBlank": true,
+      "sha256": "63bca51a526a8f8d431ea08c02a5cc89a4b8d1e855def933f6850986844fecb8",
+      "visuallyVerified": true
+    },
+    {
+      "file": "user-320.png",
+      "path": "/Users/ivanrodriguezruelas/stratos-ai-application/.impeccable/review/motion-2026-10-16/user-320.png",
+      "official": true,
+      "kind": "fullPage",
+      "width": 320,
+      "height": 13272,
+      "documentBounds": null,
+      "meanRGB": [
+        229.73549672242314,
+        232.01945190061784,
+        234.39264169868898
+      ],
+      "standardDeviationRGB": [
+        66.55971715979103,
+        61.570844547913666,
+        56.239495095715384
+      ],
+      "notBlank": true,
+      "sha256": "0d58cc65a7e3a543e7b19e749e898b5b4bfc92249041bf39b565962bfff89540",
+      "visuallyVerified": true
+    },
+    {
+      "file": "user-320-feature-motion.png",
+      "path": "/Users/ivanrodriguezruelas/stratos-ai-application/.impeccable/review/motion-2026-10-16/user-320-feature-motion.png",
+      "official": false,
+      "kind": "documentCrop",
+      "width": 320,
+      "height": 1772,
+      "documentBounds": [
+        0,
+        3373,
+        320,
+        5145
+      ],
+      "meanRGB": [
+        238.95140730812642,
+        240.52654839164785,
+        242.09451361455982
+      ],
+      "standardDeviationRGB": [
+        44.83620819748199,
+        41.09072528522945,
+        37.303036390280184
+      ],
+      "notBlank": true,
+      "sha256": "13b97fbf616b829e99b7c7cc46dff34d6d678784ae3efb37f49e11a0cf8089db",
+      "visuallyVerified": true
+    },
+    {
+      "file": "tablet.png",
+      "path": "/Users/ivanrodriguezruelas/stratos-ai-application/.impeccable/review/motion-2026-10-16/tablet.png",
+      "official": true,
+      "kind": "fullPage",
+      "width": 834,
+      "height": 9171,
+      "documentBounds": null,
+      "meanRGB": [
+        233.6586776375432,
+        235.82715129826136,
+        237.9309924647786
+      ],
+      "standardDeviationRGB": [
+        61.21245928099592,
+        56.29573016912757,
+        51.38853571737632
+      ],
+      "notBlank": true,
+      "sha256": "e230d69af9488e3e2052704863c53a7ed61cea71bab20dd5de0790002abacbe2",
+      "visuallyVerified": true
+    },
+    {
+      "file": "tablet-feature-motion.png",
+      "path": "/Users/ivanrodriguezruelas/stratos-ai-application/.impeccable/review/motion-2026-10-16/tablet-feature-motion.png",
+      "official": false,
+      "kind": "documentCrop",
+      "width": 834,
+      "height": 1047,
+      "documentBounds": [
+        0,
+        3062,
+        834,
+        4109
+      ],
+      "meanRGB": [
+        242.70741343887642,
+        243.92137636595595,
+        245.1357080524692
+      ],
+      "standardDeviationRGB": [
+        38.072080165542474,
+        34.894515072146184,
+        31.664276461933405
+      ],
+      "notBlank": true,
+      "sha256": "be41e644921f635825524617250477667de9bbe17a33545757133efd46033b20",
+      "visuallyVerified": true
+    }
+  ],
+  "visualValidation": {
+    "completed": true,
+    "confirmationRounds": 1,
+    "captureRoundsTotal": 2,
+    "checks": [
+      "The same eight official filenames have been overwritten from the isolated corrected build",
+      "Four fullPage dimensions remain unchanged",
+      "All captures originate at document scrollY=0 with document-coordinate crops",
+      "Pixel variation confirms no image is blank or black",
+      "Viewed all four updated fullPage PNGs and all six section crops; no blank or black screenshot",
+      "Copilot and Comando labels are visibly unobstructed on mobile, user-320 and tablet; vertical branches begin 6.8125 CSS px below each label box",
+      "All official section crops contain complete content with no sticky header overlay",
+      "Only one confirmation capture round was performed after the independent review fix"
+    ],
+    "labelClearanceMinCSSPixels": 6.8125
+  }
+}

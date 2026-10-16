@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-16T17:23:56.644Z",
+  "generatedAt": "2026-10-16T19:34:37.074925+00:00",
   "title": "Design System: Stratos AI — sitio público",
   "extensions": {
     "motion": [
@@ -10,9 +10,24 @@
         "purpose": "Rotación de módulos; pausada por hover, foco, fuera de viewport, documento oculto, selección manual o movimiento reducido."
       },
       {
-        "name": "reveal",
+        "name": "headline-reveal",
         "value": "180ms ease-out",
-        "purpose": "Aparición del panel y transición de la frase; desactivada con movimiento reducido."
+        "purpose": "Transición de la frase; desactivada con movimiento reducido."
+      },
+      {
+        "name": "module-reveal",
+        "value": "180ms cubic-bezier(.23, 1, .32, 1)",
+        "purpose": "Aparición del panel; sin animación con foco dentro o movimiento reducido."
+      },
+      {
+        "name": "module-press",
+        "value": "120ms cubic-bezier(.23, 1, .32, 1)",
+        "purpose": "scale(.97) de pestañas y pausa al presionar; sin transform con foco o movimiento reducido."
+      },
+      {
+        "name": "flow-stroke",
+        "value": "5.6s linear × 2",
+        "purpose": "Dos recorridos SVG limitados; 11.44s incluida la demora final, después estado quieto y Repetir animación. Pausa/reanudación conserva avance; repetir remonta solo el arte del diagrama."
       }
     ],
     "breakpoints": [
@@ -21,13 +36,24 @@
         "value": "1029px"
       },
       {
+        "name": "showcase-stack",
+        "value": "900px",
+        "purpose": "Captura y texto apilados; capacidades en tres columnas."
+      },
+      {
         "name": "landing-stack",
         "value": "760px",
         "purpose": "Control de pausa del titular estático, flex y margin 8px auto 0."
       },
       {
+        "name": "showcase-mobile",
+        "value": "700px",
+        "purpose": "Seis cápsulas visibles en 3×2 y capacidades en una columna."
+      },
+      {
         "name": "mobile",
-        "value": "480px"
+        "value": "480px",
+        "purpose": "La frase del hero reserva 2.2em para evitar saltos entre una y dos líneas."
       },
       {
         "name": "narrow",
@@ -38,8 +64,9 @@
       "value": "2px solid #0A1B2E",
       "offset": "4px",
       "showcaseOffset": "3px",
-      "tabOffset": "-3px",
-      "darkSurfaceColor": "#7EE9FF"
+      "tabOffset": "-4px",
+      "darkSurfaceColor": "#7EE9FF",
+      "tabSelectedColor": "#FFFFFF"
     },
     "guards": {
       "boundary": "Solo landing marketing. Conserva DESIGN.md, PRODUCT.md y .impeccable/design.json de Rails en raíz.",
@@ -60,8 +87,26 @@
         "branding/stratos-logo-web-20261016.webp.json"
       ],
       "fontLicenses": "Switzer FFL: binario ignorado y descargado en preparación web con hash fijado. Inter OFL: original completo versionado con licencia. Ver public/fonts/marketing/README.md.",
-      "assets": "Seis composiciones lossless 1440×1020 en public/marketing/modules/framed-20261016/*.webp; originales PNG a escala 1:1 en x36/y36 (Métricas x58/y92), interior RGB idéntico en el área preservada y marco blanco/translúcido de scripts/marketing-screenshot-frame.html, sin IA. La figura no añade fondo, radio ni altura mínima; beneficios usa blanco y padding de imagen cero. Procedencia y límite del harness iAgents en public/marketing/modules/README.md.",
-      "review": ".impeccable/review/marketing-2026-10-16/REVIEW.md"
-    }
+      "assets": "Seis composiciones lossless 1440×1020 en public/marketing/modules/framed-20261016/*.webp; originales PNG a escala 1:1 en x36/y36 (Métricas x58/y92), interior RGB idéntico en el área preservada y marco blanco/translúcido de scripts/marketing-screenshot-frame.html, sin IA. La figura no añade fondo, radio ni altura mínima; la galería real y el flujo manual conservan las capturas. Procedencia y límite del harness iAgents en public/marketing/modules/README.md.",
+      "review": ".impeccable/review/motion-2026-10-16/REVIEW.md",
+      "flowTruth": "Consulta → contexto: Consultar cartera / Copilot / Clientes, Pendientes, Próximos pasos. Actividad registrada → visibilidad: Actividad registrada / Comando / Cartera, Equipo, Métricas. Flujos ilustrativos sujetos a permisos/configuración; no prometen acciones, envíos ni guardados autónomos.",
+      "flowLifecycle": "Dos recorridos limitados para Safari; detener fuera de viewport, documento oculto o movimiento reducido. Pausa manual, reanudación y repetición. HTML/CSS/SVG nativos, sin GIF pesado.",
+      "historicalReview": ".impeccable/review/marketing-2026-10-16/REVIEW.md",
+      "reviewStatus": "ship de la confirmación del único fix; revisión independiente mediante subagente general. 24 comprobaciones funcionales confirmadas. Visibilidad real de Chromium no verificada; listener sintético aprobado."
+    },
+    "shadows": [
+      {
+        "name": "flow-nodes",
+        "value": "0 3px 8px rgba(10,27,46,.05)",
+        "purpose": "Sombra local de entradas e iconos de salida sobre el gris claro de la tarjeta."
+      }
+    ],
+    "containerQueries": [
+      {
+        "name": "flow-vertical",
+        "value": "385px",
+        "purpose": "Entrada, hub y salidas con conectores verticales según el ancho del diagrama."
+      }
+    ]
   }
 }

@@ -1,0 +1,20 @@
+{
+  "method": "synthetic listener dispatch with temporarily overridden document.hidden",
+  "genuineVisibilityChange": false,
+  "a": {
+    "time": 33.34599999999455,
+    "state": "paused",
+    "running": "false"
+  },
+  "b": {
+    "time": 33.34599999999455,
+    "state": "paused",
+    "running": "false"
+  },
+  "c": {
+    "time": 400.04599999999255,
+    "state": "running",
+    "running": "true"
+  },
+  "pass": true
+}

@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v444'; // v444: capturas reales con marco translúcido sobre fondo blanco.
+const CACHE_VERSION = 'stratos-v445'; // v445: flujos motion y galería navy, pulidos para móvil y escritorio.
 // const CACHE_VERSION = 'stratos-v424'; // v424: ficha de Google Play (textos + graficos de tienda)
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;

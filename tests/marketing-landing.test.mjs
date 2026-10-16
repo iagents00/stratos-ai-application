@@ -39,11 +39,13 @@ test('the public site preserves commercial terms, contact and fixed login routes
 });
 
 test('marketing styles cannot alter authenticated app surfaces', () => {
-  const css = postcss.parse(readFileSync(new URL('../src/landing/LandingMarketing.css', import.meta.url), 'utf8'));
-  css.walkRules(rule => {
-    if (rule.parent.type === 'atrule' && rule.parent.name.endsWith('keyframes')) return;
-    for (const selector of rule.selectors) assert.match(selector, /^(?:\.stratos-marketing(?:\s|:|\[|$)|body\.stratos-public-site(?:\s|$))/, selector);
-  });
+  for (const file of ['LandingMarketing.css', 'FeatureMotion.css']) {
+    const css = postcss.parse(readFileSync(new URL(`../src/landing/${file}`, import.meta.url), 'utf8'));
+    css.walkRules(rule => {
+      if (rule.parent.type === 'atrule' && rule.parent.name.endsWith('keyframes')) return;
+      for (const selector of rule.selectors) assert.match(selector, /^(?:\.stratos-marketing(?:\s|:|\[|$)|body\.stratos-public-site(?:\s|$))/, selector);
+    });
+  }
   const config = readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
   for (const path of ['marketing', 'fonts/marketing', 'branding/stratos-logo-web-20261016.webp']) assert.ok(config.includes(`'${path}'`), `Native build exclusion ${path}`);
 });

@@ -18,7 +18,7 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
 .stratos-marketing button:disabled { cursor: not-allowed; opacity: .55; }
 .stratos-marketing img { display: block; max-width: 100%; height: auto; }
 .stratos-marketing svg { flex-shrink: 0; }
-.stratos-marketing ::selection { color: var(--smk-ink); background: var(--smk-cyan-soft); }
+.stratos-marketing ::selection { color: var(--smk-ink); background: #E5EBF0; }
 .stratos-marketing * { scrollbar-color: #A3B3C1 transparent; }
 .stratos-marketing *::-webkit-scrollbar-thumb { background-color: #A3B3C1; }
 .stratos-marketing [id] { scroll-margin-top: 96px; }
@@ -41,7 +41,7 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
 .stratos-marketing .smk-brand > span > span { color: var(--smk-navy); font-weight: 400; }
 .stratos-marketing .smk-desktop-links { display: flex; flex-wrap: nowrap; align-items: center; gap: 24px; }
 .stratos-marketing .smk-desktop-links > a { display: inline-flex; align-items: center; min-height: 48px; white-space: nowrap; color: var(--smk-muted); font-size: 13px; font-weight: 500; }
-.stratos-marketing .smk-desktop-links > a:hover { color: var(--smk-ink); text-decoration: underline; text-decoration-color: var(--smk-cyan); text-decoration-thickness: 2px; }
+.stratos-marketing .smk-desktop-links > a:hover { color: var(--smk-ink); text-decoration: underline; text-decoration-color: var(--smk-ink); text-decoration-thickness: 2px; }
 .stratos-marketing .smk-nav-actions { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
 .stratos-marketing .smk-nav-actions > a:not(.smk-button) { display: inline-flex; align-items: center; min-height: 48px; font-size: 13px; font-weight: 500; white-space: nowrap; }
 .stratos-marketing .smk-nav-actions > a:not(.smk-button):hover { text-decoration: underline; }
@@ -88,19 +88,6 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
 .stratos-marketing .smk-workflow-stage h3 { margin-bottom: 18px; }
 .stratos-marketing .smk-workflow-stage p { color: var(--smk-muted); font-size: 15px; line-height: 1.7; max-width: 36ch; }
 
-.stratos-marketing .smk-benefit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
-.stratos-marketing .smk-benefit-grid > article { min-width: 0; overflow: hidden; border-radius: 24px; }
-.stratos-marketing .smk-benefit-visual { display: flex; flex-direction: column; background: #fff; }
-.stratos-marketing .smk-benefit-visual img { width: 100%; height: auto; object-fit: contain; padding: 0; }
-.stratos-marketing .smk-benefit-visual > div { padding: 28px 32px 32px; }
-.stratos-marketing .smk-benefit-visual h3 { font-size: 28px; }
-.stratos-marketing .smk-benefit-visual p { color: var(--smk-muted); font-size: 15px; line-height: 1.65; margin-top: 14px; max-width: 46ch; }
-.stratos-marketing .smk-benefit-text { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; min-height: 360px; padding: 48px; background: #F1F7FA; }
-.stratos-marketing .smk-benefit-text h3 { font-size: 36px; line-height: 1.12; }
-.stratos-marketing .smk-benefit-text p { color: var(--smk-muted); font-size: 16px; line-height: 1.7; margin-top: 20px; max-width: 40ch; }
-.stratos-marketing .smk-benefit-text a { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; margin-top: 24px; font-size: 14px; font-weight: 500; text-decoration: underline; text-decoration-color: #A3B3C1; }
-.stratos-marketing .smk-benefit-text a:hover { text-decoration-color: var(--smk-ink); }
-.stratos-marketing .smk-muted-panel { background: var(--smk-surface); }
 .stratos-marketing .smk-call-center { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); align-items: center; gap: 64px; width: min(1072px, calc(100% - 48px)); padding: 48px; border-radius: 24px; background: var(--smk-ink); color: #fff; }
 .stratos-marketing .smk-call-center > div > svg { margin-bottom: 24px; color: var(--smk-cyan-soft); }
 .stratos-marketing .smk-call-center h2 { font-size: 40px; line-height: 1.12; }
@@ -202,7 +189,6 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
   .stratos-marketing .smk-price-grid { gap: 16px; }
   .stratos-marketing .smk-price-card { padding: 24px 20px; }
   .stratos-marketing .smk-sector-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px; }
-  .stratos-marketing .smk-benefit-text { padding: 32px; }
 }
 @media (max-width: 760px) {
   .stratos-marketing .smk-section { padding-block: 64px; }
@@ -221,9 +207,6 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
   .stratos-marketing .smk-workflow-stage { grid-template-columns: minmax(0, 1fr); gap: 28px; padding: 20px; }
   .stratos-marketing .smk-workflow-stage > div { padding: 0 8px 8px; }
   .stratos-marketing .smk-workflow-stage h3 { font-size: 28px; }
-  .stratos-marketing .smk-benefit-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
-  .stratos-marketing .smk-benefit-text { min-height: 300px; }
-  .stratos-marketing .smk-benefit-text h3 { font-size: 32px; }
   .stratos-marketing .smk-call-center { grid-template-columns: minmax(0, 1fr); gap: 28px; padding: 32px; }
   .stratos-marketing .smk-call-center h2 { font-size: 34px; }
   .stratos-marketing .smk-call-center li { padding-block: 16px; }
@@ -249,6 +232,7 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
   .stratos-marketing .smk-hero { padding-top: 44px; }
   .stratos-marketing .smk-hero h1 { font-size: clamp(32px, 9.3vw, 38px); line-height: 1.1; }
   .stratos-marketing .smk-hero-heading { padding-bottom: 0; }
+  .stratos-marketing .smk-rotating-word { min-height: 2.2em; display: grid !important; align-items: center; }
   .stratos-marketing .smk-hero > p { font-size: 16px; line-height: 1.65; padding-inline: 16px; }
   .stratos-marketing .smk-actions { gap: 10px; }
   .stratos-marketing .smk-actions > .smk-button { flex: 1 1 100%; }
@@ -261,9 +245,6 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
   .stratos-marketing .smk-workflow-tabs { gap: 6px; }
   .stratos-marketing .smk-workflow-tabs button { min-height: 44px; padding: 10px 12px; font-size: 13px; gap: 6px; }
   .stratos-marketing .smk-workflow-stage { padding: 16px; }
-  .stratos-marketing .smk-benefit-visual > div { padding: 24px; }
-  .stratos-marketing .smk-benefit-text { padding: 28px 24px; }
-  .stratos-marketing .smk-benefit-text h3 { font-size: 30px; }
   .stratos-marketing .smk-call-center { width: calc(100% - 48px); padding: 28px 24px; }
   .stratos-marketing .smk-call-center h2 { font-size: 30px; }
   .stratos-marketing .smk-call-center p { font-size: 15px; }

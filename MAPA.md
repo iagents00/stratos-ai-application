@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**262 archivos · 81.048 líneas**
+**264 archivos · 81.181 líneas**
 
 ---
 
@@ -427,17 +427,19 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `DataDeletion.jsx` | 554 | _sin describir_ |
 | `PricingScreen.jsx` | 552 | _sin describir_ |
 | `DukeLeadRouter.jsx` | 343 | _sin describir_ |
-| `LandingMarketing.css` | 299 | _sin describir_ |
 | `ManualGasil.jsx` | 285 | _sin describir_ |
 | `ManualNSG.jsx` | 285 | _sin describir_ |
+| `LandingMarketing.css` | 280 | _sin describir_ |
 | `ManualLegacy.jsx` | 246 | _sin describir_ |
 | `ManualBrasa.jsx` | 235 | _sin describir_ |
 | `ManualMuebleria.jsx` | 224 | _sin describir_ |
 | `LoginScreenNative.jsx` | 183 | _sin describir_ |
 | `marketing-content.js` | 108 | _sin describir_ |
+| `LandingMarketing.jsx` | 97 | _sin describir_ |
 | `ModuleShowcase.jsx` | 97 | _sin describir_ |
-| `LandingMarketing.jsx` | 96 | _sin describir_ |
-| `ModuleShowcase.css` | 58 | _sin describir_ |
+| `FeatureMotion.jsx` | 81 | _sin describir_ |
+| `ModuleShowcase.css` | 68 | _sin describir_ |
+| `FeatureMotion.css` | 60 | _sin describir_ |
 
 ### `src/lib/`
 
@@ -811,13 +813,13 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/App.css` (321 líneas)
 - `src/app/features/Admin/PipelineConfiguratorAdmin.jsx` (312 líneas)
 - `src/clients/clinica-dental/config.js` (311 líneas)
-- `src/landing/LandingMarketing.css` (299 líneas)
 - `src/lib/lead-save.js` (288 líneas)
 - `src/app/features/Admin/PlatformAdminConsole.jsx` (285 líneas)
 - `src/landing/ManualGasil.jsx` (285 líneas)
 - `src/landing/ManualNSG.jsx` (285 líneas)
 - `src/app/views/ZoomControl/Graficas.jsx` (284 líneas)
 - `src/lib/native.js` (282 líneas)
+- `src/landing/LandingMarketing.css` (280 líneas)
 - `src/index.css` (278 líneas)
 - `src/clients/nsg/config.js` (270 líneas)
 - `src/lib/push-native.js` (265 líneas)
@@ -881,13 +883,14 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/Admin/CompanySetupAdmin.jsx` (99 líneas)
 - `src/app/constants/areas.js` (97 líneas)
 - `src/app/views/CRM/date-range.js` (97 líneas)
+- `src/landing/LandingMarketing.jsx` (97 líneas)
 - `src/landing/ModuleShowcase.jsx` (97 líneas)
-- `src/landing/LandingMarketing.jsx` (96 líneas)
 - `src/app/views/LandingPages/PublicLanding.jsx` (93 líneas)
 - `src/clients/tgenius/config.js` (90 líneas)
 - `src/app/features/Admin/RailsSettings.css` (86 líneas)
 - `src/lib/backup.js` (85 líneas)
 - `src/contexts/ClientOrgGuard.jsx` (83 líneas)
+- `src/landing/FeatureMotion.jsx` (81 líneas)
 - `src/clients/i-space/config.js` (80 líneas)
 - `src/lib/avisos-nativos.js` (79 líneas)
 - `src/lib/transcribir.js` (77 líneas)
@@ -897,6 +900,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/agenda.js` (71 líneas)
 - `src/contexts/ClientContext.jsx` (70 líneas)
 - `src/lib/supabase.js` (70 líneas)
+- `src/landing/ModuleShowcase.css` (68 líneas)
 - `src/app/components/MobileHeaderMenu.jsx` (66 líneas)
 - `src/contexts/TenantConfigGate.jsx` (64 líneas)
 - `src/app/views/CRM/command-report.js` (63 líneas)

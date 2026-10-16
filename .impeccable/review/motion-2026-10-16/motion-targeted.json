@@ -1,0 +1,59 @@
+{
+  "checks": [
+    {
+      "name": "flow pause retains progress",
+      "pass": true,
+      "data": {
+        "a": {
+          "time": 66.71199999766486,
+          "state": "paused"
+        },
+        "b": {
+          "time": 66.71199999766486,
+          "state": "paused"
+        },
+        "c": {
+          "time": 433.3119999976702,
+          "state": "running"
+        }
+      }
+    },
+    {
+      "name": "flow offscreen freezes",
+      "pass": true,
+      "data": {
+        "a": {
+          "time": 500.01199999766754,
+          "state": "paused"
+        },
+        "b": {
+          "time": 500.01199999766754,
+          "state": "paused"
+        }
+      }
+    },
+    {
+      "name": "flow actual minimized document hidden freezes",
+      "pass": false,
+      "error": "page.waitForFunction: Timeout 2500ms exceeded."
+    },
+    {
+      "name": "flow finite completion and replay",
+      "pass": true,
+      "data": {
+        "a": {
+          "time": 100.03199999999879,
+          "state": "running"
+        },
+        "b": {
+          "time": 500.06799999999885,
+          "state": "running"
+        },
+        "linkPreserved": true,
+        "artRemounted": true,
+        "focusRetained": true
+      }
+    }
+  ],
+  "pass": false
+}
