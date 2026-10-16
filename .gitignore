@@ -57,3 +57,7 @@ dd/
 output/playwright/
 
 supabase/.temp/
+
+# Fontshare FFL: self-host for our website; do not redistribute in this public repo.
+public/fonts/marketing/switzer-variable.woff2
+public/fonts/marketing/switzer-variable.woff2.*.tmp

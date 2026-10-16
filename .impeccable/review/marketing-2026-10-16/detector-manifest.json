@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-16",
+  "reports": {
+    "detector-module-showcase.json": {
+      "command": "/Users/ivanrodriguezruelas/.codex/skills/impeccable/scripts/impeccable detect --json src/landing/ModuleShowcase.jsx src/landing/ModuleShowcase.css",
+      "targets": [
+        "src/landing/ModuleShowcase.jsx",
+        "src/landing/ModuleShowcase.css"
+      ],
+      "exit_code": 0,
+      "findings": 12,
+      "warnings": 0,
+      "advisories": 12,
+      "preserved_from_original_tool_output": true
+    },
+    "detector-landing-css.json": {
+      "command": "/Users/ivanrodriguezruelas/.codex/skills/impeccable/scripts/impeccable detect --json src/landing/LandingMarketing.css",
+      "targets": [
+        "src/landing/LandingMarketing.css"
+      ],
+      "exit_code": 2,
+      "findings": 62,
+      "warnings": 2,
+      "advisories": 60,
+      "preserved_from_original_tool_output": true
+    }
+  },
+  "context": "Original detector output before the marketing-specific design documentation was finalized. The pinned marketing brief authorizes Switzer, Inter, navy/cyan, white backgrounds and the 24px panel radius."
+}
