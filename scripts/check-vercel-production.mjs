@@ -3,6 +3,7 @@ import { existsSync, lstatSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkProjectBoundary } from './check-project-boundary.mjs';
+import { MARKETING_FONT } from './marketing-font-spec.mjs';
 
 const repository = 'iagents00/stratos-ai-application';
 const sourceDirectories = ['src', 'public', 'api', 'server', 'scripts', 'tools', 'assets', 'tests', 'ops'];
@@ -15,6 +16,9 @@ export function canonicalJson(value) {
 }
 export function gitBlobHash(bytes) {
   return createHash('sha1').update(Buffer.from(`blob ${bytes.length}\0`)).update(bytes).digest('hex');
+}
+export function isApprovedGeneratedAsset(path, stats, sha256) {
+  return path === MARKETING_FONT.path && stats.isFile() && !stats.isSymbolicLink() && sha256 === MARKETING_FONT.sha256;
 }
 export function verifySourceTree(root, tree) {
   if (!Array.isArray(tree)) throw new Error('GitHub no devolvió el árbol de fuente.');
@@ -36,11 +40,19 @@ export function verifySourceTree(root, tree) {
   }
   const walk = directory => {
     if (!existsSync(resolve(root, directory))) return;
+    const directoryStats = lstatSync(resolve(root, directory));
+    if (!directoryStats.isDirectory() || directoryStats.isSymbolicLink()) throw new Error(`Directorio de fuente inseguro: ${directory}`);
     for (const entry of readdirSync(resolve(root, directory), { withFileTypes: true })) {
       if (entry.name === '.DS_Store') continue;
       const path = directory + '/' + entry.name;
       if (entry.isDirectory()) walk(path);
-      else if (!expected.has(path)) throw new Error(`Archivo ajeno a main en la fuente: ${path}`);
+      else if (!expected.has(path)) {
+        const local = resolve(root, path);
+        const stats = lstatSync(local);
+        const sha256 = path === MARKETING_FONT.path && stats.isFile() && !stats.isSymbolicLink()
+          ? createHash('sha256').update(readFileSync(local)).digest('hex') : null;
+        if (!isApprovedGeneratedAsset(path, stats, sha256)) throw new Error(`Archivo ajeno a main en la fuente: ${path}`);
+      }
     }
   };
   sourceDirectories.forEach(walk);
