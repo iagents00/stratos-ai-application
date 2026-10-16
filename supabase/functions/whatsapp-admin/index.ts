@@ -995,7 +995,8 @@ Deno.serve(async (req) => {
       }
       if (password.length < 12) return respond({ ok: false, error: "La contraseña debe tener al menos 12 caracteres." }, 400, origin);
       if (name.length > 120 || email.length > 254) return respond({ ok: false, error: "Nombre o correo demasiado largo." }, 400, origin);
-      const { data: org } = await admin.from("organizations").select("id,name,seats,meta_config").eq("id", organizationId).eq("active", true).maybeSingle();
+      const { data: org, error: orgError } = await admin.from("organizations").select("id,name,seats,meta_config").eq("id", organizationId).eq("active", true).maybeSingle();
+      if (orgError) throw orgError;
       if (!org) return respond({ ok: false, error: "La empresa no existe o está inactiva." }, 404, origin);
       if (org.meta_config?.onboarding?.createdFrom === "whatsapp_admin"
           && org.meta_config?.platform?.kind !== "partner"
@@ -1007,8 +1008,12 @@ Deno.serve(async (req) => {
         .eq("organization_id", organizationId)
         .eq("active", true);
       if (countError) throw countError;
-      if ((activeUsers ?? 0) === 0 && org.meta_config?.onboarding?.createdFrom === "whatsapp_admin" && role !== "admin") {
-        return respond({ ok: false, error: "Crea primero al administrador de la empresa." }, 400, origin);
+      if (org.meta_config?.onboarding?.createdFrom === "whatsapp_admin" && role !== "admin") {
+        const { count: administrators, error: adminCountError } = await admin.from("profiles")
+          .select("id", { count: "exact", head: true }).eq("organization_id", organizationId)
+          .eq("active", true).in("role", ["admin", "super_admin"]);
+        if (adminCountError) throw adminCountError;
+        if (!administrators) return respond({ ok: false, error: "Crea primero al administrador de la empresa." }, 400, origin);
       }
       if ((activeUsers ?? 0) >= Number(org.seats || 0)) {
         return respond({ ok: false, error: `${org.name} ya utiliza sus ${org.seats} licencias. Amplía el límite o desactiva un usuario.` }, 409, origin);

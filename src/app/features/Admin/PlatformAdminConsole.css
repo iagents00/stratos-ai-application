@@ -67,6 +67,10 @@
 .company-error { color: var(--company-error); }
 .company-context { display: flex; flex-wrap: wrap; gap: 24px; padding: 0 0 24px; margin-bottom: 16px; color: var(--company-muted); border-bottom: 1px solid var(--company-border); }
 .company-context span { display: inline-flex; align-items: center; gap: 8px; }
+.company-readiness { margin: 0 0 28px; }
+.company-readiness h2 { margin: 0 0 8px; font-size: 19px; font-weight: 550; }
+.company-readiness p { margin: 8px 0; max-width: 70ch; color: var(--company-muted); }
+.company-readiness a { color: var(--company-accent); text-underline-offset: 4px; overflow-wrap: anywhere; }
 .company-access { border: 1px solid var(--company-border); border-radius: 16px; padding: 28px; margin-bottom: 32px; background: var(--company-surface); }
 .company-access > div:first-child { display: flex; gap: 10px; align-items: center; color: var(--company-accent); }
 .company-access h2 { font-size: 20px; font-weight: 550; margin: 0; overflow-wrap: anywhere; }
