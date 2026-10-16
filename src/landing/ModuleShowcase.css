@@ -1,4 +1,4 @@
-.stratos-marketing .stratos-modules { --module-ink: #0A1B2E; --module-cyan: #00D1FF; --module-muted: #526477; --module-line: #DFE7EE; width: min(1120px, 100%); margin: 0 auto; padding: 80px 24px; color: var(--module-ink); font-family: var(--marketing-body, "Inter", sans-serif); }
+.stratos-marketing .stratos-modules { --module-ink: #0A1B2E; --module-muted: #526477; --module-line: #DFE7EE; --module-ease: cubic-bezier(.23, 1, .32, 1); width: min(1120px, 100%); margin: 0 auto; padding: 80px 24px; color: var(--module-ink); font-family: var(--marketing-body, "Inter", sans-serif); }
 .stratos-marketing .stratos-modules *, .stratos-marketing .stratos-modules *::before, .stratos-marketing .stratos-modules *::after { box-sizing: border-box; }
 .stratos-marketing .stratos-modules .stratos-modules__heading { max-width: 720px; margin: 0 auto 36px; text-align: center; }
 .stratos-marketing .stratos-modules .stratos-modules__heading h2 { font-family: var(--marketing-display, "Inter", sans-serif); font-size: clamp(32px, 4.2vw, 48px); font-weight: 400; line-height: 1.08; letter-spacing: -.025em; margin: 0; text-wrap: balance; }
@@ -6,15 +6,16 @@
 .stratos-marketing .stratos-modules .stratos-modules__navigation { display: flex; justify-content: center; align-items: center; gap: 16px; margin-bottom: 28px; min-width: 0; }
 .stratos-marketing .stratos-modules .stratos-modules__tabs { position: relative; display: flex; gap: 4px; padding: 6px; max-width: 100%; overflow-x: auto; border: 1px solid var(--module-line); border-radius: 999px; background: #fff; scrollbar-width: none; overscroll-behavior-x: contain; }
 .stratos-marketing .stratos-modules .stratos-modules__tabs::-webkit-scrollbar { display: none; }
-.stratos-marketing .stratos-modules .stratos-modules__tab { flex: 0 0 auto; min-height: 44px; padding: 10px 17px; border: 0; border-radius: 999px; background: transparent; color: var(--module-muted); font: 500 14px/1.4 var(--marketing-body, "Inter", sans-serif); white-space: nowrap; cursor: pointer; touch-action: manipulation; transition: background-color 160ms ease-out, color 160ms ease-out; }
-.stratos-marketing .stratos-modules .stratos-modules__tab:hover { background: #EFF6FA; color: var(--module-ink); }
-.stratos-marketing .stratos-modules .stratos-modules__tab[aria-selected="true"] { background: var(--module-cyan); color: var(--module-ink); }
-.stratos-marketing .stratos-modules .stratos-modules__playback { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 10px 12px; border: 1px solid var(--module-line); border-radius: 10px; background: #fff; color: var(--module-muted); font: 500 12px/1.4 var(--marketing-body, "Inter", sans-serif); cursor: pointer; touch-action: manipulation; }
-.stratos-marketing .stratos-modules .stratos-modules__playback:hover:not(:disabled) { background: #EFF6FA; color: var(--module-ink); }
+.stratos-marketing .stratos-modules .stratos-modules__tab { flex: 0 0 auto; min-height: 44px; padding: 10px 17px; border: 1px solid transparent; border-radius: 999px; background: #fff; color: var(--module-muted); font: 500 14px/1.4 var(--marketing-body, "Inter", sans-serif); white-space: nowrap; cursor: pointer; touch-action: manipulation; transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, transform 120ms var(--module-ease); }
+.stratos-marketing .stratos-modules .stratos-modules__tab[aria-selected="true"] { border-color: var(--module-ink); background: var(--module-ink); color: #fff; }
+.stratos-marketing .stratos-modules .stratos-modules__playback { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 10px 12px; border: 1px solid var(--module-line); border-radius: 10px; background: #fff; color: var(--module-muted); font: 500 12px/1.4 var(--marketing-body, "Inter", sans-serif); cursor: pointer; touch-action: manipulation; transition: background-color 160ms ease, color 160ms ease, transform 120ms var(--module-ease); }
+.stratos-marketing .stratos-modules :is(.stratos-modules__tab, .stratos-modules__playback):active:not(:disabled) { transform: scale(.97); }
 .stratos-marketing .stratos-modules .stratos-modules__playback:disabled { cursor: default; opacity: .65; }
 .stratos-marketing .stratos-modules :is(button, a, [role="tabpanel"]):focus-visible { outline: 2px solid var(--module-ink); outline-offset: 3px; }
-.stratos-marketing .stratos-modules .stratos-modules__tabs .stratos-modules__tab:focus-visible { outline-offset: -3px; }
-.stratos-marketing .stratos-modules .stratos-modules__panel { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); grid-template-areas: "intro visual" "details visual"; grid-template-rows: auto 1fr; gap: 24px 36px; align-items: start; padding: 32px; min-height: 510px; border: 1px solid var(--module-line); border-radius: 24px; background: #fff; animation: stratosModuleReveal 180ms ease-out; }
+.stratos-marketing .stratos-modules .stratos-modules__tabs .stratos-modules__tab:focus-visible { outline-offset: -4px; transform: none; transition: none; }
+.stratos-marketing .stratos-modules .stratos-modules__tab[aria-selected="true"]:focus-visible { outline-color: #fff; }
+.stratos-marketing .stratos-modules .stratos-modules__panel { display: grid; grid-template-columns: minmax(0, .68fr) minmax(0, 1.32fr); grid-template-areas: "intro visual" "details visual"; grid-template-rows: auto 1fr; gap: 24px 28px; align-items: start; padding: 28px; min-height: 510px; border: 1px solid var(--module-line); border-radius: 24px; background: #fff; animation: stratosModuleReveal 180ms var(--module-ease); }
+.stratos-marketing .stratos-modules:focus-within .stratos-modules__panel { animation: none; }
 .stratos-marketing .stratos-modules .stratos-modules__panel[hidden] { display: none; }
 .stratos-marketing .stratos-modules .stratos-modules__intro { grid-area: intro; min-width: 0; }
 .stratos-marketing .stratos-modules .stratos-modules__intro h3 { color: var(--module-ink); font-family: var(--marketing-display, "Inter", sans-serif); font-size: clamp(26px, 2.7vw, 32px); font-weight: 400; letter-spacing: -.025em; line-height: 1.13; margin: 0; text-wrap: balance; }
@@ -26,32 +27,41 @@
 .stratos-marketing .stratos-modules .stratos-modules__details { grid-area: details; min-width: 0; }
 .stratos-marketing .stratos-modules .stratos-modules__details ul { display: grid; gap: 19px; list-style: none; margin: 0; padding: 0; }
 .stratos-marketing .stratos-modules .stratos-modules__details li { display: flex; gap: 10px; align-items: flex-start; }
-.stratos-marketing .stratos-modules .stratos-modules__details li > svg { flex-shrink: 0; margin-top: 3px; color: #007D99; }
+.stratos-marketing .stratos-modules .stratos-modules__details li > svg { flex-shrink: 0; margin-top: 3px; color: var(--module-ink); }
 .stratos-marketing .stratos-modules .stratos-modules__details h4 { color: var(--module-ink); font: 500 14px/1.5 var(--marketing-body, "Inter", sans-serif); margin: 0; }
 .stratos-marketing .stratos-modules .stratos-modules__details p { color: var(--module-muted); font-size: 13px; line-height: 1.6; margin: 4px 0 0; max-width: 46ch; text-wrap: pretty; }
 .stratos-marketing .stratos-modules .stratos-modules__link { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 9px 0; margin-top: 19px; color: var(--module-ink); font-size: 13px; font-weight: 500; text-decoration: underline; text-decoration-color: #95A7B8; text-underline-offset: 4px; }
 .stratos-marketing .stratos-modules .stratos-modules__link:hover { text-decoration-color: var(--module-ink); }
 .stratos-marketing .stratos-modules .stratos-modules__disclosure { color: var(--module-muted); font-size: 11px; line-height: 1.6; text-align: center; margin: 16px auto 0; max-width: 70ch; }
-.stratos-marketing .stratos-modules ::selection { background: var(--module-cyan); color: var(--module-ink); }
-@keyframes stratosModuleReveal { from { opacity: .65; } to { opacity: 1; } }
+.stratos-marketing .stratos-modules ::selection { background: var(--module-ink); color: #fff; }
+@keyframes stratosModuleReveal { from { opacity: .8; } to { opacity: 1; } }
+@media (hover: hover) and (pointer: fine) {
+  .stratos-marketing .stratos-modules .stratos-modules__tab:hover:not([aria-selected="true"]) { background: #F3F5F7; color: var(--module-ink); }
+  .stratos-marketing .stratos-modules .stratos-modules__playback:hover:not(:disabled) { background: #F3F5F7; color: var(--module-ink); }
+}
 @media (max-width: 900px) {
   .stratos-marketing .stratos-modules .stratos-modules__navigation { flex-wrap: wrap; gap: 10px; }
-  .stratos-marketing .stratos-modules .stratos-modules__panel { padding: 24px; gap: 24px; }
+  .stratos-marketing .stratos-modules .stratos-modules__panel { grid-template-columns: minmax(0, 1fr); grid-template-areas: "intro" "visual" "details"; grid-template-rows: auto; min-height: 0; padding: 24px; gap: 24px; }
+  .stratos-marketing .stratos-modules .stratos-modules__intro p { max-width: 65ch; }
+  .stratos-marketing .stratos-modules .stratos-modules__details ul { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 }
 @media (max-width: 700px) {
-  .stratos-marketing .stratos-modules { padding: 48px 24px; }
+  .stratos-marketing .stratos-modules { padding: 48px 16px; }
   .stratos-marketing .stratos-modules .stratos-modules__heading { margin-bottom: 24px; }
   .stratos-marketing .stratos-modules .stratos-modules__heading p { font-size: 15px; }
-  .stratos-marketing .stratos-modules .stratos-modules__navigation { justify-content: flex-end; gap: 8px; margin-bottom: 20px; }
-  .stratos-marketing .stratos-modules .stratos-modules__tabs { width: 100%; }
-  .stratos-marketing .stratos-modules .stratos-modules__tab { padding-inline: 15px; }
-  .stratos-marketing .stratos-modules .stratos-modules__playback { border: 0; padding: 5px 2px 5px 10px; }
-  .stratos-marketing .stratos-modules .stratos-modules__panel { grid-template-columns: minmax(0, 1fr); grid-template-areas: "intro" "visual" "details"; grid-template-rows: auto; min-height: 0; gap: 24px; padding: 20px 17px; }
+  .stratos-marketing .stratos-modules .stratos-modules__navigation { justify-content: flex-end; gap: 10px; margin-bottom: 20px; }
+  .stratos-marketing .stratos-modules .stratos-modules__tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; padding: 0; overflow: visible; border: 0; border-radius: 0; }
+  .stratos-marketing .stratos-modules .stratos-modules__tab { min-width: 0; padding-inline: 8px; border-color: var(--module-line); font-size: 13px; }
+  .stratos-marketing .stratos-modules .stratos-modules__playback { padding: 8px 10px; }
+  .stratos-marketing .stratos-modules .stratos-modules__panel { gap: 20px; padding: 20px 16px; }
   .stratos-marketing .stratos-modules .stratos-modules__intro h3 { font-size: 28px; }
-  .stratos-marketing .stratos-modules .stratos-modules__details ul { gap: 18px; }
+  .stratos-marketing .stratos-modules .stratos-modules__visual { margin-inline: -12px; }
+  .stratos-marketing .stratos-modules .stratos-modules__details ul { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .stratos-marketing .stratos-modules .stratos-modules__details p { line-height: 1.5; }
 }
 @media (prefers-reduced-motion: reduce) {
   .stratos-marketing .stratos-modules .stratos-modules__panel { animation: none; }
-  .stratos-marketing .stratos-modules .stratos-modules__tab { transition: none; }
+  .stratos-marketing .stratos-modules :is(.stratos-modules__tab, .stratos-modules__playback) { transition: none; }
+  .stratos-marketing .stratos-modules :is(.stratos-modules__tab, .stratos-modules__playback):active:not(:disabled) { transform: none; }
   .stratos-marketing .stratos-modules .stratos-modules__tabs { scroll-behavior: auto; }
 }

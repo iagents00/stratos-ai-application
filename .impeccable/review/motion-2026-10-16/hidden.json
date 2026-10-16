@@ -1,0 +1,15 @@
+{
+  "method": "actual browser visibilitychange",
+  "attempts": [
+    {
+      "method": "second real tab with focus emulation disabled",
+      "hidden": false
+    },
+    {
+      "method": "real window minimized",
+      "hidden": false
+    }
+  ],
+  "pass": null,
+  "limitation": "Chromium automation kept document.hidden=false for both real background tab and minimized window; no genuine hidden assertion claimed."
+}

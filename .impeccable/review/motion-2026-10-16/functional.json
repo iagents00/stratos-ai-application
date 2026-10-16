@@ -1,0 +1,396 @@
+{
+  "checks": [
+    {
+      "name": "gallery2800ms nohover/nofocus",
+      "pass": true,
+      "data": {
+        "before": "Mi Espacio",
+        "after": "Métricas"
+      }
+    },
+    {
+      "name": "manual Copilot",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "manual CRM",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "manual Mi Espacio",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "manual Métricas",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "manual Comando",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "manual iAgents",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "keyboard End/Home/Left/right",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "gallery pause full interval",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "flow actual animation advances",
+      "pass": true,
+      "data": {
+        "a": {
+          "time": 0,
+          "state": "running",
+          "offset": "12px",
+          "opacity": "0"
+        },
+        "b": {
+          "time": 516.5000000000007,
+          "state": "running",
+          "offset": "-22.4333px",
+          "opacity": "1"
+        }
+      }
+    },
+    {
+      "name": "flow pause retains progress",
+      "pass": false,
+      "data": false
+    },
+    {
+      "name": "flow offscreen freezes",
+      "pass": false,
+      "error": "page.waitForFunction: Timeout 30000ms exceeded."
+    },
+    {
+      "name": "flow document hidden freezes",
+      "pass": false,
+      "error": "page.waitForFunction: Timeout 30000ms exceeded."
+    },
+    {
+      "name": "flow finite completion and replay",
+      "pass": false,
+      "error": "locator.waitFor: Timeout 14000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Repetir animaciones de flujos', exact: true }) to be visible\u001b[22m\n"
+    },
+    {
+      "name": "flow reduced motion disables signals/control",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "gallery reduced motion stable and manual available",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "public hrefs only; diagnostics/login targets intact",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "mobile menu ESC and anchor",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "user-320 menu ESC and anchor",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "tablet menu ESC and anchor",
+      "pass": true,
+      "data": true
+    }
+  ],
+  "modules": [
+    {
+      "name": "Copilot",
+      "src": "/marketing/modules/framed-20261016/copilot.webp",
+      "width": 1440,
+      "height": 1020
+    },
+    {
+      "name": "CRM",
+      "src": "/marketing/modules/framed-20261016/crm.webp",
+      "width": 1440,
+      "height": 1020
+    },
+    {
+      "name": "Mi Espacio",
+      "src": "/marketing/modules/framed-20261016/mi-espacio.webp",
+      "width": 1440,
+      "height": 1020
+    },
+    {
+      "name": "Métricas",
+      "src": "/marketing/modules/framed-20261016/metricas.webp",
+      "width": 1440,
+      "height": 1020
+    },
+    {
+      "name": "Comando",
+      "src": "/marketing/modules/framed-20261016/comando.webp",
+      "width": 1440,
+      "height": 1020
+    },
+    {
+      "name": "iAgents",
+      "src": "/marketing/modules/framed-20261016/iagents.webp",
+      "width": 1440,
+      "height": 1020
+    }
+  ],
+  "devices": [
+    {
+      "name": "desktop",
+      "touch": true,
+      "keyboard": true,
+      "documentWidth": 1440,
+      "viewport": 1440,
+      "tabs": [
+        {
+          "text": "Copilot",
+          "width": 83.6640625,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "CRM",
+          "width": 68.125,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Mi Espacio",
+          "width": 108.828125,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Métricas",
+          "width": 94.5234375,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Comando",
+          "width": 100.6484375,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "iAgents",
+          "width": 86.8359375,
+          "height": 44,
+          "inList": true
+        }
+      ],
+      "selectedStyle": {
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(82, 100, 119)"
+      },
+      "image": {
+        "width": 1440,
+        "height": 1020,
+        "ratio": 1.4117826514355445,
+        "fit": "contain"
+      },
+      "fonts": true,
+      "pass": false
+    },
+    {
+      "name": "mobile",
+      "touch": true,
+      "keyboard": true,
+      "documentWidth": 390,
+      "viewport": 390,
+      "tabs": [
+        {
+          "text": "Copilot",
+          "width": 114,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "CRM",
+          "width": 114,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Mi Espacio",
+          "width": 114,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Métricas",
+          "width": 114,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Comando",
+          "width": 114,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "iAgents",
+          "width": 114,
+          "height": 44,
+          "inList": true
+        }
+      ],
+      "selectedStyle": {
+        "background": "rgb(87, 99, 112)",
+        "color": "rgb(201, 206, 212)"
+      },
+      "image": {
+        "width": 1440,
+        "height": 1020,
+        "ratio": 1.411764705882353,
+        "fit": "contain"
+      },
+      "fonts": true,
+      "pass": false
+    },
+    {
+      "name": "user-320",
+      "touch": true,
+      "keyboard": true,
+      "documentWidth": 320,
+      "viewport": 320,
+      "tabs": [
+        {
+          "text": "Copilot",
+          "width": 90.6640625,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "CRM",
+          "width": 90.6640625,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Mi Espacio",
+          "width": 90.6640625,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Métricas",
+          "width": 90.6640625,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Comando",
+          "width": 90.6640625,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "iAgents",
+          "width": 90.6640625,
+          "height": 44,
+          "inList": true
+        }
+      ],
+      "selectedStyle": {
+        "background": "rgb(87, 98, 111)",
+        "color": "rgb(201, 206, 212)"
+      },
+      "image": {
+        "width": 1440,
+        "height": 1020,
+        "ratio": 1.4117833763142233,
+        "fit": "contain"
+      },
+      "fonts": true,
+      "pass": false
+    },
+    {
+      "name": "tablet",
+      "touch": true,
+      "keyboard": true,
+      "documentWidth": 834,
+      "viewport": 834,
+      "tabs": [
+        {
+          "text": "Copilot",
+          "width": 83.6640625,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "CRM",
+          "width": 68.125,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Mi Espacio",
+          "width": 108.828125,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Métricas",
+          "width": 94.5234375,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Comando",
+          "width": 100.6484375,
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "iAgents",
+          "width": 86.8359375,
+          "height": 44,
+          "inList": true
+        }
+      ],
+      "selectedStyle": {
+        "background": "rgb(87, 99, 112)",
+        "color": "rgb(201, 206, 212)"
+      },
+      "image": {
+        "width": 1440,
+        "height": 1020,
+        "ratio": 1.411778810130376,
+        "fit": "contain"
+      },
+      "fonts": true,
+      "pass": false
+    }
+  ],
+  "errors": [],
+  "httpErrors": [],
+  "privacy": {
+    "supabaseBlockedBeforeNavigation": true,
+    "loginVisited": false,
+    "realCRMVisited": false
+  },
+  "pass": false
+}

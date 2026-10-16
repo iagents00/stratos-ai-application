@@ -1,0 +1,110 @@
+[
+  {
+    "antipattern": "design-system-font-size",
+    "name": "Font size outside DESIGN.md",
+    "description": "A literal font-size is off the type ramp documented in DESIGN.md typography. Use a documented size step or update the design system if the new step is intentional.",
+    "severity": "advisory",
+    "category": "quality",
+    "file": "/Users/ivanrodriguezruelas/stratos-ai-application/src/landing/ModuleShowcase.css",
+    "line": 4,
+    "snippet": "font-size: clamp(32px, 4.2vw, 48px) has fluid endpoints 32px and 48px off the DESIGN.md type ramp",
+    "advisory": true,
+    "ignoreValue": "32px"
+  },
+  {
+    "antipattern": "design-system-font-size",
+    "name": "Font size outside DESIGN.md",
+    "description": "A literal font-size is off the type ramp documented in DESIGN.md typography. Use a documented size step or update the design system if the new step is intentional.",
+    "severity": "advisory",
+    "category": "quality",
+    "file": "/Users/ivanrodriguezruelas/stratos-ai-application/src/landing/ModuleShowcase.css",
+    "line": 5,
+    "snippet": "font-size: 17px is off the DESIGN.md type ramp",
+    "advisory": true,
+    "ignoreValue": "17px"
+  },
+  {
+    "antipattern": "design-system-radius",
+    "name": "Radius outside DESIGN.md",
+    "description": "A border-radius value is outside the DESIGN.md rounded scale. Use a documented radius token or update the design system if the new shape is intentional.",
+    "severity": "advisory",
+    "category": "quality",
+    "file": "/Users/ivanrodriguezruelas/stratos-ai-application/src/landing/ModuleShowcase.css",
+    "line": 7,
+    "snippet": "border-radius: 999px is outside the DESIGN.md rounded scale",
+    "advisory": true,
+    "ignoreValue": "999px"
+  },
+  {
+    "antipattern": "design-system-radius",
+    "name": "Radius outside DESIGN.md",
+    "description": "A border-radius value is outside the DESIGN.md rounded scale. Use a documented radius token or update the design system if the new shape is intentional.",
+    "severity": "advisory",
+    "category": "quality",
+    "file": "/Users/ivanrodriguezruelas/stratos-ai-application/src/landing/ModuleShowcase.css",
+    "line": 17,
+    "snippet": "border-radius: 24px is outside the DESIGN.md rounded scale",
+    "advisory": true,
+    "ignoreValue": "24px"
+  },
+  {
+    "antipattern": "design-system-font-size",
+    "name": "Font size outside DESIGN.md",
+    "description": "A literal font-size is off the type ramp documented in DESIGN.md typography. Use a documented size step or update the design system if the new step is intentional.",
+    "severity": "advisory",
+    "category": "quality",
+    "file": "/Users/ivanrodriguezruelas/stratos-ai-application/src/landing/ModuleShowcase.css",
+    "line": 21,
+    "snippet": "font-size: clamp(26px, 2.7vw, 32px) has fluid endpoints 26px and 32px off the DESIGN.md type ramp",
+    "advisory": true,
+    "ignoreValue": "26px"
+  },
+  {
+    "antipattern": "design-system-color",
+    "name": "Color outside DESIGN.md",
+    "description": "A literal color is outside the DESIGN.md palette and sidecar tonal ramps. This may be legitimate, but it should be an intentional design-system addition rather than drift.",
+    "severity": "advisory",
+    "category": "quality",
+    "file": "/Users/ivanrodriguezruelas/stratos-ai-application/src/landing/ModuleShowcase.css",
+    "line": 33,
+    "snippet": "Undocumented color #95A7B8 is outside DESIGN.md colors",
+    "advisory": true,
+    "ignoreValue": "#95A7B8"
+  },
+  {
+    "antipattern": "design-system-font-size",
+    "name": "Font size outside DESIGN.md",
+    "description": "A literal font-size is off the type ramp documented in DESIGN.md typography. Use a documented size step or update the design system if the new step is intentional.",
+    "severity": "advisory",
+    "category": "quality",
+    "file": "/Users/ivanrodriguezruelas/stratos-ai-application/src/landing/ModuleShowcase.css",
+    "line": 35,
+    "snippet": "font-size: 11px is off the DESIGN.md type ramp",
+    "advisory": true,
+    "ignoreValue": "11px"
+  },
+  {
+    "antipattern": "design-system-color",
+    "name": "Color outside DESIGN.md",
+    "description": "A literal color is outside the DESIGN.md palette and sidecar tonal ramps. This may be legitimate, but it should be an intentional design-system addition rather than drift.",
+    "severity": "advisory",
+    "category": "quality",
+    "file": "/Users/ivanrodriguezruelas/stratos-ai-application/src/landing/ModuleShowcase.css",
+    "line": 39,
+    "snippet": "Undocumented color #F3F5F7 is outside DESIGN.md colors",
+    "advisory": true,
+    "ignoreValue": "#F3F5F7"
+  },
+  {
+    "antipattern": "design-system-font-size",
+    "name": "Font size outside DESIGN.md",
+    "description": "A literal font-size is off the type ramp documented in DESIGN.md typography. Use a documented size step or update the design system if the new step is intentional.",
+    "severity": "advisory",
+    "category": "quality",
+    "file": "/Users/ivanrodriguezruelas/stratos-ai-application/src/landing/ModuleShowcase.css",
+    "line": 57,
+    "snippet": "font-size: 28px is off the DESIGN.md type ramp",
+    "advisory": true,
+    "ignoreValue": "28px"
+  }
+]

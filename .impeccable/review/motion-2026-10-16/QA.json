@@ -1,0 +1,558 @@
+{
+  "scope": "QA funcional de portada anónima local; capturas oficiales a cargo de validate_tests",
+  "timestampUTC": "2026-10-16T19:27:43.234490+00:00",
+  "url": "http://127.0.0.1:5303/",
+  "release": {
+    "project": "stratos-ai-application",
+    "projectId": "prj_Epv30SFnQmJGnxy3LdYLKV8NwDLi",
+    "repository": "iagents00/stratos-ai-application",
+    "schemaVersion": 1,
+    "commit": "8ac2168ef41cbe854ca1b7e3c70f40d8f98a95dd",
+    "builtAt": "2026-10-16T19:17:16.004Z",
+    "serviceWorker": "stratos-v445",
+    "dirty": true,
+    "deployment": null
+  },
+  "result": {
+    "confirmedPasses": 24,
+    "confirmedFailures": 0,
+    "openProductFindings": 0,
+    "genuineBrowserHidden": "not_verified_harness_limitation",
+    "functionalConfirmed": true
+  },
+  "checks": [
+    {
+      "name": "gallery2800ms nohover/nofocus",
+      "pass": true,
+      "data": {
+        "before": "Mi Espacio",
+        "after": "Métricas"
+      },
+      "evidence": "functional.json"
+    },
+    {
+      "name": "manual Copilot",
+      "pass": true,
+      "data": true,
+      "evidence": "functional.json"
+    },
+    {
+      "name": "manual CRM",
+      "pass": true,
+      "data": true,
+      "evidence": "functional.json"
+    },
+    {
+      "name": "manual Mi Espacio",
+      "pass": true,
+      "data": true,
+      "evidence": "functional.json"
+    },
+    {
+      "name": "manual Métricas",
+      "pass": true,
+      "data": true,
+      "evidence": "functional.json"
+    },
+    {
+      "name": "manual Comando",
+      "pass": true,
+      "data": true,
+      "evidence": "functional.json"
+    },
+    {
+      "name": "manual iAgents",
+      "pass": true,
+      "data": true,
+      "evidence": "functional.json"
+    },
+    {
+      "name": "keyboard End/Home/Left/right",
+      "pass": true,
+      "data": true,
+      "evidence": "functional.json"
+    },
+    {
+      "name": "gallery pause full interval",
+      "pass": true,
+      "data": true,
+      "evidence": "functional.json"
+    },
+    {
+      "name": "flow actual animation advances",
+      "pass": true,
+      "data": {
+        "a": {
+          "time": 0,
+          "state": "running",
+          "offset": "12px",
+          "opacity": "0"
+        },
+        "b": {
+          "time": 516.5000000000007,
+          "state": "running",
+          "offset": "-22.4333px",
+          "opacity": "1"
+        }
+      },
+      "evidence": "functional.json"
+    },
+    {
+      "name": "flow pause retains progress",
+      "pass": true,
+      "data": {
+        "a": {
+          "time": 66.71199999766486,
+          "state": "paused"
+        },
+        "b": {
+          "time": 66.71199999766486,
+          "state": "paused"
+        },
+        "c": {
+          "time": 433.3119999976702,
+          "state": "running"
+        }
+      },
+      "evidence": "motion-targeted.json"
+    },
+    {
+      "name": "flow offscreen freezes",
+      "pass": true,
+      "data": {
+        "a": {
+          "time": 500.01199999766754,
+          "state": "paused"
+        },
+        "b": {
+          "time": 500.01199999766754,
+          "state": "paused"
+        }
+      },
+      "evidence": "motion-targeted.json"
+    },
+    {
+      "name": "flow finite completion and replay",
+      "pass": true,
+      "data": {
+        "a": {
+          "time": 100.03199999999879,
+          "state": "running"
+        },
+        "b": {
+          "time": 500.06799999999885,
+          "state": "running"
+        },
+        "linkPreserved": true,
+        "artRemounted": true,
+        "focusRetained": true
+      },
+      "evidence": "motion-targeted.json"
+    },
+    {
+      "name": "flow reduced motion disables signals/control",
+      "pass": true,
+      "data": true,
+      "evidence": "functional.json"
+    },
+    {
+      "name": "gallery reduced motion stable and manual available",
+      "pass": true,
+      "data": true,
+      "evidence": "functional.json"
+    },
+    {
+      "name": "public hrefs only; diagnostics/login targets intact",
+      "pass": true,
+      "data": true,
+      "evidence": "functional.json"
+    },
+    {
+      "name": "mobile menu ESC and anchor",
+      "pass": true,
+      "data": true,
+      "evidence": "functional.json"
+    },
+    {
+      "name": "user-320 menu ESC and anchor",
+      "pass": true,
+      "data": true,
+      "evidence": "functional.json"
+    },
+    {
+      "name": "tablet menu ESC and anchor",
+      "pass": true,
+      "data": true,
+      "evidence": "functional.json"
+    },
+    {
+      "name": "visibilitychange listener freezes/resumes (synthetic only)",
+      "pass": true,
+      "data": {
+        "method": "synthetic listener dispatch with temporarily overridden document.hidden",
+        "genuineVisibilityChange": false,
+        "a": {
+          "time": 33.34599999999455,
+          "state": "paused",
+          "running": "false"
+        },
+        "b": {
+          "time": 33.34599999999455,
+          "state": "paused",
+          "running": "false"
+        },
+        "c": {
+          "time": 400.04599999999255,
+          "state": "running",
+          "running": "true"
+        },
+        "pass": true
+      },
+      "evidence": "visibility-listener.json"
+    },
+    {
+      "name": "responsive layout 1440px",
+      "pass": true,
+      "evidence": "capture.json",
+      "data": {
+        "name": "desktop",
+        "width": 1440,
+        "documentWidth": 1440,
+        "fonts": true,
+        "tabs": [
+          {
+            "text": "Copilot",
+            "width": 83.6640625,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "CRM",
+            "width": 68.125,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Mi Espacio",
+            "width": 108.828125,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Métricas",
+            "width": 94.5234375,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Comando",
+            "width": 100.6484375,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "iAgents",
+            "width": 86.8359375,
+            "height": 44,
+            "inList": true
+          }
+        ],
+        "selected": {
+          "text": "CRM",
+          "background": "rgb(10, 27, 46)",
+          "color": "rgb(255, 255, 255)"
+        },
+        "image": {
+          "naturalWidth": 1440,
+          "naturalHeight": 1020,
+          "fit": "contain",
+          "ratio": 1.4117826514355445
+        },
+        "diagrams": [
+          true,
+          true
+        ],
+        "pass": true
+      }
+    },
+    {
+      "name": "responsive layout 390px",
+      "pass": true,
+      "evidence": "capture.json",
+      "data": {
+        "name": "mobile",
+        "width": 390,
+        "documentWidth": 390,
+        "fonts": true,
+        "tabs": [
+          {
+            "text": "Copilot",
+            "width": 114,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "CRM",
+            "width": 114,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Mi Espacio",
+            "width": 114,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Métricas",
+            "width": 114,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Comando",
+            "width": 114,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "iAgents",
+            "width": 114,
+            "height": 44,
+            "inList": true
+          }
+        ],
+        "selected": {
+          "text": "CRM",
+          "background": "rgb(10, 27, 46)",
+          "color": "rgb(255, 255, 255)"
+        },
+        "image": {
+          "naturalWidth": 1440,
+          "naturalHeight": 1020,
+          "fit": "contain",
+          "ratio": 1.411764705882353
+        },
+        "diagrams": [
+          true,
+          true
+        ],
+        "pass": true
+      }
+    },
+    {
+      "name": "responsive layout 320px",
+      "pass": true,
+      "evidence": "capture.json",
+      "data": {
+        "name": "user-320",
+        "width": 320,
+        "documentWidth": 320,
+        "fonts": true,
+        "tabs": [
+          {
+            "text": "Copilot",
+            "width": 90.6640625,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "CRM",
+            "width": 90.6640625,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Mi Espacio",
+            "width": 90.6640625,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Métricas",
+            "width": 90.6640625,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Comando",
+            "width": 90.6640625,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "iAgents",
+            "width": 90.6640625,
+            "height": 44,
+            "inList": true
+          }
+        ],
+        "selected": {
+          "text": "CRM",
+          "background": "rgb(10, 27, 46)",
+          "color": "rgb(255, 255, 255)"
+        },
+        "image": {
+          "naturalWidth": 1440,
+          "naturalHeight": 1020,
+          "fit": "contain",
+          "ratio": 1.4117833763142233
+        },
+        "diagrams": [
+          true,
+          true
+        ],
+        "pass": true
+      }
+    },
+    {
+      "name": "responsive layout 834px",
+      "pass": true,
+      "evidence": "capture.json",
+      "data": {
+        "name": "tablet",
+        "width": 834,
+        "documentWidth": 834,
+        "fonts": true,
+        "tabs": [
+          {
+            "text": "Copilot",
+            "width": 83.6640625,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "CRM",
+            "width": 68.125,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Mi Espacio",
+            "width": 108.828125,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Métricas",
+            "width": 94.5234375,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Comando",
+            "width": 100.6484375,
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "iAgents",
+            "width": 86.8359375,
+            "height": 44,
+            "inList": true
+          }
+        ],
+        "selected": {
+          "text": "CRM",
+          "background": "rgb(10, 27, 46)",
+          "color": "rgb(255, 255, 255)"
+        },
+        "image": {
+          "naturalWidth": 1440,
+          "naturalHeight": 1020,
+          "fit": "contain",
+          "ratio": 1.411778810130376
+        },
+        "diagrams": [
+          true,
+          true
+        ],
+        "pass": true
+      }
+    }
+  ],
+  "documentHiddenVerification": {
+    "method": "actual browser visibilitychange",
+    "attempts": [
+      {
+        "method": "second real tab with focus emulation disabled",
+        "hidden": false
+      },
+      {
+        "method": "real window minimized",
+        "hidden": false
+      }
+    ],
+    "pass": null,
+    "limitation": "Chromium automation kept document.hidden=false for both real background tab and minimized window; no genuine hidden assertion claimed."
+  },
+  "modules": [
+    {
+      "name": "Copilot",
+      "src": "/marketing/modules/framed-20261016/copilot.webp",
+      "width": 1440,
+      "height": 1020
+    },
+    {
+      "name": "CRM",
+      "src": "/marketing/modules/framed-20261016/crm.webp",
+      "width": 1440,
+      "height": 1020
+    },
+    {
+      "name": "Mi Espacio",
+      "src": "/marketing/modules/framed-20261016/mi-espacio.webp",
+      "width": 1440,
+      "height": 1020
+    },
+    {
+      "name": "Métricas",
+      "src": "/marketing/modules/framed-20261016/metricas.webp",
+      "width": 1440,
+      "height": 1020
+    },
+    {
+      "name": "Comando",
+      "src": "/marketing/modules/framed-20261016/comando.webp",
+      "width": 1440,
+      "height": 1020
+    },
+    {
+      "name": "iAgents",
+      "src": "/marketing/modules/framed-20261016/iagents.webp",
+      "width": 1440,
+      "height": 1020
+    }
+  ],
+  "errors": [],
+  "httpErrors": [],
+  "privacy": {
+    "supabaseBlockedBeforeNavigation": true,
+    "loginVisited": false,
+    "realCRMVisited": false
+  },
+  "harnessNotes": [
+    "Initial raw functional.json sampled an unsettled CSS pause/color frame; an early assertion left motion paused and invalidated downstream checks. Corrected targeted tests wait for data-running and 100 ms settlement; capture.json waits for selected CSS color settlement. The raw exploratory records are preserved but superseded here.",
+    "Actual background-tab and minimized-window visibility checks were attempted with focus emulation disabled. Chromium retained document.hidden=false. The listener test overrides document.hidden temporarily and dispatches visibilitychange; it does not establish genuine browser visibility behavior.",
+    "No PNG was written to .impeccable/review/motion-2026-10-16 by this agent; official screenshot batch belongs to validate_tests."
+  ],
+  "sourceSHA256": {
+    "src/landing/FeatureMotion.jsx": "aed1dcc9e631e00d8d913fc0ca1d7e73bd19109abae15f59f23cb75aa65c93a4",
+    "src/landing/FeatureMotion.css": "de80fba313e6c664958d88fb75009c50166f0ff5163ed8cf288758c2a8242911",
+    "src/landing/ModuleShowcase.jsx": "41440ff7ea99db4869ee8e40898165d30e1907d89da64edbb2baa890322be35c",
+    "src/landing/ModuleShowcase.css": "d578cfcca046926391d1f43fe5aae45ca71e717dda0cd23a3138342e487185a0"
+  },
+  "rawEvidence": [
+    "functional.json",
+    "motion-targeted.json",
+    "capture.json",
+    "hidden.json",
+    "visibility-listener.json"
+  ],
+  "postFunctionalGeometryFix": {
+    "change": "Ramas verticales comienzan en y202 para liberar los rótulos Copilot/Comando. No cambian clases, duración, pausas, callbacks ni controles.",
+    "functionalSourceSHA256Preserved": true,
+    "finalSourceSHA256": "16b644f9147b57c6c05143335cdf9406ba487d825789ad834e8067d2e0175886",
+    "visualConfirmation": "CAPTURES.json después del único lote de corrección; revisión independiente en REVIEW.md."
+  }
+}
