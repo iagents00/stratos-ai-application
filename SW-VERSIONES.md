@@ -1,5 +1,9 @@
 # Historial de versiones del Service Worker (CACHE_VERSION)
 
+## v444 — Capturas con marco de cristal
+
+Las seis capturas reales se presentan como imágenes sobre blanco con un borde translúcido redondeado y sombra suave. La composición conserva la interfaz original a escala 1:1; los originales permanecen disponibles. Mantiene el carrusel de 2.8 segundos, el slider y los controles existentes. No requiere cambios en Supabase.
+
 ## v443 — Sitio oficial y capturas reales
 
 Portada blanca con identidad Stratos, tipografía Switzer e Inter, slider inicial conservado y galería de seis módulos que avanza cada 2.8 segundos. Las imágenes son capturas reales con datos de demostración. Incluye pausa, selección manual, teclado y movimiento reducido. Mantiene planes, contacto y acceso fijo; los recursos comerciales quedan fuera del binario móvil. No requiere cambios en Supabase.

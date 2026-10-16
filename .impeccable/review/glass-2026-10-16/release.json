@@ -1,0 +1,11 @@
+{
+  "project": "stratos-ai-application",
+  "projectId": "prj_Epv30SFnQmJGnxy3LdYLKV8NwDLi",
+  "repository": "iagents00/stratos-ai-application",
+  "schemaVersion": 1,
+  "commit": "e7a9377bef26349eed45bc04120fee345710ef2d",
+  "builtAt": "2026-10-16T18:10:03.624Z",
+  "serviceWorker": "stratos-v444",
+  "dirty": true,
+  "deployment": null
+}

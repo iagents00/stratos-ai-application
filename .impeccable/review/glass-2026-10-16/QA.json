@@ -1,0 +1,347 @@
+{
+  "checks": [
+    {
+      "name": "auto2800 without hover/focus",
+      "pass": true,
+      "before": "Copilot",
+      "after": "CRM"
+    },
+    {
+      "name": "six manual images1440x1020",
+      "pass": true
+    },
+    {
+      "name": "keyboard existing behavior",
+      "pass": true
+    },
+    {
+      "name": "explicit pause survives full interval",
+      "pass": true
+    },
+    {
+      "name": "reduced motion stops auto and manual remains available",
+      "pass": true
+    }
+  ],
+  "modules": [
+    {
+      "name": "Copilot",
+      "src": "/marketing/modules/framed-20261016/copilot.webp",
+      "width": 1440,
+      "height": 1020
+    },
+    {
+      "name": "CRM",
+      "src": "/marketing/modules/framed-20261016/crm.webp",
+      "width": 1440,
+      "height": 1020
+    },
+    {
+      "name": "Mi Espacio",
+      "src": "/marketing/modules/framed-20261016/mi-espacio.webp",
+      "width": 1440,
+      "height": 1020
+    },
+    {
+      "name": "Métricas",
+      "src": "/marketing/modules/framed-20261016/metricas.webp",
+      "width": 1440,
+      "height": 1020
+    },
+    {
+      "name": "Comando",
+      "src": "/marketing/modules/framed-20261016/comando.webp",
+      "width": 1440,
+      "height": 1020
+    },
+    {
+      "name": "iAgents",
+      "src": "/marketing/modules/framed-20261016/iagents.webp",
+      "width": 1440,
+      "height": 1020
+    }
+  ],
+  "views": [
+    {
+      "name": "desktop",
+      "documentWidth": 1440,
+      "viewport": 1440,
+      "pageBackground": "rgb(255, 255, 255)",
+      "figure": {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "minHeight": "auto"
+      },
+      "image": {
+        "naturalWidth": 1440,
+        "naturalHeight": 1020,
+        "width": 557.75,
+        "height": 395.0625,
+        "objectFit": "contain",
+        "ratio": 1.4118019300743554,
+        "insideFigure": true
+      },
+      "fonts": true,
+      "pass": true
+    },
+    {
+      "name": "mobile",
+      "documentWidth": 390,
+      "viewport": 390,
+      "pageBackground": "rgb(255, 255, 255)",
+      "figure": {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "minHeight": "auto"
+      },
+      "image": {
+        "naturalWidth": 1440,
+        "naturalHeight": 1020,
+        "width": 306,
+        "height": 216.75,
+        "objectFit": "contain",
+        "ratio": 1.411764705882353,
+        "insideFigure": true
+      },
+      "fonts": true,
+      "pass": true
+    },
+    {
+      "name": "user-320",
+      "documentWidth": 320,
+      "viewport": 320,
+      "pageBackground": "rgb(255, 255, 255)",
+      "figure": {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "minHeight": "auto"
+      },
+      "image": {
+        "naturalWidth": 1440,
+        "naturalHeight": 1020,
+        "width": 236,
+        "height": 167.15625,
+        "objectFit": "contain",
+        "ratio": 1.4118526827444382,
+        "insideFigure": true
+      },
+      "fonts": true,
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "httpErrors": [],
+  "blockedSupabase": [],
+  "pass": true,
+  "uses": {
+    "reducedMotion": {
+      "before": "CRM",
+      "after": "CRM",
+      "disabled": true,
+      "manual": true,
+      "pass": true
+    },
+    "workflow": [
+      {
+        "name": "Habla",
+        "src": "/marketing/modules/framed-20261016/copilot.webp",
+        "pass": true
+      },
+      {
+        "name": "Procesa",
+        "src": "/marketing/modules/framed-20261016/crm.webp",
+        "pass": true
+      },
+      {
+        "name": "Claridad",
+        "src": "/marketing/modules/framed-20261016/comando.webp",
+        "pass": true
+      }
+    ],
+    "uses": [
+      {
+        "viewport": 1440,
+        "name": "workflow",
+        "images": [
+          {
+            "src": "/marketing/modules/framed-20261016/copilot.webp",
+            "naturalWidth": 1440,
+            "naturalHeight": 1020,
+            "objectFit": "contain",
+            "contentRatio": 1.4118092627326504
+          }
+        ],
+        "pass": true
+      },
+      {
+        "viewport": 1440,
+        "name": "benefits",
+        "images": [
+          {
+            "src": "/marketing/modules/framed-20261016/mi-espacio.webp",
+            "naturalWidth": 1440,
+            "naturalHeight": 1020,
+            "objectFit": "contain",
+            "contentRatio": 1.4118043276921781
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/metricas.webp",
+            "naturalWidth": 1440,
+            "naturalHeight": 1020,
+            "objectFit": "contain",
+            "contentRatio": 1.4118043276921781
+          }
+        ],
+        "pass": true
+      },
+      {
+        "viewport": 390,
+        "name": "workflow",
+        "images": [
+          {
+            "src": "/marketing/modules/framed-20261016/copilot.webp",
+            "naturalWidth": 1440,
+            "naturalHeight": 1020,
+            "objectFit": "contain",
+            "contentRatio": 1.4118321157427303
+          }
+        ],
+        "pass": true
+      },
+      {
+        "viewport": 390,
+        "name": "benefits",
+        "images": [
+          {
+            "src": "/marketing/modules/framed-20261016/mi-espacio.webp",
+            "naturalWidth": 1440,
+            "naturalHeight": 1020,
+            "objectFit": "contain",
+            "contentRatio": 1.411764705882353
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/metricas.webp",
+            "naturalWidth": 1440,
+            "naturalHeight": 1020,
+            "objectFit": "contain",
+            "contentRatio": 1.411764705882353
+          }
+        ],
+        "pass": true
+      },
+      {
+        "viewport": 320,
+        "name": "workflow",
+        "images": [
+          {
+            "src": "/marketing/modules/framed-20261016/copilot.webp",
+            "naturalWidth": 1440,
+            "naturalHeight": 1020,
+            "objectFit": "contain",
+            "contentRatio": 1.411764705882353
+          }
+        ],
+        "pass": true
+      },
+      {
+        "viewport": 320,
+        "name": "benefits",
+        "images": [
+          {
+            "src": "/marketing/modules/framed-20261016/mi-espacio.webp",
+            "naturalWidth": 1440,
+            "naturalHeight": 1020,
+            "objectFit": "contain",
+            "contentRatio": 1.411801780508942
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/metricas.webp",
+            "naturalWidth": 1440,
+            "naturalHeight": 1020,
+            "objectFit": "contain",
+            "contentRatio": 1.411801780508942
+          }
+        ],
+        "pass": true
+      }
+    ]
+  },
+  "release": {
+    "project": "stratos-ai-application",
+    "projectId": "prj_Epv30SFnQmJGnxy3LdYLKV8NwDLi",
+    "repository": "iagents00/stratos-ai-application",
+    "schemaVersion": 1,
+    "commit": "e7a9377bef26349eed45bc04120fee345710ef2d",
+    "builtAt": "2026-10-16T18:10:03.624Z",
+    "serviceWorker": "stratos-v444",
+    "dirty": true,
+    "deployment": null
+  },
+  "verifiedAt": "2026-10-16T18:16:48.102829+00:00",
+  "privacy": {
+    "anonymous": true,
+    "supabaseBlockedBeforeNavigation": true,
+    "supabaseQueriesSent": 0,
+    "visitedLogin": false,
+    "visitedRealCRM": false
+  },
+  "captures": [
+    {
+      "path": "desktop-benefits.png",
+      "width": 1072,
+      "height": 1077,
+      "sha256": "31406f13302873e4a1764e66bc20a15c03dfed1c31a816d73362a74e476b066e"
+    },
+    {
+      "path": "desktop-gallery.png",
+      "width": 1120,
+      "height": 892,
+      "sha256": "11db89e5cba75dd67f8df6074131083a6a5427622a23d2c30ddfac1652b527a3"
+    },
+    {
+      "path": "desktop-workflow.png",
+      "width": 1072,
+      "height": 598,
+      "sha256": "710ab15d8b4628f8ef48f2688947a3f40f088cb7e1565b9320f193ea3724c561"
+    },
+    {
+      "path": "mobile-benefits.png",
+      "width": 342,
+      "height": 1494,
+      "sha256": "43d4c30f21e5456099a7a582dd4edfef5524417c343698589c4c80f3a8eccecc"
+    },
+    {
+      "path": "mobile-gallery.png",
+      "width": 390,
+      "height": 1202,
+      "sha256": "04ff364144aa08f2f3360fca0ecc242c56b96a03584e6f665b0f0e8b5c2941d2"
+    },
+    {
+      "path": "mobile-workflow.png",
+      "width": 342,
+      "height": 575,
+      "sha256": "b07c0e33ff0d39be98f38af935dc76d949263952344083b654a6d3b01947f91a"
+    },
+    {
+      "path": "user-320-benefits.png",
+      "width": 280,
+      "height": 1486,
+      "sha256": "8c03e1c1557e0d9aad05136e698db0d9534083fa2d8bce48af85f1cecaa5f720"
+    },
+    {
+      "path": "user-320-gallery.png",
+      "width": 320,
+      "height": 1202,
+      "sha256": "d14009893d5f927faaadf6b82657326ba0e86f23b80351256a31d31162a02cd9"
+    },
+    {
+      "path": "user-320-workflow.png",
+      "width": 280,
+      "height": 551,
+      "sha256": "a13d049356785a9cd7c9b210c056e09b209809c44a7e4bfe227bde0ab60f51b1"
+    }
+  ]
+}

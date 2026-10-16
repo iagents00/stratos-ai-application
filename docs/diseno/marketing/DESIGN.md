@@ -50,7 +50,6 @@ rounded:
   badge: "6px"
   control: "10px"
   promotion: "12px"
-  visual: "14px"
   price-card: "16px"
   panel: "24px"
   tab: "999px"
@@ -149,7 +148,7 @@ La paleta combina tinta azul profunda con cian nítido y neutros claros, sin tra
 ### Neutral
 
 - **Blanco** (`white`): lienzo principal, navegación y tarjetas.
-- **Superficie fría** (`surface`): secciones alternas, capturas y agrupaciones.
+- **Superficie fría** (`surface`): secciones alternas y agrupaciones.
 - **Azul claro de interacción** (`hover-surface`): hover secundario y paneles suaves.
 - **Texto secundario** (`muted`): explicaciones, pies y navegación de menor énfasis.
 - **Línea clara** (`line`): límites de tarjetas, separadores y controles secundarios.
@@ -181,7 +180,7 @@ Inter 4.1 conserva el archivo oficial completo, incluido Latin Extended, con SHA
 
 El contenedor editorial tiene ancho máximo (1120 px) e incluye márgenes internos de (24 px). La navegación blanca es sticky, de (72 px) de alto. Los destinos internos compensan esa barra mediante margen de scroll (96 px). El hero centra título, explicación y dos acciones; después aparece la exploración de producto. Las secciones usan separación vertical amplia, mientras precios, Enterprise y FAQ agrupan información comparable.
 
-El panel del demostrador distribuye texto e imagen en columnas (0.85:1.15), con relleno de (32 px) y separación (24 × 36 px). La imagen conserva su relación de aspecto y `object-fit: contain`; el panel tiene una altura mínima de escritorio, no una imagen de fondo. Beneficios se organiza en dos columnas, precios en tres, sectores en cuatro y FAQ en dos. Las separaciones recurrentes están en la cabecera, con valores ópticos locales que no constituyen una retícula universal.
+El panel del demostrador distribuye texto e imagen en columnas (0.85:1.15), con relleno de (32 px) y separación (24 × 36 px). La imagen conserva su relación de aspecto y `object-fit: contain`; el panel mantiene su altura mínima de escritorio, mientras la figura se centra sin fondo gris, radio ni altura mínima propios: el marco viene integrado en el activo. Las imágenes de beneficios también usan fondo blanco y relleno cero. Beneficios se organiza en dos columnas, precios en tres, sectores en cuatro y FAQ en dos. Las separaciones recurrentes están en la cabecera, con valores ópticos locales que no constituyen una retícula universal.
 
 Los breakpoints de la landing son (1029, 760, 480 y 350 px). Hasta (1029 px), el menú desplegable sustituye navegación y acciones de escritorio; sectores pasa a dos columnas. Hasta (760 px), se apilan flujo, beneficios, precios, Enterprise y FAQ. **El control de pausa del titular entra en el flujo normal, centrado debajo de las líneas, con margen (8 px auto 0)**; conserva el objetivo de (44 × 44 px) y deja de superponerse a la frase. Hasta (480 px), las dos acciones del hero ocupan filas completas, sectores usa una columna y la franja de servicios admite scroll horizontal. Hasta (350 px), el contenedor reduce sus márgenes internos a (20 px).
 
@@ -192,6 +191,8 @@ El [router](../../../src/main.jsx) conserva como único dominio público de mark
 ## Elevation & Depth
 
 Las superficies son planas: la landing no añade sombras de tarjeta ni desenfoque de fondo. El blanco, los fondos fríos y los bordes finos separan las agrupaciones. El bloque de AI Call Center invierte tinta y fondo para producir contraste; el header conserva fondo sólido al quedar sticky. La interfaz real mostrada dentro de las capturas puede contener su propio lenguaje de profundidad, que no se convierte en una regla del marketing.
+
+El refinamiento del 16 de octubre incorpora seis composiciones blancas en [framed-20261016](../../../public/marketing/modules/framed-20261016/), todas de (1440 × 1020 px). El [marco HTML/CSS](../../../scripts/marketing-screenshot-frame.html) aporta un anillo translúcido de (15 px), radio exterior de (30 px), radio interior de (12 px) y sombra exterior `0 7px 14px rgba(10,27,46,.07)`. Los PNG originales se colocan a escala 1:1 en (x36, y36), salvo Métricas en (x58, y92); el interior RGB del WebP lossless coincide con el original en el área preservada. La composición añade el marco alrededor, sin redibujar la interfaz ni usar IA.
 
 El movimiento comunica cambio de estado. Los botones y el chevrón de FAQ transicionan en (160 ms, ease-out). La frase rotatoria y la aparición del panel usan (180 ms, ease-out). La frase cambia cada (2600 ms) con control de pausa, y se detiene con documento oculto o movimiento reducido. El demostrador cambia cada (2800 ms) solo al estar visible; se pausa por hover, foco, ocultamiento, preferencia de movimiento reducido o selección manual. Cada reanudación comienza un intervalo completo, sin recuperar cambios atrasados. El [controlador](../../../src/landing/module-showcase.mjs) mantiene estas reglas fuera de React para probarlas con reloj simulado.
 

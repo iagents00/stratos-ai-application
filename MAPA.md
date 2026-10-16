@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**262 archivos · 81.050 líneas**
+**262 archivos · 81.048 líneas**
 
 ---
 
@@ -437,7 +437,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `marketing-content.js` | 108 | _sin describir_ |
 | `ModuleShowcase.jsx` | 97 | _sin describir_ |
 | `LandingMarketing.jsx` | 96 | _sin describir_ |
-| `ModuleShowcase.css` | 60 | _sin describir_ |
+| `ModuleShowcase.css` | 58 | _sin describir_ |
 
 ### `src/lib/`
 
