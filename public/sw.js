@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v440'; // v440: acentos azul Stratos y superficies navy casi negras.
+const CACHE_VERSION = 'stratos-v441'; // v441: login fijo, acceso global por permisos y CRM de empresas.
 // const CACHE_VERSION = 'stratos-v424'; // v424: ficha de Google Play (textos + graficos de tienda)
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;

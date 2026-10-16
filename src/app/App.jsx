@@ -2,6 +2,7 @@ import HuliWorkspace from "../dental-demo/TenantHuliWorkspace.jsx";
 import { DENTAL_DEMO_LEADS } from "../dental-demo/profile-data";
 import { portfolioCache } from "../lib/portfolio-cache.js";
 import { readAllRows } from "../lib/read-all-rows.js";
+import { isCommonEntryLocation } from "../lib/common-entry.js";
 /**
  * app/App.jsx — Shell principal de Stratos AI
  * ─────────────────────────────────────────────────────────────────────────────
@@ -45,7 +46,7 @@ import { llamadaEnCurso, marcarLlamadaDespachada } from "../lib/llamadas";
 import { initPushContext, enablePushNotifications, onNotificationClick, getPushStatus, subscribeToPush, saveSubscriptionToBackend } from "../lib/push";
 
 import {
-  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, X, PhoneCall, PhoneOff, MessageCircle, Target, Sparkles, Bot,
+  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, X, PhoneCall, PhoneOff, MessageCircle, Target, Sparkles, Bot, Building2,
 } from "lucide-react";
 import "./App.css";
 
@@ -260,22 +261,26 @@ const fetchAllPaged = readAllRows;
 export default function App() {
   const { user, login, logout, upgradeToOnline, bootHydrating } = useAuth();
   const [platformConsole, setPlatformConsole] = useState({ userId: null, status: "idle", data: null });
+  const [consoleOpen, setConsoleOpen] = useState(true);
+  const [platformRetry, setPlatformRetry] = useState(0);
   useEffect(() => {
     let active = true;
+    setConsoleOpen(true);
     if (!user?.id) {
       setPlatformConsole({ userId: null, status: "idle", data: null });
       return () => { active = false; };
     }
-    if (user.role !== "super_admin") {
+    if (user.isDemo || user._offline || user.isClinicalSession) {
       setPlatformConsole({ userId: user.id, status: "denied", data: null });
       return () => { active = false; };
     }
     setPlatformConsole({ userId: user.id, status: "checking", data: null });
     loadWhatsAppAdmin()
-      .then(data => { if (active) setPlatformConsole({ userId: user.id, status: data?.access?.supportOnly === false ? "denied" : "allowed", data }); })
-      .catch(() => { if (active) setPlatformConsole({ userId: user.id, status: "denied", data: null }); });
+      .then(data => { if (active) setPlatformConsole({ userId: user.id, status: data?.access && typeof data.access.root === "boolean" ? "allowed" : "denied", data }); })
+      .catch(error => { if (active) setPlatformConsole({ userId: user.id, status: [401, 403].includes(error.status) ? "denied" : "error", data: null }); });
     return () => { active = false; };
-  }, [user?.id, user?.role]);
+  }, [user?.id, user?.isDemo, user?._offline, user?.isClinicalSession, platformRetry]);
+  const hasPlatformAccess = platformConsole.userId === user?.id && platformConsole.status === "allowed";
   // Cliente activo (Duke, Grupo 28, etc.) según hostname/path. Usado como
   // fallback para orgBrand cuando la organización del user no tiene `brand`
   // explícitamente seteado en meta_config — así cada cliente ve su propia
@@ -311,6 +316,18 @@ export default function App() {
     if (!user?.id) return;
     if (vistaResueltaParaRef.current !== user.id) {
       vistaResueltaParaRef.current = user.id;   // también cubre cambiar de cuenta
+      // La primera entrada de esta cuenta en la pestaña abre su CRM. Después
+      // F5 conserva la vista elegida, como en el shell habitual.
+      if (isCommonEntryLocation(window.location) && canAccessModule("c", user, clientConfig)) {
+        try {
+          const entryKey = `stratos.common-entry.${user.id}`;
+          if (!sessionStorage.getItem(entryKey)) {
+            sessionStorage.setItem(entryKey, "1");
+            setV("c");
+            return;
+          }
+        } catch { /* storage no disponible: conserva el resolver habitual */ }
+      }
       setV(resolveInitialView(user, clientConfig));
       return;
     }
@@ -1865,7 +1882,10 @@ export default function App() {
   }, [orgMetaConfig, user?.organizationId, user?._offline]);
 
   /* ── Notifications ── */
-  const onLogout = () => logout();
+  const onLogout = () => {
+    try { if (user?.id) sessionStorage.removeItem(`stratos.common-entry.${user.id}`); } catch { /* storage bloqueado */ }
+    return logout();
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -1955,14 +1975,22 @@ export default function App() {
     return <LoginScreen onLogin={login} />;
   }
 
-  // Las cuentas de soporte de plataforma no entran al shell comercial del
-  // tenant. El permiso se comprueba en la Edge Function; no depende del correo,
-  // del nombre de la ruta ni de esconder botones en React.
-  if (platformConsole.userId === user.id && platformConsole.status === "checking") {
-    return <div style={{ position: "fixed", inset: 0, background: T.bg, color: T.txt, display: "grid", placeItems: "center", fontFamily: font }}><div style={{ textAlign: "center" }}><div style={{ width: 44, height: 44, borderRadius: "50%", border: `2px solid ${T.border}`, borderTopColor: T.accent, animation: "stratosSpin .9s linear infinite", margin: "0 auto 14px" }} /><div style={{ color: T.txt2, fontSize: 12.5 }}>Abriendo centro de soporte…</div><style>{`@keyframes stratosSpin { to { transform: rotate(360deg); } }`}</style></div></div>;
+  // La autorización de plataforma viene del servidor. La consola es el destino
+  // inicial del operador, con una salida explícita al CRM de su propia cuenta.
+  if (!user.isDemo && !user._offline && !user.isClinicalSession && (platformConsole.userId !== user.id || ["idle", "checking"].includes(platformConsole.status))) {
+    return <div style={{ position: "fixed", inset: 0, background: T.bg, color: T.txt, display: "grid", placeItems: "center", fontFamily: font }}><div style={{ textAlign: "center" }}><div style={{ width: 44, height: 44, borderRadius: "50%", border: `2px solid ${T.border}`, borderTopColor: T.accent, animation: "stratosSpin .9s linear infinite", margin: "0 auto 14px" }} /><div style={{ color: T.txt2, fontSize: 12.5 }}>Abriendo tu espacio…</div><style>{`@keyframes stratosSpin { to { transform: rotate(360deg); } }`}</style></div></div>;
   }
-  if (platformConsole.userId === user.id && platformConsole.status === "allowed") {
-    return <Suspense fallback={null}><PlatformAdminConsole initialData={platformConsole.data} T={T} theme={theme} onThemeChange={setTheme} /></Suspense>;
+  if (platformConsole.userId === user.id && platformConsole.status === "error") {
+    const button = { minHeight: 44, padding: "10px 16px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surface, color: T.txt, cursor: "pointer", fontFamily: font };
+    return <div style={{ minHeight: "100dvh", display: "grid", placeItems: "center", background: T.bg, color: T.txt, fontFamily: font, padding: 24 }}><div style={{ maxWidth: 480 }}>
+      <h1 style={{ fontSize: 24, fontWeight: 500 }}>No pude comprobar tu acceso</h1>
+      <p role="alert" style={{ color: T.txt2, lineHeight: 1.6 }}>La conexión con la plataforma está tardando. Puedes reintentar o continuar al espacio de tu empresa.</p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}><button style={{ ...button, color: T.accent }} onClick={() => setPlatformRetry(value => value + 1)}>Reintentar acceso</button>
+        <button style={button} onClick={() => setPlatformConsole({ userId: user.id, status: "denied", data: null })}>Continuar a mi empresa</button><button style={button} onClick={logout}>Cerrar sesión</button></div>
+    </div></div>;
+  }
+  if (hasPlatformAccess && consoleOpen) {
+    return <Suspense fallback={null}><PlatformAdminConsole initialData={platformConsole.data} T={T} theme={theme} onThemeChange={setTheme} onOpenOwnCRM={canAccessModule("c", user, clientConfig) ? () => { setV("c"); setConsoleOpen(false); } : undefined} /></Suspense>;
   }
 
   /* ── Sidebar helpers ── */
@@ -2379,7 +2407,8 @@ export default function App() {
               </div>
               {/* RIGHT */}
               <div className="stratos-header-right" style={{ display:"flex", alignItems:"center", gap:4 }}>
-                <MobileHeaderMenu user={user} T={T} isLight={isLight} unread={totalNotifUnread} pendingSync={pendingSync} onNotifications={() => setBellOpen(true)} onSearch={openHeaderSearch} onProfile={() => setV("perfil")} onTheme={() => setTheme(isLight ? "dark" : "light")} onLogout={onLogout} supportPhoneHref={supportPhoneHref} supportPhoneLabel={supportPhoneLabel} />
+                <MobileHeaderMenu user={user} T={T} isLight={isLight} unread={totalNotifUnread} pendingSync={pendingSync} onNotifications={() => setBellOpen(true)} onSearch={openHeaderSearch} onProfile={() => setV("perfil")} onPlatform={hasPlatformAccess ? () => setConsoleOpen(true) : undefined} onTheme={() => setTheme(isLight ? "dark" : "light")} onLogout={onLogout} supportPhoneHref={supportPhoneHref} supportPhoneLabel={supportPhoneLabel} />
+                {hasPlatformAccess && <button className="stratos-header-search" title="Empresas y administración global" aria-label="Empresas y administración global" onClick={() => setConsoleOpen(true)} style={iBtnBase} onMouseEnter={onIco} onMouseLeave={offIco}><Building2 size={18} color={T.accent} /></button>}
                 {clientConfig?.features?.crm !== false && (
                 <button className="stratos-header-search" title="Buscar (⌘K)" onClick={openHeaderSearch} style={iBtnBase} onMouseEnter={onIco} onMouseLeave={offIco} onMouseDown={dnIco} onMouseUp={upIco}>
                   <IosIcon name="search" size={16} color={icoRest} />

@@ -12,6 +12,7 @@ import { P } from "../design-system/tokens";
 import { useClient } from "../hooks/useClient";
 import { requestRecoveryCode, verifyRecoveryCode } from "../lib/recovery";
 import { isNativeApp } from "../lib/native";
+import { isCommonEntryLocation } from "../lib/common-entry";
 
 const font  = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
 const fontD = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
@@ -67,13 +68,17 @@ export default function LoginScreen({ onLogin }) {
   // para que Duke quede pixel-idéntico: name "Stratos AI" + logoText "Stratos"
   // → "Stratos" en bold + "AI" en ligero. Para clientes cuyo name == logoText
   // (TGenius, Grupo 28) no hay sufijo → se muestra solo el nombre.
-  const { config, clientId } = useClient();
+  const { config: clientConfig, clientId } = useClient();
+  // El acceso común mantiene la marca Stratos incluso tras cerrar una sesión
+  // cuya empresa se había aplicado en memoria. Las portadas específicas siguen.
+  const commonEntry = isCommonEntryLocation(window.location);
+  const config = commonEntry ? null : clientConfig;
   const brandName   = config?.name || "Stratos AI";
   const brandWord   = config?.brand?.logoText || "Stratos";
   const brandSuffix = brandName.startsWith(brandWord)
     ? brandName.slice(brandWord.length).trim()
     : "";
-  const isDuke   = clientId === "duke";
+  const isDuke   = commonEntry || clientId === "duke";
   // ── Portada del acceso, por cliente ──────────────────────────────
   // Era texto fijo de Stratos: "IA comercial", "diseñado para cerrar más" y
   // "$40M+ en transacciones gestionadas". A una inmobiliaria le habla; a una

@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Menu, X, Bell, Search, UserRound, Sun, Moon, LogOut, PhoneCall, ChevronRight } from "lucide-react";
+import { Menu, X, Bell, Search, UserRound, Sun, Moon, LogOut, PhoneCall, ChevronRight, Building2 } from "lucide-react";
 import "./MobileHeaderMenu.css";
 
-export default function MobileHeaderMenu({ user, T, isLight, unread, pendingSync, onNotifications, onSearch, onProfile, onTheme, onLogout, supportPhoneHref, supportPhoneLabel }) {
+export default function MobileHeaderMenu({ user, T, isLight, unread, pendingSync, onNotifications, onSearch, onProfile, onPlatform, onTheme, onLogout, supportPhoneHref, supportPhoneLabel }) {
   const [open, setOpen] = useState(false);
   const trigger = useRef(null);
   const panel = useRef(null);
@@ -54,6 +54,7 @@ export default function MobileHeaderMenu({ user, T, isLight, unread, pendingSync
         {row(Bell, "Notificaciones", onNotifications, count > 0 ? (count > 99 ? "99+" : count) : undefined)}
         {row(Search, "Buscar", onSearch)}
         {row(UserRound, "Mi perfil", onProfile)}
+        {onPlatform && row(Building2, "Empresas y administración global", onPlatform)}
         {row(isLight ? Moon : Sun, isLight ? "Cambiar a modo oscuro" : "Cambiar a modo claro", onTheme)}
         {supportPhoneHref && <a className="mobile-account-row" href={supportPhoneHref} onClick={close}><PhoneCall size={19} strokeWidth={1.8} /><span>Soporte {supportPhoneLabel}</span><ChevronRight size={15} className="mobile-account-chevron" /></a>}
         <div className="mobile-account-separator" />

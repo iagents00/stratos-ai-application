@@ -2,7 +2,7 @@ import { createElement, useCallback, useEffect, useMemo, useState } from "react"
 import {
   Activity, Building2, Copy, Eye, EyeOff, FolderOpen, Gauge, KeyRound,
   LayoutDashboard, LogOut, Megaphone, Menu, MessageCircle, Plus, RefreshCw,
-  ShieldCheck, Users, Waypoints, X, Sun, Moon,
+  ShieldCheck, Users, Waypoints, X, Sun, Moon, ContactRound,
 } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { useAuth } from "../../../hooks/useAuth";
@@ -16,6 +16,8 @@ import CatalogConfiguratorAdmin from "./CatalogConfiguratorAdmin";
 import CompanySetupAdmin from "./CompanySetupAdmin";
 import CompanyOnboarding from "./CompanyOnboarding";
 import PlatformUsersAdmin from "./PlatformUsersAdmin";
+import PlatformCompanyCRM from "./PlatformCompanyCRM";
+import { StratosAtomHex } from "../../components/Logo";
 import "./PlatformAdminConsole.css";
 
 const EMPTY_PARTNER = { name: "", admin_name: "", email: "", company_limit: 100 };
@@ -154,10 +156,14 @@ function TemporaryAccessPanel({ T, credentials, organizations, partners, loading
   </div>;
 }
 
-export default function PlatformAdminConsole({ initialData, T: palette = P, theme = "dark", onThemeChange }) {
+export default function PlatformAdminConsole({ initialData, T: palette = P, theme = "dark", onThemeChange, onOpenOwnCRM }) {
   const { logout, user } = useAuth();
   const isMobile = useIsMobile();
-  const T = { ...palette, accent: palette.accentDark || palette.accent };
+  const T = palette;
+  const [crmCompany, setCrmCompany] = useState("");
+  const [crmGuard, setCRMGuard] = useState({ dirty: false, saving: false });
+  const [pendingNavigation, setPendingNavigation] = useState(null);
+  const onCRMDraftState = useCallback((dirty, saving) => setCRMGuard({ dirty, saving }), []);
   const [integrationCompany, setIntegrationCompany] = useState("");
   const [usersCompany, setUsersCompany] = useState("");
   const [setupCompany, setSetupCompany] = useState("");
@@ -192,15 +198,28 @@ export default function PlatformAdminConsole({ initialData, T: palette = P, them
   const used = Number(data?.access?.companiesUsed || 0);
   const limit = data?.access?.companyLimit;
   const nav = useMemo(() => [
-    ["home", "Resumen", LayoutDashboard], ["companies", "Empresas", Building2],
+    ["companies", "Empresas", Building2], ["crm", "CRM de empresas", ContactRound], ["home", "Resumen", LayoutDashboard],
     ...(root ? [["users", "Usuarios", Users], ["marketing", "Marketing", Megaphone]] : []),
     ["whatsapp", "WhatsApp", MessageCircle],
     ["credentials", "Accesos temporales", KeyRound], ["pipelines", "Pipelines", Waypoints], ["catalogs", "Catálogos", FolderOpen],
     ...(root ? [["setup", "Módulos y licencias", ShieldCheck], ["partners", "Partners y cupos", Users], ["activity", "Actividad", Activity]] : []),
   ], [root]);
-  const choose = id => { setSection(id); setMenuOpen(false); if (id === "credentials") refreshCredentials(); if (id === "users" || id === "marketing") setUsersCompany(""); if (id === "setup") setSetupCompany(""); };
+  const navigate = id => {
+    setPendingNavigation(null);
+    if (id === "own-crm") { onOpenOwnCRM?.(); return; }
+    setSection(id); setMenuOpen(false);
+    if (id === "credentials") refreshCredentials();
+    if (id === "users" || id === "marketing") setUsersCompany("");
+    if (id === "setup") setSetupCompany("");
+  };
+  const choose = id => {
+    if (crmGuard.saving) return;
+    if (section === "crm" && crmGuard.dirty && id !== "crm") { setPendingNavigation(id); setMenuOpen(false); return; }
+    navigate(id);
+  };
 
-  const content = section === "companies" ? <CompanyOnboarding data={data} refresh={refresh} onIntegrations={id => { setIntegrationCompany(id); choose("whatsapp"); }} onUsers={id => { choose("users"); setUsersCompany(id); }} onSetup={id => { choose("setup"); setSetupCompany(id); }} />
+  const content = section === "companies" ? <CompanyOnboarding data={data} refresh={refresh} onOpenCRM={id => { setCrmCompany(id); choose("crm"); }} onIntegrations={id => { setIntegrationCompany(id); choose("whatsapp"); }} onUsers={id => { choose("users"); setUsersCompany(id); }} onSetup={id => { choose("setup"); setSetupCompany(id); }} />
+    : section === "crm" ? <PlatformCompanyCRM key={crmCompany || "select"} T={T} organizations={data?.organizations || []} initialOrganizationId={crmCompany} actorId={user?.id} onDraftState={onCRMDraftState} />
     : (section === "users" || section === "marketing") && root ? <PlatformUsersAdmin key={`${section}:${usersCompany}`} currentUserId={user?.id} initialOrganizationId={usersCompany} marketingOnly={section === "marketing"} refreshKey={usersRefreshKey} onChanged={refresh} />
     : section === "whatsapp" ? <WhatsAppOnboardingAdmin T={T} initialOrganizationId={integrationCompany} integrationsOnly />
     : section === "credentials" ? <TemporaryAccessPanel T={T} credentials={temporaryCredentials} organizations={data?.organizations || []} partners={data?.partners || []} loading={credentialsLoading} error={credentialsError} />
@@ -222,17 +241,43 @@ export default function PlatformAdminConsole({ initialData, T: palette = P, them
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(230px,1fr))", gap: 12 }}>{nav.filter(([id]) => id !== "home").map(([id, label, icon]) => <button key={id} onClick={() => choose(id)} style={{ border: `1px solid ${T.border}`, borderRadius: 16, background: T.glass, color: T.txt, padding: 18, textAlign: "left", cursor: "pointer", fontFamily: font }}>{createElement(icon, { size: 19, color: T.accent })}<div style={{ fontWeight: 750, marginTop: 13 }}>{label}</div><div style={{ color: T.txt3, fontSize: 11.5, marginTop: 5 }}>Abrir sección</div></button>)}</div>
             </div>;
 
-  return <div className="platform-console" data-theme={theme} style={{ "--company-bg": T.bg, "--company-surface": T.surface, "--company-hover": T.glassH, "--company-text": T.txt, "--company-muted": T.txt3, "--company-border": T.borderH, "--company-accent": T.accent, "--company-on-accent": T.onAccent, "--company-success": T.success, "--company-error": T.rose, position: "fixed", inset: 0, zIndex: 10000, background: T.bg, color: T.txt, fontFamily: font, display: "flex", overflow: "hidden" }}>
-    {isMobile && <button aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"} aria-expanded={menuOpen} aria-controls="platform-navigation" onClick={() => setMenuOpen(v => !v)} style={{ position: "fixed", top: 14, left: 14, zIndex: 10003, width: 42, height: 42, borderRadius: 12, border: `1px solid ${T.border}`, background: T.surface, color: T.txt, display: "grid", placeItems: "center" }}>{menuOpen ? <X size={18} /> : <Menu size={18} />}</button>}
-    {isMobile && menuOpen && <button aria-label="Cerrar navegación" onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, border: 0, background: "rgba(0,0,0,.45)", zIndex: 10001 }} />}
-    <aside style={{ width: 248, flexShrink: 0, padding: isMobile ? "72px 14px 22px" : "22px 14px", borderRight: `1px solid ${T.border}`, background: T.surface, display: isMobile && !menuOpen ? "none" : "flex", flexDirection: "column", position: isMobile ? "fixed" : "relative", inset: isMobile ? 0 : "auto", zIndex: 10002 }}>
-      <div style={{ padding: "4px 10px 22px" }}><div style={{ color: T.accent, fontWeight: 800, letterSpacing: ".04em" }}>STRATOS</div><div style={{ color: T.txt3, fontSize: 11.5, marginTop: 4 }}>{root ? "Superadministrador" : "Administrador partner"}</div></div>
-      <nav id="platform-navigation" className="console-nav" aria-label="Administración de Stratos" style={{ display: "flex", flexDirection: "column", gap: 5 }}>{nav.map(([id, label, icon]) => <button key={id} aria-current={section === id ? "page" : undefined} onClick={() => choose(id)} style={{ minHeight: 43, borderRadius: 11, border: `1px solid ${section === id ? T.accentB : "transparent"}`, background: section === id ? T.accentS : "transparent", color: section === id ? T.accent : T.txt2, display: "flex", alignItems: "center", gap: 10, padding: "0 12px", cursor: "pointer", fontFamily: font, fontWeight: 650, textAlign: "left" }}>{createElement(icon, { size: 16 })}{label}</button>)}</nav>
-      <div style={{ marginTop: "auto", borderTop: `1px solid ${T.border}`, paddingTop: 14 }}><div style={{ padding: "0 10px 12px", color: T.txt3, fontSize: 11.5, overflow: "hidden", textOverflow: "ellipsis" }}>{user?.email || user?.name}</div><button onClick={logout} style={{ width: "100%", minHeight: 41, borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.txt2, display: "flex", alignItems: "center", gap: 9, padding: "0 12px", cursor: "pointer" }}><LogOut size={15} /> Cerrar sesión</button></div>
+  const shortLabel = { crm: "CRM", credentials: "Accesos", pipelines: "Pipelines", catalogs: "Catálogos", setup: "Módulos", activity: "Actividad" };
+  return <div className="platform-console" data-theme={theme} style={{
+    "--company-bg": T.bg, "--company-rail": theme === "light" ? T.bgSoft : T.bg2,
+    "--company-surface": T.surface, "--company-hover": T.glassH,
+    "--company-text": T.txt, "--company-muted": T.txt3, "--company-border": T.border,
+    "--company-accent": T.accent, "--company-on-accent": T.onAccent,
+    "--company-success": T.success, "--company-error": T.rose, fontFamily: font,
+  }}>
+    {isMobile && <button className="platform-menu-toggle" aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"} aria-expanded={menuOpen} aria-controls="platform-navigation" onClick={() => setMenuOpen(value => !value)}>{menuOpen ? <X size={20} /> : <Menu size={20} />}</button>}
+    {isMobile && menuOpen && <button className="platform-menu-backdrop" aria-label="Cerrar navegación" onClick={() => setMenuOpen(false)} />}
+    <aside className="platform-rail" data-open={menuOpen}>
+      <div className="platform-rail-brand"><StratosAtomHex size={30} color={theme === "light" ? T.accent : T.txt} edge={T.accentSoft} /><span>{isMobile ? "Stratos AI" : "STRATOS"}</span></div>
+      <nav id="platform-navigation" className="console-nav platform-rail-nav" aria-label="Administración de Stratos">
+        {nav.map(([id, label, icon]) => <button key={id} title={label} aria-label={label} aria-current={section === id ? "page" : undefined} onClick={() => choose(id)}>
+          {createElement(icon, { size: 21, strokeWidth: 1.6 })}<span>{isMobile ? label : shortLabel[id] || label}</span>
+        </button>)}
+      </nav>
+      <div className="platform-rail-footer">
+        {onOpenOwnCRM && <button title="Abrir mi CRM" aria-label="Abrir mi CRM" disabled={crmGuard.saving} onClick={() => choose("own-crm")}><ContactRound size={21} strokeWidth={1.6} /><span>Mi CRM</span></button>}
+        <button title="Cerrar sesión" aria-label="Cerrar sesión" onClick={logout}><LogOut size={20} strokeWidth={1.6} /><span>Salir</span></button>
+      </div>
     </aside>
-    <main inert={isMobile && menuOpen ? true : undefined} style={{ flex: 1, minWidth: 0, overflowY: "auto", paddingTop: 0 }}>
-      <div style={{ position: "sticky", top: 0, zIndex: 3, background: T.bg, minHeight: 62, borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "0 16px 0 66px" : "0 24px" }}><div><strong style={{ fontSize: 13.5 }}>{nav.find(([id]) => id === section)?.[1] || "Centro de soporte"}</strong><div style={{ color: T.txt3, fontSize: 10.5, marginTop: 3 }}>{root ? "Control total de Stratos" : `${used} de ${limit || 0} empresas utilizadas`}</div></div><div style={{ display: "flex", gap: 8 }}>{onThemeChange && <button aria-label={theme === "light" ? "Activar tema oscuro" : "Activar tema claro"} onClick={() => onThemeChange(theme === "light" ? "dark" : "light")} style={{ width: 44, borderRadius: 10, border: `1px solid ${T.border}`, background: T.surface, color: T.txt2, display: "grid", placeItems: "center", cursor: "pointer" }}>{theme === "light" ? <Moon size={18} /> : <Sun size={18} />}</button>}<button aria-label="Actualizar consola" onClick={() => { refresh(); if (section === "credentials") refreshCredentials(); if (section === "users" || section === "marketing") setUsersRefreshKey(value => value + 1); }} disabled={loading} style={{ minHeight: 36, borderRadius: 10, border: `1px solid ${T.border}`, background: T.glass, color: T.txt2, padding: "0 12px", display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}><RefreshCw size={14} />{!isMobile && "Actualizar"}</button></div></div>
+    <main className="platform-main" inert={isMobile && menuOpen ? true : undefined}>
+      <header className="platform-header">
+        <div className="platform-header-brand">Stratos<span>AI</span></div>
+        <div className="platform-header-context">{root ? "Administración global" : "Mis empresas"}</div>
+        <div className="platform-header-actions">
+          {onOpenOwnCRM && <button className="platform-own-crm" disabled={crmGuard.saving} onClick={() => choose("own-crm")}><ContactRound size={16} />Mi CRM</button>}
+          <button aria-label="Actualizar consola" title="Actualizar consola" disabled={loading} onClick={() => { refresh(); if (section === "credentials") refreshCredentials(); if (section === "users" || section === "marketing") setUsersRefreshKey(value => value + 1); }}><RefreshCw size={17} /></button>
+          {onThemeChange && <button aria-label={theme === "light" ? "Modo oscuro" : "Modo claro"} title={theme === "light" ? "Modo oscuro" : "Modo claro"} onClick={() => onThemeChange(theme === "light" ? "dark" : "light")}>
+            {theme === "light" ? <Moon size={17} /> : <Sun size={17} />}
+          </button>}
+          <div className="platform-user" title={user?.email || user?.name}><span aria-hidden="true">{user?.name?.charAt(0).toUpperCase() || "U"}</span><div><strong>{user?.name?.split(" ")[0] || "Mi cuenta"}</strong><small>{root ? "Superadministrador" : "Partner"}</small></div></div>
+        </div>
+      </header>
       {error && section !== "home" && <div className="company-message company-error" role="alert" style={{ margin: 16 }}>{error}</div>}
+      {pendingNavigation && <div className="company-message" role="alert" style={{ margin: 24, color: T.txt }}><div><strong>Tienes cambios sin guardar.</strong><p style={{ color: T.txt2 }}>Puedes seguir editando o descartar este borrador antes de salir.</p><div className="company-actions"><button className="company-secondary" onClick={() => setPendingNavigation(null)}>Seguir editando</button><button className="company-secondary" onClick={() => navigate(pendingNavigation)}>Descartar cambios y salir</button></div></div></div>}
       {content}
     </main>
   </div>;

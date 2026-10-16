@@ -4,9 +4,9 @@
  * Provee la configuración del cliente activo (Duke, Grupo 28, NSG, Vega…) a
  * toda la app.
  *
- * El clientId se resuelve en main.jsx con resolveClientFromLocation() y se pasa
- * a este provider como prop. NO se cambia en runtime — para cambiar de cliente
- * se navega a la URL correspondiente.
+ * El clientId se resuelve en main.jsx. En /login y la entrada común se aplica
+ * después la empresa del perfil sin cambiar de URL; las entradas white-label
+ * conservan sus rutas específicas.
  *
  * USO en componentes:
  *   import { useClient } from "../hooks/useClient";
@@ -20,30 +20,37 @@
  * porqué — se desincronizó una vez y apagó toda la personalización por cliente.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { createContext, useMemo, useState, useCallback } from "react";
+import { createContext, useMemo, useState, useCallback, useEffect } from "react";
 import { getClientConfig } from "../clients";
 import { isNativeApp } from "../lib/native";
+import { isCommonEntryLocation } from "../lib/common-entry";
 import { DEFAULT_CLIENT_CONFIG } from "../clients/_shared/defaults";
 import { crearValorCliente } from "../clients/_shared/client-value";
 
 export const ClientContext = createContext(crearValorCliente(DEFAULT_CLIENT_CONFIG));
 
 export function ClientProvider({ config, children }) {
-  // En WEB el cliente lo fija la URL y no cambia en runtime: ClientOrgGuard
-  // redirige al path correcto. En la APP NATIVA no hay URL que lo fije —
-  // siempre arranca en capacitor://localhost — así que el tenant se aplica en
-  // memoria después del login, a partir de user.organizationId.
-  const [configNativa, setConfigNativa] = useState(null);
+  // Las entradas compartidas y el binario aplican la empresa del perfil en
+  // memoria. Las rutas white-label conservan la resolución por URL.
+  const inMemory = isNativeApp() || isCommonEntryLocation(typeof window !== "undefined" ? window.location : null);
+  const [configMemoria, setConfigMemoria] = useState(null);
   const [organizationFeatures, setOrganizationFeaturesState] = useState(null);
-  const base = (isNativeApp() ? configNativa : null) || config;
+  const base = (inMemory ? configMemoria : null) || config;
   const activa = useMemo(() => base?.id === "tenant" && organizationFeatures
     ? { ...base, features: { ...base.features, ...organizationFeatures.features } }
     : base, [base, organizationFeatures]);
 
   const setClientById = useCallback((clientId) => {
-    if (!isNativeApp() || !clientId) return;   // en web manda la URL
-    setConfigNativa(getClientConfig(clientId));
-  }, []);
+    if (!inMemory || !clientId) return;
+    setConfigMemoria(getClientConfig(clientId));
+    setOrganizationFeaturesState(null);
+  }, [inMemory]);
+
+  useEffect(() => {
+    if (!inMemory || !base) return;
+    document.documentElement.setAttribute("data-client", base.id);
+    document.title = `${base.name} — Plataforma`;
+  }, [inMemory, base]);
 
   const setOrganizationFeatures = useCallback((organizationId, features, managed = false) => {
     setOrganizationFeaturesState({ organizationId, features, managed });
@@ -51,7 +58,7 @@ export function ClientProvider({ config, children }) {
 
   const value = useMemo(
     () => crearValorCliente(activa, setClientById, setOrganizationFeatures, organizationFeatures?.organizationId || null, organizationFeatures?.managed || false),
-    [activa, setClientById, setOrganizationFeatures, organizationFeatures?.organizationId],
+    [activa, setClientById, setOrganizationFeatures, organizationFeatures?.organizationId, organizationFeatures?.managed],
   );
 
   return (

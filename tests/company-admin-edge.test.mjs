@@ -5,6 +5,7 @@ import { stripTypeScriptTypes } from 'node:module';
 import vm from 'node:vm';
 import { webcrypto } from 'node:crypto';
 const provisioningSource=stripTypeScriptTypes(readFileSync('supabase/functions/_shared/provision-user.ts','utf8').replace('export async function','async function'));
+const crmSource=stripTypeScriptTypes(readFileSync('supabase/functions/whatsapp-admin/platform-crm.ts','utf8').replace(/^export /gm,''));
 const source=stripTypeScriptTypes(readFileSync('supabase/functions/whatsapp-admin/index.ts','utf8').replace(/^import .*;\n/gm,''));
 
 function harness({operator=true,disabled=false,root=false,rpcError=null,directory=null}={}) {
@@ -29,6 +30,7 @@ function harness({operator=true,disabled=false,root=false,rpcError=null,director
   Deno:{env:{get:key=>({SB_URL:'https://stratos.example',SB_SERVICE_ROLE_KEY:'service',SB_ANON_KEY:'anon'}[key])},serve:fn=>{handler=fn;}},
  });
  vm.runInContext(provisioningSource,context);
+ vm.runInContext(crmSource,context);
  vm.runInContext(source,context);
  const call=async payload=>{const response=await handler(new Request('https://stratos.example/functions/v1/whatsapp-admin',{method:'POST',headers:{authorization:'Bearer qa'},body:JSON.stringify(payload)}));return {status:response.status,body:await response.json()};};
  return {call,creates,rows,rpcs,authUsers,authPages};
@@ -151,4 +153,39 @@ test('root can provision Marketing into historical and managed companies without
   assert.equal(h.creates[0].app_metadata.stratos_organization_id,organization_id);
   assert.equal(h.rows.platform_admins.length,1);
  }
+});
+
+test('CRM actions bind the verified operator and expose explicit RPCs with bounded pagination',async()=>{
+ const h=harness({root:true});
+ const organization_id='00000000-0000-0000-0000-000000000001';
+ const lead_id='00000000-0000-0000-0000-000000000099';
+ const listed=await h.call({action:'list_company_leads',organization_id,page:2,page_size:25,search:'Maria',p_actor_id:'forged'});
+ assert.equal(listed.status,200);assert.equal(h.rpcs[0].name,'fn_platform_crm_read');
+ assert.equal(h.rpcs[0].args.p_actor_id,'operator');assert.equal(h.rpcs[0].args.p_organization_id,organization_id);
+ assert.equal(h.rpcs[0].args.p_page,2);assert.equal(h.rpcs[0].args.p_page_size,25);assert.equal(h.rpcs[0].args.p_search,'Maria');
+ assert.equal(h.rpcs[0].args.p_lead_id,null);
+ for(const page_size of [0,101,1.5]) assert.equal((await h.call({action:'list_company_leads',organization_id,page_size})).status,400);
+ assert.equal((await h.call({action:'get_company_lead',organization_id})).status,400);
+ assert.equal((await h.call({action:'get_company_lead',organization_id,lead_id})).status,200);
+ assert.equal(h.rpcs[1].args.p_lead_id,lead_id);
+ assert.equal((await h.call({action:'update_company_lead',organization_id,lead_id,patch:{name:'Maria'}})).status,400);
+ const expected_updated_at='2026-10-16T00:00:00.123456+00:00';
+ assert.equal((await h.call({action:'update_company_lead',organization_id,lead_id,expected_updated_at,patch:{name:'Maria'}})).status,200);
+ assert.equal(h.rpcs[2].name,'fn_platform_crm_mutate');assert.equal(h.rpcs[2].args.p_create,false);
+ assert.equal(h.rpcs[2].args.p_expected_updated_at,expected_updated_at,'retain timestamp precision');
+ assert.equal((await h.call({action:'create_company_lead',organization_id,lead_id,lead:{name:'Maria'}})).status,200);
+ assert.equal(h.rpcs[3].args.p_create,true);assert.equal(h.rpcs[3].args.p_lead_id,lead_id);
+});
+
+test('CRM maps scope rejection, stale saves and undeployed gateway without falling back to tenant reads',async()=>{
+ const organization_id='00000000-0000-0000-0000-000000000001';
+ for(const [code,status] of [['42501',403],['P0002',404],['40001',409],['23505',409],['22023',400],['PGRST202',503]]) {
+  const h=harness({root:true,rpcError:{code,message:'SQL rejected'}});
+  const response=await h.call({action:'list_company_leads',organization_id});
+  assert.equal(response.status,status);assert.equal(response.body.code,code);
+  assert.equal(h.rpcs.length,1);
+ }
+ const h=harness({operator:false});
+ assert.equal((await h.call({action:'list_company_leads',organization_id})).status,403);
+ assert.equal(h.rpcs.length,0);
 });

@@ -1,4 +1,4 @@
-.platform-console { color-scheme: dark; --company-surface: #030D13; }
+.platform-console { color-scheme: dark; position: fixed; inset: 0; z-index: 10000; display: flex; overflow: hidden; background: var(--company-bg); color: var(--company-text); }
 .platform-console[data-theme="light"] { color-scheme: light; }
 .platform-console *, .platform-console *::before, .platform-console *::after { box-sizing: border-box; }
 .platform-console button, .platform-console input:not([type="checkbox"]), .platform-console select { min-height: 44px; font: inherit; }
@@ -13,6 +13,44 @@
 .platform-console .console-page { max-width: 1240px; margin: 0 auto; }
 .platform-console .console-nav { overflow-y: auto; }
 .platform-console .console-nav button[aria-current="page"] { font-weight: 600; }
+.platform-rail { flex: 0 0 72px; width: 72px; display: flex; flex-direction: column; background: var(--company-rail); border-inline-end: 1px solid var(--company-border); padding: 0 7px 10px; min-height: 0; }
+.platform-rail-brand { min-height: 84px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; }
+.platform-rail-brand > span { color: var(--company-muted); font-size: 7px; letter-spacing: .16em; }
+.platform-console .platform-rail-nav { display: flex; flex-direction: column; gap: 4px; padding: 6px 0; min-height: 0; scrollbar-width: none; }
+.platform-console .platform-rail button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-height: 54px; width: 56px; padding: 7px 2px; border-radius: 12px; background: transparent; border: 1px solid transparent; color: var(--company-muted); cursor: pointer; flex-shrink: 0; }
+.platform-console .platform-rail button > span { font-size: 9px; font-weight: 400; line-height: 1.15; }
+.platform-console .platform-rail button:hover { background: var(--company-hover); color: var(--company-text); }
+.platform-console .platform-rail button[aria-current="page"] { border-color: var(--company-border); background: var(--company-surface); color: var(--company-accent); }
+.platform-rail-footer { border-top: 1px solid var(--company-border); padding-top: 8px; margin-top: auto; flex-shrink: 0; }
+.platform-main { flex: 1; min-width: 0; overflow-y: auto; }
+.platform-header { position: sticky; top: 0; z-index: 3; height: 52px; display: flex; align-items: center; gap: 24px; padding: 0 20px; border-bottom: 1px solid var(--company-border); background: var(--company-bg); }
+.platform-header-brand { display: flex; gap: 3px; font-size: 14px; letter-spacing: -.03em; white-space: nowrap; }
+.platform-header-brand > span { color: var(--company-muted); }
+.platform-header-context { margin-right: auto; color: var(--company-accent); font-size: 12px; }
+.platform-header-actions { margin-left: auto; display: flex; align-items: center; gap: 5px; min-width: 0; }
+.platform-console .platform-header-actions > button { min-width: 44px; min-height: 44px; padding: 0 10px; border: 0; border-radius: 9px; background: transparent; color: var(--company-muted); display: inline-flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; }
+.platform-console .platform-header-actions > button:hover { background: var(--company-hover); color: var(--company-text); }
+.platform-console .platform-header-actions > .platform-own-crm { color: var(--company-accent); font-size: 12px; }
+.platform-user { display: flex; align-items: center; gap: 8px; padding-left: 10px; min-width: 0; }
+.platform-user > span { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: var(--company-accent); border: 1px solid var(--company-border); font-size: 12px; flex-shrink: 0; }
+.platform-user > div { display: grid; gap: 2px; min-width: 0; }
+.platform-user strong { font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.platform-user small { font-size: 10px; color: var(--company-muted); }
+.platform-console .platform-menu-toggle, .platform-menu-backdrop { display: none; }
+@media (max-width: 768px) {
+  .platform-console .platform-menu-toggle { display: grid; place-items: center; position: fixed; top: 4px; left: 6px; z-index: 10003; min-width: 44px; min-height: 44px; border: 0; background: var(--company-bg); color: var(--company-text); border-radius: 9px; }
+  .platform-console .platform-menu-backdrop { display: block; position: fixed; inset: 0; border: 0; background: rgba(0,0,0,.45); z-index: 10001; }
+  .platform-rail { display: none; position: fixed; inset: 0 auto 0 0; z-index: 10002; width: 248px; padding: 52px 14px 14px; }
+  .platform-rail[data-open="true"] { display: flex; }
+  .platform-rail-brand { min-height: 62px; flex-direction: row; justify-content: flex-start; padding-inline: 10px; gap: 10px; }
+  .platform-rail-brand > span { color: var(--company-text); font-size: 14px; letter-spacing: -.02em; }
+  .platform-console .platform-rail button { width: 100%; min-height: 46px; padding: 8px 12px; flex-direction: row; justify-content: flex-start; gap: 12px; }
+  .platform-console .platform-rail button > span { font-size: 13px; }
+  .platform-header { padding: 0 10px 0 54px; gap: 8px; }
+  .platform-header-context, .platform-user > div, .platform-console .platform-header-actions > .platform-own-crm { display: none; }
+  .platform-header-actions { gap: 0; }
+  .platform-user { padding-left: 4px; }
+}
 .company-page { max-width: 1240px; padding: 36px 40px 72px; margin: 0 auto; font-size: 14px; line-height: 1.55; }
 .company-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 30px; }
 .company-heading h1 { margin: 0; font-size: clamp(25px, 2.5vw, 32px); line-height: 1.2; letter-spacing: -.025em; font-weight: 550; overflow-wrap: anywhere; }
@@ -150,7 +188,7 @@
   .platform-users-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .platform-users-list-heading, .platform-users .platform-user-row { grid-template-columns: minmax(170px, 1.2fr) minmax(110px, .9fr) minmax(130px, 1fr) 18px; gap: 12px; }
 }
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .company-page { padding: 24px 16px 48px; }
   .company-heading { align-items: flex-start; flex-direction: column; gap: 18px; margin-bottom: 24px; }
   .company-heading > .company-primary { width: 100%; }
