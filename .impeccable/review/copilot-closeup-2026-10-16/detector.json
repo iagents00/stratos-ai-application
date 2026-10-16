@@ -1,0 +1,60 @@
+[
+  {
+    "antipattern": "broken-image",
+    "name": "Broken or placeholder image",
+    "description": "<img> tags with empty src, missing src, or placeholder values ship as broken-image boxes. Use real images, generated assets, or remove the tag.",
+    "severity": "warning",
+    "category": "quality",
+    "file": "/Users/ivanrodriguezruelas/stratos-ai-application/scripts/marketing-screenshot-frame.html",
+    "line": 0,
+    "snippet": "<img> with no src attribute"
+  },
+  {
+    "antipattern": "design-system-color",
+    "name": "Color outside DESIGN.md",
+    "description": "A literal color is outside the DESIGN.md palette and sidecar tonal ramps. This may be legitimate, but it should be an intentional design-system addition rather than drift.",
+    "severity": "advisory",
+    "category": "quality",
+    "file": "/Users/ivanrodriguezruelas/stratos-ai-application/scripts/marketing-screenshot-frame.html",
+    "line": 13,
+    "snippet": "border-top rgba(157, 180, 194, 0.36) on div is outside DESIGN.md colors",
+    "advisory": true,
+    "ignoreValue": "rgba(157, 180, 194, 0.36)"
+  },
+  {
+    "antipattern": "design-system-radius",
+    "name": "Radius outside DESIGN.md",
+    "description": "A border-radius value is outside the DESIGN.md rounded scale. Use a documented radius token or update the design system if the new shape is intentional.",
+    "severity": "advisory",
+    "category": "quality",
+    "file": "/Users/ivanrodriguezruelas/stratos-ai-application/scripts/marketing-screenshot-frame.html",
+    "line": 13,
+    "snippet": "border-radius 30px on div is outside the DESIGN.md rounded scale",
+    "advisory": true,
+    "ignoreValue": "30px"
+  },
+  {
+    "antipattern": "design-system-color",
+    "name": "Color outside DESIGN.md",
+    "description": "A literal color is outside the DESIGN.md palette and sidecar tonal ramps. This may be legitimate, but it should be an intentional design-system addition rather than drift.",
+    "severity": "advisory",
+    "category": "quality",
+    "file": "/Users/ivanrodriguezruelas/stratos-ai-application/scripts/marketing-screenshot-frame.html",
+    "line": 20,
+    "snippet": "outline rgba(153, 178, 194, 0.18) on div is outside DESIGN.md colors",
+    "advisory": true,
+    "ignoreValue": "rgba(153, 178, 194, 0.18)"
+  },
+  {
+    "antipattern": "design-system-color",
+    "name": "Color outside DESIGN.md",
+    "description": "A literal color is outside the DESIGN.md palette and sidecar tonal ramps. This may be legitimate, but it should be an intentional design-system addition rather than drift.",
+    "severity": "advisory",
+    "category": "quality",
+    "file": "/Users/ivanrodriguezruelas/stratos-ai-application/scripts/marketing-screenshot-frame.html",
+    "line": 15,
+    "snippet": "Undocumented color rgba(156,181,196,.12) is outside DESIGN.md colors",
+    "advisory": true,
+    "ignoreValue": "rgba(156,181,196,.12)"
+  }
+]

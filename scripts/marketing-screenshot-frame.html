@@ -29,9 +29,11 @@
     const params = new URLSearchParams(location.search);
     const module = params.get('module');
     if (!modules.includes(module)) throw new Error('Selecciona un módulo real de Stratos.');
-    document.querySelector('img').src = params.get('source') === 'original'
-      ? `/output/playwright/marketing-source/${module}.png`
-      : `/marketing/modules/${module}.webp`;
+    document.querySelector('img').src = module === 'copilot' && params.get('source') === 'closeup'
+      ? '/output/playwright/copilot-closeup/copilot-source.png'
+      : params.get('source') === 'original'
+        ? `/output/playwright/marketing-source/${module}.png`
+        : `/marketing/modules/${module}.webp`;
   </script>
 </body>
 </html>

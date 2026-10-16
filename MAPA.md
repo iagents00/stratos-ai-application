@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**266 archivos · 81.213 líneas**
+**266 archivos · 81.233 líneas**
 
 ---
 
@@ -492,6 +492,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `rails-store.js` | 51 | _sin describir_ |
 | `financial-data.js` | 41 | _sin describir_ |
 | `password-change.js` | 38 | Change only the authenticated user's password; never trust a cached UI identity. |
+| `copilot-demo.js` | 36 | Demo messages are local examples; they never claim to write to a real account. |
 | `read-all-rows.js` | 36 | _sin describir_ |
 | `app-review-access.native.js` | 32 | _sin describir_ |
 | `service-errors.js` | 32 | _sin describir_ |
@@ -499,7 +500,6 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `rails-gestion.js` | 24 | Valida el borrador una vez; un envío incierto se reintenta sin alterar su payload. |
 | `auth-events.js` | 22 | _sin describir_ |
 | `project-copilot.js` | 18 | _sin describir_ |
-| `copilot-demo.js` | 16 | Demo messages are local examples; they never claim to write to a real account. |
 | `app-review-access.js` | 12 | Implementación web: App Review no existe fuera del binario móvil. |
 | `huli.js` | 10 | _sin describir_ |
 | `portfolio-route.js` | 8 | _sin describir_ |

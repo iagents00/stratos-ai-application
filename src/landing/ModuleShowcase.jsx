@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { ArrowUpRight, Check } from "lucide-react";
-import { createModuleRotation, moduleIndexForKey, SHOWCASE_MODULES } from "./module-showcase.mjs";
+import { createModuleRotation, moduleIndexForKey, moduleScreenshotSrc, SHOWCASE_MODULES } from "./module-showcase.mjs";
 import "./ModuleShowcase.css";
 
 export default function ModuleShowcase({ appUrl = "/login" }) {
@@ -80,7 +80,7 @@ export default function ModuleShowcase({ appUrl = "/login" }) {
         <div className="stratos-modules__intro"><h3>{module.title}</h3><p>{module.description}</p></div>
         <figure className="stratos-modules__visual">
           {missingImages.includes(module.id) ? <div className="stratos-modules__image-fallback">Vista previa de {module.name}</div>
-            : <img src={`/marketing/modules/framed-20261016/${module.id}.webp`} alt={`Captura real del módulo ${module.name} de Stratos AI con marco translúcido y datos de demostración`} width={1440} height={1020}
+            : <img src={moduleScreenshotSrc(module.id)} alt={`Captura real del módulo ${module.name} de Stratos AI con marco translúcido y datos de demostración`} width={1440} height={1020}
               loading={index === 0 ? "eager" : "lazy"} decoding="async" onError={() => setMissingImages(current => current.includes(module.id) ? current : [...current, module.id])} />}
           <figcaption>Datos de demostración</figcaption>
         </figure>

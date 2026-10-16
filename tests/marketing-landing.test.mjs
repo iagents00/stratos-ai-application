@@ -35,6 +35,7 @@ test('the public site preserves commercial terms, contact and fixed login routes
       assert.ok(existsSync(new URL(`../public${match[1]}`, import.meta.url)), match[1]);
     }
     assert.match(html, /Capturas reales de Stratos AI con datos de demostración/);
+    assert.equal((html.match(/src="\/marketing\/modules\/copilot-closeup-20261016\/copilot.webp"/g) || []).length, 2, 'Gallery and workflow share the legible Copilot capture');
   } finally { await vite.close(); }
 });
 

@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v446'; // v446: red de flujos del hero y sliders automáticos sin controles.
+const CACHE_VERSION = 'stratos-v447'; // v447: Copilot en primer plano y consultas de seguimiento en demo.
 // const CACHE_VERSION = 'stratos-v424'; // v424: ficha de Google Play (textos + graficos de tienda)
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
