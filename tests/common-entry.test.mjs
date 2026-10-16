@@ -1,7 +1,68 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'vite';
-import { isCommonEntryLocation } from '../src/lib/common-entry.js';
+import { clearCommonEntryViews, isCommonEntryLocation, readCommonEntryView, writeCommonEntryView } from '../src/lib/common-entry.js';
+
+function tabStorage() {
+  const values = new Map();
+  return { get length() { return values.size; }, key: index => [...values.keys()][index] ?? null,
+    getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key) };
+}
+const viewOptions = storage => ({ location: new URL('https://getstratosai.com/login'), storage,
+  canAccess: view => ['c', 'd', 'mkt_reporte', 'admin'].includes(view),
+  isPersistable: view => !['admin', 'planes', 'miespacio'].includes(view) });
+
+test('common views belong to each tab and legacy markers start in CRM without consulting shared preferences', () => {
+  const crmTab = tabStorage();
+  const otherTab = tabStorage();
+  const globalPreferences = tabStorage();
+  globalPreferences.setItem('stratos.crm.view.person', 'mkt_reporte');
+  crmTab.setItem('stratos.common-entry.person', '1');
+  assert.equal(readCommonEntryView('person', viewOptions(crmTab)), 'c');
+  assert.equal(writeCommonEntryView('person', 'c', viewOptions(crmTab)), true);
+  assert.equal(writeCommonEntryView('person', 'mkt_reporte', viewOptions(otherTab)), true);
+  for (let refresh = 0; refresh < 3; refresh++) {
+    globalPreferences.setItem('stratos.crm.view.person', 'mkt_reporte');
+    assert.equal(readCommonEntryView('person', viewOptions(crmTab)), 'c');
+    assert.equal(readCommonEntryView('person', viewOptions(otherTab)), 'mkt_reporte');
+  }
+  writeCommonEntryView('person', 'd', viewOptions(crmTab));
+  assert.equal(readCommonEntryView('person', viewOptions(crmTab)), 'd');
+  assert.equal(readCommonEntryView('another-person', viewOptions(crmTab)), 'c');
+  const branded = { ...viewOptions(crmTab), location: new URL('https://getstratosai.com/nsg') };
+  assert.equal(readCommonEntryView('person', branded), null);
+  assert.equal(writeCommonEntryView('person', 'c', branded), false);
+  assert.equal(crmTab.getItem('stratos.common-entry.person'), 'd');
+  assert.equal(globalPreferences.getItem('stratos.crm.view.person'), 'mkt_reporte');
+});
+
+test('tab restoration reevaluates permissions and never replaces a real view with an ephemeral one', () => {
+  const storage = tabStorage();
+  const options = viewOptions(storage);
+  writeCommonEntryView('person', 'd', options);
+  for (const view of ['admin', 'planes', 'miespacio', 'unknown', '1']) assert.equal(writeCommonEntryView('person', view, options), false, view);
+  assert.equal(readCommonEntryView('person', options), 'd');
+  assert.equal(readCommonEntryView('person', { ...options, canAccess: view => view === 'c' }), 'c');
+  assert.equal(readCommonEntryView('person', { ...options, canAccess: view => view === 'mkt_reporte' }), null);
+  writeCommonEntryView('marketing', 'mkt_reporte', options);
+  assert.equal(readCommonEntryView('marketing', { ...options, canAccess: view => view === 'mkt_reporte' }), 'mkt_reporte');
+  assert.equal(readCommonEntryView(null, options), null);
+});
+
+test('explicit logout clears common tab views while preserving other session state; unavailable storage stays safe', () => {
+  const storage = tabStorage();
+  storage.setItem('stratos.common-entry.person', 'c');
+  storage.setItem('stratos.common-entry.other', '1');
+  storage.setItem('unrelated-session-state', 'preserved');
+  clearCommonEntryViews(storage);
+  assert.equal(storage.getItem('stratos.common-entry.person'), null);
+  assert.equal(storage.getItem('stratos.common-entry.other'), null);
+  assert.equal(storage.getItem('unrelated-session-state'), 'preserved');
+  const unavailable = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); }, get length() { throw new Error('blocked'); } };
+  assert.equal(readCommonEntryView('person', viewOptions(unavailable)), 'c');
+  assert.equal(writeCommonEntryView('person', 'd', viewOptions(unavailable)), false);
+  assert.doesNotThrow(() => clearCommonEntryViews(unavailable));
+});
 
 test('shared login keeps a stable entry while client-specific paths, domains and public routes remain separate', () => {
   for (const url of [
@@ -31,6 +92,14 @@ test('shared entry applies the authenticated company in memory, never a requeste
   const vite = await createServer({ server: { middlewareMode: true }, appType: 'custom', logLevel: 'error' });
   try {
     const { getClientConfig, resolveClientFromLocation, resolveClientTransitionForUser, resolveRedirectForUser } = await vite.ssrLoadModule('/src/clients/index.js');
+    const { nav, canAccessModule } = await vite.ssrLoadModule('/src/app/constants/navigation.js');
+    const storage = tabStorage();
+    const stratosAdmin = { id: 'admin-stratos', role: 'admin', organizationId: getClientConfig('duke').tenant.organizationId };
+    const options = { ...viewOptions(storage), canAccess: view => canAccessModule(view, stratosAdmin, getClientConfig('duke')),
+      isPersistable: view => !['admin', 'planes', 'miespacio'].includes(view) && nav.some(item => item.id === view) };
+    storage.setItem('stratos.common-entry.admin-stratos', 'removed-view');
+    assert.equal(readCommonEntryView(stratosAdmin.id, options), 'c', 'an obsolete module must never restore an empty shell, even with administrator permissions');
+    assert.equal(writeCommonEntryView(stratosAdmin.id, 'removed-view', options), false);
     const known = Object.freeze({ id: 'ordinary-user', role: 'asesor', organizationId: getClientConfig('nsg').tenant.organizationId });
     const entry = new URL('https://getstratosai.com/login?client=grupo28#crm');
     assert.equal(resolveClientFromLocation(entry).id, 'tenant');

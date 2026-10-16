@@ -1,5 +1,9 @@
 # Historial de versiones del Service Worker (CACHE_VERSION)
 
+## v442 — Vista independiente por pestaña
+
+El acceso común guarda su vista por pestaña para que una sesión antigua abierta en otra pestaña no cambie el destino tras F5. Conserva el CRM inicial y la navegación elegida; las entradas específicas de clientes siguen su comportamiento existente. No requiere nuevos cambios en Supabase.
+
 ## v441 — Acceso fijo y CRM de empresas
 
 Login común en `/login`, empresa autenticada aplicada sin cambiar la dirección y entrada directa a todas las empresas para operadores globales autorizados. Consola con el sidebar y header de Stratos, salida a Mi CRM y cartera global por empresa. Requiere migración 274 y nueva versión de `whatsapp-admin`; conserva el aislamiento del CRM ordinario.

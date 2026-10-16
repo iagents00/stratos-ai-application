@@ -2,7 +2,7 @@
 
 El enlace estable es `https://app.stratoscapitalgroup.com/login`. La pantalla de acceso conserva la marca Stratos. Tras autenticar, la configuración de la empresa del perfil se aplica en memoria; la dirección no se convierte en `/tenant` ni en una ruta de cliente. Las portadas específicas de clientes siguen disponibles en sus rutas.
 
-Las cuentas autorizadas en `platform_admins` abren directamente Empresas. Una autorización raíz activa (`scope_organization_id` nulo) ve todas las empresas; un partner ve solamente su alcance. El correo y el rol `super_admin` por sí solos no conceden acceso global. Las cuentas comunes conservan su organización y los permisos existentes. La primera entrada común abre su CRM si tienen acceso; posteriores recargas conservan la vista elegida.
+Las cuentas autorizadas en `platform_admins` abren directamente Empresas. Una autorización raíz activa (`scope_organization_id` nulo) ve todas las empresas; un partner ve solamente su alcance. El correo y el rol `super_admin` por sí solos no conceden acceso global. Las cuentas comunes conservan su organización y los permisos existentes. La primera entrada común abre su CRM si tienen acceso; posteriores recargas conservan la vista elegida en esa pestaña, aunque otra pestaña tenga abierta una sección distinta.
 
 La consola comparte la paleta, la tipografía, la barra lateral de 72 px y el header de 52 px de Stratos. En móvil la navegación se abre desde el header. “Mi CRM” abre la cartera propia; “Empresas y administración global” permite volver a la consola sin cerrar sesión. Empresas ofrece “Abrir CRM” en la ficha del cliente; CRM de empresas mantiene un selector explícito de empresa.
 
@@ -16,7 +16,7 @@ Un conflicto conserva el borrador y permite revisar la ficha actual. Una respues
 
 ## Despliegue y recuperación
 
-Aplicar únicamente `274_platform_crm_gateway.sql` al proyecto Stratos `glulgyhkrqpykxmujodb` y desplegar la nueva versión de `whatsapp-admin`. La web debe publicarse después de verificar ambas versiones. La versión web es `stratos-v441`.
+Aplicar únicamente `274_platform_crm_gateway.sql` al proyecto Stratos `glulgyhkrqpykxmujodb` y desplegar la nueva versión de `whatsapp-admin`. La web debe publicarse después de verificar ambas versiones. La versión web es `stratos-v442`. La migración 274 y `whatsapp-admin` v23 ya están activas en Stratos; v442 solo actualiza la web.
 
 Antes de la aplicación se debe conservar la definición previa de las funciones y una copia de la función Edge. La migración es aditiva y compatible con la web anterior. Para revertir el acceso global nuevo, restaurar la versión anterior de `whatsapp-admin` y de la web; las funciones SQL nuevas quedan inaccesibles a usuarios ordinarios.
 

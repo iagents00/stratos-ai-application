@@ -2,7 +2,7 @@ import HuliWorkspace from "../dental-demo/TenantHuliWorkspace.jsx";
 import { DENTAL_DEMO_LEADS } from "../dental-demo/profile-data";
 import { portfolioCache } from "../lib/portfolio-cache.js";
 import { readAllRows } from "../lib/read-all-rows.js";
-import { isCommonEntryLocation } from "../lib/common-entry.js";
+import { isCommonEntryLocation, readCommonEntryView, writeCommonEntryView } from "../lib/common-entry.js";
 /**
  * app/App.jsx — Shell principal de Stratos AI
  * ─────────────────────────────────────────────────────────────────────────────
@@ -165,6 +165,13 @@ function resolveInitialView(user, clientConfig) {
   };
   const fallback = resolverAccesible(fallbackDeseado);
   if (!user?.id) return fallback;
+  if (isCommonEntryLocation(window.location)) {
+    return readCommonEntryView(user.id, {
+      location: window.location,
+      canAccess: view => canAccessModule(view, user, clientConfig),
+      isPersistable: view => !NON_PERSISTABLE_VIEWS.has(view) && nav.some(item => item.id === view),
+    }) || fallback;
+  }
   // Estreno de Actividades: una sola vez por usuario de marketing, antes de
   // mirar la vista guardada (si no, nunca la vería).
   const esMarketing = user?.isMarketingAdmin === true || user?.role === "marketing";
@@ -293,9 +300,8 @@ export default function App() {
   // no se renderiza (cero impacto visual para clientes sin numero).
   const supportPhoneLabel = clientConfig?.support?.phoneLabel || clientConfig?.support?.whatsapp || "";
   const supportPhoneHref  = supportPhoneLabel ? `tel:${String(supportPhoneLabel).replace(/[^\d+]/g, "")}` : "";
-  // Vista activa persistida por usuario en localStorage. Si haces F5 estando
-  // en el CRM, vuelves al CRM (no al Comando). Validamos contra los permisos
-  // del rol actual por si cambió desde la última sesión.
+  // La entrada común recuerda la vista por usuario y pestaña. Las portadas
+  // específicas conservan su preferencia histórica en localStorage.
   const [v, setV]        = useState(() => resolveInitialView(user, clientConfig));
 
   // ⚠️ EL useState DE ARRIBA CORRE ANTES DE SABER QUIÉN ENTRÓ. `<App/>` se monta
@@ -312,23 +318,21 @@ export default function App() {
   // useLayoutEffect (no useEffect) para que se corrija ANTES de pintar: si no,
   // se ve un parpadeo del módulo equivocado.
   const vistaResueltaParaRef = useRef(null);
+  const commonViewResolvedRef = useRef(null);
   useLayoutEffect(() => {
-    if (!user?.id) return;
+    const commonEntry = isCommonEntryLocation(window.location);
+    if (!user?.id) {
+      if (commonEntry) {
+        vistaResueltaParaRef.current = null;
+        commonViewResolvedRef.current = null;
+      }
+      return;
+    }
     if (vistaResueltaParaRef.current !== user.id) {
       vistaResueltaParaRef.current = user.id;   // también cubre cambiar de cuenta
-      // La primera entrada de esta cuenta en la pestaña abre su CRM. Después
-      // F5 conserva la vista elegida, como en el shell habitual.
-      if (isCommonEntryLocation(window.location) && canAccessModule("c", user, clientConfig)) {
-        try {
-          const entryKey = `stratos.common-entry.${user.id}`;
-          if (!sessionStorage.getItem(entryKey)) {
-            sessionStorage.setItem(entryKey, "1");
-            setV("c");
-            return;
-          }
-        } catch { /* storage no disponible: conserva el resolver habitual */ }
-      }
-      setV(resolveInitialView(user, clientConfig));
+      const resolved = resolveInitialView(user, clientConfig);
+      if (commonEntry) commonViewResolvedRef.current = { userId: user.id, view: resolved };
+      setV(resolved);
       return;
     }
     // Red de seguridad 1: "miespacio" es un PANEL, no una vista — nadie la
@@ -336,11 +340,20 @@ export default function App() {
     // camino nuevo), se va a una vista que sí se dibuja en vez de dejar la
     // pantalla vacía. ⛔ Acá NO se puede tocar `setMetaOpen`: se declara mucho
     // más abajo y referenciarlo sería el mismo TDZ que tumbó el Copilot.
-    if (v === "miespacio") { setV(resolveInitialView(user, clientConfig)); return; }
+    if (v === "miespacio") {
+      const resolved = resolveInitialView(user, clientConfig);
+      if (commonEntry) commonViewResolvedRef.current = { userId: user.id, view: resolved };
+      setV(resolved); return;
+    }
     // Red de seguridad 2: si la vista actual deja de ser suya (le cambian el rol o
     // los permisos a mitad de sesión), se va a su casa en vez de quedarse
     // mirando la pantalla de «Acceso restringido».
-    if (!canAccessModule(v, user, clientConfig)) setV(resolveInitialView(user, clientConfig));
+    if (!canAccessModule(v, user, clientConfig)) {
+      const resolved = resolveInitialView(user, clientConfig);
+      if (commonEntry) commonViewResolvedRef.current = { userId: user.id, view: resolved };
+      setV(resolved); return;
+    }
+    if (commonEntry) commonViewResolvedRef.current = { userId: user.id, view: v };
   }, [user, clientConfig, v]);
 
   // Vista PREVIA a las vistas INMERSIVAS (Copilot / WhatsApp) — su flecha
@@ -361,6 +374,17 @@ export default function App() {
     // restringido». Le pasaba a Alex: el "c" del arranque sin usuario le quedaba
     // grabado como su última vista.
     if (!canAccessModule(v, user, clientConfig)) return;
+    if (isCommonEntryLocation(window.location)) {
+      // El efecto pasivo de un render previo puede correr después de resolver
+      // otra identidad/vista en layout. No sobrescribir esa decisión pendiente.
+      if (commonViewResolvedRef.current?.userId !== user.id || commonViewResolvedRef.current.view !== v) return;
+      writeCommonEntryView(user.id, v, {
+        location: window.location,
+        canAccess: view => canAccessModule(view, user, clientConfig),
+        isPersistable: view => !NON_PERSISTABLE_VIEWS.has(view) && nav.some(item => item.id === view),
+      });
+      return;
+    }
     try { localStorage.setItem(`stratos.crm.view.${user.id}`, v); } catch (_) { /* quota o bloqueado */ }
   }, [v, user, clientConfig]);
 
@@ -1882,10 +1906,7 @@ export default function App() {
   }, [orgMetaConfig, user?.organizationId, user?._offline]);
 
   /* ── Notifications ── */
-  const onLogout = () => {
-    try { if (user?.id) sessionStorage.removeItem(`stratos.common-entry.${user.id}`); } catch { /* storage bloqueado */ }
-    return logout();
-  };
+  const onLogout = () => logout();
 
   useEffect(() => {
     if (!user) return;
