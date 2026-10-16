@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { font, fontDisp } from "../../design-system/tokens";
 import { supabase } from "../../lib/supabase";
+import { updateMarketingRecord } from "../../lib/marketing-records.mjs";
 import { useAuth } from "../../hooks/useAuth";
 import { useIsMobile } from "../../hooks/useViewport";
 import { resolveClientFromLocation } from "../../clients";
@@ -416,9 +417,8 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   /* ── Mutaciones ── */
   const patch = useCallback(async (table, id, fields) => {
     setError("");
-    const { error: e } = await supabase.from(table)
-      .update({ ...fields, updated_at: new Date().toISOString() })
-      .eq("id", id).eq("organization_id", orgId);
+    const { error: e } = await updateMarketingRecord(supabase, table, id, orgId,
+      { ...fields, updated_at: new Date().toISOString() });
     if (e) { setError("No se pudo guardar el cambio. Intenta de nuevo."); return false; }
     return true;
   }, [orgId]);
@@ -437,10 +437,13 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
   }, [patch]);
   const saveEvidence = useCallback(async () => {
     if (!evidence?.task) return;
-    const url = (evidence.url || "").trim();
+    const link = (evidence.url || "").trim();
+    const url = link || evidence.uploaded?.path;
+    const tipo = link ? "link" : evidence.uploaded?.tipo;
     if (url) {
-      await patch("mkt_tasks", evidence.task.id, { evidencia_url: url, evidencia_tipo: "link" });
-      setTasks(prev => prev.map(x => x.id === evidence.task.id ? { ...x, evidencia_url: url, evidencia_tipo: "link" } : x));
+      const ok = await patch("mkt_tasks", evidence.task.id, { evidencia_url: url, evidencia_tipo: tipo });
+      if (!ok) return;
+      setTasks(prev => prev.map(x => x.id === evidence.task.id ? { ...x, evidencia_url: url, evidencia_tipo: tipo } : x));
     }
     setEvidence(null);
   }, [evidence, patch]);
@@ -455,7 +458,10 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       const { error: e } = await supabase.storage.from("evidencia").upload(path, file);
       if (e) throw e;
       const tipo = String(file.type || "").startsWith("video") ? "video" : "foto";
-      await patch("mkt_tasks", evidence.task.id, { evidencia_url: path, evidencia_tipo: tipo });
+      // Keep the uploaded file available for Guardar if attaching it fails.
+      setEvidence(prev => prev ? { ...prev, uploaded: { path, tipo } } : prev);
+      const ok = await patch("mkt_tasks", evidence.task.id, { evidencia_url: path, evidencia_tipo: tipo });
+      if (!ok) return;
       setTasks(prev => prev.map(x => x.id === evidence.task.id ? { ...x, evidencia_url: path, evidencia_tipo: tipo } : x));
       setEvidence(null);
     } catch {
@@ -519,7 +525,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
     // Sin id es una propiedad NUEVA. Nace al final de la lista con posición
     // propia, para que la tabla no se reacomode cuando la empiecen a llenar.
     const e = ficha.id
-      ? (await supabase.from("mkt_pipeline_items").update(campos).eq("id", ficha.id)).error
+      ? (await updateMarketingRecord(supabase, "mkt_pipeline_items", ficha.id, orgId, campos)).error
       : (await supabase.from("mkt_pipeline_items").insert({
           ...campos, organization_id: orgId, created_by: user?.id || null,
           orden: pipeline.reduce((m, p) => Math.max(m, p.orden || 0), 0) + 1,
@@ -1119,22 +1125,22 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
       : { [campo]: limpio };
     // La bitácora no tiene `updated_at`; el registro sí y lo usa para ordenar.
     if (tabla === PIPE) payload.updated_at = new Date().toISOString();
-    const { error: e } = await supabase.from(tabla).update(payload).eq("id", id);
+    const { error: e } = await updateMarketingRecord(supabase, tabla, id, orgId, payload);
     setCeldaSaving(false);
-    setCelda(siguiente);
     if (e) { setError("No pude guardar ese dato. Intenta de nuevo."); return; }
+    setCelda(siguiente);
     load();
-  }, [celda, filaDe, load]);
+  }, [celda, filaDe, orgId, load]);
 
   /* Guardar un campo de un tirón (los desplegables: estatus, empresa, ubicación,
      tipo). No pasa por el modo edición porque se resuelven con un solo clic. */
   const guardarCampo = useCallback(async (tabla, id, campo, valor) => {
     const payload = { [campo]: valor || null };
     if (tabla === PIPE) payload.updated_at = new Date().toISOString();
-    const { error: e } = await supabase.from(tabla).update(payload).eq("id", id);
+    const { error: e } = await updateMarketingRecord(supabase, tabla, id, orgId, payload);
     if (e) { setError("No pude guardar ese cambio. Intenta de nuevo."); return; }
     load();
-  }, [load]);
+  }, [orgId, load]);
 
   /* Moverse como en Excel: Enter baja, Tab va a la derecha (y al final de la
      fila salta a la siguiente). Devuelve la celda destino o null si ya no hay. */
@@ -1165,12 +1171,12 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
      Se puede devolver desde la base si alguien se equivoca. */
   const [archivarId, setArchivarId] = useState(null);
   const archivarPropiedad = useCallback(async (id) => {
-    const { error: e } = await supabase.from("mkt_pipeline_items")
-      .update({ deleted_at: new Date().toISOString() }).eq("id", id);
-    setArchivarId(null);
+    const { error: e } = await updateMarketingRecord(supabase, "mkt_pipeline_items", id, orgId,
+      { deleted_at: new Date().toISOString() });
     if (e) { setError("No pude quitar esa propiedad."); return; }
+    setArchivarId(null);
     load();
-  }, [load]);
+  }, [orgId, load]);
 
   /* Alta desde la última fila de la tabla, como en una hoja: se escribe el
      nombre, Enter, y ya está. El formulario de arriba sigue existiendo para
@@ -1219,11 +1225,11 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
 
   const archivarColumna = useCallback(async (col) => {
     // No se borra: se archiva. Los valores siguen en `datos` por si vuelven.
-    const { error: e } = await supabase.from("mkt_pipeline_columns")
-      .update({ deleted_at: new Date().toISOString() }).eq("id", col.id);
+    const { error: e } = await updateMarketingRecord(supabase, "mkt_pipeline_columns", col.id, orgId,
+      { deleted_at: new Date().toISOString() });
     if (e) { setError("No pude quitar la columna."); return; }
     load();
-  }, [load]);
+  }, [orgId, load]);
 
   /* Celda editable. Se renderiza como JSX suelto (NO como componente anidado):
      un componente definido acá adentro cambiaría de identidad en cada render y
@@ -2881,7 +2887,9 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           <Check size={16} color={accent} strokeWidth={2.5} />
           <div style={{ flex: 1, minWidth: 180 }}>
             <div style={{ fontSize: 13, color: txt, fontWeight: 600 }}>«{evidence.task.titulo}» completada</div>
-            <div style={{ fontSize: 12, color: txt2, marginTop: 2 }}>Si tienes alguna evidencia (foto, video o link), envíala — suma a tu reporte. Es opcional.</div>
+            <div style={{ fontSize: 12, color: txt2, marginTop: 2 }}>{evidence.uploaded
+              ? "Tu archivo está subido. Pulsa Guardar evidencia para adjuntarlo a la tarea."
+              : "Si tienes alguna evidencia (foto, video o link), envíala — suma a tu reporte. Es opcional."}</div>
           </div>
           <label style={{
             background: `${accent}12`, border: `1px dashed ${accent}55`, borderRadius: 10, padding: "9px 13px",
@@ -2898,7 +2906,7 @@ export default function Marketing({ T, onOpenCopilot, initialTab }) {
           <button onClick={saveEvidence} disabled={evUploading} style={{
             background: `${accent}1A`, border: `1px solid ${accent}55`, borderRadius: 10, padding: "9px 15px",
             cursor: "pointer", color: accent, fontSize: 12.5, fontWeight: 600, fontFamily: font, opacity: evUploading ? 0.6 : 1,
-          }}>{(evidence.url || "").trim() ? "Guardar evidencia" : "Listo, sin evidencia"}</button>
+          }}>{(evidence.url || "").trim() || evidence.uploaded ? "Guardar evidencia" : "Listo, sin evidencia"}</button>
         </div>
       )}
       {error && <div style={{ fontSize: 12.5, color: RED }}>{error}</div>}

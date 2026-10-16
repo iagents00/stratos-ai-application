@@ -386,6 +386,7 @@ Deno.serve(async (req) => {
       const orgs = await visibleOrganizations();
       if (orgs.error) throw orgs.error;
       const organizations = (orgs.data ?? []).filter(row => {
+        if (isRootAdmin) return true;
         const meta = row.meta_config && typeof row.meta_config === "object"
           ? row.meta_config as Record<string, unknown> : {};
         const platform = meta.platform && typeof meta.platform === "object"
@@ -432,6 +433,60 @@ Deno.serve(async (req) => {
           embeddedSignupReady: Boolean(INFOBIP_API_KEY),
         },
       }, 200, origin);
+    }
+
+    if (action === "list_platform_users") {
+      if (!isRootAdmin) return respond({ ok: false, error: "Esta acción requiere administración raíz." }, 403, origin);
+      // Proyección service-only: Auth Admin listUsers falla al decodificar
+      // algunos campos NULL históricos. No modificar identidades para listarlas.
+      const { data, error } = await admin.rpc("fn_platform_list_users", { p_actor_id: callerId });
+      if (error) return respond({ ok: false, error: error.message, code: error.code }, error.code === "42501" ? 403 : 500, origin);
+      return respond({ ok: true, ...data }, 200, origin);
+    }
+
+    if (action === "update_platform_user" || action === "update_platform_company") {
+      if (!isRootAdmin) return respond({ ok: false, error: "Esta acción requiere administración raíz." }, 403, origin);
+      // Las organizaciones históricas incluyen UUIDs sin versión RFC. PostgreSQL
+      // los acepta; validamos formato sin excluir Duke ni otras cuentas antiguas.
+      const entityUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const updatedAt = String(body.expected_updated_at || "");
+      const name = String(body.name ?? "").trim();
+      const organizationId = String(body.organization_id ?? "");
+      if (!entityUuid.test(organizationId) || !updatedAt || Number.isNaN(Date.parse(updatedAt))
+          || !name || name.length > 120 || typeof body.active !== "boolean") {
+        return respond({ ok: false, error: "Empresa, nombre, estado o versión inválidos." }, 400, origin);
+      }
+      let result: any;
+      if (action === "update_platform_user") {
+        const userId = String(body.user_id ?? "");
+        const role = String(body.role ?? "");
+        if (!entityUuid.test(userId) || !VALID_ROLES.has(role)
+            || typeof body.is_marketing_admin !== "boolean" || typeof body.crm_only !== "boolean"
+            || (body.area != null && (typeof body.area !== "string" || body.area.length > 120))
+            || (body.confirm_move != null && typeof body.confirm_move !== "boolean")) {
+          return respond({ ok: false, error: "Datos o permisos de usuario inválidos." }, 400, origin);
+        }
+        result = await admin.rpc("fn_platform_update_user", {
+          p_actor_id: callerId, p_user_id: userId, p_expected_updated_at: updatedAt,
+          p_name: name, p_role: role, p_active: body.active, p_organization_id: organizationId,
+          p_is_marketing_admin: body.is_marketing_admin, p_crm_only: body.crm_only,
+          p_area: body.area == null ? null : body.area, p_confirm_move: body.confirm_move === true,
+        });
+      } else {
+        const seats = Number(body.seats);
+        if (name.length < 2 || !Number.isInteger(seats) || seats < 1 || seats > 1000) {
+          return respond({ ok: false, error: "Elige un nombre y entre 1 y 1000 licencias enteras." }, 400, origin);
+        }
+        result = await admin.rpc("fn_platform_update_company", {
+          p_actor_id: callerId, p_organization_id: organizationId, p_expected_updated_at: updatedAt,
+          p_name: name, p_seats: seats, p_active: body.active,
+        });
+      }
+      if (result.error) {
+        const statuses: Record<string, number> = { "40001": 409, "23514": 409, "42501": 403, "22023": 400, "P0002": 404 };
+        return respond({ ok: false, error: result.error.message, code: result.error.code }, statuses[result.error.code] || 500, origin);
+      }
+      return respond({ ok: true, ...result.data }, 200, origin);
     }
 
     if (action === "list_temporary_credentials") {
@@ -990,14 +1045,18 @@ Deno.serve(async (req) => {
         return respond({ ok: false, error: "No tienes acceso a esa empresa." }, 403, origin);
       }
       if (!VALID_ROLES.has(role)) return respond({ ok: false, error: "Rol inválido." }, 400, origin);
+      if (!isRootAdmin && !["admin", "director", "asesor"].includes(role)) {
+        return respond({ ok: false, error: "Ese rol requiere administración raíz de Stratos." }, 403, origin);
+      }
       if (platform) {
         return respond({ ok: false, error: "Los administradores partner se crean únicamente desde la sección Partners de Stratos." }, 403, origin);
       }
       if (password.length < 12) return respond({ ok: false, error: "La contraseña debe tener al menos 12 caracteres." }, 400, origin);
       if (name.length > 120 || email.length > 254) return respond({ ok: false, error: "Nombre o correo demasiado largo." }, 400, origin);
-      const { data: org } = await admin.from("organizations").select("id,name,seats,meta_config").eq("id", organizationId).eq("active", true).maybeSingle();
+      const { data: org, error: orgError } = await admin.from("organizations").select("id,name,seats,meta_config").eq("id", organizationId).eq("active", true).maybeSingle();
+      if (orgError) throw orgError;
       if (!org) return respond({ ok: false, error: "La empresa no existe o está inactiva." }, 404, origin);
-      if (org.meta_config?.onboarding?.createdFrom === "whatsapp_admin"
+      if (!isRootAdmin && org.meta_config?.onboarding?.createdFrom === "whatsapp_admin"
           && org.meta_config?.platform?.kind !== "partner"
           && !["admin", "director", "asesor"].includes(role)) {
         return respond({ ok: false, error: "Ese rol requiere administración de Stratos." }, 403, origin);
@@ -1007,8 +1066,12 @@ Deno.serve(async (req) => {
         .eq("organization_id", organizationId)
         .eq("active", true);
       if (countError) throw countError;
-      if ((activeUsers ?? 0) === 0 && org.meta_config?.onboarding?.createdFrom === "whatsapp_admin" && role !== "admin") {
-        return respond({ ok: false, error: "Crea primero al administrador de la empresa." }, 400, origin);
+      if (org.meta_config?.onboarding?.createdFrom === "whatsapp_admin" && !["admin", "super_admin"].includes(role)) {
+        const { count: administrators, error: adminCountError } = await admin.from("profiles")
+          .select("id", { count: "exact", head: true }).eq("organization_id", organizationId)
+          .eq("active", true).in("role", ["admin", "super_admin"]);
+        if (adminCountError) throw adminCountError;
+        if (!administrators) return respond({ ok: false, error: "Crea primero al administrador de la empresa." }, 400, origin);
       }
       if ((activeUsers ?? 0) >= Number(org.seats || 0)) {
         return respond({ ok: false, error: `${org.name} ya utiliza sus ${org.seats} licencias. Amplía el límite o desactiva un usuario.` }, 409, origin);
