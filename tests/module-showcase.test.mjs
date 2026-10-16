@@ -52,18 +52,35 @@ test('hover, focus, visibility, viewport and reduced motion each pause independe
   }
 });
 
-test('manual selection stays paused when hover or focus ends and independent pause reasons cannot resume each other', () => {
+test('selecting a module restarts a full interval and continues automatically without a resume control', () => {
   const timers = clock();
-  const rotation = createModuleRotation({ count: 6, timers, pauseReasons: ['outside'], onUpdate() {} });
-  timers.advance(28000); assert.equal(rotation.snapshot().index, 0);
-  rotation.setPaused('outside', false);
-  rotation.setPaused('hover', true); rotation.setPaused('focus', true);
-  rotation.select(4); rotation.setPaused('hover', false); rotation.setPaused('focus', false);
-  timers.advance(28000); assert.equal(rotation.snapshot().index, 4);
-  assert.equal(rotation.snapshot().manual, true);
-  rotation.setPaused('manual', false); rotation.setPaused('hidden', true);
-  timers.advance(28000); assert.equal(rotation.snapshot().index, 4);
-  rotation.setPaused('hidden', false); timers.advance(2800);
+  const rotation = createModuleRotation({ count: 6, timers, onUpdate() {} });
+  timers.advance(2000); rotation.select(4);
+  assert.equal(rotation.snapshot().paused, false);
+  timers.advance(2799); assert.equal(rotation.snapshot().index, 4);
+  timers.advance(1); assert.equal(rotation.snapshot().index, 5);
+  timers.advance(1500); rotation.select(5);
+  timers.advance(2799); assert.equal(rotation.snapshot().index, 5);
+  timers.advance(1); assert.equal(rotation.snapshot().index, 0);
+  assert.equal(timers.pending(), 1);
+  rotation.destroy();
+});
+
+test('selection preserves all independent pauses and resumes after the last interaction or environment reason clears', () => {
+  const timers = clock();
+  const reasons = ['hover', 'focus', 'hidden', 'outside', 'reduced-motion'];
+  const rotation = createModuleRotation({ count: 6, timers, pauseReasons: reasons, onUpdate() {} });
+  rotation.select(4);
+  for (const reason of reasons.slice(0, -1)) {
+    rotation.setPaused(reason, false);
+    assert.equal(rotation.snapshot().paused, true, reason);
+    assert.equal(timers.pending(), 0, reason);
+    timers.advance(28000); assert.equal(rotation.snapshot().index, 4, reason);
+  }
+  rotation.setPaused('reduced-motion', false);
+  assert.equal(rotation.snapshot().paused, false);
+  timers.advance(2799); assert.equal(rotation.snapshot().index, 4);
+  timers.advance(1);
   assert.equal(rotation.snapshot().index, 5);
   rotation.destroy();
 });
@@ -96,6 +113,8 @@ test('module gallery renders six named tabs linked to real panels and complete l
     const { default: ModuleShowcase } = await vite.ssrLoadModule('/src/landing/ModuleShowcase.jsx');
     const html = renderToStaticMarkup(createElement(ModuleShowcase, { appUrl: '/login?source=modules' }));
     assert.equal((html.match(/role="tab"/g) || []).length, 6);
+    assert.equal((html.match(/<button\b/g) || []).length, 6);
+    assert.doesNotMatch(html, /Pausar|Reanudar|recorrido automático/);
     assert.equal((html.match(/role="tabpanel"/g) || []).length, 6);
     assert.equal((html.match(/aria-selected="true"/g) || []).length, 1);
     assert.equal((html.match(/role="tabpanel"[^>]*hidden=""/g) || []).length, 5);

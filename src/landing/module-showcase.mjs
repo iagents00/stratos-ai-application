@@ -73,7 +73,7 @@ export function createModuleRotation({ count, onUpdate, initialIndex = 0, pauseR
   let timer = null;
   let destroyed = false;
   const reasons = new Set(pauseReasons);
-  const snapshot = () => ({ index, paused: reasons.size > 0, manual: reasons.has("manual"), reducedMotion: reasons.has("reduced-motion") });
+  const snapshot = () => ({ index, paused: reasons.size > 0, reducedMotion: reasons.has("reduced-motion") });
   const emit = () => { if (!destroyed) onUpdate(snapshot()); };
   const schedule = () => {
     if (timer !== null) timers.clearTimeout(timer);
@@ -96,7 +96,9 @@ export function createModuleRotation({ count, onUpdate, initialIndex = 0, pauseR
     setPaused,
     select(nextIndex) {
       if (destroyed || !Number.isInteger(nextIndex) || nextIndex < 0 || nextIndex >= count) return;
-      index = nextIndex; reasons.add("manual"); emit(); schedule();
+      // A selection restarts the interval without overriding independent
+      // interaction or environment pauses; there is no sticky manual mode.
+      index = nextIndex; emit(); schedule();
     },
     snapshot,
     destroy() { destroyed = true; if (timer !== null) timers.clearTimeout(timer); timer = null; },

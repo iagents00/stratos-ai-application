@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**264 archivos · 81.181 líneas**
+**266 archivos · 81.213 líneas**
 
 ---
 
@@ -429,17 +429,19 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `DukeLeadRouter.jsx` | 343 | _sin describir_ |
 | `ManualGasil.jsx` | 285 | _sin describir_ |
 | `ManualNSG.jsx` | 285 | _sin describir_ |
-| `LandingMarketing.css` | 280 | _sin describir_ |
+| `LandingMarketing.css` | 278 | _sin describir_ |
 | `ManualLegacy.jsx` | 246 | _sin describir_ |
 | `ManualBrasa.jsx` | 235 | _sin describir_ |
 | `ManualMuebleria.jsx` | 224 | _sin describir_ |
 | `LoginScreenNative.jsx` | 183 | _sin describir_ |
 | `marketing-content.js` | 108 | _sin describir_ |
-| `LandingMarketing.jsx` | 97 | _sin describir_ |
-| `ModuleShowcase.jsx` | 97 | _sin describir_ |
-| `FeatureMotion.jsx` | 81 | _sin describir_ |
-| `ModuleShowcase.css` | 68 | _sin describir_ |
-| `FeatureMotion.css` | 60 | _sin describir_ |
+| `LandingMarketing.jsx` | 94 | _sin describir_ |
+| `ModuleShowcase.jsx` | 93 | _sin describir_ |
+| `FeatureMotion.jsx` | 70 | _sin describir_ |
+| `ModuleShowcase.css` | 66 | _sin describir_ |
+| `FeatureMotion.css` | 53 | _sin describir_ |
+| `HeroFlowBackdrop.jsx` | 40 | _sin describir_ |
+| `HeroFlowBackdrop.css` | 21 | _sin describir_ |
 
 ### `src/lib/`
 
@@ -819,8 +821,8 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/landing/ManualNSG.jsx` (285 líneas)
 - `src/app/views/ZoomControl/Graficas.jsx` (284 líneas)
 - `src/lib/native.js` (282 líneas)
-- `src/landing/LandingMarketing.css` (280 líneas)
 - `src/index.css` (278 líneas)
+- `src/landing/LandingMarketing.css` (278 líneas)
 - `src/clients/nsg/config.js` (270 líneas)
 - `src/lib/push-native.js` (265 líneas)
 - `src/app/features/MetaPanel/DocsStratos.jsx` (263 líneas)
@@ -883,14 +885,13 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/Admin/CompanySetupAdmin.jsx` (99 líneas)
 - `src/app/constants/areas.js` (97 líneas)
 - `src/app/views/CRM/date-range.js` (97 líneas)
-- `src/landing/LandingMarketing.jsx` (97 líneas)
-- `src/landing/ModuleShowcase.jsx` (97 líneas)
+- `src/landing/LandingMarketing.jsx` (94 líneas)
 - `src/app/views/LandingPages/PublicLanding.jsx` (93 líneas)
+- `src/landing/ModuleShowcase.jsx` (93 líneas)
 - `src/clients/tgenius/config.js` (90 líneas)
 - `src/app/features/Admin/RailsSettings.css` (86 líneas)
 - `src/lib/backup.js` (85 líneas)
 - `src/contexts/ClientOrgGuard.jsx` (83 líneas)
-- `src/landing/FeatureMotion.jsx` (81 líneas)
 - `src/clients/i-space/config.js` (80 líneas)
 - `src/lib/avisos-nativos.js` (79 líneas)
 - `src/lib/transcribir.js` (77 líneas)
@@ -899,9 +900,10 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/ringer.js` (72 líneas)
 - `src/lib/agenda.js` (71 líneas)
 - `src/contexts/ClientContext.jsx` (70 líneas)
+- `src/landing/FeatureMotion.jsx` (70 líneas)
 - `src/lib/supabase.js` (70 líneas)
-- `src/landing/ModuleShowcase.css` (68 líneas)
 - `src/app/components/MobileHeaderMenu.jsx` (66 líneas)
+- `src/landing/ModuleShowcase.css` (66 líneas)
 - `src/contexts/TenantConfigGate.jsx` (64 líneas)
 - `src/app/views/CRM/command-report.js` (63 líneas)
 - `src/dental-demo/DentalDemo.jsx` (63 líneas)

@@ -21,10 +21,8 @@
 .stratos-marketing .smk-flow-outputs { position: absolute; right: 0; inset-block: 0; display: flex; flex-direction: column; justify-content: space-between; width: 28%; padding-block: 16px; }
 .stratos-marketing .smk-flow-output { display: flex; align-items: center; gap: 8px; min-height: 56px; font-size: 12px; line-height: 1.4; }
 .stratos-marketing .smk-flow-output > span:first-child { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; border-radius: 50%; background: #fff; box-shadow: 0 3px 8px rgba(10,27,46,.05); }
-.stratos-marketing .smk-motion-footer { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-top: 20px; }
+.stratos-marketing .smk-motion-footer { margin-top: 20px; }
 .stratos-marketing .smk-motion-footer > p { color: var(--smk-muted); max-width: 68ch; font-size: 11px; line-height: 1.6; }
-.stratos-marketing .smk-motion-footer button { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; gap: 8px; min-height: 44px; padding: 10px 14px; border: 1px solid var(--smk-line); border-radius: 999px; background: #fff; color: var(--smk-ink); font-size: 12px; cursor: pointer; transition: background-color 160ms ease-out; }
-.stratos-marketing .smk-motion-footer button:disabled { opacity: 1; color: var(--smk-muted); }
 .stratos-marketing .smk-feature-motion[data-running="true"] .smk-flow-signal { animation-play-state: running; }
 @keyframes smk-flow-signal { 0% { opacity: 0; stroke-dashoffset: 12; } 8% { opacity: 1; } 30% { opacity: 1; stroke-dashoffset: -100; } 34%, 100% { opacity: 0; stroke-dashoffset: -100; } }
 @keyframes smk-flow-branch { 0%, 28% { opacity: 0; stroke-dashoffset: 12; } 35% { opacity: 1; } 72% { opacity: 1; stroke-dashoffset: -100; } 78%, 100% { opacity: 0; stroke-dashoffset: -100; } }
@@ -38,15 +36,11 @@
   .stratos-marketing .smk-flow-output { flex: 0 0 31.33%; flex-direction: column; gap: 10px; text-align: center; }
   .stratos-marketing .smk-flow-output > span:last-child { max-width: 12ch; min-height: 34px; }
 }
-@media (hover: hover) and (pointer: fine) {
-  .stratos-marketing .smk-motion-footer button:hover:not(:disabled) { background: var(--smk-surface); }
-}
 @media (max-width: 760px) {
   .stratos-marketing .smk-motion-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
   .stratos-marketing .smk-motion-card { padding: 28px; }
   .stratos-marketing .smk-motion-card h3 { font-size: 32px; }
   .stratos-marketing .smk-motion-card > p { min-height: 0; }
-  .stratos-marketing .smk-motion-footer { flex-direction: column; align-items: flex-start; gap: 12px; }
 }
 @media (max-width: 350px) {
   .stratos-marketing .smk-motion-card { padding: 24px 20px; }
@@ -55,5 +49,4 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .stratos-marketing .smk-feature-motion .smk-flow-signal { animation: none; display: none; }
-  .stratos-marketing .smk-motion-footer button { transition: none; }
 }

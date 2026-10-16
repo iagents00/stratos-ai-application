@@ -53,15 +53,15 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
 .stratos-marketing .smk-menu-toggle { display: none; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 10px; border: 1px solid var(--smk-line); border-radius: 10px; color: var(--smk-ink); background: #fff; cursor: pointer; }
 .stratos-marketing .smk-mobile-menu { display: none; }
 
-.stratos-marketing .smk-hero { padding-top: 72px; padding-bottom: 20px; text-align: center; }
+.stratos-marketing .smk-hero { position: relative; padding-top: 72px; padding-bottom: 20px; text-align: center; }
 .stratos-marketing .smk-hero-heading { position: relative; width: min(940px, 100%); margin-inline: auto; }
 .stratos-marketing .smk-hero h1 { font-size: 64px; line-height: 1.06; font-weight: 400; letter-spacing: -.025em; }
 .stratos-marketing .smk-hero h1 > span:not(.smk-sr-only) { display: block; }
-.stratos-marketing .smk-rotating-word { min-height: 1.1em; color: var(--smk-navy); opacity: 0; transform: translateY(6px); transition: opacity 180ms ease-out, transform 180ms ease-out; }
+.stratos-marketing .smk-hero-content { position: relative; z-index: 1; }
+.stratos-marketing .smk-hero h1 > span.smk-rotating-words { display: grid; }
+.stratos-marketing .smk-rotating-word { grid-area: 1 / 1; min-height: 1.1em; color: var(--smk-navy); opacity: 0; transform: translateY(4px); transition: opacity 240ms cubic-bezier(.23, 1, .32, 1), transform 240ms cubic-bezier(.23, 1, .32, 1); }
 .stratos-marketing .smk-rotating-word.is-visible { opacity: 1; transform: none; }
-.stratos-marketing .smk-headline-control { position: absolute; right: 0; bottom: 0; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 10px; border: 0; border-radius: 10px; background: transparent; color: var(--smk-muted); cursor: pointer; }
-.stratos-marketing .smk-headline-control:hover { background: var(--smk-surface); color: var(--smk-ink); }
-.stratos-marketing .smk-hero > p { max-width: 610px; margin: 24px auto 0; color: var(--smk-muted); font-size: 18px; line-height: 1.6; }
+.stratos-marketing .smk-hero-copy { max-width: 610px; margin: 24px auto 0; color: var(--smk-muted); font-size: 18px; line-height: 1.6; }
 .stratos-marketing .smk-actions { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
 .stratos-marketing .smk-modules-wrap { padding-inline: 0; }
 .stratos-marketing .smk-modules-wrap .stratos-modules { padding-top: 48px; padding-bottom: 64px; }
@@ -195,10 +195,9 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
   .stratos-marketing h2 { font-size: 36px; }
   .stratos-marketing .smk-section-heading { display: block; margin-bottom: 32px; }
   .stratos-marketing .smk-section-heading > p { max-width: 54ch; margin-top: 20px; font-size: 16px; }
-  .stratos-marketing .smk-hero { padding-top: 56px; padding-bottom: 8px; }
+  .stratos-marketing .smk-hero { position: relative; padding-top: 56px; padding-bottom: 8px; }
   .stratos-marketing .smk-hero h1 { font-size: 48px; }
-  .stratos-marketing .smk-headline-control { position: static; display: flex; margin: 8px auto 0; }
-  .stratos-marketing .smk-hero > p { max-width: 48ch; font-size: 17px; margin-top: 24px; padding-inline: 20px; }
+  .stratos-marketing .smk-hero-copy { max-width: 48ch; font-size: 17px; margin-top: 24px; padding-inline: 20px; }
   .stratos-marketing .smk-modules-wrap .stratos-modules { padding-top: 40px; padding-bottom: 48px; }
   .stratos-marketing .smk-problem { display: block; }
   .stratos-marketing .smk-problem > .smk-section-intro { margin-top: 22px; max-width: 50ch; }
@@ -229,11 +228,10 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
   .stratos-marketing .smk-modules-wrap { padding-inline: 0; }
   .stratos-marketing .smk-section { padding-block: 56px; }
   .stratos-marketing h2 { font-size: 32px; line-height: 1.14; }
-  .stratos-marketing .smk-hero { padding-top: 44px; }
+  .stratos-marketing .smk-hero { position: relative; padding-top: 44px; }
   .stratos-marketing .smk-hero h1 { font-size: clamp(32px, 9.3vw, 38px); line-height: 1.1; }
   .stratos-marketing .smk-hero-heading { padding-bottom: 0; }
-  .stratos-marketing .smk-rotating-word { min-height: 2.2em; display: grid !important; align-items: center; }
-  .stratos-marketing .smk-hero > p { font-size: 16px; line-height: 1.65; padding-inline: 16px; }
+  .stratos-marketing .smk-hero-copy { font-size: 16px; line-height: 1.65; padding-inline: 16px; }
   .stratos-marketing .smk-actions { gap: 10px; }
   .stratos-marketing .smk-actions > .smk-button { flex: 1 1 100%; }
   .stratos-marketing .smk-button { min-height: 44px; padding-block: 11px; font-size: 13px; }
@@ -268,12 +266,12 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
   .stratos-marketing .smk-nav { gap: 12px; }
   .stratos-marketing .smk-brand > span { font-size: 22px; }
   .stratos-marketing .smk-hero h1 { font-size: 32px; }
-  .stratos-marketing .smk-hero > p { padding-inline: 10px; }
+  .stratos-marketing .smk-hero-copy { padding-inline: 10px; }
   .stratos-marketing .smk-workflow-tabs button { padding-inline: 9px; font-size: 12px; }
   .stratos-marketing .smk-call-center { width: calc(100% - 40px); padding-inline: 20px; }
   .stratos-marketing .smk-price-card { padding-inline: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .stratos-marketing .smk-rotating-word { opacity: 1; transform: none; transition: none; }
+  .stratos-marketing .smk-rotating-word { transform: none; transition: none; }
   .stratos-marketing .smk-button, .stratos-marketing .smk-faq summary > svg { transition: none; }
 }
