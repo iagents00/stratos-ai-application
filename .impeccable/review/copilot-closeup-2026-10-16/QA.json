@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-16",
+  "target": "Copilot marketing screenshot only; demo dossier and read-only follow-ups",
+  "capture": {
+    "componentCss": [684, 474], "deviceScaleFactor": 2,
+    "sourcePng": [1368, 948], "framedWebP": [1440, 1020],
+    "sourcePosition": [36, 36], "interiorPixelsMatch": true,
+    "encoding": "lossless", "assetBytes": 108478,
+    "actualFormSubmitted": "Dame la ficha de Alex Ejemplo",
+    "syntheticData": true, "uiRepaint": false,
+    "productionReadOnlyPropertySearchTested": true,
+    "productionContentPublished": false
+  },
+  "responsive": [
+    {"width":1280,"horizontalOverflow":false,"sectionHeight":933.453125,"sixTabsHeightDelta":0,"imageWidth":650.765625,"bodyTextApparentPx":14.732610677083334},
+    {"width":834,"horizontalOverflow":false,"sectionHeight":1229.296875,"sixTabsHeightDelta":0,"imageWidth":736,"bodyTextApparentPx":16.662222222222223},
+    {"width":390,"horizontalOverflow":false,"sectionHeight":1192.625,"sixTabsHeightDelta":0,"imageWidth":348,"bodyTextApparentPx":7.878333333333334},
+    {"width":320,"horizontalOverflow":false,"sectionHeight":1198.65625,"sixTabsHeightDelta":0,"imageWidth":278,"bodyTextApparentPx":6.293611111111112}
+  ],
+  "evidenceViewportHeight":1600,
+  "evidenceNote":"Section recaptures use height1600 to include the entire section inside its app scroll container. Width checks were performed at height960. Mobile presentation remains unchanged as requested; no claim of desktop reading size on narrow phones.",
+  "assets":"All six decoded successfully at each of four widths; five former module paths unchanged.",
+  "workflow":{"Habla":"/marketing/modules/copilot-closeup-20261016/copilot.webp","Procesa":"/marketing/modules/framed-20261016/crm.webp","Claridad":"/marketing/modules/framed-20261016/comando.webp"},
+  "detector":{"runs":1,"newConsumerFindings":0,"recipePrimaryFinding":"Static broken-image warning: img src is assigned by validated module query; browser decoded1368x948 successfully and interior pixel equality passed. Existing local composition recipe, not a shipped product page.","recipeAdvisories":"Existing intentional glass rim tones/radius; pinned visual reference. No new CSS styling."}
+}

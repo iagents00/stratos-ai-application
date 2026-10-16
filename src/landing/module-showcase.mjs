@@ -1,5 +1,9 @@
 export const MODULE_ROTATION_MS = 2800;
 
+export const moduleScreenshotSrc = id => id === "copilot"
+  ? "/marketing/modules/copilot-closeup-20261016/copilot.webp"
+  : `/marketing/modules/framed-20261016/${id}.webp`;
+
 export const SHOWCASE_MODULES = [
   {
     id: "copilot", name: "Copilot", title: "El contexto de tu operación, a una pregunta.",

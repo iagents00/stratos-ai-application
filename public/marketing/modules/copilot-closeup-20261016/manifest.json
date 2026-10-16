@@ -1,0 +1,41 @@
+{
+  "createdAt": "2026-10-16T20:24:10.469312+00:00",
+  "module": "copilot",
+  "source": "../../../../.impeccable/review/copilot-closeup-2026-10-16/copilot-source.png",
+  "sourceSha256": "1b7373ddce0e217b0832706f99cf77a1486b27d78000adc4e4fc6d957244b010",
+  "sourceDimensions": [
+    1368,
+    948
+  ],
+  "component": "src/app/views/Copilot.jsx",
+  "demoReply": "src/lib/copilot-demo.js",
+  "fixtures": "src/app/data/demo-leads.js",
+  "capture": {
+    "cssWidth": 684,
+    "cssHeight": 474,
+    "deviceScaleFactor": 2,
+    "method": "Actual demo form submission in unchanged Copilot component, Playwright/Chrome; native PNG screenshot",
+    "prompt": "Dame la ficha de Alex Ejemplo",
+    "syntheticData": true,
+    "productionData": false,
+    "uiRepaint": false,
+    "aiGenerated": false
+  },
+  "frameRecipe": "scripts/marketing-screenshot-frame.html?module=copilot&source=closeup",
+  "recipeSha256": "eb784afaf66923687dec6bf82387b0ce7e389d8016f9634d7368a5a9ed6a80ee",
+  "file": "copilot.webp",
+  "sha256": "68da59771b72babbceadf58ef970a0affd39da9b7abc123f7414c66fad4f4bb7",
+  "dimensions": [
+    1440,
+    1020
+  ],
+  "format": "lossless WebP",
+  "sourceBounds": [
+    36,
+    36,
+    1368,
+    948
+  ],
+  "interiorPixelsMatch": true,
+  "comparisonInset": 16
+}

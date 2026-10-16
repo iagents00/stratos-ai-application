@@ -106,7 +106,33 @@
       "previousMotionReview": ".impeccable/review/motion-2026-10-16/REVIEW.md",
       "showcaseLayout": "Los seis paneles comparten una retícula para conservar la altura del contenido más alto; los inactivos permanecen ocultos y sin interacción.",
       "header": "Header con wordmark Stratos AI sin icono; footer conserva logo S original.",
-      "playback": "Sin controles de inicio/pausa/repetición en titular, galería o FeatureMotion. Galería reanuda al despejar la última razón independiente; teclado conserva pausa durante su exploración."
+      "playback": "Sin controles de inicio/pausa/repetición en titular, galería o FeatureMotion. Galería reanuda al despejar la última razón independiente; teclado conserva pausa durante su exploración.",
+      "copilotCloseup": {
+        "asset": "public/marketing/modules/copilot-closeup-20261016/copilot.webp",
+        "cssCapture": [
+          684,
+          474
+        ],
+        "deviceScaleFactor": 2,
+        "nativePng": [
+          1368,
+          948
+        ],
+        "frame": [
+          1440,
+          1020
+        ],
+        "data": "Ficha de Alex Ejemplo desde fixtures ficticios; formulario real de Copilot demo. No conversaciones productivas.",
+        "apparentTextDesktopPx": 14.7,
+        "mobile": "Composición existente preservada a petición del usuario; texto escala con la imagen.",
+        "sharedBy": [
+          "Galería",
+          "Workflow Habla"
+        ],
+        "evidence": ".impeccable/review/copilot-closeup-2026-10-16/QA.json",
+        "review": ".impeccable/review/copilot-closeup-2026-10-16/REVIEW.md",
+        "reviewStatus": "ship: revisión independiente de subagente general, alcance limitado al asset y sus dos consumidores; sin nuevo comp ni QUALITY BAR."
+      }
     },
     "shadows": [
       {

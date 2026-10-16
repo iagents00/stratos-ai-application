@@ -20,6 +20,69 @@ test('sample replies use only the supplied guest data', () => {
   assert.match(demoCopilotReply('registrar un cliente', { leads: [] }), /No se crean clientes/);
 });
 
+test('demo dossier reads the exact supplied client without inventing fields', () => {
+  const leads = createDemoLeads();
+  assert.equal(demoCopilotReply('Dame la ficha de Alex Ejemplo', { leads }),
+    'Demostración · Ficha con datos ficticios.\nNombre: Alex Ejemplo\nEtapa: Seguimiento\nPresupuesto: $100K USD (ejemplo)\nPróxima acción: Preparar una propuesta de ejemplo');
+  assert.equal(demoCopilotReply('Dame la ficha de ÁLEX EJEMPLO, por favor.', { leads }), demoCopilotReply('Dame la ficha de Alex Ejemplo', { leads }));
+  leads[0] = { ...leads[0], st: 'Visita Agendada', budget: '$120K USD (ejemplo)', nextAction: 'Revisar opciones de ejemplo' };
+  const reply = demoCopilotReply('Muéstrame el expediente del cliente Alex Ejemplo', { leads });
+  assert.match(reply, /Etapa: Visita Agendada/);
+  assert.match(reply, /Presupuesto: \$120K USD \(ejemplo\)/);
+  assert.match(reply, /Próxima acción: Revisar opciones de ejemplo/);
+});
+
+test('demo dossier never substitutes a different or ambiguous client', () => {
+  const leads = createDemoLeads();
+  for (const records of [leads, [], [...leads, { ...leads[0] }]]) {
+    const name = records.length > leads.length ? 'Alex Ejemplo' : 'Cliente Desconocido';
+    const reply = demoCopilotReply(`Dame la ficha de ${name}`, { leads: records });
+    assert.match(reply, /No encuentro una ficha única/);
+    assert.doesNotMatch(reply, /Etapa:|Presupuesto:|Próxima acción:/);
+  }
+});
+
+test('demo follow-ups use at most three existing next actions without claiming appointments today', () => {
+  const leads = createDemoLeads();
+  leads[0].nextAction = '';
+  leads[1].nextAction = 'Consultar preferencia de ejemplo';
+  const before = structuredClone(leads);
+  const reply = demoCopilotReply('¿A quién doy seguimiento hoy?', { leads });
+  assert.match(reply, /Demostración.*datos ficticios/);
+  assert.match(reply, /Sam Ejemplo: Consultar preferencia de ejemplo/);
+  assert.match(reply, /Robin Ejemplo:/);
+  assert.match(reply, /Charlie Ejemplo:/);
+  assert.doesNotMatch(reply, /Alex Ejemplo:|Dani Ejemplo:|cita de hoy/i);
+  assert.equal(reply.split('\n').filter(line => line.startsWith('• ')).length, 3);
+  assert.match(reply, /Revisa la fecha/);
+  assert.deepEqual(leads, before);
+  assert.match(demoCopilotReply('Prioridades de seguimiento', { leads: [] }), /No hay clientes con próxima acción/);
+});
+
+test('demo mutations are refused before client dossier and follow-up reads', () => {
+  const leads = createDemoLeads();
+  const before = structuredClone(leads);
+  for (const prompt of [
+    'Asigna el cliente Alex Ejemplo a Asesor 2 Ejemplo',
+    'Reasígnale Alex Ejemplo a Asesor 2 Ejemplo',
+    'Cambia la ficha de Alex Ejemplo',
+    'Modifica la ficha de Alex Ejemplo',
+    'Actualice la ficha de Alex Ejemplo',
+    'Añade una nota al expediente de Alex Ejemplo',
+    'Registra un cliente nuevo',
+    'Mueve a Alex Ejemplo a Cierre',
+    'Anota en el expediente de Alex Ejemplo: llamar mañana',
+    'Agenda una visita con Alex Ejemplo',
+    'Crear una tarea de seguimiento para Alex Ejemplo',
+  ]) {
+    const reply = demoCopilotReply(prompt, { leads });
+    assert.match(reply, /No se crean clientes/);
+    assert.match(reply, /Tampoco se reasignan clientes ni se modifican datos reales/);
+    assert.doesNotMatch(reply, /Nombre:|Seguimientos para revisar/);
+  }
+  assert.deepEqual(leads, before);
+});
+
 test('guest replaces storage without reading or clearing enterprise state and denies transport', () => {
   let enterpriseReads = 0, networkCalls = 0;
   const enterprise = memoryStorage(); enterprise.setItem('sb-real-auth-token', 'sentinel');

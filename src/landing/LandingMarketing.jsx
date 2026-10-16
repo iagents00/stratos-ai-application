@@ -3,7 +3,7 @@ import { ArrowRight, ArrowUpRight, Check, ChevronDown, Menu, X, Mic, MessageSqua
 import ModuleShowcase from "./ModuleShowcase.jsx";
 import FeatureMotion from "./FeatureMotion.jsx";
 import HeroFlowBackdrop from "./HeroFlowBackdrop.jsx";
-import { createModuleRotation } from "./module-showcase.mjs";
+import { createModuleRotation, moduleScreenshotSrc } from "./module-showcase.mjs";
 import { plans, faqs, rotatingWords, marketingLoginUrl } from "./marketing-content.js";
 import "./LandingMarketing.css";
 
@@ -66,7 +66,7 @@ const workflow = [
 function WorkflowPreview() {
   const [step, setStep] = useState(0);
   const item = workflow[step];
-  return <div className="smk-workflow"><div className="smk-workflow-tabs" aria-label="Flujo de trabajo">{workflow.map(({ label, icon }, index) => <button type="button" key={label} aria-pressed={step === index} onClick={() => setStep(index)}>{createElement(icon, { size: 17, "aria-hidden": true })}{label}</button>)}</div><div className="smk-workflow-stage"><img src={`/marketing/modules/framed-20261016/${item.image}.webp`} alt={`Captura real del módulo ${item.image} de Stratos AI con datos de demostración`} loading="lazy" width="1440" height="1020" /><div><h3>{item.title}</h3><p>{item.text}</p></div></div><p className="smk-caption">Capturas del sistema con datos de demostración.</p></div>;
+  return <div className="smk-workflow"><div className="smk-workflow-tabs" aria-label="Flujo de trabajo">{workflow.map(({ label, icon }, index) => <button type="button" key={label} aria-pressed={step === index} onClick={() => setStep(index)}>{createElement(icon, { size: 17, "aria-hidden": true })}{label}</button>)}</div><div className="smk-workflow-stage"><img src={moduleScreenshotSrc(item.image)} alt={`Captura real del módulo ${item.image} de Stratos AI con datos de demostración`} loading="lazy" width="1440" height="1020" /><div><h3>{item.title}</h3><p>{item.text}</p></div></div><p className="smk-caption">Capturas del sistema con datos de demostración.</p></div>;
 }
 
 function PricingCard({ plan }) {

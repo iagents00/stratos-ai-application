@@ -254,6 +254,12 @@ Ocho pares de preguntas y respuestas conservan el contenido comercial existente,
 
 **The Real Product Rule.** Las imágenes presentan la interfaz existente con su procedencia y rótulo de demostración. No agregar maquetas generadas, conexiones inventadas ni datos de clientes a los activos públicos.
 
+### Copilot en primer plano
+
+La captura de Copilot se renovó con una consulta real al formulario de la demo: «Dame la ficha de Alex Ejemplo». La respuesta muestra etapa, presupuesto y próxima acción desde los fixtures ficticios existentes; la demo también permite consultar hasta tres seguimientos sin afirmar citas de hoy ni confirmar asignaciones. El componente conserva su interfaz y tipografía. Se capturó a 684 × 474 píxeles CSS con DPR 2: el PNG físico de 1368 × 948 entra intacto en el mismo marco blanco de 1440 × 1020. El texto aparente se duplica, hasta aproximadamente 14.7px cuando la galería muestra la imagen a 650.8px. La composición móvil permanece igual por petición del usuario; el menor ancho sigue reduciendo proporcionalmente el texto de la captura.
+
+El nuevo [asset y su procedencia](../../../public/marketing/modules/copilot-closeup-20261016/README.md) se comparten entre galería y paso «Habla» mediante `moduleScreenshotSrc`. Los otros cinco módulos mantienen sus archivos anteriores. La [evidencia de la captura y QA](../../../.impeccable/review/copilot-closeup-2026-10-16/QA.json) conserva la igualdad de píxeles interiores, cuatro anchos sin desbordamiento ni cambios de altura entre módulos y el límite móvil. Una consulta de Cancún se probó en producción solo para comprobar su respuesta; esa conversación no forma parte del material público.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -271,3 +277,5 @@ Ocho pares de preguntas y respuestas conservan el contenido comercial existente,
 - **Don't** presentar capturas demo, indicadores LIVE locales o una revisión visual como resultados productivos verificados.
 - **Don't** hacer que la rotación automática bloquee la exploración manual o ignore movimiento reducido.
 - **Don't** incluir componentes, capturas, fuentes ni logo de esta landing en el paquete nativo: `vite.config.js` los excluye en `build:app`.
+
+La [revisión independiente del encuadre Copilot](../../../.impeccable/review/copilot-closeup-2026-10-16/REVIEW.md) obtuvo `disposition: ship`; cubre el refinamiento de la captura y sus consumidores.

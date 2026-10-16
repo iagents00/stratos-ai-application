@@ -125,7 +125,8 @@ test('module gallery renders six named tabs linked to real panels and complete l
     assert.equal(images.length, 6);
     for (const module of SHOWCASE_MODULES) {
       assert.equal(module.capabilities.length, 3);
-      const image = images.find(tag => tag.includes(`src="/marketing/modules/framed-20261016/${module.id}.webp"`));
+      const path = module.id === 'copilot' ? '/marketing/modules/copilot-closeup-20261016/copilot.webp' : `/marketing/modules/framed-20261016/${module.id}.webp`;
+      const image = images.find(tag => tag.includes(`src="${path}"`));
       assert.ok(image, module.id);
       assert.match(image, /width="1440" height="1020"/);
       assert.ok(image.includes(`alt="Captura real del módulo ${module.name} de Stratos AI con marco translúcido y datos de demostración"`));
