@@ -575,7 +575,7 @@ export default function MetaPanel({
     setMetaNewDate("");
     setDuePickerOpen(null);
   };
-  const marketingDemoActions = marketingMode ? [
+  const marketingDemoActions = marketingMode && user?.isDemo === true ? [
     {
       id: `demo-marketing-${user?.id || "user"}-1`,
       text: "DEMO · Revisar campañas activas y anotar ajustes de copy",
@@ -622,11 +622,7 @@ export default function MetaPanel({
       _demo: true,
     },
   ] : [];
-  const ownMarketingActions = metaActions.filter(a => {
-    if (a._demo) return true;
-    const owner = _nameKey(_actionOwner(a));
-    return owner && owner !== "todos" && owner !== "equipo" && owner === _nameKey(_selfName);
-  });
+  const ownMarketingActions = metaActions.filter(_isOwnAction);
   const agendaActions = marketingMode
     ? (ownMarketingActions.length ? ownMarketingActions : marketingDemoActions)
     : ((_isManager && agendaView === "team") ? metaActions : metaActions.filter(_isOwnAction));

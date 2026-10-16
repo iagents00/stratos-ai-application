@@ -63,3 +63,25 @@ test('bootstrap counts the complete team beyond the PostgREST page limit',async(
  assert.equal(result.status,200);assert.equal(result.body.profiles.length,1201);
  assert.ok(result.body.profiles.every(person=>person.organization_id==='own'));
 });
+
+test('managed company with an existing team still requires its own active administrator',async()=>{
+ const h=harness();
+ h.rows.profiles.find(person=>person.id==='own-user').active=false;
+ h.rows.profiles.push({id:'advisor',organization_id:'own',role:'asesor',active:true});
+ h.rows.profiles.push({id:'other-admin',organization_id:'duke',role:'admin',active:true});
+ for(const role of ['director','asesor']){
+  const blocked=await h.call({action:'create_user',organization_id:'own',name:'Test',email:'test@example.com',role});
+  assert.equal(blocked.status,400);
+  assert.match(blocked.body.error,/primero al administrador/);
+ }
+ assert.equal(h.creates.length,0);
+ const allowed=await h.call({action:'create_user',organization_id:'own',name:'Admin',email:'admin@example.com',role:'admin'});
+ assert.equal(allowed.status,200);
+});
+
+test('managed company can add advisors after its active administrator exists',async()=>{
+ const h=harness();
+ const result=await h.call({action:'create_user',organization_id:'own',name:'Advisor',email:'advisor@example.com',role:'asesor'});
+ assert.equal(result.status,200);
+ assert.equal(h.creates[0].app_metadata.stratos_role,'asesor');
+});

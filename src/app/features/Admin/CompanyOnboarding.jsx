@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Building2, Check, Copy, Eye, EyeOff, Plus, Search, ShieldCheck, Users } from 'lucide-react';
 import { createWhatsAppOrganization, createWhatsAppTenantUser } from '../../../lib/whatsapp-admin';
 import { MANAGED_TENANT_FEATURES, managedTenantFeatures } from '../../../clients/tenant/managed-features';
-import { companySummary, isManagedCompany, validateCompany, validateCompanyUser } from './company-onboarding';
+import { companyReadiness, companySummary, isManagedCompany, validateCompany, validateCompanyUser } from './company-onboarding';
 
 const initialCompany = () => ({ name: '', seats: 5, features: managedTenantFeatures() });
 const initialUser = organizationId => ({ organization_id: organizationId, name: '', email: '', role: 'admin' });
@@ -29,6 +29,7 @@ export default function CompanyOnboarding({ data, refresh, onIntegrations }) {
   const profiles = data?.profiles || [];
   const company = organizations.find(item => item.id === selectedId) || (createdCompany?.id === selectedId ? createdCompany : null);
   const summary = company ? companySummary(company, profiles) : null;
+  const readiness = company ? companyReadiness(company, profiles) : null;
   const managed = organizations.filter(isManagedCompany);
   const filtered = managed.filter(item => item.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   const root = data?.access?.root === true;
@@ -101,10 +102,11 @@ export default function CompanyOnboarding({ data, refresh, onIntegrations }) {
       <div className="company-list">
         {filtered.length ? filtered.map(item => {
           const info = companySummary(item, profiles);
+          const status = companyReadiness(item, profiles);
           return <button className="company-row" key={item.id} onClick={() => selectCompany(item)}>
             <span className="company-avatar"><Building2 size={21} /></span>
             <span className="company-row-name"><strong>{item.name}</strong><small>{item.slug}</small></span>
-            <span className="company-row-status">{!item.active ? 'Inactiva' : info.hasAdmin ? 'Con administrador' : 'Falta administrador'}</span>
+            <span className="company-row-status">{status.label}</span>
             <span className="company-seats">{info.used} / {item.seats} usuarios</span><ArrowRight size={17} />
           </button>;
         }) : <div className="company-empty"><Building2 size={28} /><h2>{query ? 'No encontramos esa empresa' : 'Tu próximo cliente empieza aquí'}</h2><p>{query ? 'Prueba con otro nombre.' : 'Crea la empresa y su administrador. Después podrás incorporar al resto del equipo.'}</p>{!query && <button className="company-primary" disabled={!quotaAvailable || !data} onClick={() => setView('create')}><Plus size={17} /> Crear primera empresa</button>}</div>}
@@ -126,6 +128,7 @@ export default function CompanyOnboarding({ data, refresh, onIntegrations }) {
 
     {view === 'detail' && company && <>
       <div className="company-context"><span><Users size={17} />{summary.used} de {company.seats} licencias en uso</span><span><ShieldCheck size={17} />{company.active ? 'Empresa activa' : 'Empresa inactiva'}</span></div>
+      <section className="company-readiness" aria-labelledby="company-readiness-title"><h2 id="company-readiness-title">{readiness.label}</h2><p>{readiness.detail}</p><p>Acceso de empresas: <a href={loginUrl} target="_blank" rel="noreferrer">{loginUrl}</a></p><p className="company-help">Cada persona entra con su propia cuenta. WhatsApp se verifica por separado y no es necesario para empezar a usar el CRM.</p></section>
       {credentials && <section className="company-access" aria-labelledby="company-access-title"><div><Check size={22} /><h2 id="company-access-title" ref={accessRef} tabIndex={-1}>Acceso creado para {credentials.company}</h2></div><p>Comparte estos datos con la persona autorizada de esta empresa.</p><dl><div><dt>Enlace de acceso</dt><dd><a href={loginUrl} target="_blank" rel="noreferrer">{loginUrl}</a></dd></div><div><dt>Correo</dt><dd>{credentials.email}</dd></div><div><dt>Contraseña temporal</dt><dd><code>{visiblePassword ? credentials.password : '••••••••••••'}</code><button type="button" className="company-icon" aria-label={visiblePassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} onClick={() => setVisiblePassword(value => !value)}>{visiblePassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></dd></div></dl><div className="company-actions"><button className="company-primary" onClick={copyAccess}><Copy size={17} />{copied ? 'Acceso copiado' : 'Copiar acceso completo'}</button><button className="company-secondary" onClick={() => { setCredentials(null); setVisiblePassword(false); }}>Ya guardé el acceso</button></div></section>}
       <div className="company-workspace">
         <form className="company-form" onSubmit={createUser}>
