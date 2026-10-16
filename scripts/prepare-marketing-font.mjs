@@ -2,20 +2,19 @@ import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { MARKETING_FONT } from './marketing-font-spec.mjs';
 
 // Fontshare permits self-hosting on our own website, but its FFL prohibits
 // redistributing font binaries through a public source repository. Fetch the
 // original, pinned file before web development/build; never commit this asset.
-const FONT_URL = 'https://cdn.fontshare.com/wf/HJHZ26OECMTXRH7JXPFC7EVIHDSLT2RA/LJRNLR7WCPF3PY3SZ7B2LHNUTQMFNCHL/4MCJYGQDIOOXHWSIIB2OYNDBEALJSOGN.woff2';
-const FONT_SHA256 = 'd1bf801ffb1a6096def70a7c532255722ad87d948b13a8a586e342f7091f8ee4';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const DESTINATION = resolve(ROOT, 'public/fonts/marketing/switzer-variable.woff2');
+const DESTINATION = resolve(ROOT, MARKETING_FONT.path);
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 
 async function prepare() {
   try {
     const existing = await readFile(DESTINATION);
-    if (hash(existing) === FONT_SHA256) {
+    if (hash(existing) === MARKETING_FONT.sha256) {
       console.log('Switzer: original verificado, listo para la web.');
       return;
     }
@@ -27,10 +26,10 @@ async function prepare() {
   const timeout = setTimeout(() => controller.abort(), 15000);
   let bytes;
   try {
-    const response = await fetch(FONT_URL, { signal: controller.signal, redirect: 'error', credentials: 'omit' });
+    const response = await fetch(MARKETING_FONT.url, { signal: controller.signal, redirect: 'error', credentials: 'omit' });
     if (!response.ok) throw new Error(`Fontshare respondió HTTP ${response.status}.`);
     bytes = Buffer.from(await response.arrayBuffer());
-    if (bytes.subarray(0, 4).toString('ascii') !== 'wOF2' || hash(bytes) !== FONT_SHA256) {
+    if (bytes.subarray(0, 4).toString('ascii') !== 'wOF2' || hash(bytes) !== MARKETING_FONT.sha256) {
       throw new Error('El archivo de Fontshare no coincide con el original aprobado (SHA-256).');
     }
   } catch (error) {

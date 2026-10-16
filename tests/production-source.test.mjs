@@ -1,9 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, symlinkSync, lstatSync, renameSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { canonicalJson, gitBlobHash, verifySourceTree } from '../scripts/check-vercel-production.mjs';
+import { canonicalJson, gitBlobHash, isApprovedGeneratedAsset, verifySourceTree } from '../scripts/check-vercel-production.mjs';
+import { MARKETING_FONT } from '../scripts/marketing-font-spec.mjs';
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), 'stratos-source-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
@@ -49,5 +51,80 @@ test('acepta la serialización equivalente de Vercel y rechaza cambios reales de
   writeFileSync(join(root, 'vercel.json'), JSON.stringify({buildCommand: expected.buildCommand, framework: expected.framework}));
   assert.doesNotThrow(() => verifySourceTree(root, tree));
   writeFileSync(join(root, 'vercel.json'), JSON.stringify({...expected, buildCommand: 'npm run old'}));
+  assert.throws(() => verifySourceTree(root, tree), /Cambios sin integrar/);
+});
+
+const generatedFontPath = MARKETING_FONT.path;
+function writeGeneratedFont(root, bytes = Buffer.from('wOF2altered font')) {
+  mkdirSync(join(root, 'public/fonts/marketing'), { recursive: true });
+  writeFileSync(join(root, generatedFontPath), bytes);
+  return bytes;
+}
+
+test('la política acepta solo la ruta y el hash fijados de Switzer en un archivo regular', t => {
+  const {root} = fixture(t);
+  const stats = lstatSync(join(root, 'src/app.js'));
+  assert.equal(Object.isFrozen(MARKETING_FONT), true);
+  assert.equal(isApprovedGeneratedAsset(generatedFontPath, stats, MARKETING_FONT.sha256), true);
+  assert.equal(isApprovedGeneratedAsset(generatedFontPath + '.tmp', stats, MARKETING_FONT.sha256), false);
+  assert.equal(isApprovedGeneratedAsset('public/fonts/marketing/foreign.woff2', stats, MARKETING_FONT.sha256), false);
+  assert.equal(isApprovedGeneratedAsset(generatedFontPath, stats, createHash('sha256').update('tampered font').digest('hex')), false);
+});
+
+test('la política rechaza symlinks y directorios incluso con el hash fijado', t => {
+  const {root} = fixture(t);
+  const link = join(root, 'font-link');
+  symlinkSync(join(root, 'src/app.js'), link);
+  assert.equal(isApprovedGeneratedAsset(generatedFontPath, lstatSync(link), MARKETING_FONT.sha256), false);
+  assert.equal(isApprovedGeneratedAsset(generatedFontPath, lstatSync(join(root, 'src')), MARKETING_FONT.sha256), false);
+});
+
+test('rechaza una fuente generada con contenido distinto del original aprobado', t => {
+  const {root, tree} = fixture(t);
+  writeGeneratedFont(root);
+  assert.throws(() => verifySourceTree(root, tree), /switzer-variable\.woff2/);
+});
+
+test('rechaza un enlace simbólico en la ruta de la fuente generada', t => {
+  const {root, tree} = fixture(t);
+  mkdirSync(join(root, 'public/fonts/marketing'), { recursive: true });
+  symlinkSync(join(root, 'src/app.js'), join(root, generatedFontPath));
+  assert.throws(() => verifySourceTree(root, tree), /switzer-variable\.woff2/);
+});
+
+test('rechaza enlaces simbólicos en directorios de la fuente generada', t => {
+  const {root, tree} = fixture(t);
+  mkdirSync(join(root, 'public'));
+  mkdirSync(join(root, 'font-target/marketing'), { recursive: true });
+  writeFileSync(join(root, 'font-target/marketing/switzer-variable.woff2'), 'wOF2altered font');
+  symlinkSync(join(root, 'font-target'), join(root, 'public/fonts'), 'dir');
+  assert.throws(() => verifySourceTree(root, tree), /public\/fonts/);
+});
+
+test('rechaza public como symlink aunque apunte a archivos oficiales intactos', t => {
+  const {root, tree} = fixture(t);
+  const bytes = Buffer.from('official public/known.txt\n');
+  mkdirSync(join(root, 'public'));
+  writeFileSync(join(root, 'public/known.txt'), bytes);
+  tree.push({path: 'public/known.txt', type: 'blob', mode: '100644', sha: gitBlobHash(bytes)});
+  assert.equal(verifySourceTree(root, tree), 9);
+  renameSync(join(root, 'public'), join(root, 'public-target'));
+  symlinkSync(join(root, 'public-target'), join(root, 'public'), 'dir');
+  assert.throws(() => verifySourceTree(root, tree), /Directorio de fuente inseguro: public/);
+});
+
+test('la excepción de Switzer no permite archivos vecinos ajenos a main', t => {
+  const {root, tree} = fixture(t);
+  mkdirSync(join(root, 'public/fonts/marketing'), { recursive: true });
+  writeFileSync(join(root, 'public/fonts/marketing/foreign.woff2'), 'unapproved font');
+  assert.throws(() => verifySourceTree(root, tree), /foreign\.woff2/);
+});
+
+test('la excepción generada no sustituye la verificación Git de un archivo de main', t => {
+  const {root, tree} = fixture(t);
+  const bytes = writeGeneratedFont(root);
+  tree.push({path: generatedFontPath, type: 'blob', mode: '100644', sha: gitBlobHash(bytes)});
+  assert.equal(verifySourceTree(root, tree), 9);
+  writeFileSync(join(root, generatedFontPath), 'different tracked font');
   assert.throws(() => verifySourceTree(root, tree), /Cambios sin integrar/);
 });

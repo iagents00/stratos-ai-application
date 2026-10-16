@@ -27,6 +27,11 @@ en esta carpeta. Vite lo copia al sitio compilado para su autohospedaje. Una
 copia local válida se reutiliza; una instalación nueva requiere conexión a
 Fontshare y dispone de 15 segundos para la descarga.
 
+La ruta, URL y SHA-256 se comparten desde `scripts/marketing-font-spec.mjs`.
+El control de fuente productiva acepta exclusivamente ese archivo generado
+cuando es un archivo regular y su contenido coincide con el hash fijado.
+Rechaza enlaces simbólicos, bytes distintos y cualquier otro archivo ajeno a main.
+
 No se modifica, renombra internamente, convierte ni recorta el archivo de
 fuente. El nombre `Stratos Switzer` es únicamente un alias de `@font-face`. No
 utilizar este archivo como fuente seleccionable en generadores o plantillas de
