@@ -12,9 +12,21 @@ test('I Space resolves by authenticated organization and keeps its Copilot isola
     const cfg = clients.getClientConfig('i-space');
     const rawConfig = (await server.ssrLoadModule('/src/clients/i-space/config.js')).default;
     const user = { id: 'test-owner', role: 'admin', organizationId: cfg.tenant.organizationId };
-    for (const path of ['/', '/tenant', '/nsg']) {
+    for (const path of ['/', '/login', '/tenant', '/nsg']) {
       const loc = new URL(`https://stratoscapitalgroup.com${path}`);
-      assert.equal(new URL(clients.resolveRedirectForUser(user, clients.matchClientFromLocation(loc), loc)).pathname, '/i-space');
+      const currentClient = clients.resolveClientFromLocation(loc).id;
+      const transition = clients.resolveClientTransitionForUser(user, currentClient, loc);
+      assert.equal(transition.clientId, 'i-space');
+      if (path === '/' || path === '/login') {
+        assert.equal(transition.inMemory, true);
+        assert.equal(transition.redirectUrl, null);
+        assert.equal(clients.resolveRedirectForUser(user, currentClient, loc), null);
+        assert.equal(loc.pathname, path);
+        assert.equal(clients.getClientConfig(transition.clientId).tenant.organizationId, user.organizationId);
+      } else {
+        assert.equal(transition.inMemory, false);
+        assert.equal(new URL(transition.redirectUrl).pathname, '/i-space');
+      }
     }
     const unknown = clients.resolveRedirectForUser({ organizationId: 'unknown-org' }, 'i-space', new URL('https://stratoscapitalgroup.com/i-space'));
     assert.equal(new URL(unknown).pathname, '/tenant');

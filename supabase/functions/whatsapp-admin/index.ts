@@ -1,4 +1,5 @@
 import { createProvisionedUser } from "../_shared/provision-user.ts";
+import { PLATFORM_CRM_ACTIONS, handlePlatformCRM } from "./platform-crm.ts";
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import * as XLSX from "npm:xlsx@0.18.5";
@@ -382,6 +383,10 @@ Deno.serve(async (req) => {
   const action = String(body.action ?? "bootstrap");
 
   try {
+    if (PLATFORM_CRM_ACTIONS.has(action)) {
+      const result = await handlePlatformCRM(admin, callerId, action, body);
+      return respond(result.body, result.status, origin);
+    }
     if (action === "bootstrap") {
       const orgs = await visibleOrganizations();
       if (orgs.error) throw orgs.error;

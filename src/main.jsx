@@ -27,6 +27,7 @@ import ErrorBoundary   from "./components/ErrorBoundary.jsx";
 import UpdatePill      from "./components/UpdatePill.jsx";
 import { recoverFromStaleChunk } from "./lib/chunk-recovery.js";
 import { isNativeApp } from "./lib/native";
+import { isCommonEntryLocation } from "./lib/common-entry";
 
 // Code-splitting: solo se carga el bundle de la experiencia que el usuario
 // realmente abrió. Antes este import era estático y arrastraba todo a 922KB.
@@ -182,7 +183,8 @@ const isPublicLanding = isPortfolioPath(pathname);
 //   · cualquier otra cosa                            →  cliente "duke" (default)
 // Si el path matchea un cliente explícito (no-default), forzamos isApp=true:
 // esto permite entrar a `/grupo28` sin necesidad de `?app` en localhost.
-const clientId        = matchClientFromLocation(window.location);
+const commonEntry     = isCommonEntryLocation(window.location);
+const clientId        = commonEntry ? "tenant" : matchClientFromLocation(window.location);
 const clientConfig    = resolveClientFromLocation(window.location);
 const isExplicitClient = clientId !== "duke";
 
@@ -192,7 +194,7 @@ const isExplicitClient = clientId !== "duke";
 // la LANDING DE MARKETING en lugar del CRM. El binario ES la plataforma.
 const esAppNativa = isNativeApp();
 
-const isLanding = !esAppNativa && !isExplicitClient && (
+const isLanding = !esAppNativa && !commonEntry && !isExplicitClient && (
   LANDING_DOMAINS.includes(hostname)
   || (hostname === "localhost" && !params.has("app"))
   || (hostname === "127.0.0.1" && !params.has("app"))
@@ -201,7 +203,7 @@ const isLanding = !esAppNativa && !isExplicitClient && (
 const isApp = esAppNativa || (!isDentalDemo && !isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isManualMkt && !isManualNSG && !isManualLegacy && !isManualBrasa && !isManualGasil && !isManualMuebleria && !isDiagnostico && !isDukeLeadRouter && !isOnboardingCC && !isPublicLanding && !isLanding);
 
 // URL de la plataforma — usada por la landing para el CTA principal
-const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/?app");
+const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/login");
 
 // ─── BRANDING POR CLIENTE ────────────────────────────────────────────────────
 // Cambio mínimo y observable: título de la pestaña + atributo en <html>.
@@ -243,7 +245,7 @@ try {
 
     // 2) El manifest de esta empresa. `start_url` apunta a SU dirección, así
     //    que el ícono instalado abre donde se instaló y no en la raíz.
-    const inicio = clientId === "duke" ? "/" : `/${clientId}`;
+    const inicio = commonEntry ? "/login" : clientId === "duke" ? "/" : `/${clientId}`;
     const linkManifest = document.querySelector('link[rel="manifest"]');
     if (linkManifest) {
       const manifest = {

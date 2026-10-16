@@ -39,8 +39,9 @@ async function call(action, payload = {}) {
   token ||= readStoredAccessToken();
   if (!token) throw new Error("Tu sesión venció. Vuelve a entrar.");
 
-  const response = await withTimeout(
-    fetch(FUNCTION_URL, {
+  const { response, body } = await withTimeout(
+    (async () => {
+      const response = await fetch(FUNCTION_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -48,11 +49,13 @@ async function call(action, payload = {}) {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ action, ...payload }),
-    }),
+      });
+      const body = await response.json().catch(() => ({}));
+      return { response, body };
+    })(),
     REQUEST_TIMEOUT_MS,
     "La plataforma está tardando. Intenta nuevamente en unos segundos.",
   );
-  const body = await response.json().catch(() => ({}));
   if (!response.ok || body?.ok === false) {
     const error = new Error(body?.error || `No se pudo completar la acción (HTTP ${response.status}).`);
     error.status = response.status;
@@ -63,6 +66,10 @@ async function call(action, payload = {}) {
 }
 
 export const loadWhatsAppAdmin = () => call("bootstrap");
+export const loadCompanyCRM = (payload) => call("list_company_leads", payload);
+export const loadCompanyCRMLead = (payload) => call("get_company_lead", payload);
+export const createCompanyCRMLead = (payload) => call("create_company_lead", payload);
+export const updateCompanyCRMLead = (payload) => call("update_company_lead", payload);
 export const loadPlatformUsers = () => call("list_platform_users");
 export const updatePlatformUser = (payload) => call("update_platform_user", payload);
 export const updatePlatformCompany = (payload) => call("update_platform_company", payload);

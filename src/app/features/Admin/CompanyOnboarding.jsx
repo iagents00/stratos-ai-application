@@ -13,7 +13,7 @@ const companyLabel = company => {
   return alias && alias !== company.name ? `${company.name} · ${alias}` : company.name;
 };
 
-export default function CompanyOnboarding({ data, refresh, onIntegrations, onUsers, onSetup }) {
+export default function CompanyOnboarding({ data, refresh, onIntegrations, onUsers, onSetup, onOpenCRM }) {
   const [query, setQuery] = useState('');
   const [view, setView] = useState('list');
   const [selectedId, setSelectedId] = useState('');
@@ -39,8 +39,7 @@ export default function CompanyOnboarding({ data, refresh, onIntegrations, onUse
   const companies = visibleCompanies(organizations, root);
   const filtered = companies.filter(item => `${companyLabel(item)} ${item.slug}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   const quotaAvailable = root || (data?.access?.scopeReady === true && Number(data?.access?.companiesUsed) < Number(data?.access?.companyLimit));
-  const client = company ? getClientConfigByOrgId(company.id) : null;
-  const loginUrl = `${window.location.origin}${client ? client.id === 'duke' ? '/' : `/${client.id}` : '/tenant'}`;
+  const loginUrl = `${window.location.origin}/login`;
 
   useEffect(() => { if (view !== "list") headingRef.current?.focus(); }, [view, selectedId]);
   useEffect(() => { if (credentials) accessRef.current?.focus(); }, [credentials]);
@@ -133,6 +132,7 @@ export default function CompanyOnboarding({ data, refresh, onIntegrations, onUse
     </div>}
 
     {view === 'detail' && company && <>
+      {onOpenCRM && <div className="company-actions" style={{ marginBottom: 24 }}><button className="company-primary" disabled={!company.active || busy} onClick={() => onOpenCRM(company.id)}>Abrir CRM de {company.name}<ArrowRight size={17} /></button></div>}
       <div className="company-context"><span><Users size={17} />{summary.used} de {company.seats} licencias en uso</span><span><ShieldCheck size={17} />{company.active ? 'Empresa activa' : 'Empresa inactiva'}</span></div>
       <section className="company-readiness" aria-labelledby="company-readiness-title"><h2 id="company-readiness-title">{readiness.label}</h2><p>{readiness.detail}</p><p>Acceso de empresas: <a href={loginUrl} target="_blank" rel="noreferrer">{loginUrl}</a></p><p className="company-help">Cada persona entra con su propia cuenta. WhatsApp se verifica por separado y no es necesario para empezar a usar el CRM.</p></section>
       {credentials && <section className="company-access" aria-labelledby="company-access-title"><div><Check size={22} /><h2 id="company-access-title" ref={accessRef} tabIndex={-1}>Acceso creado para {credentials.company}</h2></div><p>Comparte estos datos con la persona autorizada de esta empresa.</p><dl><div><dt>Enlace de acceso</dt><dd><a href={loginUrl} target="_blank" rel="noreferrer">{loginUrl}</a></dd></div><div><dt>Correo</dt><dd>{credentials.email}</dd></div><div><dt>Contraseña temporal</dt><dd><code>{visiblePassword ? credentials.password : '••••••••••••'}</code><button type="button" className="company-icon" aria-label={visiblePassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} onClick={() => setVisiblePassword(value => !value)}>{visiblePassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></dd></div></dl><div className="company-actions"><button className="company-primary" onClick={copyAccess}><Copy size={17} />{copied ? 'Acceso copiado' : 'Copiar acceso completo'}</button><button className="company-secondary" onClick={() => { setCredentials(null); setVisiblePassword(false); }}>Ya guardé el acceso</button></div></section>}

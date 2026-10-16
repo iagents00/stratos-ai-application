@@ -1,5 +1,9 @@
 # Historial de versiones del Service Worker (CACHE_VERSION)
 
+## v441 — Acceso fijo y CRM de empresas
+
+Login común en `/login`, empresa autenticada aplicada sin cambiar la dirección y entrada directa a todas las empresas para operadores globales autorizados. Consola con el sidebar y header de Stratos, salida a Mi CRM y cartera global por empresa. Requiere migración 274 y nueva versión de `whatsapp-admin`; conserva el aislamiento del CRM ordinario.
+
 ## v440 — Azul Stratos y tema casi negro
 
 Acentos cian de marca, superficies navy casi negras y azul profundo legible en el tema claro. Conserva los verdes de éxito y WhatsApp. Renueva el caché estático sin forzar recargas; no requiere cambios nuevos en Supabase.

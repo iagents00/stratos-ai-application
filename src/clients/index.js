@@ -13,6 +13,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import { mergeClientConfig } from "./_shared/defaults";
+import { isCommonEntryLocation } from "../lib/common-entry";
 import dentalConfig from "./clinica-dental-demo/config";
 import dukeConfig    from "./duke/config";
 import grupo28Config from "./grupo28/config";
@@ -136,6 +137,7 @@ export function getClientConfig(clientId) {
  * Atajo para main.jsx: detecta y devuelve config en una sola llamada.
  */
 export function resolveClientFromLocation(location = window.location) {
+  if (isCommonEntryLocation(location)) return getClientConfig("tenant");
   const clientId = matchClientFromLocation(location);
   return getClientConfig(clientId);
 }
@@ -201,6 +203,7 @@ export function getClientConfigByOrgId(organizationId) {
  * @returns {string|null} URL absoluta a la que redirigir, o null si no redirige
  */
 export function resolveRedirectForUser(user, currentClientId, location = window.location) {
+  if (isCommonEntryLocation(location)) return null;
   if (!user?.organizationId) return null;
   const targetClientId = getClientIdByOrgId(user.organizationId) || "tenant";
   if (targetClientId === currentClientId) return null;
@@ -227,4 +230,20 @@ export function resolveRedirectForUser(user, currentClientId, location = window.
     : `/${targetClientId}${basePath === "/" ? "" : basePath}`;
 
   return `${origin}${targetPath}${search}${hash}`;
+}
+
+// Solo el perfil autenticado decide la configuración que se aplica en memoria.
+// El destino es presentación: la organización del perfil y RLS siguen siendo
+// la autoridad para datos y operaciones.
+export function resolveClientTransitionForUser(user, currentClientId, location, { native = false } = {}) {
+  // La demo local conserva su experiencia completa sin inventar organización
+  // productiva; App ya separa sus datos simulados de la cartera real.
+  if (user?.id === "demo-user-local" && user.isDemo && isCommonEntryLocation(location)) {
+    return currentClientId === "duke" ? null : { clientId: "duke", inMemory: true, redirectUrl: null };
+  }
+  if (!user?.organizationId || user?._offline) return null;
+  const clientId = getClientIdByOrgId(user.organizationId) || "tenant";
+  if (clientId === currentClientId) return null;
+  const inMemory = native || isCommonEntryLocation(location);
+  return { clientId, inMemory, redirectUrl: inMemory ? null : resolveRedirectForUser(user, currentClientId, location) };
 }
