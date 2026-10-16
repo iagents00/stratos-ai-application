@@ -1,33 +1,43 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-16T19:34:37.074925+00:00",
+  "generatedAt": "2026-10-16T19:59:04.547608+00:00",
   "title": "Design System: Stratos AI — sitio público",
   "extensions": {
     "motion": [
       {
         "name": "module-interval",
         "value": "2800ms",
-        "purpose": "Rotación de módulos; pausada por hover, foco, fuera de viewport, documento oculto, selección manual o movimiento reducido."
+        "purpose": "Avance automático cada 2800ms; suspensión por hover, foco de teclado, fuera de viewport, documento oculto o movimiento reducido. Selección manual reinicia el intervalo sin bloqueo permanente; click/touch no retienen foco. Sin botones de reproducción."
       },
       {
         "name": "headline-reveal",
-        "value": "180ms ease-out",
-        "purpose": "Transición de la frase; desactivada con movimiento reducido."
+        "value": "240ms cubic-bezier(.23, 1, .32, 1)",
+        "purpose": "Crossfade y desplazamiento corto de la frase; siete elementos comparten celda CSS grid y conservan altura. Sin transición con movimiento reducido."
       },
       {
         "name": "module-reveal",
         "value": "180ms cubic-bezier(.23, 1, .32, 1)",
-        "purpose": "Aparición del panel; sin animación con foco dentro o movimiento reducido."
+        "purpose": "Aparición del panel; sin animación con foco visible de teclado dentro o movimiento reducido."
       },
       {
         "name": "module-press",
         "value": "120ms cubic-bezier(.23, 1, .32, 1)",
-        "purpose": "scale(.97) de pestañas y pausa al presionar; sin transform con foco o movimiento reducido."
+        "purpose": "scale(.97) de pestañas al presionar; sin transform con foco o movimiento reducido."
       },
       {
         "name": "flow-stroke",
         "value": "5.6s linear × 2",
-        "purpose": "Dos recorridos SVG limitados; 11.44s incluida la demora final, después estado quieto y Repetir animación. Pausa/reanudación conserva avance; repetir remonta solo el arte del diagrama."
+        "purpose": "Dos recorridos SVG automáticos limitados; 11.44s incluida la demora final, después estado quieto. Sin botones ni estados manuales de pausa, finalización o repetición."
+      },
+      {
+        "name": "headline-interval",
+        "value": "2800ms",
+        "purpose": "Instancia independiente del controlador compartido con galería; suspensión fuera de viewport, documento oculto o movimiento reducido. Sin controles manuales."
+      },
+      {
+        "name": "hero-network-travel",
+        "value": "6s linear × 3",
+        "purpose": "Viajes limitados del fondo SVG; máximo activo 20.4s en escritorio y 18.8s en móvil incluidos escalonamientos. Suspensión offscreen/hidden; red estática con movimiento reducido."
       }
     ],
     "breakpoints": [
@@ -43,7 +53,7 @@
       {
         "name": "landing-stack",
         "value": "760px",
-        "purpose": "Control de pausa del titular estático, flex y margin 8px auto 0."
+        "purpose": "Secciones apiladas y composición móvil del fondo hero."
       },
       {
         "name": "showcase-mobile",
@@ -53,7 +63,7 @@
       {
         "name": "mobile",
         "value": "480px",
-        "purpose": "La frase del hero reserva 2.2em para evitar saltos entre una y dos líneas."
+        "purpose": "CTAs del hero en filas completas; la altura de frases se conserva con la celda grid compartida, sin reserva fija de dos líneas."
       },
       {
         "name": "narrow",
@@ -88,11 +98,15 @@
       ],
       "fontLicenses": "Switzer FFL: binario ignorado y descargado en preparación web con hash fijado. Inter OFL: original completo versionado con licencia. Ver public/fonts/marketing/README.md.",
       "assets": "Seis composiciones lossless 1440×1020 en public/marketing/modules/framed-20261016/*.webp; originales PNG a escala 1:1 en x36/y36 (Métricas x58/y92), interior RGB idéntico en el área preservada y marco blanco/translúcido de scripts/marketing-screenshot-frame.html, sin IA. La figura no añade fondo, radio ni altura mínima; la galería real y el flujo manual conservan las capturas. Procedencia y límite del harness iAgents en public/marketing/modules/README.md.",
-      "review": ".impeccable/review/motion-2026-10-16/REVIEW.md",
+      "review": ".impeccable/review/hero-flow-2026-10-16/REVIEW.md",
       "flowTruth": "Consulta → contexto: Consultar cartera / Copilot / Clientes, Pendientes, Próximos pasos. Actividad registrada → visibilidad: Actividad registrada / Comando / Cartera, Equipo, Métricas. Flujos ilustrativos sujetos a permisos/configuración; no prometen acciones, envíos ni guardados autónomos.",
-      "flowLifecycle": "Dos recorridos limitados para Safari; detener fuera de viewport, documento oculto o movimiento reducido. Pausa manual, reanudación y repetición. HTML/CSS/SVG nativos, sin GIF pesado.",
+      "flowLifecycle": "Dos recorridos limitados para Safari; animación CSS suspendida fuera de viewport o con documento oculto. Movimiento reducido mantiene el diagrama estático sin señales. Footer solo declaración ilustrativa, sin controles de reproducción. HTML/CSS/SVG nativos, sin GIF pesado.",
       "historicalReview": ".impeccable/review/marketing-2026-10-16/REVIEW.md",
-      "reviewStatus": "ship de la confirmación del único fix; revisión independiente mediante subagente general. 24 comprobaciones funcionales confirmadas. Visibilidad real de Chromium no verificada; listener sintético aprobado."
+      "reviewStatus": "ship: revisión independiente mediante subagente general,23 comprobaciones confirmadas y8capturas en4tamaños. Alturas estables. document.hidden real no verificado en el harness; listener sintético documentado.",
+      "previousMotionReview": ".impeccable/review/motion-2026-10-16/REVIEW.md",
+      "showcaseLayout": "Los seis paneles comparten una retícula para conservar la altura del contenido más alto; los inactivos permanecen ocultos y sin interacción.",
+      "header": "Header con wordmark Stratos AI sin icono; footer conserva logo S original.",
+      "playback": "Sin controles de inicio/pausa/repetición en titular, galería o FeatureMotion. Galería reanuda al despejar la última razón independiente; teclado conserva pausa durante su exploración."
     },
     "shadows": [
       {
@@ -107,6 +121,23 @@
         "value": "385px",
         "purpose": "Entrada, hub y salidas con conectores verticales según el ancho del diagrama."
       }
-    ]
+    ],
+    "heroBackdrop": {
+      "desktop": {
+        "nodes": 28,
+        "connections": 46,
+        "routes": 4
+      },
+      "mobile": {
+        "nodes": 16,
+        "connections": 22,
+        "routes": 2
+      },
+      "breakpoint": "760px",
+      "desktopViewBox": "0 0 1440 500",
+      "mobileViewBox": "0 0 390 560",
+      "semantics": "Decorativo, aria-hidden, sin etiquetas ni datos, pointer-events:none; máscara radial despeja el centro.",
+      "implementation": "SVG geométrico nativo con paleta azul gris sobre blanco; sin filtros/blur/canvas/dependencias ni React por fotograma."
+    }
   }
 }

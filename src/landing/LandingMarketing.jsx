@@ -1,7 +1,9 @@
 import { createElement, useEffect, useRef, useState } from "react";
-import { ArrowRight, ArrowUpRight, Check, ChevronDown, Menu, X, Pause, Play, Mic, MessageSquareText, BarChart3, PhoneCall, Users, Building2, Stethoscope, Cpu, ShieldCheck } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, ChevronDown, Menu, X, Mic, MessageSquareText, BarChart3, PhoneCall, Users, Building2, Stethoscope, Cpu, ShieldCheck } from "lucide-react";
 import ModuleShowcase from "./ModuleShowcase.jsx";
 import FeatureMotion from "./FeatureMotion.jsx";
+import HeroFlowBackdrop from "./HeroFlowBackdrop.jsx";
+import { createModuleRotation } from "./module-showcase.mjs";
 import { plans, faqs, rotatingWords, marketingLoginUrl } from "./marketing-content.js";
 import "./LandingMarketing.css";
 
@@ -10,8 +12,8 @@ const navLinks = [["Solución", "#solución"], ["Características", "#modulos"],
 const services = ["Call Center + IA", "Marketing + IA", "CRM Inteligente", "Equipos de iAgents", "Avatars de IA", "ERPs Autónomos", "Automatización comercial", "Reportes en tiempo real"];
 
 
-function Brand() {
-  return <a className="smk-brand" href="#" aria-label="Stratos AI, inicio"><img src="/branding/stratos-logo-web-20261016.webp" width="40" height="40" alt="" /><span>Stratos <span>AI</span></span></a>;
+function Brand({ showIcon = true }) {
+  return <a className="smk-brand" href="#" aria-label="Stratos AI, inicio">{showIcon && <img src="/branding/stratos-logo-web-20261016.webp" width="40" height="40" alt="" />}<span>Stratos <span>AI</span></span></a>;
 }
 
 function AccessButton({ message, children = "Solicitar acceso", secondary = false }) {
@@ -27,29 +29,24 @@ function Header({ loginUrl }) {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
-  return <header className="smk-header"><nav className="smk-container smk-nav" aria-label="Navegación principal"><Brand /><div className="smk-desktop-links">{navLinks.map(([label, href]) => <a key={label} href={href}>{label}</a>)}</div><div className="smk-nav-actions"><a href={loginUrl}>Iniciar sesión</a><AccessButton /></div><button ref={toggle} className="smk-menu-toggle" type="button" onClick={() => setOpen(value => !value)} aria-expanded={open} aria-controls="stratos-marketing-menu" aria-label={open ? "Cerrar menú" : "Abrir menú"}>{open ? <X size={22} /> : <Menu size={22} />}</button></nav>{open && <nav className="smk-mobile-menu" id="stratos-marketing-menu" aria-label="Menú móvil">{navLinks.map(([label, href]) => <a key={label} href={href} onClick={() => setOpen(false)}>{label}<ArrowUpRight size={16} aria-hidden="true" /></a>)}<a href={loginUrl}>Iniciar sesión<ArrowUpRight size={16} aria-hidden="true" /></a><AccessButton /></nav>}</header>;
+  return <header className="smk-header"><nav className="smk-container smk-nav" aria-label="Navegación principal"><Brand showIcon={false} /><div className="smk-desktop-links">{navLinks.map(([label, href]) => <a key={label} href={href}>{label}</a>)}</div><div className="smk-nav-actions"><a href={loginUrl}>Iniciar sesión</a><AccessButton /></div><button ref={toggle} className="smk-menu-toggle" type="button" onClick={() => setOpen(value => !value)} aria-expanded={open} aria-controls="stratos-marketing-menu" aria-label={open ? "Cerrar menú" : "Abrir menú"}>{open ? <X size={22} /> : <Menu size={22} />}</button></nav>{open && <nav className="smk-mobile-menu" id="stratos-marketing-menu" aria-label="Menú móvil">{navLinks.map(([label, href]) => <a key={label} href={href} onClick={() => setOpen(false)}>{label}<ArrowUpRight size={16} aria-hidden="true" /></a>)}<a href={loginUrl}>Iniciar sesión<ArrowUpRight size={16} aria-hidden="true" /></a><AccessButton /></nav>}</header>;
 }
 
 function RotatingHeadline() {
+  const heading = useRef(null);
   const [index, setIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
-  const [paused, setPaused] = useState(false);
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let interval = null;
-    let transition = null;
-    const stop = () => { clearInterval(interval); clearTimeout(transition); interval = null; transition = null; setVisible(true); };
-    const update = () => {
-      stop();
-      if (paused || media.matches || document.hidden) return;
-      interval = setInterval(() => { setVisible(false); transition = setTimeout(() => { setIndex(value => (value + 1) % rotatingWords.length); setVisible(true); }, 180); }, 2600);
-    };
-    update();
-    document.addEventListener("visibilitychange", update);
-    media.addEventListener?.("change", update);
-    return () => { clearInterval(interval); clearTimeout(transition); document.removeEventListener("visibilitychange", update); media.removeEventListener?.("change", update); };
-  }, [paused]);
-  return <div className="smk-hero-heading"><h1><span>Escalamos empresas con</span><span className={`smk-rotating-word${visible ? " is-visible" : ""}`} aria-hidden="true">{rotatingWords[index]}</span><span className="smk-sr-only">soluciones de inteligencia artificial</span></h1><button type="button" className="smk-headline-control" onClick={() => setPaused(value => !value)} aria-label={paused ? "Reanudar titular automático" : "Pausar titular automático"} aria-pressed={paused}>{paused ? <Play size={13} /> : <Pause size={13} />}</button></div>;
+    const controller = createModuleRotation({ count: rotatingWords.length, pauseReasons: ["outside", ...(document.hidden ? ["hidden"] : []), ...(media.matches ? ["reduced-motion"] : [])], onUpdate: value => setIndex(value.index) });
+    const visibility = () => controller.setPaused("hidden", document.hidden);
+    const preference = () => controller.setPaused("reduced-motion", media.matches);
+    const observer = new IntersectionObserver(entries => controller.setPaused("outside", !entries[0].isIntersecting), { threshold: .1 });
+    observer.observe(heading.current);
+    document.addEventListener("visibilitychange", visibility);
+    media.addEventListener("change", preference);
+    return () => { observer.disconnect(); controller.destroy(); document.removeEventListener("visibilitychange", visibility); media.removeEventListener("change", preference); };
+  }, []);
+  return <div className="smk-hero-heading" ref={heading}><h1><span>Escalamos empresas con</span><span className="smk-rotating-words" aria-hidden="true">{rotatingWords.map((word, item) => <span className={`smk-rotating-word${item === index ? " is-visible" : ""}`} key={word}>{word}</span>)}</span><span className="smk-sr-only">soluciones de inteligencia artificial</span></h1></div>;
 }
 
 function Actions() {
@@ -80,7 +77,7 @@ export default function LandingMarketing({ appUrl = "/login" }) {
   const loginUrl = marketingLoginUrl(appUrl);
   useEffect(() => { document.body.classList.add("stratos-public-site"); return () => document.body.classList.remove("stratos-public-site"); }, []);
   return <div className="stratos-marketing"><a className="smk-skip-link" href="#marketing-main">Saltar al contenido</a><Header loginUrl={loginUrl} /><main id="marketing-main">
-    <section className="smk-hero smk-container" aria-label="Stratos AI, sistema operativo comercial"><RotatingHeadline /><p>CRM, Copilot y agentes de IA para ordenar el seguimiento y darle claridad a tu equipo.</p><Actions /></section>
+    <section className="smk-hero" aria-label="Stratos AI, sistema operativo comercial"><HeroFlowBackdrop /><div className="smk-container smk-hero-content"><RotatingHeadline /><p className="smk-hero-copy">CRM, Copilot y agentes de IA para ordenar el seguimiento y darle claridad a tu equipo.</p><Actions /></div></section>
     <div className="smk-container smk-modules-wrap"><ModuleShowcase appUrl={loginUrl} /></div><ServicesTicker />
     <section className="smk-section smk-problem smk-container"><h2>El problema no es el CRM.<br />Es que nadie lo alimenta.</h2><p className="smk-section-intro">Tu equipo quiere vender. La dirección necesita claridad. El sistema debe ayudar a los dos.</p><div className="smk-problem-points"><p>El contexto se pierde entre WhatsApp, llamadas y memoria.</p><p>Los reportes llegan tarde porque alguien tiene que reconstruirlos.</p><p>El seguimiento depende de lo que cada persona recuerda.</p></div></section>
     <section id="solución" className="smk-section smk-solution"><div className="smk-container"><div className="smk-section-heading"><h2>El agente que hace que<br />el equipo sí registre.</h2><p>Hablar, registrar y decidir. Un flujo conectado para que la operación comercial avance con contexto.</p></div><WorkflowPreview /></div></section>

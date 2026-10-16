@@ -1,5 +1,5 @@
 import { createElement, useEffect, useRef, useState } from "react";
-import { ArrowRight, BarChart3, CalendarDays, ChartNoAxesCombined, ListTodo, Pause, Play, Users } from "lucide-react";
+import { ArrowRight, BarChart3, CalendarDays, ChartNoAxesCombined, ListTodo, Users } from "lucide-react";
 import "./FeatureMotion.css";
 
 const flows = [
@@ -46,9 +46,6 @@ function FlowDiagram({ flow }) {
 
 export default function FeatureMotion() {
   const section = useRef(null);
-  const [paused, setPaused] = useState(false);
-  const [finished, setFinished] = useState(false);
-  const [replay, setReplay] = useState(0);
   const [environment, setEnvironment] = useState(() => ({ visible: false, hidden: typeof document !== "undefined" && document.hidden, reduced: typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches }));
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -60,21 +57,13 @@ export default function FeatureMotion() {
     media.addEventListener("change", preference);
     return () => { observer.disconnect(); document.removeEventListener("visibilitychange", visibility); media.removeEventListener("change", preference); };
   }, []);
-  const running = environment.visible && !environment.hidden && !environment.reduced && !paused && !finished;
-  const playback = () => {
-    if (finished) { setReplay(value => value + 1); setFinished(false); setPaused(false); }
-    else setPaused(value => !value);
-  };
-  const complete = event => {
-    if (event.animationName === "smk-flow-branch" && event.target.classList.contains("smk-flow-signal-3")) setFinished(true);
-  };
-  const playbackLabel = environment.reduced ? "Animaciones desactivadas por movimiento reducido" : finished ? "Repetir animaciones de flujos" : paused ? "Reanudar animaciones de flujos" : "Pausar animaciones de flujos";
-  return <section className="smk-section smk-container smk-feature-motion" ref={section} aria-labelledby="smk-motion-title" data-running={running} onAnimationEnd={complete}>
+  const running = environment.visible && !environment.hidden && !environment.reduced;
+  return <section className="smk-section smk-container smk-feature-motion" ref={section} aria-labelledby="smk-motion-title" data-running={running}>
     <div className="smk-section-heading"><h2 id="smk-motion-title">Menos trabajo disperso.<br />Más contexto para avanzar.</h2><p>De una consulta al panorama del equipo. Así se conecta el trabajo en Stratos AI.</p></div>
     <div className="smk-motion-grid">{flows.map(flow => <article className="smk-motion-card" key={flow.id}>
       <h3>{flow.title.split("\n").map((line, index) => <span key={line}>{index > 0 && <br />}{line}</span>)}</h3>
-      <p>{flow.description}</p><FlowDiagram flow={flow} key={replay} /><a href="#modulos">{flow.link}<ArrowRight size={16} aria-hidden="true" /></a>
+      <p>{flow.description}</p><FlowDiagram flow={flow} /><a href="#modulos">{flow.link}<ArrowRight size={16} aria-hidden="true" /></a>
     </article>)}</div>
-    <div className="smk-motion-footer"><p>Flujos ilustrativos. Disponibilidad según los permisos y la configuración de cada empresa.</p><button type="button" disabled={environment.reduced} aria-pressed={paused} onClick={playback} aria-label={playbackLabel}>{paused || finished || environment.reduced ? <Play size={15} aria-hidden="true" /> : <Pause size={15} aria-hidden="true" />}<span>{environment.reduced ? "Movimiento reducido" : finished ? "Repetir animación" : paused ? "Reanudar animación" : "Pausar animación"}</span></button></div>
+    <div className="smk-motion-footer"><p>Flujos ilustrativos. Disponibilidad según los permisos y la configuración de cada empresa.</p></div>
   </section>;
 }

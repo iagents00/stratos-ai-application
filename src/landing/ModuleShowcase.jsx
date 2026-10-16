@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { ArrowUpRight, Check, Pause, Play } from "lucide-react";
+import { ArrowUpRight, Check } from "lucide-react";
 import { createModuleRotation, moduleIndexForKey, SHOWCASE_MODULES } from "./module-showcase.mjs";
 import "./ModuleShowcase.css";
 
@@ -11,7 +11,7 @@ export default function ModuleShowcase({ appUrl = "/login" }) {
   const rotation = useRef(null);
   const pointerInside = useRef(false);
   const focusInside = useRef(false);
-  const [state, setState] = useState({ index: 0, paused: true, manual: false, reducedMotion: false });
+  const [state, setState] = useState({ index: 0, paused: true, reducedMotion: false });
   const [missingImages, setMissingImages] = useState([]);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function ModuleShowcase({ appUrl = "/login" }) {
     const selected = tabs.current[state.index];
     if (!list || !selected || list.scrollWidth <= list.clientWidth) return;
     const left = selected.offsetLeft - list.offsetLeft - (list.clientWidth - selected.offsetWidth) / 2;
-    list.scrollTo({ left, behavior: state.reducedMotion ? "auto" : "smooth" });
+    list.scrollTo({ left, behavior: state.reducedMotion || focusInside.current ? "auto" : "smooth" });
   }, [state.index, state.reducedMotion]);
 
   const selectModule = (index, focus = false) => {
@@ -64,7 +64,8 @@ export default function ModuleShowcase({ appUrl = "/login" }) {
 
   return <section id="modulos" ref={region} className="stratos-modules" aria-labelledby={`${id}-title`} aria-roledescription="carrusel"
     onPointerEnter={event => { if (event.pointerType !== "touch") setHover(true); }} onPointerLeave={() => setHover(false)}
-    onFocusCapture={() => setFocus(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocus(false); }}>
+    onPointerDownCapture={() => setFocus(false)} onKeyDownCapture={() => setFocus(true)}
+    onFocusCapture={event => setFocus(event.target.matches(":focus-visible"))} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocus(false); }}>
     <div className="stratos-modules__heading"><h2 id={`${id}-title`}>Toda tu operación, conectada.</h2><p>Explora los espacios de Stratos para trabajar, dar seguimiento y decidir.</p></div>
     <div className="stratos-modules__navigation">
       <div className="stratos-modules__tabs" role="tablist" aria-label="Módulos de Stratos" aria-orientation="horizontal" ref={tabList}>
@@ -72,11 +73,6 @@ export default function ModuleShowcase({ appUrl = "/login" }) {
           id={`${id}-tab-${module.id}`} aria-controls={`${id}-panel-${module.id}`} aria-selected={state.index === index} tabIndex={state.index === index ? 0 : -1}
           className="stratos-modules__tab" onClick={() => selectModule(index)} onKeyDown={event => onTabKey(event, index)}>{module.name}</button>)}
       </div>
-      <button type="button" className="stratos-modules__playback" onClick={() => rotation.current?.setPaused("manual", !state.manual)}
-        aria-label={state.reducedMotion ? "Recorrido automático en pausa por movimiento reducido" : state.manual ? "Reanudar recorrido automático" : "Pausar recorrido automático"} aria-pressed={state.manual || state.reducedMotion} disabled={state.reducedMotion}
-        title={state.reducedMotion ? "El recorrido automático respeta tu preferencia de movimiento reducido" : undefined}>
-        {state.manual && !state.reducedMotion ? <Play size={15} aria-hidden="true" /> : <Pause size={15} aria-hidden="true" />}<span>{state.reducedMotion ? "En pausa" : state.manual ? "Reanudar" : "Pausar"}</span>
-      </button>
     </div>
     <div className="stratos-modules__panels" aria-live="off">
       {SHOWCASE_MODULES.map((module, index) => <div key={module.id} id={`${id}-panel-${module.id}`} role="tabpanel" aria-labelledby={`${id}-tab-${module.id}`}

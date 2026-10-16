@@ -1,0 +1,1756 @@
+{
+  "scope": "Una ronda de QA anónima sobre preview compilado de Stratos; sin edición de fuente",
+  "url": "http://127.0.0.1:5303/",
+  "verifiedAt": "2026-10-16T19:57:13.150474+00:00",
+  "release": {
+    "project": "stratos-ai-application",
+    "projectId": "prj_Epv30SFnQmJGnxy3LdYLKV8NwDLi",
+    "repository": "iagents00/stratos-ai-application",
+    "schemaVersion": 1,
+    "commit": "54f2ec1f447f83b836d65c5fdaf42c8576c74ad5",
+    "builtAt": "2026-10-16T19:49:51.243Z",
+    "serviceWorker": "stratos-v446",
+    "dirty": true,
+    "deployment": null
+  },
+  "result": {
+    "confirmedPasses": 23,
+    "confirmedFailures": 0,
+    "openProductFindings": 0,
+    "realHiddenBehavior": "not_verified_harness_limitation",
+    "pass": true
+  },
+  "checks": [
+    {
+      "name": "hero actual CSS animation advances at initial navigation",
+      "pass": true,
+      "data": {
+        "a": {
+          "running": "true",
+          "time": 466.7000000000001,
+          "state": "running",
+          "offset": "-2.24463px",
+          "opacity": "0.388917",
+          "lines": 46
+        },
+        "b": {
+          "running": "true",
+          "time": 933.5,
+          "state": "running",
+          "offset": "-12.4915px",
+          "opacity": "0.6",
+          "lines": 46
+        }
+      },
+      "evidence": "capture.json"
+    },
+    {
+      "name": "header text-only Stratos AI",
+      "pass": true,
+      "data": {
+        "text": "Stratos AI",
+        "images": 0
+      },
+      "evidence": "capture.json"
+    },
+    {
+      "name": "no playback buttons anywhere",
+      "pass": true,
+      "data": [],
+      "evidence": "capture.json"
+    },
+    {
+      "name": "layout and stable gallery 1440",
+      "pass": true,
+      "data": {
+        "name": "desktop",
+        "width": 1440,
+        "documentWidth": 1440,
+        "fonts": true,
+        "tabs": [
+          {
+            "text": "Copilot",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "CRM",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Mi Espacio",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Métricas",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Comando",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "iAgents",
+            "height": 44,
+            "inList": true
+          }
+        ],
+        "selected": {
+          "background": "rgb(10, 27, 46)",
+          "color": "rgb(255, 255, 255)"
+        },
+        "hero": {
+          "top": -48,
+          "height": 387.828125,
+          "word": "Call Centers de IA",
+          "svgs": [
+            {
+              "width": 1440,
+              "height": 387.828125,
+              "opacity": "1",
+              "paths": 4
+            }
+          ]
+        },
+        "heights": [
+          {
+            "module": "Copilot",
+            "section": 933.46875,
+            "panel": 553.25,
+            "document": 8795,
+            "top": 460.828125
+          },
+          {
+            "module": "CRM",
+            "section": 933.46875,
+            "panel": 553.25,
+            "document": 8795,
+            "top": 460.828125
+          },
+          {
+            "module": "Mi Espacio",
+            "section": 933.46875,
+            "panel": 553.25,
+            "document": 8795,
+            "top": 460.828125
+          },
+          {
+            "module": "Métricas",
+            "section": 933.46875,
+            "panel": 553.25,
+            "document": 8795,
+            "top": 460.828125
+          },
+          {
+            "module": "Comando",
+            "section": 933.46875,
+            "panel": 553.25,
+            "document": 8795,
+            "top": 460.828125
+          },
+          {
+            "module": "iAgents",
+            "section": 933.46875,
+            "panel": 553.25,
+            "document": 8795,
+            "top": 460.828125
+          }
+        ],
+        "spread": {
+          "section": 0,
+          "panel": 0,
+          "document": 0,
+          "top": 0
+        },
+        "assets": [
+          {
+            "src": "/marketing/modules/framed-20261016/copilot.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/crm.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/mi-espacio.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/metricas.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/comando.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/iagents.webp",
+            "width": 1440,
+            "height": 1020
+          }
+        ],
+        "accessiblePanels": 1
+      },
+      "evidence": "capture.json"
+    },
+    {
+      "name": "layout and stable gallery 834",
+      "pass": true,
+      "data": {
+        "name": "tablet",
+        "width": 834,
+        "documentWidth": 834,
+        "fonts": true,
+        "tabs": [
+          {
+            "text": "Copilot",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "CRM",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Mi Espacio",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Métricas",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Comando",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "iAgents",
+            "height": 44,
+            "inList": true
+          }
+        ],
+        "selected": {
+          "background": "rgb(10, 27, 46)",
+          "color": "rgb(255, 255, 255)"
+        },
+        "hero": {
+          "top": 22,
+          "height": 387.828125,
+          "word": "Call Centers de IA",
+          "svgs": [
+            {
+              "width": 834,
+              "height": 387.828125,
+              "opacity": "1",
+              "paths": 4
+            }
+          ]
+        },
+        "heights": [
+          {
+            "module": "Copilot",
+            "section": 1229.3046875,
+            "panel": 863.09375,
+            "document": 9163,
+            "top": 460.828125
+          },
+          {
+            "module": "CRM",
+            "section": 1229.3046875,
+            "panel": 863.09375,
+            "document": 9163,
+            "top": 460.828125
+          },
+          {
+            "module": "Mi Espacio",
+            "section": 1229.3046875,
+            "panel": 863.09375,
+            "document": 9163,
+            "top": 460.828125
+          },
+          {
+            "module": "Métricas",
+            "section": 1229.3046875,
+            "panel": 863.09375,
+            "document": 9163,
+            "top": 460.828125
+          },
+          {
+            "module": "Comando",
+            "section": 1229.3046875,
+            "panel": 863.09375,
+            "document": 9163,
+            "top": 460.828125
+          },
+          {
+            "module": "iAgents",
+            "section": 1229.3046875,
+            "panel": 863.09375,
+            "document": 9163,
+            "top": 460.828125
+          }
+        ],
+        "spread": {
+          "section": 0,
+          "panel": 0,
+          "document": 0,
+          "top": 0
+        },
+        "assets": [
+          {
+            "src": "/marketing/modules/framed-20261016/copilot.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/crm.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/mi-espacio.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/metricas.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/comando.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/iagents.webp",
+            "width": 1440,
+            "height": 1020
+          }
+        ],
+        "accessiblePanels": 1
+      },
+      "evidence": "capture.json"
+    },
+    {
+      "name": "layout and stable gallery 390",
+      "pass": true,
+      "data": {
+        "name": "mobile",
+        "width": 390,
+        "documentWidth": 390,
+        "fonts": true,
+        "tabs": [
+          {
+            "text": "Copilot",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "CRM",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Mi Espacio",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Métricas",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Comando",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "iAgents",
+            "height": 44,
+            "inList": true
+          }
+        ],
+        "selected": {
+          "background": "rgb(10, 27, 46)",
+          "color": "rgb(255, 255, 255)"
+        },
+        "hero": {
+          "top": -150,
+          "height": 400.890625,
+          "word": "Call Centers de IA",
+          "svgs": [
+            {
+              "width": 390,
+              "height": 400.890625,
+              "opacity": "1",
+              "paths": 2
+            }
+          ]
+        },
+        "heights": [
+          {
+            "module": "Copilot",
+            "section": 1192.65625,
+            "panel": 762.765625,
+            "document": 12545,
+            "top": 473.890625
+          },
+          {
+            "module": "CRM",
+            "section": 1192.65625,
+            "panel": 762.765625,
+            "document": 12545,
+            "top": 473.890625
+          },
+          {
+            "module": "Mi Espacio",
+            "section": 1192.65625,
+            "panel": 762.765625,
+            "document": 12545,
+            "top": 473.890625
+          },
+          {
+            "module": "Métricas",
+            "section": 1192.65625,
+            "panel": 762.765625,
+            "document": 12545,
+            "top": 473.890625
+          },
+          {
+            "module": "Comando",
+            "section": 1192.65625,
+            "panel": 762.765625,
+            "document": 12545,
+            "top": 473.890625
+          },
+          {
+            "module": "iAgents",
+            "section": 1192.65625,
+            "panel": 762.765625,
+            "document": 12545,
+            "top": 473.890625
+          }
+        ],
+        "spread": {
+          "section": 0,
+          "panel": 0,
+          "document": 0,
+          "top": 0
+        },
+        "assets": [
+          {
+            "src": "/marketing/modules/framed-20261016/copilot.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/crm.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/mi-espacio.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/metricas.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/comando.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/iagents.webp",
+            "width": 1440,
+            "height": 1020
+          }
+        ],
+        "accessiblePanels": 1
+      },
+      "evidence": "capture.json"
+    },
+    {
+      "name": "layout and stable gallery 320",
+      "pass": true,
+      "data": {
+        "name": "user-320",
+        "width": 320,
+        "documentWidth": 320,
+        "fonts": true,
+        "tabs": [
+          {
+            "text": "Copilot",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "CRM",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Mi Espacio",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Métricas",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "Comando",
+            "height": 44,
+            "inList": true
+          },
+          {
+            "text": "iAgents",
+            "height": 44,
+            "inList": true
+          }
+        ],
+        "selected": {
+          "background": "rgb(10, 27, 46)",
+          "color": "rgb(255, 255, 255)"
+        },
+        "hero": {
+          "top": -152,
+          "height": 386.78125,
+          "word": "Call Centers de IA",
+          "svgs": [
+            {
+              "width": 320,
+              "height": 386.78125,
+              "opacity": "1",
+              "paths": 2
+            }
+          ]
+        },
+        "heights": [
+          {
+            "module": "Copilot",
+            "section": 1198.703125,
+            "panel": 768.8125,
+            "document": 13128,
+            "top": 459.78125
+          },
+          {
+            "module": "CRM",
+            "section": 1198.703125,
+            "panel": 768.8125,
+            "document": 13128,
+            "top": 459.78125
+          },
+          {
+            "module": "Mi Espacio",
+            "section": 1198.703125,
+            "panel": 768.8125,
+            "document": 13128,
+            "top": 459.78125
+          },
+          {
+            "module": "Métricas",
+            "section": 1198.703125,
+            "panel": 768.8125,
+            "document": 13128,
+            "top": 459.78125
+          },
+          {
+            "module": "Comando",
+            "section": 1198.703125,
+            "panel": 768.8125,
+            "document": 13128,
+            "top": 459.78125
+          },
+          {
+            "module": "iAgents",
+            "section": 1198.703125,
+            "panel": 768.8125,
+            "document": 13128,
+            "top": 459.78125
+          }
+        ],
+        "spread": {
+          "section": 0,
+          "panel": 0,
+          "document": 0,
+          "top": 0
+        },
+        "assets": [
+          {
+            "src": "/marketing/modules/framed-20261016/copilot.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/crm.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/mi-espacio.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/metricas.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/comando.webp",
+            "width": 1440,
+            "height": 1020
+          },
+          {
+            "src": "/marketing/modules/framed-20261016/iagents.webp",
+            "width": 1440,
+            "height": 1020
+          }
+        ],
+        "accessiblePanels": 1
+      },
+      "evidence": "capture.json"
+    },
+    {
+      "name": "no runtime or failed responses",
+      "pass": true,
+      "data": {
+        "errors": [],
+        "httpErrors": []
+      },
+      "evidence": "capture.json"
+    },
+    {
+      "name": "headline advances without geometry jump",
+      "pass": true,
+      "data": {
+        "pass": true,
+        "a": {
+          "text": "seguimiento real",
+          "heroHeight": 387.828125,
+          "headingHeight": 138.234375
+        },
+        "b": {
+          "text": "Call Centers de IA",
+          "heroHeight": 387.828125,
+          "headingHeight": 138.234375
+        }
+      },
+      "evidence": "functional.json"
+    },
+    {
+      "name": "hero SVG signal advances",
+      "pass": true,
+      "data": {
+        "pass": true,
+        "a": [
+          {
+            "name": "smk-hero-flow-travel",
+            "time": 3199.9340000000025,
+            "state": "running"
+          },
+          {
+            "name": "smk-hero-flow-travel",
+            "time": 3199.9340000000025,
+            "state": "running"
+          },
+          {
+            "name": "smk-hero-flow-travel",
+            "time": 3199.9340000000025,
+            "state": "running"
+          },
+          {
+            "name": "smk-hero-flow-travel",
+            "time": 3199.9340000000025,
+            "state": "running"
+          }
+        ],
+        "b": [
+          {
+            "name": "smk-hero-flow-travel",
+            "time": 3666.633999999998,
+            "state": "running"
+          },
+          {
+            "name": "smk-hero-flow-travel",
+            "time": 3666.633999999998,
+            "state": "running"
+          },
+          {
+            "name": "smk-hero-flow-travel",
+            "time": 3666.633999999998,
+            "state": "running"
+          },
+          {
+            "name": "smk-hero-flow-travel",
+            "time": 3666.633999999998,
+            "state": "running"
+          }
+        ]
+      },
+      "evidence": "functional.json"
+    },
+    {
+      "name": "click selection continues after leaving hover",
+      "pass": true,
+      "data": {
+        "pass": true,
+        "a": "CRM",
+        "b": "Mi Espacio"
+      },
+      "evidence": "functional.json"
+    },
+    {
+      "name": "keyboard focus pauses and blur resumes full interval",
+      "pass": true,
+      "data": {
+        "pass": true,
+        "a": "iAgents",
+        "b": "iAgents",
+        "c": "Copilot"
+      },
+      "evidence": "functional.json"
+    },
+    {
+      "name": "inactive panels absent from accessibility and tab traversal",
+      "pass": true,
+      "data": {
+        "pass": true,
+        "count": 1,
+        "inactive": [
+          {
+            "visibility": "hidden",
+            "interactive": [
+              {
+                "tag": "A",
+                "hidden": true
+              }
+            ]
+          },
+          {
+            "visibility": "hidden",
+            "interactive": [
+              {
+                "tag": "A",
+                "hidden": true
+              }
+            ]
+          },
+          {
+            "visibility": "hidden",
+            "interactive": [
+              {
+                "tag": "A",
+                "hidden": true
+              }
+            ]
+          },
+          {
+            "visibility": "hidden",
+            "interactive": [
+              {
+                "tag": "A",
+                "hidden": true
+              }
+            ]
+          },
+          {
+            "visibility": "hidden",
+            "interactive": [
+              {
+                "tag": "A",
+                "hidden": true
+              }
+            ]
+          }
+        ],
+        "seen": [
+          {
+            "tag": "DIV",
+            "inInactive": false
+          },
+          {
+            "tag": "A",
+            "inInactive": false
+          },
+          {
+            "tag": "BUTTON",
+            "inInactive": false
+          }
+        ]
+      },
+      "evidence": "functional.json"
+    },
+    {
+      "name": "gallery offscreen freezes",
+      "pass": true,
+      "data": {
+        "pass": true,
+        "a": "CRM",
+        "b": "CRM"
+      },
+      "evidence": "functional.json"
+    },
+    {
+      "name": "reduced motion freezes headline and gallery; manual tabs work",
+      "pass": true,
+      "data": {
+        "pass": true,
+        "h": "Call Centers de IA",
+        "h2": "Call Centers de IA",
+        "a": "CRM",
+        "b": "CRM",
+        "manual": "iAgents",
+        "animations": [],
+        "wordOpacity": [
+          {
+            "visible": true,
+            "opacity": "1"
+          },
+          {
+            "visible": false,
+            "opacity": "0"
+          },
+          {
+            "visible": false,
+            "opacity": "0"
+          },
+          {
+            "visible": false,
+            "opacity": "0"
+          },
+          {
+            "visible": false,
+            "opacity": "0"
+          },
+          {
+            "visible": false,
+            "opacity": "0"
+          },
+          {
+            "visible": false,
+            "opacity": "0"
+          }
+        ]
+      },
+      "evidence": "functional.json"
+    },
+    {
+      "name": "touch selection continues after interaction",
+      "pass": true,
+      "data": {
+        "pass": true,
+        "a": "CRM",
+        "after": "Mi Espacio"
+      },
+      "evidence": "functional.json"
+    },
+    {
+      "name": "public CTA and fixed login targets",
+      "pass": true,
+      "data": {
+        "pass": true,
+        "login": [
+          {
+            "text": "Iniciar sesión",
+            "href": "http://127.0.0.1:5303/login"
+          },
+          {
+            "text": "Conocer Stratos",
+            "href": "http://127.0.0.1:5303/login"
+          },
+          {
+            "text": "Conocer Stratos",
+            "href": "http://127.0.0.1:5303/login"
+          },
+          {
+            "text": "Conocer Stratos",
+            "href": "http://127.0.0.1:5303/login"
+          },
+          {
+            "text": "Conocer Stratos",
+            "href": "http://127.0.0.1:5303/login"
+          },
+          {
+            "text": "Conocer Stratos",
+            "href": "http://127.0.0.1:5303/login"
+          },
+          {
+            "text": "Conocer Stratos",
+            "href": "http://127.0.0.1:5303/login"
+          },
+          {
+            "text": "¿Ya tienes cuenta? Iniciar sesión",
+            "href": "http://127.0.0.1:5303/login"
+          },
+          {
+            "text": "Iniciar sesión",
+            "href": "http://127.0.0.1:5303/login"
+          }
+        ],
+        "diagnostic": [
+          {
+            "text": "Iniciar diagnóstico",
+            "href": "/diagnostico"
+          },
+          {
+            "text": "Iniciar diagnóstico",
+            "href": "/diagnostico"
+          },
+          {
+            "text": "Iniciar diagnóstico",
+            "href": "/diagnostico"
+          }
+        ],
+        "access": 7
+      },
+      "evidence": "functional.json"
+    },
+    {
+      "name": "mobile nav ESC and anchor 390",
+      "pass": true,
+      "data": {
+        "pass": true,
+        "closed": true,
+        "url": "http://127.0.0.1:5303/#precios"
+      },
+      "evidence": "functional.json"
+    },
+    {
+      "name": "mobile nav ESC and anchor 320",
+      "pass": true,
+      "data": {
+        "pass": true,
+        "closed": true,
+        "url": "http://127.0.0.1:5303/#precios"
+      },
+      "evidence": "functional.json"
+    },
+    {
+      "name": "mobile nav ESC and anchor 834",
+      "pass": true,
+      "data": {
+        "pass": true,
+        "closed": true,
+        "url": "http://127.0.0.1:5303/#precios"
+      },
+      "evidence": "functional.json"
+    },
+    {
+      "name": "gallery rotation observed 2800ms with stable height",
+      "pass": true,
+      "data": {
+        "timing": [
+          {
+            "at": 93656.79999999702,
+            "selected": "CRM",
+            "height": 933.46875,
+            "panelHeight": 553.25
+          },
+          {
+            "at": 96460.89999999851,
+            "selected": "Mi Espacio",
+            "height": 933.46875,
+            "panelHeight": 553.25
+          },
+          {
+            "at": 99269.59999999776,
+            "selected": "Métricas",
+            "height": 933.46875,
+            "panelHeight": 553.25
+          }
+        ],
+        "deltas": [
+          2804.10000000149,
+          2808.699999999255
+        ]
+      },
+      "evidence": "timing-offscreen.json"
+    },
+    {
+      "name": "hero signal and headline offscreen freeze",
+      "pass": true,
+      "data": {
+        "a": {
+          "word": "Call Centers de IA",
+          "running": "false",
+          "animations": [
+            {
+              "time": 333.367999999993,
+              "state": "paused"
+            },
+            {
+              "time": 333.367999999993,
+              "state": "paused"
+            },
+            {
+              "time": 333.367999999993,
+              "state": "paused"
+            },
+            {
+              "time": 333.367999999993,
+              "state": "paused"
+            }
+          ]
+        },
+        "b": {
+          "word": "Call Centers de IA",
+          "running": "false",
+          "animations": [
+            {
+              "time": 333.367999999993,
+              "state": "paused"
+            },
+            {
+              "time": 333.367999999993,
+              "state": "paused"
+            },
+            {
+              "time": 333.367999999993,
+              "state": "paused"
+            },
+            {
+              "time": 333.367999999993,
+              "state": "paused"
+            }
+          ]
+        }
+      },
+      "evidence": "timing-offscreen.json"
+    },
+    {
+      "name": "synthetic visibilitychange listener freezes hero/headline/gallery",
+      "pass": true,
+      "data": {
+        "method": "synthetic visibilitychange with temporary document.hidden override",
+        "genuineBrowserVisibility": false,
+        "a": {
+          "word": "Marketing + IA",
+          "selected": "Comando",
+          "animations": [
+            {
+              "name": "smk-hero-flow-travel",
+              "time": 4031.667999999996,
+              "state": "paused"
+            },
+            {
+              "name": "smk-hero-flow-travel",
+              "time": 4031.667999999996,
+              "state": "paused"
+            },
+            {
+              "name": "smk-hero-flow-travel",
+              "time": 4031.667999999996,
+              "state": "paused"
+            },
+            {
+              "name": "smk-hero-flow-travel",
+              "time": 4031.667999999996,
+              "state": "paused"
+            }
+          ]
+        },
+        "b": {
+          "word": "Marketing + IA",
+          "selected": "Comando",
+          "animations": [
+            {
+              "name": "smk-hero-flow-travel",
+              "time": 4031.667999999996,
+              "state": "paused"
+            },
+            {
+              "name": "smk-hero-flow-travel",
+              "time": 4031.667999999996,
+              "state": "paused"
+            },
+            {
+              "name": "smk-hero-flow-travel",
+              "time": 4031.667999999996,
+              "state": "paused"
+            },
+            {
+              "name": "smk-hero-flow-travel",
+              "time": 4031.667999999996,
+              "state": "paused"
+            }
+          ]
+        },
+        "pass": true
+      },
+      "evidence": "hidden.json"
+    }
+  ],
+  "devices": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "documentWidth": 1440,
+      "fonts": true,
+      "tabs": [
+        {
+          "text": "Copilot",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "CRM",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Mi Espacio",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Métricas",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Comando",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "iAgents",
+          "height": 44,
+          "inList": true
+        }
+      ],
+      "selected": {
+        "background": "rgb(10, 27, 46)",
+        "color": "rgb(255, 255, 255)"
+      },
+      "hero": {
+        "top": -48,
+        "height": 387.828125,
+        "word": "Call Centers de IA",
+        "svgs": [
+          {
+            "width": 1440,
+            "height": 387.828125,
+            "opacity": "1",
+            "paths": 4
+          }
+        ]
+      },
+      "heights": [
+        {
+          "module": "Copilot",
+          "section": 933.46875,
+          "panel": 553.25,
+          "document": 8795,
+          "top": 460.828125
+        },
+        {
+          "module": "CRM",
+          "section": 933.46875,
+          "panel": 553.25,
+          "document": 8795,
+          "top": 460.828125
+        },
+        {
+          "module": "Mi Espacio",
+          "section": 933.46875,
+          "panel": 553.25,
+          "document": 8795,
+          "top": 460.828125
+        },
+        {
+          "module": "Métricas",
+          "section": 933.46875,
+          "panel": 553.25,
+          "document": 8795,
+          "top": 460.828125
+        },
+        {
+          "module": "Comando",
+          "section": 933.46875,
+          "panel": 553.25,
+          "document": 8795,
+          "top": 460.828125
+        },
+        {
+          "module": "iAgents",
+          "section": 933.46875,
+          "panel": 553.25,
+          "document": 8795,
+          "top": 460.828125
+        }
+      ],
+      "spread": {
+        "section": 0,
+        "panel": 0,
+        "document": 0,
+        "top": 0
+      },
+      "assets": [
+        {
+          "src": "/marketing/modules/framed-20261016/copilot.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/crm.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/mi-espacio.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/metricas.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/comando.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/iagents.webp",
+          "width": 1440,
+          "height": 1020
+        }
+      ],
+      "accessiblePanels": 1
+    },
+    {
+      "name": "tablet",
+      "width": 834,
+      "documentWidth": 834,
+      "fonts": true,
+      "tabs": [
+        {
+          "text": "Copilot",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "CRM",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Mi Espacio",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Métricas",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Comando",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "iAgents",
+          "height": 44,
+          "inList": true
+        }
+      ],
+      "selected": {
+        "background": "rgb(10, 27, 46)",
+        "color": "rgb(255, 255, 255)"
+      },
+      "hero": {
+        "top": 22,
+        "height": 387.828125,
+        "word": "Call Centers de IA",
+        "svgs": [
+          {
+            "width": 834,
+            "height": 387.828125,
+            "opacity": "1",
+            "paths": 4
+          }
+        ]
+      },
+      "heights": [
+        {
+          "module": "Copilot",
+          "section": 1229.3046875,
+          "panel": 863.09375,
+          "document": 9163,
+          "top": 460.828125
+        },
+        {
+          "module": "CRM",
+          "section": 1229.3046875,
+          "panel": 863.09375,
+          "document": 9163,
+          "top": 460.828125
+        },
+        {
+          "module": "Mi Espacio",
+          "section": 1229.3046875,
+          "panel": 863.09375,
+          "document": 9163,
+          "top": 460.828125
+        },
+        {
+          "module": "Métricas",
+          "section": 1229.3046875,
+          "panel": 863.09375,
+          "document": 9163,
+          "top": 460.828125
+        },
+        {
+          "module": "Comando",
+          "section": 1229.3046875,
+          "panel": 863.09375,
+          "document": 9163,
+          "top": 460.828125
+        },
+        {
+          "module": "iAgents",
+          "section": 1229.3046875,
+          "panel": 863.09375,
+          "document": 9163,
+          "top": 460.828125
+        }
+      ],
+      "spread": {
+        "section": 0,
+        "panel": 0,
+        "document": 0,
+        "top": 0
+      },
+      "assets": [
+        {
+          "src": "/marketing/modules/framed-20261016/copilot.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/crm.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/mi-espacio.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/metricas.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/comando.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/iagents.webp",
+          "width": 1440,
+          "height": 1020
+        }
+      ],
+      "accessiblePanels": 1
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "documentWidth": 390,
+      "fonts": true,
+      "tabs": [
+        {
+          "text": "Copilot",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "CRM",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Mi Espacio",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Métricas",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Comando",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "iAgents",
+          "height": 44,
+          "inList": true
+        }
+      ],
+      "selected": {
+        "background": "rgb(10, 27, 46)",
+        "color": "rgb(255, 255, 255)"
+      },
+      "hero": {
+        "top": -150,
+        "height": 400.890625,
+        "word": "Call Centers de IA",
+        "svgs": [
+          {
+            "width": 390,
+            "height": 400.890625,
+            "opacity": "1",
+            "paths": 2
+          }
+        ]
+      },
+      "heights": [
+        {
+          "module": "Copilot",
+          "section": 1192.65625,
+          "panel": 762.765625,
+          "document": 12545,
+          "top": 473.890625
+        },
+        {
+          "module": "CRM",
+          "section": 1192.65625,
+          "panel": 762.765625,
+          "document": 12545,
+          "top": 473.890625
+        },
+        {
+          "module": "Mi Espacio",
+          "section": 1192.65625,
+          "panel": 762.765625,
+          "document": 12545,
+          "top": 473.890625
+        },
+        {
+          "module": "Métricas",
+          "section": 1192.65625,
+          "panel": 762.765625,
+          "document": 12545,
+          "top": 473.890625
+        },
+        {
+          "module": "Comando",
+          "section": 1192.65625,
+          "panel": 762.765625,
+          "document": 12545,
+          "top": 473.890625
+        },
+        {
+          "module": "iAgents",
+          "section": 1192.65625,
+          "panel": 762.765625,
+          "document": 12545,
+          "top": 473.890625
+        }
+      ],
+      "spread": {
+        "section": 0,
+        "panel": 0,
+        "document": 0,
+        "top": 0
+      },
+      "assets": [
+        {
+          "src": "/marketing/modules/framed-20261016/copilot.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/crm.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/mi-espacio.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/metricas.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/comando.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/iagents.webp",
+          "width": 1440,
+          "height": 1020
+        }
+      ],
+      "accessiblePanels": 1
+    },
+    {
+      "name": "user-320",
+      "width": 320,
+      "documentWidth": 320,
+      "fonts": true,
+      "tabs": [
+        {
+          "text": "Copilot",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "CRM",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Mi Espacio",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Métricas",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "Comando",
+          "height": 44,
+          "inList": true
+        },
+        {
+          "text": "iAgents",
+          "height": 44,
+          "inList": true
+        }
+      ],
+      "selected": {
+        "background": "rgb(10, 27, 46)",
+        "color": "rgb(255, 255, 255)"
+      },
+      "hero": {
+        "top": -152,
+        "height": 386.78125,
+        "word": "Call Centers de IA",
+        "svgs": [
+          {
+            "width": 320,
+            "height": 386.78125,
+            "opacity": "1",
+            "paths": 2
+          }
+        ]
+      },
+      "heights": [
+        {
+          "module": "Copilot",
+          "section": 1198.703125,
+          "panel": 768.8125,
+          "document": 13128,
+          "top": 459.78125
+        },
+        {
+          "module": "CRM",
+          "section": 1198.703125,
+          "panel": 768.8125,
+          "document": 13128,
+          "top": 459.78125
+        },
+        {
+          "module": "Mi Espacio",
+          "section": 1198.703125,
+          "panel": 768.8125,
+          "document": 13128,
+          "top": 459.78125
+        },
+        {
+          "module": "Métricas",
+          "section": 1198.703125,
+          "panel": 768.8125,
+          "document": 13128,
+          "top": 459.78125
+        },
+        {
+          "module": "Comando",
+          "section": 1198.703125,
+          "panel": 768.8125,
+          "document": 13128,
+          "top": 459.78125
+        },
+        {
+          "module": "iAgents",
+          "section": 1198.703125,
+          "panel": 768.8125,
+          "document": 13128,
+          "top": 459.78125
+        }
+      ],
+      "spread": {
+        "section": 0,
+        "panel": 0,
+        "document": 0,
+        "top": 0
+      },
+      "assets": [
+        {
+          "src": "/marketing/modules/framed-20261016/copilot.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/crm.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/mi-espacio.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/metricas.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/comando.webp",
+          "width": 1440,
+          "height": 1020
+        },
+        {
+          "src": "/marketing/modules/framed-20261016/iagents.webp",
+          "width": 1440,
+          "height": 1020
+        }
+      ],
+      "accessiblePanels": 1
+    }
+  ],
+  "captures": [
+    {
+      "path": "desktop.png",
+      "kind": "fullpage",
+      "width": 1440,
+      "height": 8795,
+      "sha256": "a2a43b95abb632537b4825bf88641094ffb39e94685e3f2c8f7bc5f0181fba8a"
+    },
+    {
+      "path": "desktop-hero.png",
+      "kind": "first viewport with header",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "27b56e688de0a398cdd8b1c30a088c49e00006f59b553749e0e9ee65c374ba7f"
+    },
+    {
+      "path": "tablet.png",
+      "kind": "fullpage",
+      "width": 834,
+      "height": 9164,
+      "sha256": "c7775318c933d8b6b6379b592d693391519de925e380d4039ad43abefdb1cb91"
+    },
+    {
+      "path": "tablet-hero.png",
+      "kind": "first viewport with header",
+      "width": 834,
+      "height": 1112,
+      "sha256": "ba04802802a08bc44be1c5144bd96daffc1e20c1d7d8c5096720a87b5319be05"
+    },
+    {
+      "path": "mobile.png",
+      "kind": "fullpage",
+      "width": 390,
+      "height": 12545,
+      "sha256": "de483426c00a31d3a31120166d64eb445542dd2c76b9451403ffa36e313887d0"
+    },
+    {
+      "path": "mobile-hero.png",
+      "kind": "first viewport with header",
+      "width": 390,
+      "height": 844,
+      "sha256": "af26361251a643f8d4c5a470ef8e87f6e4ea6d17b5097866de43df633994e0b3"
+    },
+    {
+      "path": "user-320.png",
+      "kind": "fullpage",
+      "width": 320,
+      "height": 13128,
+      "sha256": "8c1ed4935f6e4a59480499a91ab8b53a6db718e9100e6af8c30b74751f60eee2"
+    },
+    {
+      "path": "user320-hero.png",
+      "kind": "first viewport with header",
+      "width": 320,
+      "height": 812,
+      "sha256": "9118c352bb03f595033bb7525a0a1c55b5cb516360b44cd758f31304a90690f7"
+    }
+  ],
+  "genuineBrowserVisibility": {
+    "observed": false,
+    "attempts": [
+      {
+        "method": "real second tab after disabling focus emulation",
+        "hidden": false
+      },
+      {
+        "method": "actual minimized window",
+        "hidden": false
+      }
+    ],
+    "behaviorTested": false,
+    "limitation": "Chromium retained document.hidden=false even with focus emulation disabled; no genuine hidden behavior assertion claimed."
+  },
+  "errors": [],
+  "httpErrors": [],
+  "privacy": {
+    "blockedBeforeNavigation": true,
+    "visitedLogin": false,
+    "visitedRealCRM": false
+  },
+  "blockedSupabase": [],
+  "sourceSHA256": {
+    "src/landing/HeroFlowBackdrop.jsx": "c7a72ae91e88a0addbbdd890be4ba96fbdcdcbce91c028a321aba6d6114be20a",
+    "src/landing/HeroFlowBackdrop.css": "bdc9d61d81427a23f644aebb3e8761c838fe937e4b71445acdfbef1b97a7e2b8",
+    "src/landing/LandingMarketing.jsx": "d640566efad51f12af394d23d301502cb6e73a1ac226c6b11ecd6c2f7df19bf8",
+    "src/landing/LandingMarketing.css": "21362d33aa19f4a2481513043d4b491da94399877e56e5fd52742470d0758720",
+    "src/landing/ModuleShowcase.jsx": "0da531d56501a581cf14e69c049f6bc6b2f1abcb99ae96d8030e2c26772e0f9f",
+    "src/landing/ModuleShowcase.css": "e67f06fca1200bb8a413b669a1365b35f0ee032381d4b8728f06281c8af64c9c",
+    "src/landing/module-showcase.mjs": "32f18f4caf29e8b943a5ee98e04c247720dcb9faa986e2fc3dbf917b2a12b997",
+    "src/landing/FeatureMotion.jsx": "3409a515521a7635d9e3ff992a8ded1c3f1b3ff29e8ee0f640b09fe4df2585d1",
+    "src/landing/FeatureMotion.css": "89d574362acca95075a136d639b3c6ccf527ce0cc3bc720a2cab84c0344f28aa"
+  },
+  "notes": [
+    "First gallery interval assertion incorrectly assumed a new interval after scrolling to a gallery already visible in the desktop viewport. Replaced only that assertion with timestamps of two actual rotations, 2804.1 ms and 2808.7 ms. No source change or repeated screenshot round.",
+    "All eight requested PNGs captured once. Four first-viewport PNGs opened and validated: network visible, central copy legible, header text-only, correct fonts and loaded images. Fullpage PNG dimensions and hashes checked.",
+    "Genuine hidden behavior is not claimed. Automation retained document.hidden=false for real background tab and minimized window after disabling focus emulation. Synthetic visibilitychange test temporarily overrides and restores document.hidden; clocks and words freeze as expected."
+  ],
+  "rawEvidenceIgnoredDirectory": "output/playwright/hero-flow-20261016/"
+}
