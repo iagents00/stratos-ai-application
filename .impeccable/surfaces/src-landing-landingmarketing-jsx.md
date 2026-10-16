@@ -15,6 +15,8 @@ THESIS: Mostrar el sistema funcionando mediante capturas reales y exploración d
 
 OWN-WORLD: Blanco dominante, tinta #0A1B2E, cian #00D1FF, azul #112B4A. Switzer ligera e Inter; controles 10px y paneles 24px. Fondos claros discretos, sin imágenes decorativas detrás de la interfaz.
 
+Refinamiento solicitado: las capturas se presentan como imágenes de 1440 × 1020 sobre blanco, con un marco redondeado de cristal translúcido y sombra suave. La interfaz se conserva a escala 1:1; el marco se compone fuera de ella. Se mantiene la galería y su comportamiento.
+
 STORY: Entender qué organiza Stratos, explorar sus módulos, consultar planes y solicitar acceso o diagnóstico.
 
 FIRST VIEWPORT: Header blanco compacto con logo S, título centrado con siete frases rotatorias, dos acciones y pestañas del demostrador. La imagen real domina su panel.

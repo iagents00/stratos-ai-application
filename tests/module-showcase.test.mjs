@@ -90,7 +90,7 @@ test('gallery styles stay inside both the public marketing page and module galle
   });
 });
 
-test('module gallery renders six named tabs linked to real panels and uses only local demo screenshots', async () => {
+test('module gallery renders six named tabs linked to real panels and complete locally framed demo screenshots', async () => {
   const vite = await createServer({ appType: 'custom', logLevel: 'error', server: { middlewareMode: true, hmr: false }, optimizeDeps: { noDiscovery: true, include: [] } });
   try {
     const { default: ModuleShowcase } = await vite.ssrLoadModule('/src/landing/ModuleShowcase.jsx');
@@ -102,9 +102,14 @@ test('module gallery renders six named tabs linked to real panels and uses only 
     const panelIds = [...html.matchAll(/id="([^"]+)" role="tabpanel"/g)].map(match => match[1]);
     for (const match of html.matchAll(/aria-controls="([^"]+)"/g)) assert.ok(panelIds.includes(match[1]));
     assert.deepEqual(SHOWCASE_MODULES.map(module => module.name), ['Copilot', 'CRM', 'Mi Espacio', 'Métricas', 'Comando', 'iAgents']);
+    const images = [...html.matchAll(/<img\b[^>]*>/g)].map(match => match[0]);
+    assert.equal(images.length, 6);
     for (const module of SHOWCASE_MODULES) {
       assert.equal(module.capabilities.length, 3);
-      assert.ok(html.includes(`/marketing/modules/${module.id}.webp`));
+      const image = images.find(tag => tag.includes(`src="/marketing/modules/framed-20261016/${module.id}.webp"`));
+      assert.ok(image, module.id);
+      assert.match(image, /width="1440" height="1020"/);
+      assert.ok(image.includes(`alt="Captura real del módulo ${module.name} de Stratos AI con marco translúcido y datos de demostración"`));
     }
     assert.match(html, /Capturas reales de Stratos AI con datos de demostración/);
     assert.ok(html.includes('href="/login?source=modules"'));

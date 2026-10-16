@@ -60,7 +60,7 @@
         "branding/stratos-logo-web-20261016.webp.json"
       ],
       "fontLicenses": "Switzer FFL: binario ignorado y descargado en preparación web con hash fijado. Inter OFL: original completo versionado con licencia. Ver public/fonts/marketing/README.md.",
-      "assets": "Capturas reales con datos demo; procedencia y límite del harness iAgents en public/marketing/modules/README.md.",
+      "assets": "Seis composiciones lossless 1440×1020 en public/marketing/modules/framed-20261016/*.webp; originales PNG a escala 1:1 en x36/y36 (Métricas x58/y92), interior RGB idéntico en el área preservada y marco blanco/translúcido de scripts/marketing-screenshot-frame.html, sin IA. La figura no añade fondo, radio ni altura mínima; beneficios usa blanco y padding de imagen cero. Procedencia y límite del harness iAgents en public/marketing/modules/README.md.",
       "review": ".impeccable/review/marketing-2026-10-16/REVIEW.md"
     }
   }

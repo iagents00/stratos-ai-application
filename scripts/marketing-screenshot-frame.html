@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Marco de cristal para capturas reales de Stratos</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 1440px; height: 1020px; background: #fff; overflow: hidden; }
+    main { width: 1440px; height: 1020px; display: grid; place-items: center; background: #fff; }
+    .glass {
+      width: 1400px; height: 980px; padding: 15px;
+      border: 1px solid rgba(157, 180, 194, .36); border-radius: 30px;
+      background: linear-gradient(145deg, rgba(255,255,255,.95), rgba(229,237,242,.55) 39%, rgba(255,255,255,.9) 72%, rgba(223,233,239,.58));
+      box-shadow: 0 7px 14px rgba(10,27,46,.07), inset 0 1px 2px #fff, inset 0 -1px 1px rgba(156,181,196,.12);
+    }
+    .screen {
+      display: grid; place-items: center; width: 1368px; height: 948px;
+      overflow: hidden; border-radius: 12px; background: #fff;
+      outline: 1px solid rgba(153,178,194,.18);
+    }
+    img { display: block; width: auto; height: auto; max-width: none; opacity: 1; filter: none; }
+  </style>
+</head>
+<body>
+  <main><div class="glass"><div class="screen"><img alt="Captura real de Stratos AI, sin alteraciones" /></div></div></main>
+  <script type="module">
+    const modules = ['copilot', 'crm', 'mi-espacio', 'metricas', 'comando', 'iagents'];
+    const params = new URLSearchParams(location.search);
+    const module = params.get('module');
+    if (!modules.includes(module)) throw new Error('Selecciona un módulo real de Stratos.');
+    document.querySelector('img').src = params.get('source') === 'original'
+      ? `/output/playwright/marketing-source/${module}.png`
+      : `/marketing/modules/${module}.webp`;
+  </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+{
+  "createdAt": "2026-10-16T18:08:16.268Z",
+  "method": "Original PNG screenshot at native size in scripts/marketing-screenshot-frame.html?source=original, rendered with Playwright/Chromium and encoded as lossless WebP. No UI repaint, rescaling or image generation.",
+  "width": 1440,
+  "height": 1020,
+  "background": "#FFFFFF",
+  "recipeSha256": "65b681237fcf86bf814a93c9fae5bb06f9a49993a70e747a82f7fa464a8e99fa",
+  "assets": [
+    {
+      "id": "copilot",
+      "sourceFile": "output/playwright/marketing-source/copilot.png",
+      "sourceSha256": "b0d6cdd6d86b9d4fec9801d100c616d3428e6b5c10cd6728f89c3aa8dd691f67",
+      "referenceWebP": "../copilot.webp",
+      "file": "copilot.webp",
+      "sha256": "049417de3805209ab6583e20d9531652ae6f582c89ded12bba34a8031fd6766d",
+      "bytes": 74790,
+      "sourceBounds": {
+        "x": 36,
+        "y": 36,
+        "width": 1368,
+        "height": 948
+      },
+      "interiorPixelsMatch": true
+    },
+    {
+      "id": "crm",
+      "sourceFile": "output/playwright/marketing-source/crm.png",
+      "sourceSha256": "8db20cab6f29b3150a54fe13cc3cb8741fa2583ba7efd9d9f09ff4dd8fc4ad5c",
+      "referenceWebP": "../crm.webp",
+      "file": "crm.webp",
+      "sha256": "95d363a4213a006ebbe7b1a08a47a870d5a311f9957370509e017216bd324577",
+      "bytes": 229448,
+      "sourceBounds": {
+        "x": 36,
+        "y": 36,
+        "width": 1368,
+        "height": 948
+      },
+      "interiorPixelsMatch": true
+    },
+    {
+      "id": "mi-espacio",
+      "sourceFile": "output/playwright/marketing-source/mi-espacio.png",
+      "sourceSha256": "a13278c1382302c937803e33168bcf4b7a4676100394cffbfbb09bda73b49482",
+      "referenceWebP": "../mi-espacio.webp",
+      "file": "mi-espacio.webp",
+      "sha256": "808c4c8b5ed11820cc47fcb1c729417516126c748d04f03b65ea646c31b2bf52",
+      "bytes": 115986,
+      "sourceBounds": {
+        "x": 36,
+        "y": 36,
+        "width": 1368,
+        "height": 948
+      },
+      "interiorPixelsMatch": true
+    },
+    {
+      "id": "metricas",
+      "sourceFile": "output/playwright/marketing-source/metricas.png",
+      "sourceSha256": "72cbf8f5cc366f4a5a4084848d3b081bf22b78b58d8f73143ba02777432dfd6b",
+      "referenceWebP": "../metricas.webp",
+      "file": "metricas.webp",
+      "sha256": "403405514f9f62c6f45afd8573a8ef656afee9f8c1f93992fd2b52dc5489e5af",
+      "bytes": 153992,
+      "sourceBounds": {
+        "x": 58,
+        "y": 92,
+        "width": 1324,
+        "height": 836
+      },
+      "interiorPixelsMatch": true
+    },
+    {
+      "id": "comando",
+      "sourceFile": "output/playwright/marketing-source/comando.png",
+      "sourceSha256": "7589ccb3f8ebb3cd168a4bd043d657a084bbd4dca3dddc91c2719cbc080028d0",
+      "referenceWebP": "../comando.webp",
+      "file": "comando.webp",
+      "sha256": "75e1c92ad08a7ea0c087cc40337520505df8186404cd89935b9dc9a614a312e6",
+      "bytes": 158294,
+      "sourceBounds": {
+        "x": 36,
+        "y": 36,
+        "width": 1368,
+        "height": 948
+      },
+      "interiorPixelsMatch": true
+    },
+    {
+      "id": "iagents",
+      "sourceFile": "output/playwright/marketing-source/iagents.png",
+      "sourceSha256": "b647e705ce8e735ae2a86514228070ee09ccc70885ab84e0531892b7e76b7fa1",
+      "referenceWebP": "../iagents.webp",
+      "file": "iagents.webp",
+      "sha256": "3c1687d0323090c78170fc962b41b3fd2c4176d67e27397e5bab2c8d6b7e3581",
+      "bytes": 111580,
+      "sourceBounds": {
+        "x": 36,
+        "y": 36,
+        "width": 1368,
+        "height": 948
+      },
+      "interiorPixelsMatch": true
+    }
+  ]
+}

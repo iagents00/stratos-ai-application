@@ -90,8 +90,8 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
 
 .stratos-marketing .smk-benefit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
 .stratos-marketing .smk-benefit-grid > article { min-width: 0; overflow: hidden; border-radius: 24px; }
-.stratos-marketing .smk-benefit-visual { display: flex; flex-direction: column; background: var(--smk-surface); }
-.stratos-marketing .smk-benefit-visual img { width: 100%; height: auto; object-fit: contain; padding: 16px 16px 0; }
+.stratos-marketing .smk-benefit-visual { display: flex; flex-direction: column; background: #fff; }
+.stratos-marketing .smk-benefit-visual img { width: 100%; height: auto; object-fit: contain; padding: 0; }
 .stratos-marketing .smk-benefit-visual > div { padding: 28px 32px 32px; }
 .stratos-marketing .smk-benefit-visual h3 { font-size: 28px; }
 .stratos-marketing .smk-benefit-visual p { color: var(--smk-muted); font-size: 15px; line-height: 1.65; margin-top: 14px; max-width: 46ch; }
