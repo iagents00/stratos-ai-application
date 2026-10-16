@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**266 archivos · 81.276 líneas**
+**266 archivos · 81.311 líneas**
 
 ---
 
@@ -435,12 +435,12 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ManualMuebleria.jsx` | 224 | _sin describir_ |
 | `LoginScreenNative.jsx` | 183 | _sin describir_ |
 | `marketing-content.js` | 108 | _sin describir_ |
+| `FeatureMotion.jsx` | 95 | _sin describir_ |
 | `LandingMarketing.jsx` | 94 | _sin describir_ |
 | `ModuleShowcase.jsx` | 91 | _sin describir_ |
 | `HeroFlowBackdrop.jsx` | 79 | _sin describir_ |
-| `FeatureMotion.jsx` | 70 | _sin describir_ |
 | `ModuleShowcase.css` | 66 | _sin describir_ |
-| `FeatureMotion.css` | 53 | _sin describir_ |
+| `FeatureMotion.css` | 63 | _sin describir_ |
 | `HeroFlowBackdrop.css` | 27 | _sin describir_ |
 
 ### `src/lib/`
@@ -885,6 +885,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/Admin/CompanySetupAdmin.jsx` (99 líneas)
 - `src/app/constants/areas.js` (97 líneas)
 - `src/app/views/CRM/date-range.js` (97 líneas)
+- `src/landing/FeatureMotion.jsx` (95 líneas)
 - `src/landing/LandingMarketing.jsx` (94 líneas)
 - `src/app/views/LandingPages/PublicLanding.jsx` (93 líneas)
 - `src/landing/ModuleShowcase.jsx` (91 líneas)
@@ -901,11 +902,11 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/ringer.js` (72 líneas)
 - `src/lib/agenda.js` (71 líneas)
 - `src/contexts/ClientContext.jsx` (70 líneas)
-- `src/landing/FeatureMotion.jsx` (70 líneas)
 - `src/lib/supabase.js` (70 líneas)
 - `src/app/components/MobileHeaderMenu.jsx` (66 líneas)
 - `src/landing/ModuleShowcase.css` (66 líneas)
 - `src/contexts/TenantConfigGate.jsx` (64 líneas)
 - `src/app/views/CRM/command-report.js` (63 líneas)
 - `src/dental-demo/DentalDemo.jsx` (63 líneas)
+- `src/landing/FeatureMotion.css` (63 líneas)
 - `src/lib/telefono.js` (61 líneas)

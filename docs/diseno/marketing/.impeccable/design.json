@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-16T22:53:45.064454+00:00",
+  "generatedAt": "2026-10-16T23:54:42.395335+00:00",
   "title": "Design System: Stratos AI — sitio público",
   "extensions": {
     "motion": [
@@ -26,8 +26,8 @@
       },
       {
         "name": "flow-stroke",
-        "value": "5.6s linear × 2",
-        "purpose": "Dos recorridos SVG automáticos limitados; 11.44s incluida la demora final, después estado quieto. Sin botones ni estados manuales de pausa, finalización o repetición."
+        "value": "6s linear ×1; period 16s; reduced 6s opacity, period 24s",
+        "purpose": "Entrada → hub → tres salidas, con luz azul cielo y verde vivo. Una pasada de 6s y descanso de 10s; movimiento reducido sin dash ni desplazamiento, pasada de 6s y descanso de 18s. Cada diagrama inicia al alcanzar 15% de visibilidad; suspensión y cancelación offscreen, hidden o lowfx y reinicio limpio. Sin controles de reproducción."
       },
       {
         "name": "headline-interval",
@@ -98,11 +98,11 @@
       ],
       "fontLicenses": "Switzer FFL: binario ignorado y descargado en preparación web con hash fijado. Inter OFL: original completo versionado con licencia. Ver public/fonts/marketing/README.md.",
       "assets": "Seis composiciones lossless 1440×1020 en public/marketing/modules/framed-20261016/*.webp; originales PNG a escala 1:1 en x36/y36 (Métricas x58/y92), interior RGB idéntico en el área preservada y marco blanco/translúcido de scripts/marketing-screenshot-frame.html, sin IA. La figura no añade fondo, radio ni altura mínima; la galería real y el flujo manual conservan las capturas. Procedencia y límite del harness iAgents en public/marketing/modules/README.md.",
-      "review": ".impeccable/review/active-sliders-2026-10-16/REVIEW.md",
+      "review": ".impeccable/review/feature-glows-2026-10-16/REVIEW.md",
       "flowTruth": "Consulta → contexto: Consultar cartera / Copilot / Clientes, Pendientes, Próximos pasos. Actividad registrada → visibilidad: Actividad registrada / Comando / Cartera, Equipo, Métricas. Flujos ilustrativos sujetos a permisos/configuración; no prometen acciones, envíos ni guardados autónomos.",
-      "flowLifecycle": "Dos recorridos limitados para Safari; animación CSS suspendida fuera de viewport o con documento oculto. Movimiento reducido mantiene el diagrama estático sin señales. Footer solo declaración ilustrativa, sin controles de reproducción. HTML/CSS/SVG nativos, sin GIF pesado.",
+      "flowLifecycle": "Una pasada CSS finita de 6s por diagrama, periodo de 16s y descanso de 10s. Reduced: opacidad de 6s, sin dash ni desplazamiento, periodo de 24s y descanso de 18s. IntersectionObserver individual del diagrama exige >=15%; hidden, offscreen y lowfx cancelan el timeout y pausan la animación; regresar reinicia limpio. SVG de orientación inactiva pausado. Footer ilustrativo sin controles. Sin CSS infinito, RAF, WAAPI, filtros, blur ni nuevas dependencias; guard Safari intacto.",
       "historicalReview": ".impeccable/review/marketing-2026-10-16/REVIEW.md",
-      "reviewStatus": "ship: revisión independiente final de subagente general;201tests,17sliders,12lifecycleygeometríaen4anchosaprobados. Evidencialocal, hidden sintético; producción requiere comprobación posterior.",
+      "reviewStatus": "ship: revisión independiente acotada sin correcciones materiales; 23 comprobaciones locales de navegador y 201 pruebas aprobadas. Producción requiere comprobación después de integrar.",
       "previousMotionReview": ".impeccable/review/motion-2026-10-16/REVIEW.md",
       "showcaseLayout": "Los seis paneles comparten una retícula para conservar la altura del contenido más alto; los inactivos permanecen ocultos y sin interacción.",
       "header": "Header con wordmark Stratos AI sin icono; footer conserva logo S original.",
@@ -133,7 +133,9 @@
         "review": ".impeccable/review/copilot-closeup-2026-10-16/REVIEW.md",
         "reviewStatus": "ship: revisión independiente de subagente general, alcance limitado al asset y sus dos consumidores; sin nuevo comp ni QUALITY BAR."
       },
-      "previousHeroReview": ".impeccable/review/hero-flow-2026-10-16/REVIEW.md"
+      "previousHeroReview": ".impeccable/review/hero-flow-2026-10-16/REVIEW.md",
+      "previousActiveSlidersReview": ".impeccable/review/active-sliders-2026-10-16/REVIEW.md",
+      "localQA": ".impeccable/review/feature-glows-2026-10-16/QA.json"
     },
     "shadows": [
       {
@@ -174,6 +176,30 @@
         "green": "#00DB40"
       },
       "geometry": "Mitad triangular regular reflejada en X; trayectorias iguales y en fase, desde dentro hacia fuera. preserveAspectRatio none, halos dentro y margen inferior59unidadesPC/38móvil."
+    },
+    "featureFlow": {
+      "sequence": "Entrada → Copilot o Comando → tres resultados; hub y salidas señalan llegada.",
+      "light": {
+        "sky": "#59BFF4",
+        "green": "#00DB40",
+        "coreWidthPx": 1.8,
+        "corePeakOpacity": 0.88,
+        "trailWidthPx": 6,
+        "trailPeakOpacity": 0.16,
+        "arrivalRingWidthPx": 1
+      },
+      "timing": {
+        "passMs": 6000,
+        "periodMs": 16000,
+        "restMs": 10000,
+        "iterations": 1,
+        "reducedPassMs": 6000,
+        "reducedPeriodMs": 24000,
+        "reducedRestMs": 18000,
+        "reducedMaterial": "Opacidad suave, sin dash ni desplazamiento."
+      },
+      "geometry": "ResizeObserver mide el ancho real para alinear rutas con el hub fijo de 64px. Vertical con contenedor <=385px; ramas bajo el rótulo en y202. Orientación inactiva pausada.",
+      "visibility": "Cada diagrama tiene IntersectionObserver >=15%; timeout solo visible, documento activo y fuera de lowfx. Salir u ocultar cancela; volver reinicia."
     }
   }
 }

@@ -1,5 +1,6 @@
 .stratos-marketing .smk-motion-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
-.stratos-marketing .smk-motion-card { min-width: 0; padding: 36px; border-radius: 24px; background: #F6F7F8; }
+.stratos-marketing .smk-motion-card { --flow-play: paused; min-width: 0; padding: 36px; border-radius: 24px; background: #F6F7F8; }
+.stratos-marketing .smk-motion-card[data-running="true"] { --flow-play: running; }
 .stratos-marketing .smk-motion-card h3 { font-size: clamp(28px, 3vw, 36px); line-height: 1.13; }
 .stratos-marketing .smk-motion-card > p { max-width: 45ch; min-height: 84px; margin-top: 18px; color: var(--smk-muted); font-size: 15px; line-height: 1.7; }
 .stratos-marketing .smk-motion-card > a { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin-top: 8px; color: var(--smk-ink); font-size: 13px; font-weight: 500; text-decoration: underline; text-decoration-color: #A3B3C1; }
@@ -7,29 +8,35 @@
 .stratos-marketing .smk-flow-diagram { container-type: inline-size; margin-top: 24px; }
 .stratos-marketing .smk-flow-art { position: relative; height: 280px; color: var(--smk-ink); }
 .stratos-marketing .smk-flow-lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.stratos-marketing .smk-flow-lines-vertical { display: none; }
+.stratos-marketing .smk-flow-lines-vertical { --flow-play: paused; display: none; }
 .stratos-marketing .smk-flow-track { stroke: #D5DCE2; stroke-width: 1.5; fill: none; vector-effect: non-scaling-stroke; }
-.stratos-marketing .smk-flow-signal { stroke: var(--smk-navy); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 12 100; stroke-dashoffset: 12; fill: none; vector-effect: non-scaling-stroke; opacity: 0; animation: smk-flow-signal 5.6s linear 2 paused; }
-.stratos-marketing .smk-flow-signal:not(.smk-flow-signal-0) { animation-name: smk-flow-branch; }
-.stratos-marketing .smk-flow-signal-2 { animation-delay: .12s; }
-.stratos-marketing .smk-flow-signal-3 { animation-delay: .24s; }
+.stratos-marketing .smk-flow-tone-sky { --flow-light: #59BFF4; }
+.stratos-marketing .smk-flow-tone-green { --flow-light: #00DB40; }
+.stratos-marketing .smk-flow-signal { --flow-peak: .88; stroke: var(--flow-light); stroke-width: 1.8; stroke-linecap: round; stroke-dasharray: 10 112; stroke-dashoffset: 12; fill: none; vector-effect: non-scaling-stroke; opacity: 0; animation: smk-flow-input-travel 6s linear 1; animation-play-state: var(--flow-play); }
+.stratos-marketing .smk-flow-trail { --flow-peak: .16; stroke-width: 6; }
+.stratos-marketing .smk-flow-branch { animation-name: smk-flow-output-travel; }
+.stratos-marketing .smk-flow-glint { position: absolute; inset: -4px; border: 1px solid var(--flow-light); border-radius: inherit; pointer-events: none; opacity: 0; animation: smk-flow-output-arrival 6s cubic-bezier(.45, 0, .25, 1) 1; animation-play-state: var(--flow-play); }
+.stratos-marketing .smk-flow-hub-glint { animation-name: smk-flow-hub-arrival; }
 .stratos-marketing .smk-flow-input { position: absolute; left: 0; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 32%; min-height: 44px; padding: 8px; border-radius: 10px; background: #fff; box-shadow: 0 3px 8px rgba(10,27,46,.05); font-size: 12px; font-weight: 500; line-height: 1.4; text-align: center; }
 .stratos-marketing .smk-flow-hub { position: absolute; left: 50%; top: 50%; width: 64px; transform: translate(-50%, -50%); text-align: center; }
-.stratos-marketing .smk-flow-hub > div { display: grid; place-items: center; height: 64px; border-radius: 16px; background: var(--smk-ink); }
+.stratos-marketing .smk-flow-hub > div { position: relative; display: grid; place-items: center; height: 64px; border-radius: 16px; background: var(--smk-ink); }
 .stratos-marketing .smk-flow-hub img { width: 52px; height: 52px; border-radius: 12px; }
 .stratos-marketing .smk-flow-hub > span { position: absolute; top: calc(100% + 9px); left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 500; white-space: nowrap; }
 .stratos-marketing .smk-flow-outputs { position: absolute; right: 0; inset-block: 0; display: flex; flex-direction: column; justify-content: space-between; width: 28%; padding-block: 16px; }
 .stratos-marketing .smk-flow-output { display: flex; align-items: center; gap: 8px; min-height: 56px; font-size: 12px; line-height: 1.4; }
-.stratos-marketing .smk-flow-output > span:first-child { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; border-radius: 50%; background: #fff; box-shadow: 0 3px 8px rgba(10,27,46,.05); }
+.stratos-marketing .smk-flow-output > span:first-child { position: relative; display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; border-radius: 50%; background: #fff; box-shadow: 0 3px 8px rgba(10,27,46,.05); }
 .stratos-marketing .smk-motion-footer { margin-top: 20px; }
 .stratos-marketing .smk-motion-footer > p { color: var(--smk-muted); max-width: 68ch; font-size: 11px; line-height: 1.6; }
-.stratos-marketing .smk-feature-motion[data-running="true"] .smk-flow-signal { animation-play-state: running; }
-@keyframes smk-flow-signal { 0% { opacity: 0; stroke-dashoffset: 12; } 8% { opacity: 1; } 30% { opacity: 1; stroke-dashoffset: -100; } 34%, 100% { opacity: 0; stroke-dashoffset: -100; } }
-@keyframes smk-flow-branch { 0%, 28% { opacity: 0; stroke-dashoffset: 12; } 35% { opacity: 1; } 72% { opacity: 1; stroke-dashoffset: -100; } 78%, 100% { opacity: 0; stroke-dashoffset: -100; } }
+@keyframes smk-flow-input-travel { 0% { opacity: 0; stroke-dashoffset: 12; } 4% { opacity: var(--flow-peak); } 22% { opacity: var(--flow-peak); stroke-dashoffset: -100; } 26%, 100% { opacity: 0; stroke-dashoffset: -112; } }
+@keyframes smk-flow-output-travel { 0%, 30% { opacity: 0; stroke-dashoffset: 12; } 34% { opacity: var(--flow-peak); } 82% { opacity: var(--flow-peak); stroke-dashoffset: -100; } 88%, 100% { opacity: 0; stroke-dashoffset: -112; } }
+@keyframes smk-flow-hub-arrival { 0%, 18%, 46%, 100% { opacity: 0; } 26%, 32% { opacity: .65; } }
+@keyframes smk-flow-output-arrival { 0%, 66%, 100% { opacity: 0; } 80%, 86% { opacity: .68; } }
+@keyframes smk-flow-input-shimmer { 0%, 40%, 100% { opacity: 0; } 20%, 28% { opacity: var(--flow-peak); } }
+@keyframes smk-flow-output-shimmer { 0%, 34%, 100% { opacity: 0; } 64%, 78% { opacity: var(--flow-peak); } }
 @container (max-width: 385px) {
   .stratos-marketing .smk-flow-art { height: 310px; }
-  .stratos-marketing .smk-flow-lines { display: none; }
-  .stratos-marketing .smk-flow-lines-vertical { display: block; }
+  .stratos-marketing .smk-flow-lines { --flow-play: paused; display: none; }
+  .stratos-marketing .smk-flow-lines-vertical { --flow-play: inherit; display: block; }
   .stratos-marketing .smk-flow-input { left: 50%; top: 0; transform: translateX(-50%); width: auto; min-width: 154px; }
   .stratos-marketing .smk-flow-hub { top: 43.55%; }
   .stratos-marketing .smk-flow-outputs { inset: auto 0 0; width: 100%; flex-direction: row; align-items: flex-start; padding: 0; }
@@ -48,5 +55,8 @@
   .stratos-marketing .smk-motion-card > p { font-size: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .stratos-marketing .smk-feature-motion .smk-flow-signal { animation: none; display: none; }
+  .stratos-marketing .smk-flow-signal { --flow-peak: .4; stroke-dasharray: none; stroke-dashoffset: 0; animation-name: smk-flow-input-shimmer; animation-timing-function: ease-in-out; }
+  .stratos-marketing .smk-flow-trail { --flow-peak: .06; }
+  .stratos-marketing .smk-flow-branch { animation-name: smk-flow-output-shimmer; }
+  .stratos-marketing .smk-flow-glint { animation-timing-function: ease-in-out; }
 }
