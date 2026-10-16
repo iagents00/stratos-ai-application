@@ -1,0 +1,56 @@
+{
+  "head": "14a337c2b1884c795b06d64b332974ae7553ab1e",
+  "startedAt": "2026-10-16T23:28:49.449432+00:00",
+  "sourceBeforeSHA256": {
+    "src/landing/FeatureMotion.jsx": "c460412656b06ddb09d9eaef74bd67be6d528061df1378ac81ca885986725143",
+    "src/landing/FeatureMotion.css": "d787b0f0e9ff6294be985879749cfe48da38d0b441cf0f8c464b626d677f8e1a",
+    "public/sw.js": "3a0c5ef99a1cb4da5cc99664b314632710642115d789820144a333ca003fff88"
+  },
+  "checks": [
+    {
+      "check": "runtime",
+      "exit_code": 0,
+      "seconds": 18.68,
+      "log": "/tmp/stratos-feature-glows-runtime.log",
+      "completedAt": "2026-10-16T23:29:08.141088+00:00"
+    },
+    {
+      "check": "test",
+      "exit_code": 0,
+      "seconds": 13.15,
+      "log": "/tmp/stratos-feature-glows-test.log",
+      "completedAt": "2026-10-16T23:29:21.297520+00:00",
+      "counts": {
+        "tests": 201,
+        "pass": 201,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "check": "app",
+      "exit_code": 0,
+      "seconds": 1.78,
+      "log": "/tmp/stratos-feature-glows-app.log",
+      "completedAt": "2026-10-16T23:29:23.085949+00:00"
+    }
+  ],
+  "sourceAfterSHA256": {
+    "src/landing/FeatureMotion.jsx": "c460412656b06ddb09d9eaef74bd67be6d528061df1378ac81ca885986725143",
+    "src/landing/FeatureMotion.css": "d787b0f0e9ff6294be985879749cfe48da38d0b441cf0f8c464b626d677f8e1a",
+    "public/sw.js": "3a0c5ef99a1cb4da5cc99664b314632710642115d789820144a333ca003fff88"
+  },
+  "sourceUnchanged": true,
+  "completedAt": "2026-10-16T23:29:23.090908+00:00",
+  "allChecksPassed": true,
+  "nativeExclusion": {
+    "pathsRemaining": [],
+    "bundleReferences": [],
+    "filesScanned": 288,
+    "pass": true
+  },
+  "mobileGuardIntact": true,
+  "completed": true
+}
