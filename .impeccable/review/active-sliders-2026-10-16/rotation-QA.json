@@ -1,0 +1,1406 @@
+{
+  "source": "http://127.0.0.1:5218/",
+  "method": "Chrome real rendered UI with page.clock.runFor stepping JavaScript timers; synthetic hidden explicitly marked",
+  "checks": [
+    {
+      "name": "headline full cycle+wrap 2800ms width1280 reducedfalse",
+      "pass": true,
+      "data": {
+        "width": 1280,
+        "reducedMotion": false,
+        "kind": "headline",
+        "expected": [
+          "seguimiento real",
+          "Call Centers de IA",
+          "Marketing + IA",
+          "Equipos de iAgents",
+          "CRM Inteligente",
+          "ERPs Autónomos",
+          "Avatars de IA",
+          "seguimiento real"
+        ],
+        "actual": [
+          "seguimiento real",
+          "Call Centers de IA",
+          "Marketing + IA",
+          "Equipos de iAgents",
+          "CRM Inteligente",
+          "ERPs Autónomos",
+          "Avatars de IA",
+          "seguimiento real"
+        ],
+        "boundaries": [
+          {
+            "before": "seguimiento real",
+            "early": "seguimiento real",
+            "after": "Call Centers de IA",
+            "elapsed": 2800
+          },
+          {
+            "before": "Call Centers de IA",
+            "early": "Call Centers de IA",
+            "after": "Marketing + IA",
+            "elapsed": 2800
+          },
+          {
+            "before": "Marketing + IA",
+            "early": "Marketing + IA",
+            "after": "Equipos de iAgents",
+            "elapsed": 2800
+          },
+          {
+            "before": "Equipos de iAgents",
+            "early": "Equipos de iAgents",
+            "after": "CRM Inteligente",
+            "elapsed": 2800
+          },
+          {
+            "before": "CRM Inteligente",
+            "early": "CRM Inteligente",
+            "after": "ERPs Autónomos",
+            "elapsed": 2800
+          },
+          {
+            "before": "ERPs Autónomos",
+            "early": "ERPs Autónomos",
+            "after": "Avatars de IA",
+            "elapsed": 2800
+          },
+          {
+            "before": "Avatars de IA",
+            "early": "Avatars de IA",
+            "after": "seguimiento real",
+            "elapsed": 2800
+          }
+        ],
+        "spread": {
+          "heading": 0,
+          "hero": 0,
+          "gallery": 0,
+          "panel": 0,
+          "document": 0
+        }
+      },
+      "evidence": "scroll-confirmation.json"
+    },
+    {
+      "name": "gallery full cycle+wrap 2800ms width1280 reducedfalse",
+      "pass": true,
+      "data": {
+        "width": 1280,
+        "reducedMotion": false,
+        "kind": "gallery",
+        "expected": [
+          "Copilot",
+          "CRM",
+          "Mi Espacio",
+          "Métricas",
+          "Comando",
+          "iAgents",
+          "Copilot"
+        ],
+        "actual": [
+          "Copilot",
+          "CRM",
+          "Mi Espacio",
+          "Métricas",
+          "Comando",
+          "iAgents",
+          "Copilot"
+        ],
+        "boundaries": [
+          {
+            "before": "Copilot",
+            "early": "Copilot",
+            "after": "CRM",
+            "elapsed": 2800
+          },
+          {
+            "before": "CRM",
+            "early": "CRM",
+            "after": "Mi Espacio",
+            "elapsed": 2800
+          },
+          {
+            "before": "Mi Espacio",
+            "early": "Mi Espacio",
+            "after": "Métricas",
+            "elapsed": 2800
+          },
+          {
+            "before": "Métricas",
+            "early": "Métricas",
+            "after": "Comando",
+            "elapsed": 2800
+          },
+          {
+            "before": "Comando",
+            "early": "Comando",
+            "after": "iAgents",
+            "elapsed": 2800
+          },
+          {
+            "before": "iAgents",
+            "early": "iAgents",
+            "after": "Copilot",
+            "elapsed": 2800
+          }
+        ],
+        "spread": {
+          "heading": 0,
+          "hero": 0,
+          "gallery": 0,
+          "panel": 0,
+          "document": 0
+        }
+      },
+      "evidence": "scroll-confirmation.json"
+    },
+    {
+      "name": "headline full cycle+wrap 2800ms width1280 reducedtrue",
+      "pass": true,
+      "data": {
+        "width": 1280,
+        "reducedMotion": true,
+        "kind": "headline",
+        "expected": [
+          "seguimiento real",
+          "Call Centers de IA",
+          "Marketing + IA",
+          "Equipos de iAgents",
+          "CRM Inteligente",
+          "ERPs Autónomos",
+          "Avatars de IA",
+          "seguimiento real"
+        ],
+        "actual": [
+          "seguimiento real",
+          "Call Centers de IA",
+          "Marketing + IA",
+          "Equipos de iAgents",
+          "CRM Inteligente",
+          "ERPs Autónomos",
+          "Avatars de IA",
+          "seguimiento real"
+        ],
+        "boundaries": [
+          {
+            "before": "seguimiento real",
+            "early": "seguimiento real",
+            "after": "Call Centers de IA",
+            "elapsed": 2800
+          },
+          {
+            "before": "Call Centers de IA",
+            "early": "Call Centers de IA",
+            "after": "Marketing + IA",
+            "elapsed": 2800
+          },
+          {
+            "before": "Marketing + IA",
+            "early": "Marketing + IA",
+            "after": "Equipos de iAgents",
+            "elapsed": 2800
+          },
+          {
+            "before": "Equipos de iAgents",
+            "early": "Equipos de iAgents",
+            "after": "CRM Inteligente",
+            "elapsed": 2800
+          },
+          {
+            "before": "CRM Inteligente",
+            "early": "CRM Inteligente",
+            "after": "ERPs Autónomos",
+            "elapsed": 2800
+          },
+          {
+            "before": "ERPs Autónomos",
+            "early": "ERPs Autónomos",
+            "after": "Avatars de IA",
+            "elapsed": 2800
+          },
+          {
+            "before": "Avatars de IA",
+            "early": "Avatars de IA",
+            "after": "seguimiento real",
+            "elapsed": 2800
+          }
+        ],
+        "spread": {
+          "heading": 0,
+          "hero": 0,
+          "gallery": 0,
+          "panel": 0,
+          "document": 0
+        }
+      },
+      "evidence": "scroll-confirmation.json"
+    },
+    {
+      "name": "gallery full cycle+wrap 2800ms width1280 reducedtrue",
+      "pass": true,
+      "data": {
+        "width": 1280,
+        "reducedMotion": true,
+        "kind": "gallery",
+        "expected": [
+          "Copilot",
+          "CRM",
+          "Mi Espacio",
+          "Métricas",
+          "Comando",
+          "iAgents",
+          "Copilot"
+        ],
+        "actual": [
+          "Copilot",
+          "CRM",
+          "Mi Espacio",
+          "Métricas",
+          "Comando",
+          "iAgents",
+          "Copilot"
+        ],
+        "boundaries": [
+          {
+            "before": "Copilot",
+            "early": "Copilot",
+            "after": "CRM",
+            "elapsed": 2800
+          },
+          {
+            "before": "CRM",
+            "early": "CRM",
+            "after": "Mi Espacio",
+            "elapsed": 2800
+          },
+          {
+            "before": "Mi Espacio",
+            "early": "Mi Espacio",
+            "after": "Métricas",
+            "elapsed": 2800
+          },
+          {
+            "before": "Métricas",
+            "early": "Métricas",
+            "after": "Comando",
+            "elapsed": 2800
+          },
+          {
+            "before": "Comando",
+            "early": "Comando",
+            "after": "iAgents",
+            "elapsed": 2800
+          },
+          {
+            "before": "iAgents",
+            "early": "iAgents",
+            "after": "Copilot",
+            "elapsed": 2800
+          }
+        ],
+        "spread": {
+          "heading": 0,
+          "hero": 0,
+          "gallery": 0,
+          "panel": 0,
+          "document": 0
+        }
+      },
+      "evidence": "scroll-confirmation.json"
+    },
+    {
+      "name": "headline full cycle+wrap 2800ms width390 reducedfalse",
+      "pass": true,
+      "data": {
+        "width": 390,
+        "reducedMotion": false,
+        "kind": "headline",
+        "expected": [
+          "seguimiento real",
+          "Call Centers de IA",
+          "Marketing + IA",
+          "Equipos de iAgents",
+          "CRM Inteligente",
+          "ERPs Autónomos",
+          "Avatars de IA",
+          "seguimiento real"
+        ],
+        "actual": [
+          "seguimiento real",
+          "Call Centers de IA",
+          "Marketing + IA",
+          "Equipos de iAgents",
+          "CRM Inteligente",
+          "ERPs Autónomos",
+          "Avatars de IA",
+          "seguimiento real"
+        ],
+        "boundaries": [
+          {
+            "before": "seguimiento real",
+            "early": "seguimiento real",
+            "after": "Call Centers de IA",
+            "elapsed": 2800
+          },
+          {
+            "before": "Call Centers de IA",
+            "early": "Call Centers de IA",
+            "after": "Marketing + IA",
+            "elapsed": 2800
+          },
+          {
+            "before": "Marketing + IA",
+            "early": "Marketing + IA",
+            "after": "Equipos de iAgents",
+            "elapsed": 2800
+          },
+          {
+            "before": "Equipos de iAgents",
+            "early": "Equipos de iAgents",
+            "after": "CRM Inteligente",
+            "elapsed": 2800
+          },
+          {
+            "before": "CRM Inteligente",
+            "early": "CRM Inteligente",
+            "after": "ERPs Autónomos",
+            "elapsed": 2800
+          },
+          {
+            "before": "ERPs Autónomos",
+            "early": "ERPs Autónomos",
+            "after": "Avatars de IA",
+            "elapsed": 2800
+          },
+          {
+            "before": "Avatars de IA",
+            "early": "Avatars de IA",
+            "after": "seguimiento real",
+            "elapsed": 2800
+          }
+        ],
+        "spread": {
+          "heading": 0,
+          "hero": 0,
+          "gallery": 0,
+          "panel": 0,
+          "document": 0
+        }
+      },
+      "evidence": "scroll-confirmation.json"
+    },
+    {
+      "name": "gallery full cycle+wrap 2800ms width390 reducedfalse",
+      "pass": true,
+      "data": {
+        "width": 390,
+        "reducedMotion": false,
+        "kind": "gallery",
+        "expected": [
+          "Copilot",
+          "CRM",
+          "Mi Espacio",
+          "Métricas",
+          "Comando",
+          "iAgents",
+          "Copilot"
+        ],
+        "actual": [
+          "Copilot",
+          "CRM",
+          "Mi Espacio",
+          "Métricas",
+          "Comando",
+          "iAgents",
+          "Copilot"
+        ],
+        "boundaries": [
+          {
+            "before": "Copilot",
+            "early": "Copilot",
+            "after": "CRM",
+            "elapsed": 2800
+          },
+          {
+            "before": "CRM",
+            "early": "CRM",
+            "after": "Mi Espacio",
+            "elapsed": 2800
+          },
+          {
+            "before": "Mi Espacio",
+            "early": "Mi Espacio",
+            "after": "Métricas",
+            "elapsed": 2800
+          },
+          {
+            "before": "Métricas",
+            "early": "Métricas",
+            "after": "Comando",
+            "elapsed": 2800
+          },
+          {
+            "before": "Comando",
+            "early": "Comando",
+            "after": "iAgents",
+            "elapsed": 2800
+          },
+          {
+            "before": "iAgents",
+            "early": "iAgents",
+            "after": "Copilot",
+            "elapsed": 2800
+          }
+        ],
+        "spread": {
+          "heading": 0,
+          "hero": 0,
+          "gallery": 0,
+          "panel": 0,
+          "document": 0
+        }
+      },
+      "evidence": "scroll-confirmation.json"
+    },
+    {
+      "name": "headline full cycle+wrap 2800ms width390 reducedtrue",
+      "pass": true,
+      "data": {
+        "width": 390,
+        "reducedMotion": true,
+        "kind": "headline",
+        "expected": [
+          "seguimiento real",
+          "Call Centers de IA",
+          "Marketing + IA",
+          "Equipos de iAgents",
+          "CRM Inteligente",
+          "ERPs Autónomos",
+          "Avatars de IA",
+          "seguimiento real"
+        ],
+        "actual": [
+          "seguimiento real",
+          "Call Centers de IA",
+          "Marketing + IA",
+          "Equipos de iAgents",
+          "CRM Inteligente",
+          "ERPs Autónomos",
+          "Avatars de IA",
+          "seguimiento real"
+        ],
+        "boundaries": [
+          {
+            "before": "seguimiento real",
+            "early": "seguimiento real",
+            "after": "Call Centers de IA",
+            "elapsed": 2800
+          },
+          {
+            "before": "Call Centers de IA",
+            "early": "Call Centers de IA",
+            "after": "Marketing + IA",
+            "elapsed": 2800
+          },
+          {
+            "before": "Marketing + IA",
+            "early": "Marketing + IA",
+            "after": "Equipos de iAgents",
+            "elapsed": 2800
+          },
+          {
+            "before": "Equipos de iAgents",
+            "early": "Equipos de iAgents",
+            "after": "CRM Inteligente",
+            "elapsed": 2800
+          },
+          {
+            "before": "CRM Inteligente",
+            "early": "CRM Inteligente",
+            "after": "ERPs Autónomos",
+            "elapsed": 2800
+          },
+          {
+            "before": "ERPs Autónomos",
+            "early": "ERPs Autónomos",
+            "after": "Avatars de IA",
+            "elapsed": 2800
+          },
+          {
+            "before": "Avatars de IA",
+            "early": "Avatars de IA",
+            "after": "seguimiento real",
+            "elapsed": 2800
+          }
+        ],
+        "spread": {
+          "heading": 0,
+          "hero": 0,
+          "gallery": 0,
+          "panel": 0,
+          "document": 0
+        }
+      },
+      "evidence": "scroll-confirmation.json"
+    },
+    {
+      "name": "gallery full cycle+wrap 2800ms width390 reducedtrue",
+      "pass": true,
+      "data": {
+        "width": 390,
+        "reducedMotion": true,
+        "kind": "gallery",
+        "expected": [
+          "Copilot",
+          "CRM",
+          "Mi Espacio",
+          "Métricas",
+          "Comando",
+          "iAgents",
+          "Copilot"
+        ],
+        "actual": [
+          "Copilot",
+          "CRM",
+          "Mi Espacio",
+          "Métricas",
+          "Comando",
+          "iAgents",
+          "Copilot"
+        ],
+        "boundaries": [
+          {
+            "before": "Copilot",
+            "early": "Copilot",
+            "after": "CRM",
+            "elapsed": 2800
+          },
+          {
+            "before": "CRM",
+            "early": "CRM",
+            "after": "Mi Espacio",
+            "elapsed": 2800
+          },
+          {
+            "before": "Mi Espacio",
+            "early": "Mi Espacio",
+            "after": "Métricas",
+            "elapsed": 2800
+          },
+          {
+            "before": "Métricas",
+            "early": "Métricas",
+            "after": "Comando",
+            "elapsed": 2800
+          },
+          {
+            "before": "Comando",
+            "early": "Comando",
+            "after": "iAgents",
+            "elapsed": 2800
+          },
+          {
+            "before": "iAgents",
+            "early": "iAgents",
+            "after": "Copilot",
+            "elapsed": 2800
+          }
+        ],
+        "spread": {
+          "heading": 0,
+          "hero": 0,
+          "gallery": 0,
+          "panel": 0,
+          "document": 0
+        }
+      },
+      "evidence": "scroll-confirmation.json"
+    },
+    {
+      "name": "mouse hover does not pause gallery",
+      "pass": true,
+      "data": {
+        "hoverBefore": "CRM",
+        "hoverAfter": "Mi Espacio",
+        "mouse": {
+          "x": 640,
+          "y": 300
+        }
+      },
+      "evidence": "rotation-initial.json"
+    },
+    {
+      "name": "manual selection restarts full interval",
+      "pass": true,
+      "data": {
+        "resetEarly": "CRM",
+        "resetAfter": "Mi Espacio"
+      },
+      "evidence": "rotation-initial.json"
+    },
+    {
+      "name": "keyboard focus pauses; blur resumes full interval",
+      "pass": true,
+      "data": {
+        "focusBefore": "iAgents",
+        "focusAfter": "iAgents",
+        "blurEarly": "iAgents",
+        "blurAfter": "Copilot"
+      },
+      "evidence": "rotation-initial.json"
+    },
+    {
+      "name": "offscreen pauses both sliders",
+      "pass": true,
+      "data": {
+        "h1": {
+          "at": 1792191731642,
+          "value": "seguimiento real",
+          "heading": 119.6953125,
+          "hero": 400.890625,
+          "gallery": 1192.65625,
+          "panel": 762.765625,
+          "document": 12545
+        },
+        "h2": {
+          "at": 1792191740042,
+          "value": "seguimiento real",
+          "heading": 119.6953125,
+          "hero": 400.890625,
+          "gallery": 1192.65625,
+          "panel": 762.765625,
+          "document": 12545
+        },
+        "g1": {
+          "at": 1792191731642,
+          "value": "Copilot",
+          "heading": 119.6953125,
+          "hero": 400.890625,
+          "gallery": 1192.65625,
+          "panel": 762.765625,
+          "document": 12545
+        },
+        "g2": {
+          "at": 1792191740042,
+          "value": "Copilot",
+          "heading": 119.6953125,
+          "hero": 400.890625,
+          "gallery": 1192.65625,
+          "panel": 762.765625,
+          "document": 12545
+        }
+      },
+      "evidence": "scroll-confirmation.json"
+    },
+    {
+      "name": "synthetic hidden visibilitychange pauses both sliders",
+      "pass": true,
+      "data": {
+        "genuineBrowserVisibility": false,
+        "method": "Temporary document.hidden override + visibilitychange, property restored. Both sliders observed advancing before hidden and after restoration.",
+        "beforeActive": {
+          "word": "seguimiento real",
+          "module": "Copilot",
+          "hidden": false
+        },
+        "afterActive": {
+          "word": "Call Centers de IA",
+          "module": "CRM",
+          "hidden": false
+        },
+        "beforeHidden": {
+          "word": "Call Centers de IA",
+          "module": "CRM",
+          "hidden": true
+        },
+        "afterHidden": {
+          "word": "Call Centers de IA",
+          "module": "CRM",
+          "hidden": true
+        },
+        "afterResume": {
+          "word": "Marketing + IA",
+          "module": "Mi Espacio",
+          "hidden": false
+        }
+      },
+      "evidence": "hidden-confirmation.json"
+    },
+    {
+      "name": "capture ready 1280",
+      "pass": true,
+      "data": {
+        "viewport": 1280,
+        "documentWidth": 1280,
+        "fonts": true
+      },
+      "evidence": "rotation-initial.json"
+    },
+    {
+      "name": "capture ready 390",
+      "pass": true,
+      "data": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "fonts": true
+      },
+      "evidence": "rotation-initial.json"
+    },
+    {
+      "name": "no page or HTTP errors",
+      "pass": true,
+      "data": {
+        "errors": [],
+        "httpErrors": []
+      },
+      "evidence": "rotation-initial.json"
+    },
+    {
+      "name": "clock confirmation document stayed mounted",
+      "pass": true,
+      "data": {
+        "navigations": 0,
+        "boot": 1,
+        "serviceWorkersBlocked": true
+      },
+      "evidence": "scroll-confirmation.json"
+    }
+  ],
+  "cycles": [
+    {
+      "width": 1280,
+      "reducedMotion": false,
+      "kind": "headline",
+      "expected": [
+        "seguimiento real",
+        "Call Centers de IA",
+        "Marketing + IA",
+        "Equipos de iAgents",
+        "CRM Inteligente",
+        "ERPs Autónomos",
+        "Avatars de IA",
+        "seguimiento real"
+      ],
+      "actual": [
+        "seguimiento real",
+        "Call Centers de IA",
+        "Marketing + IA",
+        "Equipos de iAgents",
+        "CRM Inteligente",
+        "ERPs Autónomos",
+        "Avatars de IA",
+        "seguimiento real"
+      ],
+      "boundaries": [
+        {
+          "before": "seguimiento real",
+          "early": "seguimiento real",
+          "after": "Call Centers de IA",
+          "elapsed": 2800
+        },
+        {
+          "before": "Call Centers de IA",
+          "early": "Call Centers de IA",
+          "after": "Marketing + IA",
+          "elapsed": 2800
+        },
+        {
+          "before": "Marketing + IA",
+          "early": "Marketing + IA",
+          "after": "Equipos de iAgents",
+          "elapsed": 2800
+        },
+        {
+          "before": "Equipos de iAgents",
+          "early": "Equipos de iAgents",
+          "after": "CRM Inteligente",
+          "elapsed": 2800
+        },
+        {
+          "before": "CRM Inteligente",
+          "early": "CRM Inteligente",
+          "after": "ERPs Autónomos",
+          "elapsed": 2800
+        },
+        {
+          "before": "ERPs Autónomos",
+          "early": "ERPs Autónomos",
+          "after": "Avatars de IA",
+          "elapsed": 2800
+        },
+        {
+          "before": "Avatars de IA",
+          "early": "Avatars de IA",
+          "after": "seguimiento real",
+          "elapsed": 2800
+        }
+      ],
+      "spread": {
+        "heading": 0,
+        "hero": 0,
+        "gallery": 0,
+        "panel": 0,
+        "document": 0
+      }
+    },
+    {
+      "width": 1280,
+      "reducedMotion": false,
+      "kind": "gallery",
+      "expected": [
+        "Copilot",
+        "CRM",
+        "Mi Espacio",
+        "Métricas",
+        "Comando",
+        "iAgents",
+        "Copilot"
+      ],
+      "actual": [
+        "Copilot",
+        "CRM",
+        "Mi Espacio",
+        "Métricas",
+        "Comando",
+        "iAgents",
+        "Copilot"
+      ],
+      "boundaries": [
+        {
+          "before": "Copilot",
+          "early": "Copilot",
+          "after": "CRM",
+          "elapsed": 2800
+        },
+        {
+          "before": "CRM",
+          "early": "CRM",
+          "after": "Mi Espacio",
+          "elapsed": 2800
+        },
+        {
+          "before": "Mi Espacio",
+          "early": "Mi Espacio",
+          "after": "Métricas",
+          "elapsed": 2800
+        },
+        {
+          "before": "Métricas",
+          "early": "Métricas",
+          "after": "Comando",
+          "elapsed": 2800
+        },
+        {
+          "before": "Comando",
+          "early": "Comando",
+          "after": "iAgents",
+          "elapsed": 2800
+        },
+        {
+          "before": "iAgents",
+          "early": "iAgents",
+          "after": "Copilot",
+          "elapsed": 2800
+        }
+      ],
+      "spread": {
+        "heading": 0,
+        "hero": 0,
+        "gallery": 0,
+        "panel": 0,
+        "document": 0
+      }
+    },
+    {
+      "width": 1280,
+      "reducedMotion": true,
+      "kind": "headline",
+      "expected": [
+        "seguimiento real",
+        "Call Centers de IA",
+        "Marketing + IA",
+        "Equipos de iAgents",
+        "CRM Inteligente",
+        "ERPs Autónomos",
+        "Avatars de IA",
+        "seguimiento real"
+      ],
+      "actual": [
+        "seguimiento real",
+        "Call Centers de IA",
+        "Marketing + IA",
+        "Equipos de iAgents",
+        "CRM Inteligente",
+        "ERPs Autónomos",
+        "Avatars de IA",
+        "seguimiento real"
+      ],
+      "boundaries": [
+        {
+          "before": "seguimiento real",
+          "early": "seguimiento real",
+          "after": "Call Centers de IA",
+          "elapsed": 2800
+        },
+        {
+          "before": "Call Centers de IA",
+          "early": "Call Centers de IA",
+          "after": "Marketing + IA",
+          "elapsed": 2800
+        },
+        {
+          "before": "Marketing + IA",
+          "early": "Marketing + IA",
+          "after": "Equipos de iAgents",
+          "elapsed": 2800
+        },
+        {
+          "before": "Equipos de iAgents",
+          "early": "Equipos de iAgents",
+          "after": "CRM Inteligente",
+          "elapsed": 2800
+        },
+        {
+          "before": "CRM Inteligente",
+          "early": "CRM Inteligente",
+          "after": "ERPs Autónomos",
+          "elapsed": 2800
+        },
+        {
+          "before": "ERPs Autónomos",
+          "early": "ERPs Autónomos",
+          "after": "Avatars de IA",
+          "elapsed": 2800
+        },
+        {
+          "before": "Avatars de IA",
+          "early": "Avatars de IA",
+          "after": "seguimiento real",
+          "elapsed": 2800
+        }
+      ],
+      "spread": {
+        "heading": 0,
+        "hero": 0,
+        "gallery": 0,
+        "panel": 0,
+        "document": 0
+      }
+    },
+    {
+      "width": 1280,
+      "reducedMotion": true,
+      "kind": "gallery",
+      "expected": [
+        "Copilot",
+        "CRM",
+        "Mi Espacio",
+        "Métricas",
+        "Comando",
+        "iAgents",
+        "Copilot"
+      ],
+      "actual": [
+        "Copilot",
+        "CRM",
+        "Mi Espacio",
+        "Métricas",
+        "Comando",
+        "iAgents",
+        "Copilot"
+      ],
+      "boundaries": [
+        {
+          "before": "Copilot",
+          "early": "Copilot",
+          "after": "CRM",
+          "elapsed": 2800
+        },
+        {
+          "before": "CRM",
+          "early": "CRM",
+          "after": "Mi Espacio",
+          "elapsed": 2800
+        },
+        {
+          "before": "Mi Espacio",
+          "early": "Mi Espacio",
+          "after": "Métricas",
+          "elapsed": 2800
+        },
+        {
+          "before": "Métricas",
+          "early": "Métricas",
+          "after": "Comando",
+          "elapsed": 2800
+        },
+        {
+          "before": "Comando",
+          "early": "Comando",
+          "after": "iAgents",
+          "elapsed": 2800
+        },
+        {
+          "before": "iAgents",
+          "early": "iAgents",
+          "after": "Copilot",
+          "elapsed": 2800
+        }
+      ],
+      "spread": {
+        "heading": 0,
+        "hero": 0,
+        "gallery": 0,
+        "panel": 0,
+        "document": 0
+      }
+    },
+    {
+      "width": 390,
+      "reducedMotion": false,
+      "kind": "headline",
+      "expected": [
+        "seguimiento real",
+        "Call Centers de IA",
+        "Marketing + IA",
+        "Equipos de iAgents",
+        "CRM Inteligente",
+        "ERPs Autónomos",
+        "Avatars de IA",
+        "seguimiento real"
+      ],
+      "actual": [
+        "seguimiento real",
+        "Call Centers de IA",
+        "Marketing + IA",
+        "Equipos de iAgents",
+        "CRM Inteligente",
+        "ERPs Autónomos",
+        "Avatars de IA",
+        "seguimiento real"
+      ],
+      "boundaries": [
+        {
+          "before": "seguimiento real",
+          "early": "seguimiento real",
+          "after": "Call Centers de IA",
+          "elapsed": 2800
+        },
+        {
+          "before": "Call Centers de IA",
+          "early": "Call Centers de IA",
+          "after": "Marketing + IA",
+          "elapsed": 2800
+        },
+        {
+          "before": "Marketing + IA",
+          "early": "Marketing + IA",
+          "after": "Equipos de iAgents",
+          "elapsed": 2800
+        },
+        {
+          "before": "Equipos de iAgents",
+          "early": "Equipos de iAgents",
+          "after": "CRM Inteligente",
+          "elapsed": 2800
+        },
+        {
+          "before": "CRM Inteligente",
+          "early": "CRM Inteligente",
+          "after": "ERPs Autónomos",
+          "elapsed": 2800
+        },
+        {
+          "before": "ERPs Autónomos",
+          "early": "ERPs Autónomos",
+          "after": "Avatars de IA",
+          "elapsed": 2800
+        },
+        {
+          "before": "Avatars de IA",
+          "early": "Avatars de IA",
+          "after": "seguimiento real",
+          "elapsed": 2800
+        }
+      ],
+      "spread": {
+        "heading": 0,
+        "hero": 0,
+        "gallery": 0,
+        "panel": 0,
+        "document": 0
+      }
+    },
+    {
+      "width": 390,
+      "reducedMotion": false,
+      "kind": "gallery",
+      "expected": [
+        "Copilot",
+        "CRM",
+        "Mi Espacio",
+        "Métricas",
+        "Comando",
+        "iAgents",
+        "Copilot"
+      ],
+      "actual": [
+        "Copilot",
+        "CRM",
+        "Mi Espacio",
+        "Métricas",
+        "Comando",
+        "iAgents",
+        "Copilot"
+      ],
+      "boundaries": [
+        {
+          "before": "Copilot",
+          "early": "Copilot",
+          "after": "CRM",
+          "elapsed": 2800
+        },
+        {
+          "before": "CRM",
+          "early": "CRM",
+          "after": "Mi Espacio",
+          "elapsed": 2800
+        },
+        {
+          "before": "Mi Espacio",
+          "early": "Mi Espacio",
+          "after": "Métricas",
+          "elapsed": 2800
+        },
+        {
+          "before": "Métricas",
+          "early": "Métricas",
+          "after": "Comando",
+          "elapsed": 2800
+        },
+        {
+          "before": "Comando",
+          "early": "Comando",
+          "after": "iAgents",
+          "elapsed": 2800
+        },
+        {
+          "before": "iAgents",
+          "early": "iAgents",
+          "after": "Copilot",
+          "elapsed": 2800
+        }
+      ],
+      "spread": {
+        "heading": 0,
+        "hero": 0,
+        "gallery": 0,
+        "panel": 0,
+        "document": 0
+      }
+    },
+    {
+      "width": 390,
+      "reducedMotion": true,
+      "kind": "headline",
+      "expected": [
+        "seguimiento real",
+        "Call Centers de IA",
+        "Marketing + IA",
+        "Equipos de iAgents",
+        "CRM Inteligente",
+        "ERPs Autónomos",
+        "Avatars de IA",
+        "seguimiento real"
+      ],
+      "actual": [
+        "seguimiento real",
+        "Call Centers de IA",
+        "Marketing + IA",
+        "Equipos de iAgents",
+        "CRM Inteligente",
+        "ERPs Autónomos",
+        "Avatars de IA",
+        "seguimiento real"
+      ],
+      "boundaries": [
+        {
+          "before": "seguimiento real",
+          "early": "seguimiento real",
+          "after": "Call Centers de IA",
+          "elapsed": 2800
+        },
+        {
+          "before": "Call Centers de IA",
+          "early": "Call Centers de IA",
+          "after": "Marketing + IA",
+          "elapsed": 2800
+        },
+        {
+          "before": "Marketing + IA",
+          "early": "Marketing + IA",
+          "after": "Equipos de iAgents",
+          "elapsed": 2800
+        },
+        {
+          "before": "Equipos de iAgents",
+          "early": "Equipos de iAgents",
+          "after": "CRM Inteligente",
+          "elapsed": 2800
+        },
+        {
+          "before": "CRM Inteligente",
+          "early": "CRM Inteligente",
+          "after": "ERPs Autónomos",
+          "elapsed": 2800
+        },
+        {
+          "before": "ERPs Autónomos",
+          "early": "ERPs Autónomos",
+          "after": "Avatars de IA",
+          "elapsed": 2800
+        },
+        {
+          "before": "Avatars de IA",
+          "early": "Avatars de IA",
+          "after": "seguimiento real",
+          "elapsed": 2800
+        }
+      ],
+      "spread": {
+        "heading": 0,
+        "hero": 0,
+        "gallery": 0,
+        "panel": 0,
+        "document": 0
+      }
+    },
+    {
+      "width": 390,
+      "reducedMotion": true,
+      "kind": "gallery",
+      "expected": [
+        "Copilot",
+        "CRM",
+        "Mi Espacio",
+        "Métricas",
+        "Comando",
+        "iAgents",
+        "Copilot"
+      ],
+      "actual": [
+        "Copilot",
+        "CRM",
+        "Mi Espacio",
+        "Métricas",
+        "Comando",
+        "iAgents",
+        "Copilot"
+      ],
+      "boundaries": [
+        {
+          "before": "Copilot",
+          "early": "Copilot",
+          "after": "CRM",
+          "elapsed": 2800
+        },
+        {
+          "before": "CRM",
+          "early": "CRM",
+          "after": "Mi Espacio",
+          "elapsed": 2800
+        },
+        {
+          "before": "Mi Espacio",
+          "early": "Mi Espacio",
+          "after": "Métricas",
+          "elapsed": 2800
+        },
+        {
+          "before": "Métricas",
+          "early": "Métricas",
+          "after": "Comando",
+          "elapsed": 2800
+        },
+        {
+          "before": "Comando",
+          "early": "Comando",
+          "after": "iAgents",
+          "elapsed": 2800
+        },
+        {
+          "before": "iAgents",
+          "early": "iAgents",
+          "after": "Copilot",
+          "elapsed": 2800
+        }
+      ],
+      "spread": {
+        "heading": 0,
+        "hero": 0,
+        "gallery": 0,
+        "panel": 0,
+        "document": 0
+      }
+    }
+  ],
+  "captures": [
+    {
+      "path": ".impeccable/review/active-sliders-2026-10-16/gallery-desktop.png",
+      "viewport": 1280,
+      "sha256": "094160a60054dffaacc5b4c047aa6972ea8ed126ec29cdb7677061356acd41c0",
+      "width": 1120,
+      "height": 933
+    },
+    {
+      "path": ".impeccable/review/active-sliders-2026-10-16/gallery-mobile.png",
+      "viewport": 390,
+      "sha256": "0df46d9d98ebefed968e83a8da6c7f282708bf1c1225b0577290ae821ab4f560",
+      "width": 390,
+      "height": 1192
+    }
+  ],
+  "errors": [],
+  "httpErrors": [],
+  "privacy": {
+    "supabaseBlockedBeforeNavigation": true,
+    "visitedLogin": false,
+    "visitedRealCRM": false
+  },
+  "pass": true,
+  "result": {
+    "confirmedPasses": 17,
+    "confirmedFailures": 0,
+    "openProductFindings": 0,
+    "genuineHiddenBehavior": "not_verified; synthetic visibilitychange listener explicitly tested"
+  },
+  "verifiedAt": "2026-10-16T23:00:00.901495+00:00",
+  "release": {
+    "project": "stratos-ai-application",
+    "projectId": "prj_Epv30SFnQmJGnxy3LdYLKV8NwDLi",
+    "repository": "iagents00/stratos-ai-application",
+    "schemaVersion": 1,
+    "commit": "6ea1cb9669f00003b1d1a54e3ea7cca85d551106",
+    "builtAt": "2026-10-16T22:47:33.281Z",
+    "serviceWorker": "stratos-v448",
+    "dirty": true,
+    "deployment": null
+  },
+  "browser": "Google Chrome via Playwright CLI, own isolated session",
+  "finalMethod": "Virtual timer steps with 125ms real rendering settlement after scrolling and 25ms React commit settlement at each boundary; service workers blocked. scrollIntoViewIfNeeded follows actual scroll ancestors. Clock resumed before returning. No source or DOM behavior modified.",
+  "sourceSHA256": {
+    "src/landing/LandingMarketing.jsx": "8f020f0149a92f72f26686f8b1b2ae46168c9e5bfee1a215a47ead14e7c70a1e",
+    "src/landing/module-showcase.mjs": "d87366c426d24d84d442e1fcafce27a09f1fd2b6f79afdca96e017d4e4466438",
+    "src/landing/ModuleShowcase.jsx": "ee8ff753436f1ff023ff1bc085a58379b44ed9fdc94488c0d72fe29f6c570935",
+    "src/landing/ModuleShowcase.css": "e67f06fca1200bb8a413b669a1365b35f0ee032381d4b8728f06281c8af64c9c"
+  },
+  "capturesValidated": true,
+  "notes": [
+    "Both requested gallery PNGs were opened and checked: loaded images, legible text, complete gallery, no header overlay. Captured once; unchanged during harness confirmation.",
+    "Final cycle/offscreen checks use scrollIntoViewIfNeeded to address the real scroll ancestor, 125ms real render settlement, virtual timer steps and React commit settlement. All eight full cycle+wrap cases passed; all height spreads were 0px.",
+    "Initial exploratory interval/offscreen assertions were invalidated by insufficient scrolling/render synchronization; raw results are retained in rotation-initial.json and superseded here. No source changes were made.",
+    "Synthetic document.hidden test first observed both sliders advancing, then froze both for 5600ms, restored the descriptor, and observed both resume. This is not asserted as a genuine browser hidden transition."
+  ]
+}

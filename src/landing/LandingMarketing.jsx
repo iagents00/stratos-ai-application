@@ -37,9 +37,9 @@ function RotatingHeadline() {
   const [index, setIndex] = useState(0);
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const controller = createModuleRotation({ count: rotatingWords.length, pauseReasons: ["outside", ...(document.hidden ? ["hidden"] : []), ...(media.matches ? ["reduced-motion"] : [])], onUpdate: value => setIndex(value.index) });
+    const controller = createModuleRotation({ count: rotatingWords.length, pauseReasons: ["outside", ...(document.hidden ? ["hidden"] : [])], reducedMotion: media.matches, onUpdate: value => setIndex(value.index) });
     const visibility = () => controller.setPaused("hidden", document.hidden);
-    const preference = () => controller.setPaused("reduced-motion", media.matches);
+    const preference = () => controller.setReducedMotion(media.matches);
     const observer = new IntersectionObserver(entries => controller.setPaused("outside", !entries[0].isIntersecting), { threshold: .1 });
     observer.observe(heading.current);
     document.addEventListener("visibilitychange", visibility);

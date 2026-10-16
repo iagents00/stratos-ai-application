@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { readFileSync } from 'node:fs';
 import postcss from 'postcss';
 import { createModuleRotation, moduleIndexForKey, MODULE_ROTATION_MS, SHOWCASE_MODULES } from '../src/landing/module-showcase.mjs';
+import { rotatingWords } from '../src/landing/marketing-content.js';
 
 function clock() {
   let now = 0, next = 0;
@@ -26,20 +27,28 @@ function clock() {
   };
 }
 
-test('module rotation advances at exactly 2800 ms, wraps all six modules and stops after disposal', () => {
-  const timers = clock(), states = [];
-  const rotation = createModuleRotation({ count: SHOWCASE_MODULES.length, timers, onUpdate: state => states.push(state) });
+test('rotation wraps all six modules and seven headline options every 2800 ms, including reduced motion', () => {
   assert.equal(MODULE_ROTATION_MS, 2800);
-  timers.advance(2799); assert.equal(rotation.snapshot().index, 0);
-  timers.advance(1); assert.equal(rotation.snapshot().index, 1);
-  timers.advance(2800 * 5); assert.equal(rotation.snapshot().index, 0);
-  assert.equal(states.length, 7);
-  rotation.destroy(); assert.equal(timers.pending(), 0);
-  timers.advance(28000); assert.equal(states.length, 7);
+  assert.equal(SHOWCASE_MODULES.length, 6);
+  assert.equal(rotatingWords.length, 7);
+  for (const count of [SHOWCASE_MODULES.length, rotatingWords.length]) {
+    for (const reducedMotion of [false, true]) {
+      const timers = clock(), states = [];
+      const rotation = createModuleRotation({ count, reducedMotion, timers, onUpdate: state => states.push(state) });
+      assert.equal(rotation.snapshot().paused, false);
+      assert.equal(rotation.snapshot().reducedMotion, reducedMotion);
+      timers.advance(2799); assert.equal(rotation.snapshot().index, 0);
+      timers.advance(1); assert.equal(rotation.snapshot().index, 1);
+      timers.advance(2800 * (count - 1)); assert.equal(rotation.snapshot().index, 0);
+      assert.deepEqual(states.map(state => state.index), [...Array.from({ length: count }, (_, index) => index), 0]);
+      rotation.destroy(); assert.equal(timers.pending(), 0);
+      timers.advance(28000); assert.equal(states.length, count + 1);
+    }
+  }
 });
 
-test('hover, focus, visibility, viewport and reduced motion each pause independently and resume with a full interval', () => {
-  for (const reason of ['hover', 'focus', 'hidden', 'outside', 'reduced-motion']) {
+test('keyboard focus, document visibility and viewport each pause independently and resume with a full interval', () => {
+  for (const reason of ['focus', 'hidden', 'outside']) {
     const timers = clock();
     const rotation = createModuleRotation({ count: 6, timers, onUpdate() {} });
     timers.advance(1400); rotation.setPaused(reason, true);
@@ -50,6 +59,30 @@ test('hover, focus, visibility, viewport and reduced motion each pause independe
     timers.advance(1); assert.equal(rotation.snapshot().index, 1, reason);
     rotation.destroy();
   }
+});
+
+test('changing reduced motion updates its snapshot without pausing or restarting the current interval', () => {
+  const timers = clock(), states = [];
+  const rotation = createModuleRotation({ count: 6, reducedMotion: true, timers, onUpdate: state => states.push(state) });
+  timers.advance(1400);
+  rotation.setReducedMotion(false);
+  assert.equal(rotation.snapshot().reducedMotion, false);
+  assert.equal(rotation.snapshot().paused, false);
+  assert.equal(timers.pending(), 1);
+  timers.advance(1399); assert.equal(rotation.snapshot().index, 0);
+  timers.advance(1); assert.equal(rotation.snapshot().index, 1);
+  timers.advance(700);
+  rotation.setReducedMotion(true);
+  assert.equal(rotation.snapshot().reducedMotion, true);
+  rotation.setReducedMotion(true);
+  timers.advance(2099); assert.equal(rotation.snapshot().index, 1);
+  timers.advance(1); assert.equal(rotation.snapshot().index, 2);
+  const updates = states.length;
+  rotation.destroy();
+  rotation.setReducedMotion(false);
+  timers.advance(28000);
+  assert.equal(states.length, updates);
+  assert.equal(timers.pending(), 0);
 });
 
 test('selecting a module restarts a full interval and continues automatically without a resume control', () => {
@@ -68,7 +101,7 @@ test('selecting a module restarts a full interval and continues automatically wi
 
 test('selection preserves all independent pauses and resumes after the last interaction or environment reason clears', () => {
   const timers = clock();
-  const reasons = ['hover', 'focus', 'hidden', 'outside', 'reduced-motion'];
+  const reasons = ['focus', 'hidden', 'outside'];
   const rotation = createModuleRotation({ count: 6, timers, pauseReasons: reasons, onUpdate() {} });
   rotation.select(4);
   for (const reason of reasons.slice(0, -1)) {
@@ -77,7 +110,7 @@ test('selection preserves all independent pauses and resumes after the last inte
     assert.equal(timers.pending(), 0, reason);
     timers.advance(28000); assert.equal(rotation.snapshot().index, 4, reason);
   }
-  rotation.setPaused('reduced-motion', false);
+  rotation.setPaused('outside', false);
   assert.equal(rotation.snapshot().paused, false);
   timers.advance(2799); assert.equal(rotation.snapshot().index, 4);
   timers.advance(1);

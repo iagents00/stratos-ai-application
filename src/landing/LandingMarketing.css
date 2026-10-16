@@ -272,6 +272,6 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
   .stratos-marketing .smk-price-card { padding-inline: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .stratos-marketing .smk-rotating-word { transform: none; transition: none; }
+  .stratos-marketing .smk-rotating-word { transform: none; transition: opacity 160ms ease-out; }
   .stratos-marketing .smk-button, .stratos-marketing .smk-faq summary > svg { transition: none; }
 }

@@ -72,12 +72,13 @@ export function moduleIndexForKey(current, key, count) {
 
 // The same controller drives the browser and clock-based tests. Every resume
 // begins a full 2.8-second interval; hidden time never creates a catch-up jump.
-export function createModuleRotation({ count, onUpdate, initialIndex = 0, pauseReasons = [], timers = globalThis }) {
+export function createModuleRotation({ count, onUpdate, initialIndex = 0, pauseReasons = [], reducedMotion = false, timers = globalThis }) {
   let index = initialIndex;
   let timer = null;
   let destroyed = false;
+  let motionReduced = !!reducedMotion;
   const reasons = new Set(pauseReasons);
-  const snapshot = () => ({ index, paused: reasons.size > 0, reducedMotion: reasons.has("reduced-motion") });
+  const snapshot = () => ({ index, paused: reasons.size > 0, reducedMotion: motionReduced });
   const emit = () => { if (!destroyed) onUpdate(snapshot()); };
   const schedule = () => {
     if (timer !== null) timers.clearTimeout(timer);
@@ -98,6 +99,11 @@ export function createModuleRotation({ count, onUpdate, initialIndex = 0, pauseR
   emit(); schedule();
   return {
     setPaused,
+    setReducedMotion(value) {
+      if (destroyed || motionReduced === !!value) return;
+      motionReduced = !!value;
+      emit();
+    },
     select(nextIndex) {
       if (destroyed || !Number.isInteger(nextIndex) || nextIndex < 0 || nextIndex >= count) return;
       // A selection restarts the interval without overriding independent

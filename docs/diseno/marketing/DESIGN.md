@@ -16,6 +16,8 @@ colors:
   network-node: "#38546F"
   network-ring: "#9BAFBE"
   network-signal: "#294C68"
+  network-sky: "#59BFF4"
+  network-green: "#00DB40"
   white: "#FFFFFF"
   hover-surface: "#F1F7FA"
   hover-border: "#A3B3C1"
@@ -127,7 +129,7 @@ components:
 
 Este documento describe exclusivamente la landing de [LandingMarketing.jsx](../../../src/landing/LandingMarketing.jsx), sus estilos, el demostrador de módulos, [FeatureMotion.jsx](../../../src/landing/FeatureMotion.jsx) y [HeroFlowBackdrop.jsx](../../../src/landing/HeroFlowBackdrop.jsx). El [brief de la superficie](../../../.impeccable/surfaces/src-landing-landingmarketing-jsx.md) conserva la estrategia y las referencias elegidas por el usuario: Savio, claridad editorial de OpenAI y acabado sobrio de Apple. La dirección está fijada por esas referencias y por la identidad Stratos; este registro extrae el sistema construido, sin reemplazar `DESIGN.md`, `PRODUCT.md` ni el lenguaje de Rails en la raíz.
 
-El blanco domina el lienzo. La tinta azul sostiene los títulos, los controles, la selección de módulos y una sección de contraste. El hero incorpora una constelación geométrica de nodos y conexiones azul gris tenues, con el centro despejado para el texto; el cian conserva los detalles de marca. La tipografía ligera deja respirar la composición, mientras las capturas reales del producto aportan la evidencia visual. El usuario descartó las maquetas generadas: la interfaz mostrada procede de componentes reales con datos de demostración. Dos flujos ilustrativos explican la tesis del refinamiento: **consulta → contexto** y **actividad registrada → visibilidad**, con trazos SVG ligeros sobre gris muy claro y radios de panel ya establecidos.
+El blanco domina el lienzo. La tinta azul sostiene los títulos, los controles, la selección de módulos y una sección de contraste. El hero incorpora una constelación geométrica de nodos y conexiones azul gris tenues, con destellos azul cielo y verde vivo autorizados por el usuario y el centro despejado para el texto; el cian conserva los detalles de marca. La tipografía ligera deja respirar la composición, mientras las capturas reales del producto aportan la evidencia visual. El usuario descartó las maquetas generadas: la interfaz mostrada procede de componentes reales con datos de demostración. Dos flujos ilustrativos explican la tesis del refinamiento: **consulta → contexto** y **actividad registrada → visibilidad**, con trazos SVG ligeros sobre gris muy claro y radios de panel ya establecidos.
 
 **Key Characteristics:**
 
@@ -163,6 +165,7 @@ La paleta combina tinta azul profunda con cian nítido y neutros claros, sin tra
 - **Gris de flujos** (`motion-surface`): fondo muy claro de las dos tarjetas explicativas, tomado de la referencia fijada.
 - **Gris de selección** (`text-selection`): selección de texto general; la galería usa tinta y blanco para su selección local.
 - **Red azul gris** (`network-line`, `network-node`, `network-ring`, `network-signal`): conexiones, nodos, anillos y señales decorativas del hero, con opacidades contenidas sobre blanco.
+- **Luz azul cielo y verde vivo** (`network-sky`, `network-green`): exclusivamente señales y nodos decorativos del hero, con halo radial SVG localizado y opacidad contenida; sin filtros ni blur.
 - **Azul claro de interacción** (`hover-surface`): hover secundario y paneles suaves.
 - **Texto secundario** (`muted`): explicaciones, pies y navegación de menor énfasis.
 - **Línea clara** (`line`): límites de tarjetas, separadores y controles secundarios.
@@ -208,15 +211,15 @@ Las superficies generales permanecen planas, sin desenfoque de fondo. El blanco,
 
 El refinamiento del 16 de octubre incorpora seis composiciones blancas en [framed-20261016](../../../public/marketing/modules/framed-20261016/), todas de (1440 × 1020 px). El [marco HTML/CSS](../../../scripts/marketing-screenshot-frame.html) aporta un anillo translúcido de (15 px), radio exterior de (30 px), radio interior de (12 px) y sombra exterior `0 7px 14px rgba(10,27,46,.07)`. Los PNG originales se colocan a escala 1:1 en (x36, y36), salvo Métricas en (x58, y92); el interior RGB del WebP lossless coincide con el original en el área preservada. La composición añade el marco alrededor, sin redibujar la interfaz ni usar IA.
 
-El fondo geométrico usa SVG nativo sin etiquetas ni datos: escritorio tiene (28 nodos, 46 conexiones y 4 rutas) y móvil hasta (760 px), (16 nodos, 22 conexiones y 2 rutas). Una máscara radial despeja el centro; el arte es decorativo, queda fuera del árbol accesible y no intercepta entradas. Sus señales hacen tres viajes limitados de (6 s), con máximo de (20.4 s) en escritorio y (18.8 s) en móvil al incluir escalonamientos. Se suspenden fuera de pantalla o con documento oculto, y movimiento reducido conserva únicamente la red estática. [HeroFlowBackdrop.css](../../../src/landing/HeroFlowBackdrop.css) no usa filtros, blur, canvas ni dependencias de animación; React no actualiza por fotograma.
+El fondo del hero conserva 50 nodos, 108 conexiones y cuatro rutas en PC; 28 nodos, 42 conexiones y cuatro rutas hasta 760px. Cada ruta tiene un núcleo fino y una estela muy tenue en azul cielo o verde vivo; ocho nodos iluminados en PC y móvil usan gradientes radiales SVG locales. La máscara mantiene despejado el centro. Una sola pasada de 6s, escalonada, termina como máximo en 9s en ambos tamaños y se rearma cada 16s solo visible y en primer plano: quedan 7s reales de descanso. Movimiento reducido usa luz de 8s sin desplazamiento y un periodo de 24s, con al menos 13s de descanso. Un único timeout de baja frecuencia se limpia al ocultar, salir de viewport, activar modo seguro o desmontar; volver al hero reinicia una pasada limpia. Sin animación CSS infinita, RAF, WAAPI, filtros, blur, canvas ni React por fotograma.
 
-El movimiento comunica cambio de estado. Los botones y el chevrón de FAQ transicionan en (160 ms, ease-out). El panel de módulos aparece en (180 ms) con `cubic-bezier(.23, 1, .32, 1)` y suspende esa aparición mientras el demostrador contiene foco visible de teclado; sus pestañas responden a presión con `scale(.97)` en (120 ms), sin transformar el foco. El demostrador avanza cada (2800 ms) cuando está visible y no hay hover, foco de teclado, documento oculto o movimiento reducido. Elegir una pestaña reinicia el intervalo completo sin bloquear la reproducción: click y touch no retienen una pausa por foco; la exploración con teclado sí la mantiene hasta salir o volver al puntero. Al despejar la última razón independiente, el recorrido se reanuda con un intervalo completo y sin cambios atrasados. El [controlador](../../../src/landing/module-showcase.mjs) mantiene estas reglas fuera de React.
+El movimiento comunica cambio de estado. Los botones y el chevrón de FAQ transicionan en (160 ms, ease-out). El panel de módulos aparece en (180 ms) con `cubic-bezier(.23, 1, .32, 1)` y suspende esa aparición mientras el demostrador contiene foco visible de teclado; sus pestañas responden a presión con `scale(.97)` en (120 ms), sin transformar el foco. El demostrador avanza cada (2800 ms) cuando está visible, sin foco de teclado y con documento activo. El hover no lo detiene. Movimiento reducido conserva el ciclo de contenido con cambios sin desplazamiento. Elegir una pestaña reinicia el intervalo completo sin bloquear la reproducción: click y touch no retienen una pausa por foco; la exploración con teclado sí la mantiene hasta salir o volver al puntero. Al despejar la última razón independiente, el recorrido se reanuda con un intervalo completo y sin cambios atrasados. El [controlador](../../../src/landing/module-showcase.mjs) mantiene estas reglas fuera de React.
 
-El titular usa una instancia independiente del mismo controlador de (2800 ms), con crossfade y desplazamiento corto en (240 ms), `cubic-bezier(.23, 1, .32, 1)`. Se suspende fuera del viewport, con documento oculto o movimiento reducido. Las siete frases comparten la misma celda sin alterar la altura del hero; la galería mantiene su propio índice e intervalo.
+El titular usa una instancia independiente del mismo controlador de (2800 ms), con crossfade y desplazamiento corto en (240 ms), `cubic-bezier(.23, 1, .32, 1)`. Se suspende fuera del viewport o con documento oculto. Con movimiento reducido conserva las siete opciones y usa solo crossfade de opacidad de 160 ms, sin desplazamiento. Las siete frases comparten la misma celda sin alterar la altura del hero; la galería mantiene su propio índice e intervalo.
 
 Los diagramas recorren conexiones SVG con `stroke-dashoffset` durante dos ciclos automáticos limitados de (5.6 s, linear), con duración máxima de (11.44 s) incluida la demora de la última rama. Después permanecen quietos, sin botones de reproducción ni estados manuales de pausa, finalización o repetición. Salir del viewport u ocultar el documento suspende el avance CSS; movimiento reducido oculta solo las señales animadas y mantiene diagramas y textos legibles. El pie conserva únicamente la declaración de flujos ilustrativos. Se usan HTML/CSS y SVG nativos, sin GIF pesado, bucle infinito ni nuevas capturas de producto; los recorridos limitados respetan el guard de rendimiento móvil de Safari.
 
-**The Quiet State Rule.** `prefers-reduced-motion` detiene las rotaciones automáticas y elimina las transiciones y animaciones propias de esta superficie; la exploración manual permanece disponible.
+**The Quiet State Rule.** `prefers-reduced-motion` conserva la rotación del contenido para mostrar todas las opciones, elimina desplazamientos y entradas del panel y suaviza el titular con opacidad. El fondo sustituye el viaje de señales por luz lenta y finita. La exploración manual y la pausa por foco de teclado permanecen disponibles. Fuera de pantalla, con documento oculto o `data-lowfx`, el fondo deja de programar recorridos.
 
 ## Shapes
 
@@ -238,7 +241,7 @@ Header compacto con wordmark Stratos AI, enlaces de sección, login y acceso. El
 
 ### Module showcase
 
-Seis pestañas: Copilot, CRM, Mi Espacio, Métricas, Comando e iAgents. La seleccionada usa tinta Stratos y texto blanco; las demás conservan blanco, texto secundario y borde claro en móvil. Tienen roles `tablist`, `tab` y `tabpanel`, selección explícita, foco itinerante y navegación con flechas, Home y End. La rotación no anuncia cada cambio mediante una región viva. La selección manual conserva el avance automático cuando se despeja la interacción, sin botones de inicio o pausa; movimiento reducido mantiene la navegación manual disponible. Si una imagen falla, el panel conserva un texto de vista previa y su descripción.
+Seis pestañas: Copilot, CRM, Mi Espacio, Métricas, Comando e iAgents. La seleccionada usa tinta Stratos y texto blanco; las demás conservan blanco, texto secundario y borde claro en móvil. Tienen roles `tablist`, `tab` y `tabpanel`, selección explícita, foco itinerante y navegación con flechas, Home y End. La rotación no anuncia cada cambio mediante una región viva. La selección manual conserva el avance automático cuando se despeja la interacción, sin botones de inicio o pausa; movimiento reducido conserva la navegación automática y manual con cambios sin desplazamiento. Si una imagen falla, el panel conserva un texto de vista previa y su descripción.
 
 Cada captura identifica **Datos de demostración**. La [procedencia de los activos](../../../public/marketing/modules/README.md) detalla dimensiones, componentes y límites. Cinco imágenes proceden de la demo local. iAgents procede del componente real IACRM renderizado sin cambios en un harness local, porque la demo común no expone ese módulo; las solicitudes remotas estuvieron bloqueadas. Sus cifras y rótulos LIVE/Activo son ejemplos del componente, no evidencia de conexiones ni resultados reales. La disponibilidad de módulos y conexiones depende de cada empresa. Las capturas no contienen datos de clientes productivos.
 
@@ -266,7 +269,7 @@ El nuevo [asset y su procedencia](../../../public/marketing/modules/copilot-clos
 
 - **Do** conservar blanco dominante, selección de módulos en tinta y blanco, detalles cian y tipografía de peso regular en esta superficie.
 - **Do** mantener las capturas completas dentro de su marco, con proporción original, alt descriptivo y declaración de datos demo.
-- **Do** conservar teclado, foco visible, objetivos táctiles y suspensión por visibilidad o movimiento reducido al ampliar los módulos.
+- **Do** conservar teclado, foco visible, objetivos táctiles, suspensión por visibilidad y transiciones reducidas al ampliar los módulos.
 - **Do** mantener planes, contactos, login y diagnóstico conectados a sus fuentes y rutas existentes.
 - **Do** verificar fuentes por hash y conservar las licencias originales junto a los activos permitidos.
 
@@ -279,3 +282,7 @@ El nuevo [asset y su procedencia](../../../public/marketing/modules/copilot-clos
 - **Don't** incluir componentes, capturas, fuentes ni logo de esta landing en el paquete nativo: `vite.config.js` los excluye en `build:app`.
 
 La [revisión independiente del encuadre Copilot](../../../.impeccable/review/copilot-closeup-2026-10-16/REVIEW.md) obtuvo `disposition: ship`; cubre el refinamiento de la captura y sus consumidores.
+
+La red del hero se construye desde una mitad regular reflejada exactamente en X. Las señales cielo y verde vivo #00DB40 parten en fase desde los nodos interiores hacia los exteriores; sus longitudes son iguales por dispositivo. preserveAspectRatio="none" conserva toda la geometría y halos dentro del marco, con margen inferior. Verde extraído de la referencia proporcionada por el usuario, convertido a sRGB; sin incorporar el logo de WhatsApp al sitio.
+
+La [revisión final de red simétrica y reproducción](../../../.impeccable/review/active-sliders-2026-10-16/REVIEW.md) obtuvo `disposition: ship`, con geometría en cuatro tamaños y17checks de sliders.
