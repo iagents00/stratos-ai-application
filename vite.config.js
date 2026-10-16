@@ -67,6 +67,10 @@ export const SOLO_WEB = new Set([
  * son imágenes de vista previa para redes, que la app nunca pide.
  */
 const ESTATICOS_SOLO_WEB = [
+  'marketing',
+  'fonts/marketing',
+  'branding/stratos-logo-web-20261016.webp',
+  'branding/stratos-logo-web-20261016.webp.json',
   'duke',
   'entregables',
   'Manual-Stratos-IA-NSG.pdf',

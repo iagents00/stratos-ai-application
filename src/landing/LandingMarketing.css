@@ -1,0 +1,298 @@
+@font-face { font-family: "Stratos Switzer"; src: url("/fonts/marketing/switzer-variable.woff2") format("woff2"); font-style: normal; font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Stratos Inter"; src: url("/fonts/marketing/inter-variable.woff2") format("woff2"); font-style: normal; font-weight: 100 900; font-display: swap; }
+
+body.stratos-public-site { margin: 0; background: #fff; color: #0A1B2E; color-scheme: light; overflow-x: clip; }
+body.stratos-public-site #root { height: auto; min-height: 100dvh; }
+.stratos-marketing { --marketing-display: "Stratos Switzer", "Stratos Inter", sans-serif; --marketing-body: "Stratos Inter", sans-serif; --smk-ink: #0A1B2E; --smk-navy: #112B4A; --smk-cyan: #00D1FF; --smk-cyan-soft: #7EE9FF; --smk-muted: #526477; --smk-line: #DFE7EE; --smk-surface: #F6F8FA; position: relative; isolation: isolate; min-height: 100dvh; overflow-x: clip; background: #fff; color: var(--smk-ink); color-scheme: light; font-family: var(--marketing-body); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; font-feature-settings: "kern" 1, "liga" 1, "calt" 1; }
+.stratos-marketing *, .stratos-marketing *::before, .stratos-marketing *::after { box-sizing: border-box; }
+.stratos-marketing :is(h1, h2, h3, h4, p, figure) { margin: 0; }
+.stratos-marketing :is(h1, h2, h3, h4) { color: inherit; font-family: var(--marketing-display); font-weight: 400; letter-spacing: -.025em; text-wrap: balance; overflow-wrap: break-word; }
+.stratos-marketing h2 { font-size: clamp(36px, 4.3vw, 48px); line-height: 1.1; }
+.stratos-marketing h3 { font-size: 30px; line-height: 1.15; }
+.stratos-marketing p { text-wrap: pretty; }
+.stratos-marketing a { color: inherit; text-decoration: none; text-underline-offset: 4px; }
+.stratos-marketing :is(button, input, select, textarea) { font-family: var(--marketing-body); }
+.stratos-marketing button { font-weight: 500 !important; letter-spacing: normal; }
+.stratos-marketing :is(button, a, summary) { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.stratos-marketing :is(button, a, summary, [tabindex]):focus-visible { outline: 2px solid var(--smk-ink); outline-offset: 4px; }
+.stratos-marketing button:disabled { cursor: not-allowed; opacity: .55; }
+.stratos-marketing img { display: block; max-width: 100%; height: auto; }
+.stratos-marketing svg { flex-shrink: 0; }
+.stratos-marketing ::selection { color: var(--smk-ink); background: var(--smk-cyan-soft); }
+.stratos-marketing * { scrollbar-color: #A3B3C1 transparent; }
+.stratos-marketing *::-webkit-scrollbar-thumb { background-color: #A3B3C1; }
+.stratos-marketing [id] { scroll-margin-top: 96px; }
+.stratos-marketing .smk-container { width: min(1120px, 100%); margin-inline: auto; padding-inline: 24px; }
+.stratos-marketing .smk-section { padding-block: 96px; }
+.stratos-marketing .smk-section-intro { margin-top: 22px; max-width: 54ch; color: var(--smk-muted); font-size: 18px; line-height: 1.65; }
+.stratos-marketing .smk-section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 48px; margin-bottom: 48px; }
+.stratos-marketing .smk-section-heading h2 { flex: 1 1 58%; max-width: 690px; }
+.stratos-marketing .smk-section-heading > p { flex: 0 1 360px; color: var(--smk-muted); font-size: 17px; line-height: 1.65; max-width: 40ch; }
+.stratos-marketing .smk-caption { margin-top: 16px; color: var(--smk-muted); font-size: 12px; line-height: 1.6; text-align: center; }
+.stratos-marketing .smk-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.stratos-marketing .smk-skip-link { position: fixed; z-index: 200; top: 12px; left: 24px; min-height: 44px; padding: 10px 16px; border-radius: 10px; background: var(--smk-ink); color: #fff; transform: translateY(-160%); }
+.stratos-marketing .smk-skip-link:focus { transform: none; outline-color: var(--smk-cyan); }
+
+.stratos-marketing .smk-header { position: sticky; top: 0; z-index: 50; background: #fff; border-bottom: 1px solid #EDF1F4; }
+.stratos-marketing .smk-nav { display: flex; align-items: center; justify-content: space-between; gap: 28px; height: 72px; }
+.stratos-marketing .smk-brand { display: inline-flex; flex-shrink: 0; align-items: center; gap: 10px; min-height: 48px; white-space: nowrap; }
+.stratos-marketing .smk-brand img { width: 40px; height: 40px; object-fit: contain; }
+.stratos-marketing .smk-brand > span { font: 500 24px/1 var(--marketing-display); letter-spacing: -.03em; }
+.stratos-marketing .smk-brand > span > span { color: var(--smk-navy); font-weight: 400; }
+.stratos-marketing .smk-desktop-links { display: flex; flex-wrap: nowrap; align-items: center; gap: 24px; }
+.stratos-marketing .smk-desktop-links > a { display: inline-flex; align-items: center; min-height: 48px; white-space: nowrap; color: var(--smk-muted); font-size: 13px; font-weight: 500; }
+.stratos-marketing .smk-desktop-links > a:hover { color: var(--smk-ink); text-decoration: underline; text-decoration-color: var(--smk-cyan); text-decoration-thickness: 2px; }
+.stratos-marketing .smk-nav-actions { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
+.stratos-marketing .smk-nav-actions > a:not(.smk-button) { display: inline-flex; align-items: center; min-height: 48px; font-size: 13px; font-weight: 500; white-space: nowrap; }
+.stratos-marketing .smk-nav-actions > a:not(.smk-button):hover { text-decoration: underline; }
+.stratos-marketing .smk-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 13px 20px; border: 1px solid var(--smk-ink); border-radius: 10px; background: var(--smk-ink); color: #fff; font: 500 14px/1.4 var(--marketing-body); white-space: nowrap; cursor: pointer; transition: background-color 160ms ease-out, border-color 160ms ease-out; }
+.stratos-marketing .smk-button:hover { background: var(--smk-navy); border-color: var(--smk-navy); }
+.stratos-marketing .smk-button.smk-secondary { background: #fff; color: var(--smk-ink); border-color: var(--smk-line); }
+.stratos-marketing .smk-button.smk-secondary:hover { background: #F1F7FA; border-color: #A3B3C1; }
+.stratos-marketing .smk-nav-actions .smk-button { padding-inline: 16px; font-size: 12px; }
+.stratos-marketing .smk-menu-toggle { display: none; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 10px; border: 1px solid var(--smk-line); border-radius: 10px; color: var(--smk-ink); background: #fff; cursor: pointer; }
+.stratos-marketing .smk-mobile-menu { display: none; }
+
+.stratos-marketing .smk-hero { padding-top: 72px; padding-bottom: 20px; text-align: center; }
+.stratos-marketing .smk-hero-heading { position: relative; width: min(940px, 100%); margin-inline: auto; }
+.stratos-marketing .smk-hero h1 { font-size: 64px; line-height: 1.06; font-weight: 400; letter-spacing: -.025em; }
+.stratos-marketing .smk-hero h1 > span:not(.smk-sr-only) { display: block; }
+.stratos-marketing .smk-rotating-word { min-height: 1.1em; color: var(--smk-navy); opacity: 0; transform: translateY(6px); transition: opacity 180ms ease-out, transform 180ms ease-out; }
+.stratos-marketing .smk-rotating-word.is-visible { opacity: 1; transform: none; }
+.stratos-marketing .smk-headline-control { position: absolute; right: 0; bottom: 0; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 10px; border: 0; border-radius: 10px; background: transparent; color: var(--smk-muted); cursor: pointer; }
+.stratos-marketing .smk-headline-control:hover { background: var(--smk-surface); color: var(--smk-ink); }
+.stratos-marketing .smk-hero > p { max-width: 610px; margin: 24px auto 0; color: var(--smk-muted); font-size: 18px; line-height: 1.6; }
+.stratos-marketing .smk-actions { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.stratos-marketing .smk-modules-wrap { padding-inline: 0; }
+.stratos-marketing .smk-modules-wrap .stratos-modules { padding-top: 48px; padding-bottom: 64px; }
+.stratos-marketing .smk-service-strip { padding-block: 26px; background: var(--smk-surface); }
+.stratos-marketing .smk-ticker-track { width: min(1120px, 100%); margin-inline: auto; padding-inline: 24px; }
+.stratos-marketing .smk-ticker-track > div { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px 32px; }
+.stratos-marketing .smk-ticker-track > div[aria-hidden="true"] { display: none; }
+.stratos-marketing .smk-ticker-track span { color: #455D72; font: 400 18px/1.5 var(--marketing-display); white-space: nowrap; }
+
+.stratos-marketing .smk-problem { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 20px 72px; align-items: start; }
+.stratos-marketing .smk-problem h2 { grid-column: 1; max-width: 540px; }
+.stratos-marketing .smk-problem > .smk-section-intro { grid-column: 1; margin-top: 0; max-width: 43ch; }
+.stratos-marketing .smk-problem-points { grid-column: 2; grid-row: 1 / span 2; padding-top: 2px; }
+.stratos-marketing .smk-problem-points p { padding: 23px 0; border-bottom: 1px solid var(--smk-line); color: var(--smk-muted); font-size: 17px; line-height: 1.65; max-width: 42ch; }
+.stratos-marketing .smk-problem-points p:first-child { padding-top: 0; }
+.stratos-marketing .smk-solution { background: var(--smk-surface); }
+.stratos-marketing .smk-workflow-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 24px; }
+.stratos-marketing .smk-workflow-tabs button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 48px; padding: 11px 18px; border: 1px solid var(--smk-line); border-radius: 10px; background: #fff; color: var(--smk-muted); font-size: 14px; cursor: pointer; }
+.stratos-marketing .smk-workflow-tabs button[aria-pressed="true"] { border-color: var(--smk-ink); background: var(--smk-ink); color: #fff; }
+.stratos-marketing .smk-workflow-tabs button:hover:not([aria-pressed="true"]) { color: var(--smk-ink); border-color: #A3B3C1; }
+.stratos-marketing .smk-workflow-stage { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, .8fr); align-items: center; gap: 40px; padding: 28px; border: 1px solid var(--smk-line); border-radius: 24px; background: #fff; }
+.stratos-marketing .smk-workflow-stage img { width: 100%; height: auto; object-fit: contain; }
+.stratos-marketing .smk-workflow-stage > div { padding-right: 12px; }
+.stratos-marketing .smk-workflow-stage h3 { margin-bottom: 18px; }
+.stratos-marketing .smk-workflow-stage p { color: var(--smk-muted); font-size: 15px; line-height: 1.7; max-width: 36ch; }
+
+.stratos-marketing .smk-benefit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.stratos-marketing .smk-benefit-grid > article { min-width: 0; overflow: hidden; border-radius: 24px; }
+.stratos-marketing .smk-benefit-visual { display: flex; flex-direction: column; background: var(--smk-surface); }
+.stratos-marketing .smk-benefit-visual img { width: 100%; height: auto; object-fit: contain; padding: 16px 16px 0; }
+.stratos-marketing .smk-benefit-visual > div { padding: 28px 32px 32px; }
+.stratos-marketing .smk-benefit-visual h3 { font-size: 28px; }
+.stratos-marketing .smk-benefit-visual p { color: var(--smk-muted); font-size: 15px; line-height: 1.65; margin-top: 14px; max-width: 46ch; }
+.stratos-marketing .smk-benefit-text { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; min-height: 360px; padding: 48px; background: #F1F7FA; }
+.stratos-marketing .smk-benefit-text h3 { font-size: 36px; line-height: 1.12; }
+.stratos-marketing .smk-benefit-text p { color: var(--smk-muted); font-size: 16px; line-height: 1.7; margin-top: 20px; max-width: 40ch; }
+.stratos-marketing .smk-benefit-text a { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; margin-top: 24px; font-size: 14px; font-weight: 500; text-decoration: underline; text-decoration-color: #A3B3C1; }
+.stratos-marketing .smk-benefit-text a:hover { text-decoration-color: var(--smk-ink); }
+.stratos-marketing .smk-muted-panel { background: var(--smk-surface); }
+.stratos-marketing .smk-call-center { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); align-items: center; gap: 64px; width: min(1072px, calc(100% - 48px)); padding: 48px; border-radius: 24px; background: var(--smk-ink); color: #fff; }
+.stratos-marketing .smk-call-center > div > svg { margin-bottom: 24px; color: var(--smk-cyan-soft); }
+.stratos-marketing .smk-call-center h2 { font-size: 40px; line-height: 1.12; }
+.stratos-marketing .smk-call-center p { color: #D3E0ED; font-size: 16px; line-height: 1.7; margin-top: 20px; max-width: 48ch; }
+.stratos-marketing .smk-call-center .smk-button { margin-top: 28px; }
+.stratos-marketing .smk-button.smk-white { background: #fff; border-color: #fff; color: var(--smk-ink); }
+.stratos-marketing .smk-button.smk-white:hover { background: #E8F7FC; border-color: #E8F7FC; }
+.stratos-marketing .smk-call-center ul { list-style: none; padding: 0; margin: 0; }
+.stratos-marketing .smk-call-center li { padding: 20px 0; border-bottom: 1px solid #35495D; color: #F0F6FC; font-size: 16px; line-height: 1.5; }
+.stratos-marketing .smk-call-center li:last-child { border-bottom: 0; }
+.stratos-marketing .smk-call-center :is(a, button):focus-visible { outline-color: var(--smk-cyan-soft); }
+
+.stratos-marketing .smk-sector-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px; margin-top: 44px; }
+.stratos-marketing .smk-sector-grid article { min-width: 0; padding-top: 24px; border-top: 1px solid var(--smk-line); }
+.stratos-marketing .smk-sector-grid article > svg { margin-bottom: 24px; color: var(--smk-navy); }
+.stratos-marketing .smk-sector-grid h3 { font-size: 23px; line-height: 1.2; }
+.stratos-marketing .smk-sector-grid p { color: var(--smk-muted); font-size: 14px; line-height: 1.7; margin-top: 16px; }
+.stratos-marketing .smk-pricing { background: var(--smk-surface); }
+.stratos-marketing .smk-pricing .smk-section-heading { display: block; text-align: center; margin-bottom: 32px; }
+.stratos-marketing .smk-pricing .smk-section-heading h2 { margin-inline: auto; }
+.stratos-marketing .smk-pricing .smk-section-heading > p { max-width: 50ch; margin: 20px auto 0; }
+.stratos-marketing .smk-promo { max-width: 660px; margin: 0 auto 36px; padding: 20px 24px; border: 1px solid var(--smk-line); border-radius: 12px; background: #fff; text-align: center; }
+.stratos-marketing .smk-promo strong { font-size: 15px; font-weight: 500; }
+.stratos-marketing .smk-promo p { color: var(--smk-muted); font-size: 14px; margin-top: 7px; }
+.stratos-marketing .smk-promo > span { display: block; color: var(--smk-muted); font-size: 12px; margin-top: 6px; }
+.stratos-marketing .smk-price-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.stratos-marketing .smk-price-card { display: flex; flex-direction: column; min-width: 0; padding: 28px; border: 1px solid var(--smk-line); border-radius: 16px; background: #fff; }
+.stratos-marketing .smk-price-card.smk-featured { border-color: var(--smk-navy); }
+.stratos-marketing .smk-plan-name { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; min-height: 34px; }
+.stratos-marketing .smk-plan-name h3 { font-size: 28px; font-weight: 400; }
+.stratos-marketing .smk-plan-name > span { padding: 4px 7px; border-radius: 6px; background: #DDF8FF; color: var(--smk-navy); font-size: 10px; line-height: 1.5; font-weight: 500; }
+.stratos-marketing .smk-plan-description { min-height: 72px; margin-top: 16px; color: var(--smk-muted); font-size: 14px; line-height: 1.7; }
+.stratos-marketing .smk-price { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-top: 24px; font-variant-numeric: lining-nums; }
+.stratos-marketing .smk-price > span:first-child { font: 400 56px/1 var(--marketing-display); letter-spacing: -.035em; }
+.stratos-marketing .smk-price > span:last-child { color: var(--smk-muted); font-size: 13px; white-space: nowrap; }
+.stratos-marketing .smk-regular-price { color: var(--smk-muted); margin-top: 12px; font-size: 12px; }
+.stratos-marketing .smk-price-card > .smk-button { width: 100%; margin-top: 24px; padding-inline: 10px; }
+.stratos-marketing .smk-plan-users { margin-top: 12px; color: var(--smk-muted); text-align: center; font-size: 12px; }
+.stratos-marketing .smk-price-card ul { display: grid; align-content: start; gap: 15px; flex: 1; padding: 24px 0 0; margin: 24px 0 0; border-top: 1px solid var(--smk-line); list-style: none; }
+.stratos-marketing .smk-price-card li { display: flex; align-items: flex-start; gap: 9px; color: #334C64; font-size: 13px; line-height: 1.55; }
+.stratos-marketing .smk-price-card li > svg { color: #007D99; margin-top: 2px; }
+.stratos-marketing .smk-plan-activation { display: flex; align-items: center; gap: 8px; color: var(--smk-navy); margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--smk-line); font-size: 11px; }
+.stratos-marketing .smk-plan-activation > svg { color: #007D99; }
+.stratos-marketing .smk-pricing > .smk-container > .smk-caption { max-width: 70ch; margin: 24px auto 0; }
+
+.stratos-marketing .smk-enterprise { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); align-items: center; gap: 80px; }
+.stratos-marketing .smk-enterprise > div:first-child > p { color: var(--smk-muted); font-size: 17px; line-height: 1.7; margin-top: 24px; max-width: 49ch; }
+.stratos-marketing .smk-enterprise-services { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; margin-top: 28px; }
+.stratos-marketing .smk-enterprise-services > span { padding: 12px 0; border-bottom: 1px solid var(--smk-line); color: #334C64; font-size: 13px; }
+.stratos-marketing .smk-enterprise-offer { padding: 36px; border-radius: 24px; background: var(--smk-surface); }
+.stratos-marketing .smk-enterprise-offer h3 { font-size: 32px; }
+.stratos-marketing .smk-enterprise-offer > p { color: var(--smk-muted); font-size: 14px; line-height: 1.6; margin-top: 14px; }
+.stratos-marketing .smk-enterprise-offer .smk-enterprise-price { color: var(--smk-ink); font: 400 48px/1.15 var(--marketing-display); letter-spacing: -.03em; }
+.stratos-marketing .smk-enterprise-price > span { color: var(--smk-muted); font: 400 13px/1.6 var(--marketing-body); letter-spacing: normal; white-space: nowrap; }
+.stratos-marketing .smk-enterprise-offer .smk-button { width: 100%; margin-top: 28px; }
+.stratos-marketing .smk-enterprise-offer > .smk-caption { font-size: 11px; }
+.stratos-marketing .smk-comparison { border-top: 1px solid var(--smk-line); }
+.stratos-marketing .smk-comparison-table { overflow-x: auto; margin-top: 36px; border-block: 1px solid var(--smk-line); border-radius: 0; }
+.stratos-marketing .smk-comparison-table table { width: 100%; min-width: 640px; border-collapse: collapse; color: #334C64; text-align: left; font-size: 14px; line-height: 1.6; }
+.stratos-marketing .smk-comparison-table th, .stratos-marketing .smk-comparison-table td { width: 38%; padding: 20px; border-bottom: 1px solid var(--smk-line); vertical-align: top; }
+.stratos-marketing .smk-comparison-table th:first-child { width: 24%; }
+.stratos-marketing .smk-comparison-table thead th { color: var(--smk-ink); background: var(--smk-surface); font-weight: 500; }
+.stratos-marketing .smk-comparison-table tbody th { color: var(--smk-ink); font-weight: 500; }
+.stratos-marketing .smk-comparison-table tr > :last-child { background: #F1F7FA; }
+.stratos-marketing .smk-comparison-table tbody tr:last-child > * { border-bottom: 0; }
+.stratos-marketing .smk-faq { padding-top: 24px; }
+.stratos-marketing .smk-faq > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 0 48px; margin-top: 40px; }
+.stratos-marketing .smk-faq details { border-bottom: 1px solid var(--smk-line); }
+.stratos-marketing .smk-faq summary { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 82px; padding: 20px 0; list-style: none; cursor: pointer; color: var(--smk-ink); font: 500 15px/1.55 var(--marketing-body); }
+.stratos-marketing .smk-faq summary::-webkit-details-marker { display: none; }
+.stratos-marketing .smk-faq summary > svg { color: var(--smk-muted); transition: transform 160ms ease-out; }
+.stratos-marketing .smk-faq details[open] summary > svg { transform: rotate(180deg); }
+.stratos-marketing .smk-faq details > p { padding: 0 32px 24px 0; color: var(--smk-muted); font-size: 14px; line-height: 1.75; max-width: 62ch; }
+.stratos-marketing .smk-close { text-align: center; }
+.stratos-marketing .smk-close > svg { display: block; margin: 0 auto 24px; color: var(--smk-navy); }
+.stratos-marketing .smk-close h2 { max-width: 800px; margin-inline: auto; }
+.stratos-marketing .smk-close > p { max-width: 580px; margin: 24px auto 0; color: var(--smk-muted); font-size: 18px; line-height: 1.65; }
+.stratos-marketing .smk-close-login { display: inline-flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; min-height: 44px; margin-top: 20px; font-size: 12px; text-decoration: underline; text-decoration-color: #A3B3C1; }
+.stratos-marketing .smk-footer { padding-block: 48px 24px; border-top: 1px solid var(--smk-line); background: var(--smk-surface); }
+.stratos-marketing .smk-footer-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; }
+.stratos-marketing .smk-footer-top > div > p { color: var(--smk-muted); max-width: 35ch; font-size: 13px; margin-top: 16px; }
+.stratos-marketing .smk-footer-top > nav { display: flex; justify-content: flex-end; flex-wrap: wrap; align-items: center; gap: 8px 24px; max-width: 570px; }
+.stratos-marketing .smk-footer-top nav > a { display: inline-flex; align-items: center; min-height: 44px; font-size: 13px; }
+.stratos-marketing .smk-footer a:not(.smk-brand):hover { text-decoration: underline; }
+.stratos-marketing .smk-footer-bottom { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--smk-line); color: var(--smk-muted); font-size: 11px; }
+.stratos-marketing .smk-footer-bottom > div { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px; }
+.stratos-marketing .smk-footer-bottom a { display: inline-flex; align-items: center; min-height: 44px; }
+
+@media (max-width: 1029px) {
+  .stratos-marketing .smk-desktop-links, .stratos-marketing .smk-nav-actions { display: none; }
+  .stratos-marketing .smk-menu-toggle { display: inline-flex; }
+  .stratos-marketing .smk-mobile-menu { position: absolute; inset: 100% 0 auto; display: flex; flex-direction: column; max-height: calc(100dvh - 72px); overflow-y: auto; padding: 12px 24px 24px; background: #fff; border-bottom: 1px solid var(--smk-line); }
+  .stratos-marketing .smk-mobile-menu > a:not(.smk-button) { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 48px; padding: 12px 0; border-bottom: 1px solid #EDF1F4; font-size: 15px; }
+  .stratos-marketing .smk-mobile-menu > .smk-button { margin-top: 20px; }
+  .stratos-marketing .smk-section-heading { gap: 32px; }
+  .stratos-marketing .smk-problem { gap: 20px 40px; }
+  .stratos-marketing .smk-enterprise { gap: 40px; }
+  .stratos-marketing .smk-call-center { gap: 40px; padding: 40px; }
+  .stratos-marketing .smk-price-grid { gap: 16px; }
+  .stratos-marketing .smk-price-card { padding: 24px 20px; }
+  .stratos-marketing .smk-sector-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px; }
+  .stratos-marketing .smk-benefit-text { padding: 32px; }
+}
+@media (max-width: 760px) {
+  .stratos-marketing .smk-section { padding-block: 64px; }
+  .stratos-marketing h2 { font-size: 36px; }
+  .stratos-marketing .smk-section-heading { display: block; margin-bottom: 32px; }
+  .stratos-marketing .smk-section-heading > p { max-width: 54ch; margin-top: 20px; font-size: 16px; }
+  .stratos-marketing .smk-hero { padding-top: 56px; padding-bottom: 8px; }
+  .stratos-marketing .smk-hero h1 { font-size: 48px; }
+  .stratos-marketing .smk-headline-control { position: static; display: flex; margin: 8px auto 0; }
+  .stratos-marketing .smk-hero > p { max-width: 48ch; font-size: 17px; margin-top: 24px; padding-inline: 20px; }
+  .stratos-marketing .smk-modules-wrap .stratos-modules { padding-top: 40px; padding-bottom: 48px; }
+  .stratos-marketing .smk-problem { display: block; }
+  .stratos-marketing .smk-problem > .smk-section-intro { margin-top: 22px; max-width: 50ch; }
+  .stratos-marketing .smk-problem-points { padding-top: 32px; }
+  .stratos-marketing .smk-problem-points p { max-width: none; font-size: 16px; padding-block: 20px; }
+  .stratos-marketing .smk-workflow-stage { grid-template-columns: minmax(0, 1fr); gap: 28px; padding: 20px; }
+  .stratos-marketing .smk-workflow-stage > div { padding: 0 8px 8px; }
+  .stratos-marketing .smk-workflow-stage h3 { font-size: 28px; }
+  .stratos-marketing .smk-benefit-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .stratos-marketing .smk-benefit-text { min-height: 300px; }
+  .stratos-marketing .smk-benefit-text h3 { font-size: 32px; }
+  .stratos-marketing .smk-call-center { grid-template-columns: minmax(0, 1fr); gap: 28px; padding: 32px; }
+  .stratos-marketing .smk-call-center h2 { font-size: 34px; }
+  .stratos-marketing .smk-call-center li { padding-block: 16px; }
+  .stratos-marketing .smk-price-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; max-width: 500px; margin-inline: auto; }
+  .stratos-marketing .smk-price-card { padding: 28px; }
+  .stratos-marketing .smk-plan-description { min-height: 0; }
+  .stratos-marketing .smk-price-card ul { gap: 14px; }
+  .stratos-marketing .smk-enterprise { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .stratos-marketing .smk-enterprise-offer { max-width: 500px; width: 100%; padding: 32px; }
+  .stratos-marketing .smk-comparison-table th, .stratos-marketing .smk-comparison-table td { padding: 16px; }
+  .stratos-marketing .smk-faq { padding-top: 8px; }
+  .stratos-marketing .smk-faq > div { grid-template-columns: minmax(0, 1fr); gap: 0; margin-top: 28px; }
+  .stratos-marketing .smk-faq summary { min-height: 76px; }
+  .stratos-marketing .smk-footer-top { flex-direction: column; gap: 28px; }
+  .stratos-marketing .smk-footer-top > nav { justify-content: flex-start; }
+  .stratos-marketing .smk-footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+@media (max-width: 480px) {
+  .stratos-marketing .smk-container { padding-inline: 24px; }
+  .stratos-marketing .smk-modules-wrap { padding-inline: 0; }
+  .stratos-marketing .smk-section { padding-block: 56px; }
+  .stratos-marketing h2 { font-size: 32px; line-height: 1.14; }
+  .stratos-marketing .smk-hero { padding-top: 44px; }
+  .stratos-marketing .smk-hero h1 { font-size: clamp(32px, 9.3vw, 38px); line-height: 1.1; }
+  .stratos-marketing .smk-hero-heading { padding-bottom: 0; }
+  .stratos-marketing .smk-hero > p { font-size: 16px; line-height: 1.65; padding-inline: 16px; }
+  .stratos-marketing .smk-actions { gap: 10px; }
+  .stratos-marketing .smk-actions > .smk-button { flex: 1 1 100%; }
+  .stratos-marketing .smk-button { min-height: 44px; padding-block: 11px; font-size: 13px; }
+  .stratos-marketing .smk-section-intro { font-size: 16px; }
+  .stratos-marketing .smk-section-heading > p { margin-top: 18px; }
+  .stratos-marketing .smk-ticker-track { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; padding-inline: 24px; }
+  .stratos-marketing .smk-ticker-track > div { width: max-content; flex-wrap: nowrap; justify-content: flex-start; gap: 28px; padding-right: 24px; }
+  .stratos-marketing .smk-ticker-track span { font-size: 16px; }
+  .stratos-marketing .smk-workflow-tabs { gap: 6px; }
+  .stratos-marketing .smk-workflow-tabs button { min-height: 44px; padding: 10px 12px; font-size: 13px; gap: 6px; }
+  .stratos-marketing .smk-workflow-stage { padding: 16px; }
+  .stratos-marketing .smk-benefit-visual > div { padding: 24px; }
+  .stratos-marketing .smk-benefit-text { padding: 28px 24px; }
+  .stratos-marketing .smk-benefit-text h3 { font-size: 30px; }
+  .stratos-marketing .smk-call-center { width: calc(100% - 48px); padding: 28px 24px; }
+  .stratos-marketing .smk-call-center h2 { font-size: 30px; }
+  .stratos-marketing .smk-call-center p { font-size: 15px; }
+  .stratos-marketing .smk-call-center .smk-button { width: 100%; }
+  .stratos-marketing .smk-sector-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; margin-top: 32px; }
+  .stratos-marketing .smk-sector-grid article > svg { margin-bottom: 18px; }
+  .stratos-marketing .smk-price-card { padding: 26px 24px; }
+  .stratos-marketing .smk-enterprise-services { gap: 0 18px; }
+  .stratos-marketing .smk-enterprise-services > span { font-size: 12px; }
+  .stratos-marketing .smk-enterprise-offer { padding: 28px 24px; }
+  .stratos-marketing .smk-enterprise-offer .smk-enterprise-price { font-size: 42px; }
+  .stratos-marketing .smk-faq summary { font-size: 14px; gap: 16px; }
+  .stratos-marketing .smk-faq details > p { padding-right: 0; }
+  .stratos-marketing .smk-close > p { font-size: 16px; }
+  .stratos-marketing .smk-footer { padding-top: 36px; }
+  .stratos-marketing .smk-footer-top > nav { gap: 4px 20px; }
+}
+@media (max-width: 350px) {
+  .stratos-marketing .smk-container { padding-inline: 20px; }
+  .stratos-marketing .smk-modules-wrap { padding-inline: 0; }
+  .stratos-marketing .smk-nav { gap: 12px; }
+  .stratos-marketing .smk-brand > span { font-size: 22px; }
+  .stratos-marketing .smk-hero h1 { font-size: 32px; }
+  .stratos-marketing .smk-hero > p { padding-inline: 10px; }
+  .stratos-marketing .smk-workflow-tabs button { padding-inline: 9px; font-size: 12px; }
+  .stratos-marketing .smk-call-center { width: calc(100% - 40px); padding-inline: 20px; }
+  .stratos-marketing .smk-price-card { padding-inline: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stratos-marketing .smk-rotating-word { opacity: 1; transform: none; transition: none; }
+  .stratos-marketing .smk-button, .stratos-marketing .smk-faq summary > svg { transition: none; }
+}

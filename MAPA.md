@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**258 archivos · 81.966 líneas**
+**262 archivos · 81.050 líneas**
 
 ---
 
@@ -415,7 +415,6 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `LandingMarketing.jsx` | 1576 | _sin describir_ |
 | `PrivacyPolicy.jsx` | 1222 | _sin describir_ |
 | `ManualMarketing.jsx` | 1026 | _sin describir_ |
 | `manual-content.js` | 1004 | _sin describir_ |
@@ -428,12 +427,17 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `DataDeletion.jsx` | 554 | _sin describir_ |
 | `PricingScreen.jsx` | 552 | _sin describir_ |
 | `DukeLeadRouter.jsx` | 343 | _sin describir_ |
+| `LandingMarketing.css` | 299 | _sin describir_ |
 | `ManualGasil.jsx` | 285 | _sin describir_ |
 | `ManualNSG.jsx` | 285 | _sin describir_ |
 | `ManualLegacy.jsx` | 246 | _sin describir_ |
 | `ManualBrasa.jsx` | 235 | _sin describir_ |
 | `ManualMuebleria.jsx` | 224 | _sin describir_ |
 | `LoginScreenNative.jsx` | 183 | _sin describir_ |
+| `marketing-content.js` | 108 | _sin describir_ |
+| `ModuleShowcase.jsx` | 97 | _sin describir_ |
+| `LandingMarketing.jsx` | 96 | _sin describir_ |
+| `ModuleShowcase.css` | 60 | _sin describir_ |
 
 ### `src/lib/`
 
@@ -770,7 +774,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/CRM/index.jsx` (6669 líneas)
 - `src/app/App.jsx` (3259 líneas)
 - `src/app/views/Marketing.jsx` (3084 líneas)
-- `src/landing/LandingMarketing.jsx` (1576 líneas)
 - `src/landing/PrivacyPolicy.jsx` (1222 líneas)
 - `src/landing/ManualMarketing.jsx` (1026 líneas)
 - `src/landing/manual-content.js` (1004 líneas)
@@ -808,6 +811,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/App.css` (321 líneas)
 - `src/app/features/Admin/PipelineConfiguratorAdmin.jsx` (312 líneas)
 - `src/clients/clinica-dental/config.js` (311 líneas)
+- `src/landing/LandingMarketing.css` (299 líneas)
 - `src/lib/lead-save.js` (288 líneas)
 - `src/app/features/Admin/PlatformAdminConsole.jsx` (285 líneas)
 - `src/landing/ManualGasil.jsx` (285 líneas)
@@ -868,6 +872,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/components/CopilotMark.jsx` (115 líneas)
 - `src/clients/demo/config.js` (113 líneas)
 - `src/app/features/Admin/PlatformCompanyCRM.css` (111 líneas)
+- `src/landing/marketing-content.js` (108 líneas)
 - `src/lib/rails-config.js` (107 líneas)
 - `src/lib/chunk-recovery.js` (103 líneas)
 - `src/app/views/CRM/command-metrics.js` (101 líneas)
@@ -876,6 +881,8 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/Admin/CompanySetupAdmin.jsx` (99 líneas)
 - `src/app/constants/areas.js` (97 líneas)
 - `src/app/views/CRM/date-range.js` (97 líneas)
+- `src/landing/ModuleShowcase.jsx` (97 líneas)
+- `src/landing/LandingMarketing.jsx` (96 líneas)
 - `src/app/views/LandingPages/PublicLanding.jsx` (93 líneas)
 - `src/clients/tgenius/config.js` (90 líneas)
 - `src/app/features/Admin/RailsSettings.css` (86 líneas)

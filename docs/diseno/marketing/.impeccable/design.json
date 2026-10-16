@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-16T17:23:56.644Z",
+  "title": "Design System: Stratos AI — sitio público",
+  "extensions": {
+    "motion": [
+      {
+        "name": "module-interval",
+        "value": "2800ms",
+        "purpose": "Rotación de módulos; pausada por hover, foco, fuera de viewport, documento oculto, selección manual o movimiento reducido."
+      },
+      {
+        "name": "reveal",
+        "value": "180ms ease-out",
+        "purpose": "Aparición del panel y transición de la frase; desactivada con movimiento reducido."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "header-compact",
+        "value": "1029px"
+      },
+      {
+        "name": "landing-stack",
+        "value": "760px",
+        "purpose": "Control de pausa del titular estático, flex y margin 8px auto 0."
+      },
+      {
+        "name": "mobile",
+        "value": "480px"
+      },
+      {
+        "name": "narrow",
+        "value": "350px"
+      }
+    ],
+    "focus": {
+      "value": "2px solid #0A1B2E",
+      "offset": "4px",
+      "showcaseOffset": "3px",
+      "tabOffset": "-3px",
+      "darkSurfaceColor": "#7EE9FF"
+    },
+    "guards": {
+      "boundary": "Solo landing marketing. Conserva DESIGN.md, PRODUCT.md y .impeccable/design.json de Rails en raíz.",
+      "selectors": [
+        ".stratos-marketing",
+        "body.stratos-public-site"
+      ],
+      "bodyClassLifecycle": "Añadir al montar, eliminar al desmontar.",
+      "fontAliases": [
+        "Stratos Switzer",
+        "Stratos Inter"
+      ],
+      "routes": "www.getstratosai.com es el único dominio de marketing; /login, otros dominios, tenants y nativo conservan su resolución existente.",
+      "nativeExclusions": [
+        "marketing",
+        "fonts/marketing",
+        "branding/stratos-logo-web-20261016.webp",
+        "branding/stratos-logo-web-20261016.webp.json"
+      ],
+      "fontLicenses": "Switzer FFL: binario ignorado y descargado en preparación web con hash fijado. Inter OFL: original completo versionado con licencia. Ver public/fonts/marketing/README.md.",
+      "assets": "Capturas reales con datos demo; procedencia y límite del harness iAgents en public/marketing/modules/README.md.",
+      "review": ".impeccable/review/marketing-2026-10-16/REVIEW.md"
+    }
+  }
+}

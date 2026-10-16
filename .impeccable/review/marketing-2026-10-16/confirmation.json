@@ -1,0 +1,127 @@
+{
+  "results": [
+    {
+      "name": "desktop",
+      "layout": {
+        "width": 1440,
+        "documentWidth": 1440,
+        "bodyWidth": 1440,
+        "control": {
+          "left": 1146,
+          "right": 1190,
+          "top": 239.21875,
+          "bottom": 283.21875,
+          "width": 44,
+          "height": 44
+        },
+        "subtitle": {
+          "left": 415,
+          "right": 1025,
+          "top": 307.21875,
+          "bottom": 364.8125
+        },
+        "separation": 24,
+        "overlap": false,
+        "position": "absolute",
+        "fonts": true,
+        "visibleImagesLoaded": true
+      },
+      "titleClickable": true,
+      "galleryClickable": true,
+      "pass": true
+    },
+    {
+      "name": "mobile",
+      "layout": {
+        "width": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "control": {
+          "left": 173,
+          "right": 217,
+          "top": 244.671875,
+          "bottom": 288.671875,
+          "width": 44,
+          "height": 44
+        },
+        "subtitle": {
+          "left": 24,
+          "right": 366,
+          "top": 312.671875,
+          "bottom": 391.84375
+        },
+        "separation": 24,
+        "overlap": false,
+        "position": "static",
+        "fonts": true,
+        "visibleImagesLoaded": true
+      },
+      "titleClickable": true,
+      "galleryClickable": true,
+      "pass": true
+    },
+    {
+      "name": "user-320",
+      "layout": {
+        "width": 320,
+        "documentWidth": 320,
+        "bodyWidth": 320,
+        "control": {
+          "left": 138,
+          "right": 182,
+          "top": 230.5625,
+          "bottom": 274.5625,
+          "width": 44,
+          "height": 44
+        },
+        "subtitle": {
+          "left": 20,
+          "right": 300,
+          "top": 298.5625,
+          "bottom": 377.734375
+        },
+        "separation": 24,
+        "overlap": false,
+        "position": "static",
+        "fonts": true,
+        "visibleImagesLoaded": true
+      },
+      "titleClickable": true,
+      "galleryClickable": true,
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "httpErrors": [],
+  "release": {
+    "project": "stratos-ai-application",
+    "projectId": "prj_Epv30SFnQmJGnxy3LdYLKV8NwDLi",
+    "repository": "iagents00/stratos-ai-application",
+    "schemaVersion": 1,
+    "commit": "21d509135f28579e6fca909302ceaff798bf6bc3",
+    "builtAt": "2026-10-16T17:15:18.734Z",
+    "serviceWorker": "stratos-v443",
+    "dirty": true,
+    "deployment": null
+  },
+  "captures": [
+    {
+      "path": "desktop.png",
+      "width": 1440,
+      "height": 9064,
+      "sha256": "4b67ee5308ad37a2c63e9aebb26839e17fe382c014c1c3789e596040645b8c13"
+    },
+    {
+      "path": "mobile.png",
+      "width": 390,
+      "height": 12753,
+      "sha256": "9a0b6a80daf328911c7e7e55129c666819975241e2522d7cff7f4ad4a5720730"
+    },
+    {
+      "path": "user-320.png",
+      "width": 320,
+      "height": 13244,
+      "sha256": "9442e94adb9c432c6232a7c1bad046162cdfa09f15f81d39fd75249aba10fc6f"
+    }
+  ]
+}

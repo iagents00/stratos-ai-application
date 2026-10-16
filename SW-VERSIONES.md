@@ -1,5 +1,9 @@
 # Historial de versiones del Service Worker (CACHE_VERSION)
 
+## v443 — Sitio oficial y capturas reales
+
+Portada blanca con identidad Stratos, tipografía Switzer e Inter, slider inicial conservado y galería de seis módulos que avanza cada 2.8 segundos. Las imágenes son capturas reales con datos de demostración. Incluye pausa, selección manual, teclado y movimiento reducido. Mantiene planes, contacto y acceso fijo; los recursos comerciales quedan fuera del binario móvil. No requiere cambios en Supabase.
+
 ## v442 — Vista independiente por pestaña
 
 El acceso común guarda su vista por pestaña para que una sesión antigua abierta en otra pestaña no cambie el destino tras F5. Conserva el CRM inicial y la navegación elegida; las entradas específicas de clientes siguen su comportamiento existente. No requiere nuevos cambios en Supabase.
