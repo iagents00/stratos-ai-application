@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v438'; // v438: cartera completa en caché IndexedDB aislada por sesión.
+const CACHE_VERSION = 'stratos-v439'; // v439: administración global de empresas, usuarios y Marketing.
 // const CACHE_VERSION = 'stratos-v424'; // v424: ficha de Google Play (textos + graficos de tienda)
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;

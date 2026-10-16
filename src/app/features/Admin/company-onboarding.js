@@ -1,6 +1,10 @@
 export const isManagedCompany = company => company?.meta_config?.onboarding?.createdFrom === 'whatsapp_admin'
   && company?.meta_config?.platform?.kind !== 'partner';
 
+export const ROOT_COMPANY_ROLES = ['admin', 'director', 'asesor', 'ceo', 'super_admin', 'marketing', 'colaborador'];
+
+export const visibleCompanies = (organizations = [], root = false) => root ? organizations : organizations.filter(isManagedCompany);
+
 export function companySummary(company, profiles = []) {
   const team = profiles.filter(person => person.organization_id === company.id && person.active === true);
   return {
@@ -27,13 +31,13 @@ export function validateCompany({ name, seats }) {
   return '';
 }
 
-export function validateCompanyUser(form, company, profiles) {
-  if (!company || company.active !== true || !isManagedCompany(company)) return 'Selecciona una empresa activa creada desde esta consola.';
+export function validateCompanyUser(form, company, profiles, { root = false } = {}) {
+  if (!company || company.active !== true || (!root && !isManagedCompany(company))) return 'Selecciona una empresa activa creada desde esta consola.';
   if (form.organization_id !== company.id) return 'La empresa seleccionada cambió. Revisa los datos antes de continuar.';
   if (!form.name.trim() || form.name.trim().length > 120) return 'Escribe el nombre de la persona (máximo 120 caracteres).';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return 'Escribe un correo válido.';
   if (form.email.trim().length > 254) return 'El correo no puede superar 254 caracteres.';
-  if (!['admin', 'director', 'asesor'].includes(form.role)) return 'Selecciona un rol válido.';
+  if (!(root ? ROOT_COMPANY_ROLES : ['admin', 'director', 'asesor']).includes(form.role)) return 'Selecciona un rol válido.';
   const summary = companySummary(company, profiles);
   if (!summary.hasAdmin && form.role !== 'admin') return 'Crea primero al administrador de la empresa.';
   if (!summary.available) return 'Esta empresa ya utiliza todas sus licencias. Amplía el cupo antes de agregar usuarios.';

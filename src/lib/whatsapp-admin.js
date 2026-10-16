@@ -54,12 +54,18 @@ async function call(action, payload = {}) {
   );
   const body = await response.json().catch(() => ({}));
   if (!response.ok || body?.ok === false) {
-    throw new Error(body?.error || `No se pudo completar la acción (HTTP ${response.status}).`);
+    const error = new Error(body?.error || `No se pudo completar la acción (HTTP ${response.status}).`);
+    error.status = response.status;
+    error.code = body?.code;
+    throw error;
   }
   return body;
 }
 
 export const loadWhatsAppAdmin = () => call("bootstrap");
+export const loadPlatformUsers = () => call("list_platform_users");
+export const updatePlatformUser = (payload) => call("update_platform_user", payload);
+export const updatePlatformCompany = (payload) => call("update_platform_company", payload);
 export const loadTemporaryCredentials = () => call("list_temporary_credentials");
 export const createPlatformPartner = (payload) => call("create_partner", payload);
 export const updatePlatformPartnerQuota = (userId, companyLimit) => call("update_partner_quota", { user_id: userId, company_limit: companyLimit });
