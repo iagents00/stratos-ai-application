@@ -1,0 +1,41 @@
+[
+  {
+    "check": "runtime",
+    "exit_code": 0,
+    "seconds": 13.7,
+    "log": "/tmp/stratos-active-sliders-runtime.log",
+    "completedAt": "2026-10-16T23:10:43.053501+00:00",
+    "head": "6ea1cb9669f00003b1d1a54e3ea7cca85d551106",
+    "heroSourceSHA256": {
+      "src/landing/HeroFlowBackdrop.jsx": "b009390515159a2f43cde392d052c69342c11ee101911d5b6dcbe3c51fee24b9",
+      "src/landing/HeroFlowBackdrop.css": "53c0852cc2114b73fce1729386499288d68b3ee1c963fbde7a12372049e21d4e"
+    },
+    "heroSourceUnchangedDuringValidation": true
+  },
+  {
+    "check": "test",
+    "exit_code": 0,
+    "seconds": 15.72,
+    "log": "/tmp/stratos-active-sliders-test.log",
+    "completedAt": "2026-10-16T23:10:58.793345+00:00",
+    "head": "6ea1cb9669f00003b1d1a54e3ea7cca85d551106",
+    "heroSourceSHA256": {
+      "src/landing/HeroFlowBackdrop.jsx": "b009390515159a2f43cde392d052c69342c11ee101911d5b6dcbe3c51fee24b9",
+      "src/landing/HeroFlowBackdrop.css": "53c0852cc2114b73fce1729386499288d68b3ee1c963fbde7a12372049e21d4e"
+    },
+    "heroSourceUnchangedDuringValidation": true
+  },
+  {
+    "check": "app",
+    "exit_code": 0,
+    "seconds": 3.63,
+    "log": "/tmp/stratos-active-sliders-app.log",
+    "completedAt": "2026-10-16T23:11:02.440761+00:00",
+    "head": "6ea1cb9669f00003b1d1a54e3ea7cca85d551106",
+    "heroSourceSHA256": {
+      "src/landing/HeroFlowBackdrop.jsx": "b009390515159a2f43cde392d052c69342c11ee101911d5b6dcbe3c51fee24b9",
+      "src/landing/HeroFlowBackdrop.css": "53c0852cc2114b73fce1729386499288d68b3ee1c963fbde7a12372049e21d4e"
+    },
+    "heroSourceUnchangedDuringValidation": true
+  }
+]

@@ -1,18 +1,18 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-16T19:59:04.547608+00:00",
+  "generatedAt": "2026-10-16T22:53:45.064454+00:00",
   "title": "Design System: Stratos AI — sitio público",
   "extensions": {
     "motion": [
       {
         "name": "module-interval",
         "value": "2800ms",
-        "purpose": "Avance automático cada 2800ms; suspensión por hover, foco de teclado, fuera de viewport, documento oculto o movimiento reducido. Selección manual reinicia el intervalo sin bloqueo permanente; click/touch no retienen foco. Sin botones de reproducción."
+        "purpose": "Seis opciones automáticas, también con movimiento reducido y hover. Suspensión por foco de teclado, fuera de viewport o documento oculto. Selección reinicia intervalo; sin controles de reproducción."
       },
       {
         "name": "headline-reveal",
-        "value": "240ms cubic-bezier(.23, 1, .32, 1)",
-        "purpose": "Crossfade y desplazamiento corto de la frase; siete elementos comparten celda CSS grid y conservan altura. Sin transición con movimiento reducido."
+        "value": "240ms; reduced160ms opacity",
+        "purpose": "Siete elementos en celda grid estable. Crossfade corto; movimiento reducido conserva solo opacidad160ms sin desplazamiento."
       },
       {
         "name": "module-reveal",
@@ -32,12 +32,12 @@
       {
         "name": "headline-interval",
         "value": "2800ms",
-        "purpose": "Instancia independiente del controlador compartido con galería; suspensión fuera de viewport, documento oculto o movimiento reducido. Sin controles manuales."
+        "purpose": "Siete opciones, con o sin movimiento reducido. Suspensión únicamente offscreen/hidden; instancia independiente de galería."
       },
       {
         "name": "hero-network-travel",
-        "value": "6s linear × 3",
-        "purpose": "Viajes limitados del fondo SVG; máximo activo 20.4s en escritorio y 18.8s en móvil incluidos escalonamientos. Suspensión offscreen/hidden; red estática con movimiento reducido."
+        "value": "6s ×1; period16s",
+        "purpose": "Cuatro rutas/ocho nodos de luz en PC y móvil, exacta reflexiónX; trayectorias iguales en fase haciaafuera. Núcleo y estela tenue sky/verde#00DB40. Señales6sdelay0,nodosdelay0/3:max9speriodo16descanso7s. Reduced8s sinviaje,max11periodo24descanso13s. Timeoutcanceladohidden/offscreen/lowfx; sininfinito, filtros, blur, RAF niWAAPI."
       }
     ],
     "breakpoints": [
@@ -98,15 +98,15 @@
       ],
       "fontLicenses": "Switzer FFL: binario ignorado y descargado en preparación web con hash fijado. Inter OFL: original completo versionado con licencia. Ver public/fonts/marketing/README.md.",
       "assets": "Seis composiciones lossless 1440×1020 en public/marketing/modules/framed-20261016/*.webp; originales PNG a escala 1:1 en x36/y36 (Métricas x58/y92), interior RGB idéntico en el área preservada y marco blanco/translúcido de scripts/marketing-screenshot-frame.html, sin IA. La figura no añade fondo, radio ni altura mínima; la galería real y el flujo manual conservan las capturas. Procedencia y límite del harness iAgents en public/marketing/modules/README.md.",
-      "review": ".impeccable/review/hero-flow-2026-10-16/REVIEW.md",
+      "review": ".impeccable/review/active-sliders-2026-10-16/REVIEW.md",
       "flowTruth": "Consulta → contexto: Consultar cartera / Copilot / Clientes, Pendientes, Próximos pasos. Actividad registrada → visibilidad: Actividad registrada / Comando / Cartera, Equipo, Métricas. Flujos ilustrativos sujetos a permisos/configuración; no prometen acciones, envíos ni guardados autónomos.",
       "flowLifecycle": "Dos recorridos limitados para Safari; animación CSS suspendida fuera de viewport o con documento oculto. Movimiento reducido mantiene el diagrama estático sin señales. Footer solo declaración ilustrativa, sin controles de reproducción. HTML/CSS/SVG nativos, sin GIF pesado.",
       "historicalReview": ".impeccable/review/marketing-2026-10-16/REVIEW.md",
-      "reviewStatus": "ship: revisión independiente mediante subagente general,23 comprobaciones confirmadas y8capturas en4tamaños. Alturas estables. document.hidden real no verificado en el harness; listener sintético documentado.",
+      "reviewStatus": "ship: revisión independiente final de subagente general;201tests,17sliders,12lifecycleygeometríaen4anchosaprobados. Evidencialocal, hidden sintético; producción requiere comprobación posterior.",
       "previousMotionReview": ".impeccable/review/motion-2026-10-16/REVIEW.md",
       "showcaseLayout": "Los seis paneles comparten una retícula para conservar la altura del contenido más alto; los inactivos permanecen ocultos y sin interacción.",
       "header": "Header con wordmark Stratos AI sin icono; footer conserva logo S original.",
-      "playback": "Sin controles de inicio/pausa/repetición en titular, galería o FeatureMotion. Galería reanuda al despejar la última razón independiente; teclado conserva pausa durante su exploración.",
+      "playback": "Sin botones de reproducción. Seis módulos y siete titulares recorren todas las opciones con cualquier preferencia de movimiento; reduced elimina desplazamientos. Hover no detiene la galería; teclado, hidden y offscreen conservan pausa.",
       "copilotCloseup": {
         "asset": "public/marketing/modules/copilot-closeup-20261016/copilot.webp",
         "cssCapture": [
@@ -132,7 +132,8 @@
         "evidence": ".impeccable/review/copilot-closeup-2026-10-16/QA.json",
         "review": ".impeccable/review/copilot-closeup-2026-10-16/REVIEW.md",
         "reviewStatus": "ship: revisión independiente de subagente general, alcance limitado al asset y sus dos consumidores; sin nuevo comp ni QUALITY BAR."
-      }
+      },
+      "previousHeroReview": ".impeccable/review/hero-flow-2026-10-16/REVIEW.md"
     },
     "shadows": [
       {
@@ -150,20 +151,29 @@
     ],
     "heroBackdrop": {
       "desktop": {
-        "nodes": 28,
-        "connections": 46,
+        "nodes": 50,
+        "connections": 108,
         "routes": 4
       },
       "mobile": {
-        "nodes": 16,
-        "connections": 22,
-        "routes": 2
+        "nodes": 28,
+        "connections": 42,
+        "routes": 4
       },
       "breakpoint": "760px",
       "desktopViewBox": "0 0 1440 500",
       "mobileViewBox": "0 0 390 560",
       "semantics": "Decorativo, aria-hidden, sin etiquetas ni datos, pointer-events:none; máscara radial despeja el centro.",
-      "implementation": "SVG geométrico nativo con paleta azul gris sobre blanco; sin filtros/blur/canvas/dependencias ni React por fotograma."
+      "implementation": "Ráfagas CSS finitas rearmadas por un timeout16s/24s, solo visibleforeground y fuera de modo seguro. Descanso real. Sin filtros/blur/canvas/dependencias ni React por fotograma.",
+      "light": {
+        "sky": "#59BFF4",
+        "desktopGlints": 8,
+        "mobileGlints": 8,
+        "layersPerRoute": 2,
+        "material": "Núcleo SVG1.6px, estela6px a opacidad.14, halo radial localizado sin filtro.",
+        "green": "#00DB40"
+      },
+      "geometry": "Mitad triangular regular reflejada en X; trayectorias iguales y en fase, desde dentro hacia fuera. preserveAspectRatio none, halos dentro y margen inferior59unidadesPC/38móvil."
     }
   }
 }

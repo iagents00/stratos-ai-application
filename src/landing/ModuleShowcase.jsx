@@ -9,7 +9,6 @@ export default function ModuleShowcase({ appUrl = "/login" }) {
   const tabList = useRef(null);
   const tabs = useRef([]);
   const rotation = useRef(null);
-  const pointerInside = useRef(false);
   const focusInside = useRef(false);
   const [state, setState] = useState({ index: 0, paused: true, reducedMotion: false });
   const [missingImages, setMissingImages] = useState([]);
@@ -18,12 +17,13 @@ export default function ModuleShowcase({ appUrl = "/login" }) {
     const media = window.matchMedia?.("(prefers-reduced-motion: reduce)");
     const controller = createModuleRotation({
       count: SHOWCASE_MODULES.length,
-      pauseReasons: ["outside", ...(document.hidden ? ["hidden"] : []), ...(media?.matches ? ["reduced-motion"] : []), ...(pointerInside.current ? ["hover"] : []), ...(focusInside.current ? ["focus"] : [])],
+      pauseReasons: ["outside", ...(document.hidden ? ["hidden"] : []), ...(focusInside.current ? ["focus"] : [])],
+      reducedMotion: !!media?.matches,
       onUpdate: setState,
     });
     rotation.current = controller;
     const visibility = () => controller.setPaused("hidden", document.hidden);
-    const motion = event => controller.setPaused("reduced-motion", event.matches);
+    const motion = event => controller.setReducedMotion(event.matches);
     document.addEventListener("visibilitychange", visibility);
     if (media?.addEventListener) media.addEventListener("change", motion);
     else media?.addListener?.(motion);
@@ -59,11 +59,9 @@ export default function ModuleShowcase({ appUrl = "/login" }) {
     if (next === null) return;
     event.preventDefault(); selectModule(next, true);
   };
-  const setHover = value => { pointerInside.current = value; rotation.current?.setPaused("hover", value); };
   const setFocus = value => { focusInside.current = value; rotation.current?.setPaused("focus", value); };
 
   return <section id="modulos" ref={region} className="stratos-modules" aria-labelledby={`${id}-title`} aria-roledescription="carrusel"
-    onPointerEnter={event => { if (event.pointerType !== "touch") setHover(true); }} onPointerLeave={() => setHover(false)}
     onPointerDownCapture={() => setFocus(false)} onKeyDownCapture={() => setFocus(true)}
     onFocusCapture={event => setFocus(event.target.matches(":focus-visible"))} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocus(false); }}>
     <div className="stratos-modules__heading"><h2 id={`${id}-title`}>Toda tu operación, conectada.</h2><p>Explora los espacios de Stratos para trabajar, dar seguimiento y decidir.</p></div>
