@@ -191,7 +191,7 @@ casa; por eso mismo son los que más cuidado piden.
 | `guest/native.js` | **18** |
 | `app/views/CRM/date-range.js` | **13** |
 | `app/views/CRM/zoom-metrics.js` | **9** |
-| `lib/whatsapp-admin.js` | **7** |
+| `lib/whatsapp-admin.js` | **8** |
 | `app/components/Logo.jsx` | **5** |
 | `app/views/CRM/command-metrics.js` | **5** |
 | `lib/utils.js` | **4** |

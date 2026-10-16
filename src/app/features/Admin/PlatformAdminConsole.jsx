@@ -1,7 +1,7 @@
 import { createElement, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Activity, Building2, Copy, Eye, EyeOff, FolderOpen, Gauge, KeyRound,
-  LayoutDashboard, LogOut, Menu, MessageCircle, Plus, RefreshCw,
+  LayoutDashboard, LogOut, Megaphone, Menu, MessageCircle, Plus, RefreshCw,
   ShieldCheck, Users, Waypoints, X, Sun, Moon,
 } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
@@ -15,6 +15,7 @@ import PipelineConfiguratorAdmin from "./PipelineConfiguratorAdmin";
 import CatalogConfiguratorAdmin from "./CatalogConfiguratorAdmin";
 import CompanySetupAdmin from "./CompanySetupAdmin";
 import CompanyOnboarding from "./CompanyOnboarding";
+import PlatformUsersAdmin from "./PlatformUsersAdmin";
 import "./PlatformAdminConsole.css";
 
 const EMPTY_PARTNER = { name: "", admin_name: "", email: "", company_limit: 100 };
@@ -158,6 +159,9 @@ export default function PlatformAdminConsole({ initialData, T: palette = P, them
   const isMobile = useIsMobile();
   const T = { ...palette, accent: palette.accentDark || palette.accent };
   const [integrationCompany, setIntegrationCompany] = useState("");
+  const [usersCompany, setUsersCompany] = useState("");
+  const [setupCompany, setSetupCompany] = useState("");
+  const [usersRefreshKey, setUsersRefreshKey] = useState(0);
   const [data, setData] = useState(initialData || null);
   const [section, setSection] = useState("companies");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -188,18 +192,21 @@ export default function PlatformAdminConsole({ initialData, T: palette = P, them
   const used = Number(data?.access?.companiesUsed || 0);
   const limit = data?.access?.companyLimit;
   const nav = useMemo(() => [
-    ["home", "Resumen", LayoutDashboard], ["companies", "Empresas", Building2], ["whatsapp", "WhatsApp", MessageCircle],
+    ["home", "Resumen", LayoutDashboard], ["companies", "Empresas", Building2],
+    ...(root ? [["users", "Usuarios", Users], ["marketing", "Marketing", Megaphone]] : []),
+    ["whatsapp", "WhatsApp", MessageCircle],
     ["credentials", "Accesos temporales", KeyRound], ["pipelines", "Pipelines", Waypoints], ["catalogs", "Catálogos", FolderOpen],
     ...(root ? [["setup", "Módulos y licencias", ShieldCheck], ["partners", "Partners y cupos", Users], ["activity", "Actividad", Activity]] : []),
   ], [root]);
-  const choose = id => { setSection(id); setMenuOpen(false); if (id === "credentials") refreshCredentials(); };
+  const choose = id => { setSection(id); setMenuOpen(false); if (id === "credentials") refreshCredentials(); if (id === "users" || id === "marketing") setUsersCompany(""); if (id === "setup") setSetupCompany(""); };
 
-  const content = section === "companies" ? <CompanyOnboarding data={data} refresh={refresh} onIntegrations={id => { setIntegrationCompany(id); choose("whatsapp"); }} />
+  const content = section === "companies" ? <CompanyOnboarding data={data} refresh={refresh} onIntegrations={id => { setIntegrationCompany(id); choose("whatsapp"); }} onUsers={id => { choose("users"); setUsersCompany(id); }} onSetup={id => { choose("setup"); setSetupCompany(id); }} />
+    : (section === "users" || section === "marketing") && root ? <PlatformUsersAdmin key={`${section}:${usersCompany}`} currentUserId={user?.id} initialOrganizationId={usersCompany} marketingOnly={section === "marketing"} refreshKey={usersRefreshKey} onChanged={refresh} />
     : section === "whatsapp" ? <WhatsAppOnboardingAdmin T={T} initialOrganizationId={integrationCompany} integrationsOnly />
     : section === "credentials" ? <TemporaryAccessPanel T={T} credentials={temporaryCredentials} organizations={data?.organizations || []} partners={data?.partners || []} loading={credentialsLoading} error={credentialsError} />
     : section === "pipelines" ? <PipelineConfiguratorAdmin T={T} onBack={() => choose("home")} />
       : section === "catalogs" ? <CatalogConfiguratorAdmin T={T} onBack={() => choose("home")} />
-        : section === "setup" && root ? <CompanySetupAdmin T={T} data={data} refresh={refresh} />
+        : section === "setup" && root ? <CompanySetupAdmin T={T} data={data} refresh={refresh} initialOrganizationId={setupCompany} />
         : section === "partners" && root ? <PartnersPanel T={T} data={data} refresh={refresh} />
           : section === "activity" && root ? <ActivityPanel T={T} events={data?.events || []} />
             : <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: 18 }}>
@@ -224,7 +231,7 @@ export default function PlatformAdminConsole({ initialData, T: palette = P, them
       <div style={{ marginTop: "auto", borderTop: `1px solid ${T.border}`, paddingTop: 14 }}><div style={{ padding: "0 10px 12px", color: T.txt3, fontSize: 11.5, overflow: "hidden", textOverflow: "ellipsis" }}>{user?.email || user?.name}</div><button onClick={logout} style={{ width: "100%", minHeight: 41, borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.txt2, display: "flex", alignItems: "center", gap: 9, padding: "0 12px", cursor: "pointer" }}><LogOut size={15} /> Cerrar sesión</button></div>
     </aside>
     <main inert={isMobile && menuOpen ? true : undefined} style={{ flex: 1, minWidth: 0, overflowY: "auto", paddingTop: 0 }}>
-      <div style={{ minHeight: 62, borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "0 16px 0 66px" : "0 24px" }}><div><strong style={{ fontSize: 13.5 }}>{nav.find(([id]) => id === section)?.[1] || "Centro de soporte"}</strong><div style={{ color: T.txt3, fontSize: 10.5, marginTop: 3 }}>{root ? "Control total de Stratos" : `${used} de ${limit || 0} empresas utilizadas`}</div></div><div style={{ display: "flex", gap: 8 }}>{onThemeChange && <button aria-label={theme === "light" ? "Activar tema oscuro" : "Activar tema claro"} onClick={() => onThemeChange(theme === "light" ? "dark" : "light")} style={{ width: 44, borderRadius: 10, border: `1px solid ${T.border}`, background: T.surface, color: T.txt2, display: "grid", placeItems: "center", cursor: "pointer" }}>{theme === "light" ? <Moon size={18} /> : <Sun size={18} />}</button>}<button aria-label="Actualizar consola" onClick={() => { refresh(); if (section === "credentials") refreshCredentials(); }} disabled={loading} style={{ minHeight: 36, borderRadius: 10, border: `1px solid ${T.border}`, background: T.glass, color: T.txt2, padding: "0 12px", display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}><RefreshCw size={14} />{!isMobile && "Actualizar"}</button></div></div>
+      <div style={{ position: "sticky", top: 0, zIndex: 3, background: T.bg, minHeight: 62, borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "0 16px 0 66px" : "0 24px" }}><div><strong style={{ fontSize: 13.5 }}>{nav.find(([id]) => id === section)?.[1] || "Centro de soporte"}</strong><div style={{ color: T.txt3, fontSize: 10.5, marginTop: 3 }}>{root ? "Control total de Stratos" : `${used} de ${limit || 0} empresas utilizadas`}</div></div><div style={{ display: "flex", gap: 8 }}>{onThemeChange && <button aria-label={theme === "light" ? "Activar tema oscuro" : "Activar tema claro"} onClick={() => onThemeChange(theme === "light" ? "dark" : "light")} style={{ width: 44, borderRadius: 10, border: `1px solid ${T.border}`, background: T.surface, color: T.txt2, display: "grid", placeItems: "center", cursor: "pointer" }}>{theme === "light" ? <Moon size={18} /> : <Sun size={18} />}</button>}<button aria-label="Actualizar consola" onClick={() => { refresh(); if (section === "credentials") refreshCredentials(); if (section === "users" || section === "marketing") setUsersRefreshKey(value => value + 1); }} disabled={loading} style={{ minHeight: 36, borderRadius: 10, border: `1px solid ${T.border}`, background: T.glass, color: T.txt2, padding: "0 12px", display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}><RefreshCw size={14} />{!isMobile && "Actualizar"}</button></div></div>
       {error && section !== "home" && <div className="company-message company-error" role="alert" style={{ margin: 16 }}>{error}</div>}
       {content}
     </main>
