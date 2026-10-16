@@ -23,6 +23,7 @@ import {
 import { clearOfflineSession } from "../lib/offline-mode";
 import { portfolioCache } from "../lib/portfolio-cache.js";
 import { subscribeAuthEvents } from "../lib/auth-events.js";
+import { clearCommonEntryViews } from "../lib/common-entry.js";
 
 export const AuthContext = createContext(null);
 
@@ -327,6 +328,7 @@ export function AuthProvider({ children }) {
     userLogoutRef.current = true;    // marca: el SIGNED_OUT que viene es intencional
     void portfolioCache.clear();
     await signOut();
+    clearCommonEntryViews();
     setUser(null);
   }, []);
 

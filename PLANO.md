@@ -192,7 +192,7 @@ casa; por eso mismo son los que más cuidado piden.
 | `app/views/CRM/date-range.js` | **13** |
 | `lib/whatsapp-admin.js` | **9** |
 | `app/views/CRM/zoom-metrics.js` | **9** |
-| `lib/common-entry.js` | **6** |
+| `lib/common-entry.js` | **7** |
 | `app/components/Logo.jsx` | **6** |
 | `app/views/CRM/command-metrics.js` | **5** |
 | `lib/utils.js` | **4** |
