@@ -1,5 +1,7 @@
 # Expediente de preparación de auditoría — Stratos / Clínica Dental
 
+Actualización 16/10/2026: se añadió una **demo independiente** en `/clinica-dental-demo` (alias `/demo-dental`) con tres escenarios, cuentas públicas ficticias, enlaces por asignación y borradores locales sin firma. No consulta ni modifica Huli. La [revisión actual de fuentes y estrategia](REVISION_COFEPRIS_2026-10-16.md) separa esta simulación de los requisitos de una futura versión real. La evidencia de producción de septiembre que sigue corresponde al piloto administrativo anterior.
+
 Estado: preparación técnica de un piloto administrativo. No autorizado en este expediente para afirmar conformidad integral, expediente electrónico validado, IA diagnóstica ni certificación COFEPRIS.
 
 ## Cierre de esta revisión técnica

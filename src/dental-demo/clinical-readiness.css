@@ -1,0 +1,180 @@
+.clinical-readiness {
+  margin-block-start: 24px;
+  overflow-wrap: anywhere;
+}
+.clinical-readiness-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.clinical-readiness-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 19px;
+  margin: 0;
+  line-height: 1.4;
+}
+.clinical-readiness-heading > span {
+  font-size: 12px;
+  color: #f0d69a;
+}
+.clinical-readiness > p {
+  max-width: 75ch;
+}
+.clinical-verification {
+  margin-block: 24px;
+}
+.clinical-verification > div {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) 2fr;
+  gap: 20px;
+  border-block-end: 1px solid #363636;
+  padding-block: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.clinical-verification dt {
+  color: #b6c7dc;
+}
+.clinical-verification dd {
+  margin: 0;
+}
+.clinical-readiness h3 {
+  font-size: 16px;
+  margin-block: 28px 12px;
+}
+.clinical-documents {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.clinical-documents li {
+  padding-block: 16px;
+  border-block-end: 1px solid #363636;
+  max-width: 75ch;
+}
+.clinical-documents strong {
+  font-size: 14px;
+  font-weight: 550;
+}
+.clinical-documents p {
+  color: #b6c7dc;
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 6px 0;
+}
+.clinical-documents li > span {
+  font-size: 12px;
+  color: #f0d69a;
+}
+.clinical-readiness .clinical-export-status {
+  min-height: 20px;
+  font-size: 13px;
+}
+.clinical-sources summary {
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.6;
+  padding-block: 12px;
+}
+.clinical-sources ul {
+  padding-inline-start: 20px;
+  max-width: 75ch;
+}
+.clinical-sources li {
+  margin-block: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.clinical-sources a {
+  color: #a4eed5;
+  text-underline-offset: 4px;
+}
+.clinical-sources a svg {
+  margin-inline-start: 6px;
+}
+.clinical-readiness .clinical-readiness-note {
+  font-size: 12px;
+  color: #b6c7dc;
+  line-height: 1.7;
+}
+.clinical-readiness ::selection {
+  color: #09281e;
+  background: #a4eed5;
+}
+[data-theme="light"] .clinical-readiness-heading > span,
+[data-theme="light"] .clinical-documents li > span {
+  color: #725219;
+}
+[data-theme="light"] .clinical-verification dt,
+[data-theme="light"] .clinical-documents p,
+[data-theme="light"] .clinical-readiness .clinical-readiness-note {
+  color: #50637a;
+}
+[data-theme="light"] .clinical-verification > div,
+[data-theme="light"] .clinical-documents li {
+  border-color: #dce3eb;
+}
+[data-theme="light"] .clinical-sources a {
+  color: #166a50;
+}
+@media (max-width: 700px) {
+  .clinical-verification > div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .clinical-documents p,
+  .clinical-readiness > p,
+  .clinical-sources summary {
+    font-size: 16px;
+  }
+  .clinical-readiness .clinical-readiness-note,
+  .clinical-sources li {
+    font-size: 14px;
+  }
+}
+[data-theme] .clinical-readiness {
+  background: var(--clinical-demo-panel, #0c0c0c);
+  border: 1px solid var(--clinical-demo-line, #363636);
+  border-radius: 14px;
+  padding: 24px;
+  color: var(--clinical-demo-text, #e5e7eb);
+}
+.clinical-readiness > p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--clinical-demo-muted, #b6c7dc);
+}
+.clinical-readiness .huli-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 11px 15px;
+  border: 1px solid #52657e;
+  border-radius: 8px;
+  background: var(--clinical-demo-panel, #141414);
+  color: var(--clinical-demo-text, #e5e7eb);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.clinical-readiness .huli-secondary:hover {
+  border-color: var(--clinical-demo-accent, #6ee7c2);
+}
+.clinical-readiness :focus-visible {
+  outline: 2px solid var(--clinical-demo-accent, #6ee7c2);
+  outline-offset: 4px;
+}
+@media (max-width: 700px) {
+  [data-theme] .clinical-readiness {
+    padding: 20px;
+  }
+  .clinical-readiness > p {
+    font-size: 16px;
+  }
+}
