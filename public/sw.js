@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v449'; // v449: flujos Copilot y Comando con luces azules y verdes.
+const CACHE_VERSION = 'stratos-v450'; // v450: wordmark sin icono en el pie del sitio oficial.
 // const CACHE_VERSION = 'stratos-v424'; // v424: ficha de Google Play (textos + graficos de tienda)
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;

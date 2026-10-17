@@ -48,3 +48,5 @@ La red del hero se construye desde una mitad regular reflejada exactamente en X.
 La [revisión final de red simétrica y reproducción](../review/active-sliders-2026-10-16/REVIEW.md) obtuvo `disposition: ship`, con geometría en cuatro tamaños y17checks de sliders.
 
 Refinamiento de los dos diagramas: [brief acotado](../review/feature-glows-2026-10-16/BRIEF.md). Medición de ancho por ResizeObserver para conservar conexiones alineadas con el hub fijo de 64px; la variante horizontal o vertical oculta queda pausada. Textos, destinos e imágenes intactos.
+
+Refinamiento de marca del pie: el footer usa el mismo wordmark textual Stratos AI del header, sin icono; conserva su descripción, navegación y enlaces.
