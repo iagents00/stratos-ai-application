@@ -235,7 +235,7 @@ El header y el footer utilizan únicamente el wordmark **Stratos AI** como marca
 
 Acciones sólidas de tinta con texto blanco; la secundaria usa blanco, texto tinta y borde claro. La acción blanca aparece sobre el bloque oscuro. Los CTAs son enlaces reales y los controles de estado son botones. El tamaño táctil principal es de al menos (48 px) en escritorio y (44 px) en móvil pequeño. El foco visible usa contorno de (2 px) con separación exterior de (4 px); en el demostrador la separación es (3 px), pasa a (-4 px) dentro de las pestañas y usa blanco sobre la seleccionada oscura.
 
-Solicitar acceso conserva el contacto [WhatsApp +1 747 977 9711](https://wa.me/17479779711) y mensajes específicos por plan, con apertura segura en otra pestaña. Iniciar diagnóstico enlaza a `/diagnostico`; Iniciar sesión usa la entrada normalizada de la aplicación. Los pies conservan privacidad y términos. No se implementa un formulario ni un checkout nuevo en esta landing.
+Solicitar acceso usa el contacto [WhatsApp +52 984 280 3001](https://wa.me/529842803001) y mensajes específicos por plan, con apertura segura en otra pestaña. Iniciar diagnóstico enlaza a `/diagnostico`; Iniciar sesión usa la entrada normalizada de la aplicación. Los pies conservan privacidad y términos. No se implementa un formulario ni un checkout nuevo en esta landing.
 
 ### Navigation
 

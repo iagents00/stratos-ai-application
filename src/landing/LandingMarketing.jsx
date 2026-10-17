@@ -7,7 +7,7 @@ import { createModuleRotation, moduleScreenshotSrc } from "./module-showcase.mjs
 import { plans, faqs, rotatingWords, marketingLoginUrl } from "./marketing-content.js";
 import "./LandingMarketing.css";
 
-const contact = (message = "Hola, quiero solicitar acceso a Stratos AI") => `https://wa.me/17479779711?text=${encodeURIComponent(message)}`;
+const contact = (message = "Hola, quiero solicitar acceso a Stratos AI") => `https://wa.me/529842803001?text=${encodeURIComponent(message)}`;
 const navLinks = [["Solución", "#solución"], ["Características", "#modulos"], ["Precios", "#precios"], ["Enterprise", "#enterprise"], ["Nosotros", "#enterprise"]];
 const services = ["Call Center + IA", "Marketing + IA", "CRM Inteligente", "Equipos de iAgents", "Avatars de IA", "ERPs Autónomos", "Automatización comercial", "Reportes en tiempo real"];
 
