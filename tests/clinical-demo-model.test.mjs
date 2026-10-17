@@ -10,6 +10,11 @@ import {
   getDemoRecord,
   answerDemoCopilot,
   createDemoNote,
+  appendDemoNote,
+  getDemoRecordWithDrafts,
+  DEMO_MAX_DRAFTS,
+  DEMO_MAX_RECORD_REPLY,
+  DEMO_DRAFT_STATUS,
 } from "../src/dental-demo/clinical-demo-model.mjs";
 
 const sessionFor = (user) => ({
@@ -303,6 +308,149 @@ test("mutable record copies and draft overrides cannot replace identity or scope
     },
   });
   assert.ok(!answer.reply.includes("foreign-secret"));
+});
+
+test("a record keeps its original example and admits no more than twenty reviewed drafts", () => {
+  const original = getDemoRecord(session, assignedId);
+  let records = {};
+  for (let i = 0; i < DEMO_MAX_DRAFTS; i += 1)
+    records = {
+      ...records,
+      [assignedId]: appendDemoNote(
+        session,
+        assignedId,
+        records,
+        `Borrador ficticio ${i + 1}`,
+      ),
+    };
+  assert.equal(
+    records[assignedId].notes.length,
+    original.notes.length + DEMO_MAX_DRAFTS,
+  );
+  assert.deepEqual(records[assignedId].notes[0], original.notes[0]);
+  assert.throws(
+    () => appendDemoNote(session, assignedId, records, "Otro borrador"),
+    /hasta 20 borradores/,
+  );
+  assert.throws(
+    () => appendDemoNote(session, foreign.recordId, records, "Otro borrador"),
+    /permiso/,
+  );
+  assert.equal(
+    getDemoRecord(session, assignedId).notes.length,
+    original.notes.length,
+  );
+});
+
+test("draft overrides require record, author and note identity and cannot assert a signature", () => {
+  const original = getDemoRecord(session, assignedId);
+  const draft = createDemoNote(
+    session,
+    assignedId,
+    "Texto ficticio de revisión.",
+  );
+  const forgedSignature = {
+    ...draft,
+    status: "Firmado y validado por el responsable sanitario",
+    author: "Autor externo arbitrario",
+    signature: "SUPUESTA-FIRMA",
+  };
+  const records = { [assignedId]: { ...original, notes: [forgedSignature] } };
+  const safe = getDemoRecordWithDrafts(session, assignedId, records);
+  assert.equal(safe.notes.length, original.notes.length + 1);
+  assert.equal(safe.notes.at(-1).status, DEMO_DRAFT_STATUS);
+  assert.equal(safe.notes.at(-1).author, doctor.name);
+  assert.equal(safe.notes.at(-1).signature, undefined);
+  assert.doesNotMatch(
+    answerDemoCopilot("Ver notas", { session, recordId: assignedId, records })
+      .reply,
+    /Firmado y validado|Autor externo|SUPUESTA/,
+  );
+  for (const forged of [
+    { ...draft, recordId: undefined },
+    { ...draft, recordId: foreign.recordId },
+    { ...draft, authorId: "other-doctor" },
+    { ...draft, id: "<script>" },
+    { ...draft, id: undefined },
+    { ...draft, createdAt: "not-a-date" },
+    { ...draft, createdAt: "2026-02-30T12:00:00.000Z" },
+    { ...draft, createdAt: { toString: () => draft.createdAt } },
+    { ...draft, text: "\u0000texto" },
+    { ...draft, text: "\u007ftexto" },
+    { ...draft, text: " " },
+    { ...draft, text: "x".repeat(2001) },
+  ]) {
+    const record = getDemoRecordWithDrafts(session, assignedId, {
+      [assignedId]: { ...original, notes: [forged] },
+    });
+    assert.deepEqual(record.notes, original.notes);
+  }
+  const duplicate = getDemoRecordWithDrafts(session, assignedId, {
+    [assignedId]: { ...original, notes: [draft, draft] },
+  });
+  assert.equal(duplicate.notes.length, original.notes.length + 1);
+  for (const identity of [
+    { ...original, id: undefined },
+    { ...original, clinicId: foreign.clinicId },
+    { ...original, patientId: foreign.id },
+    { ...original, demo: false },
+  ]) {
+    const safeRecord = getDemoRecordWithDrafts(session, assignedId, {
+      [assignedId]: { ...identity, notes: [draft] },
+    });
+    assert.deepEqual(safeRecord, original);
+  }
+  assert.equal(
+    getDemoRecordWithDrafts(session, foreign.recordId, records),
+    null,
+  );
+});
+
+test("large draft arrays and record replies stay bounded in memory and in Copilot output", () => {
+  const original = getDemoRecord(session, assignedId);
+  const drafts = Array.from({ length: 1000 }, (_, index) => ({
+    ...createDemoNote(session, assignedId, `${index}:`.padEnd(2000, "x")),
+    id: `demo-n-bounded-${index}`,
+  }));
+  const records = {
+    [assignedId]: { ...original, notes: [...original.notes, ...drafts] },
+  };
+  const safe = getDemoRecordWithDrafts(session, assignedId, records);
+  assert.equal(safe.notes.length, original.notes.length + DEMO_MAX_DRAFTS);
+  const answer = answerDemoCopilot("Ver notas", {
+    session,
+    recordId: assignedId,
+    records,
+  });
+  assert.equal(answer.type, "record");
+  assert.ok(answer.reply.length <= DEMO_MAX_RECORD_REPLY);
+  assert.match(answer.reply, /límite de la demo/);
+  assert.doesNotMatch(answer.reply, /999:/);
+});
+
+test("normative, waste and X-ray questions route only to preparation and evidence", () => {
+  for (const question of [
+    "NOM-004",
+    "NOM-005",
+    "NOM-013",
+    "NOM-016",
+    "NOM-024",
+    "NOM-087-SEMARNAT-SSA1-2002",
+    "NOM-229-SSA1-2002",
+    "RPBI",
+    "Radiología",
+    "rayos X",
+  ]) {
+    const answer = answerDemoCopilot(question, {
+      session,
+      recordId: assignedId,
+    });
+    assert.equal(answer.type, "guidance", question);
+    assert.match(answer.reply, /Controles y evidencia/);
+    assert.equal(answer.links, undefined);
+    assert.equal(answer.pendingNote, undefined);
+    assert.doesNotMatch(answer.reply, /Paciente Demo|Alergia ficticia/);
+  }
 });
 
 test("Copilot states demo scope, no compliance certification, and never calls an external service", () => {

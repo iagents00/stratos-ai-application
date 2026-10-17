@@ -1,10 +1,14 @@
 # Expediente de preparación de auditoría — Stratos / Clínica Dental
 
-Actualización 16/10/2026: se añadió una **demo independiente** en `/clinica-dental-demo` (alias `/demo-dental`) con tres escenarios, cuentas públicas ficticias, enlaces por asignación y borradores locales sin firma. No consulta ni modifica Huli. La [revisión actual de fuentes y estrategia](REVISION_COFEPRIS_2026-10-16.md) separa esta simulación de los requisitos de una futura versión real. La evidencia de producción de septiembre que sigue corresponde al piloto administrativo anterior.
+Actualización 16/10/2026: la **demo independiente** en `/clinica-dental-demo` (alias `/demo-dental`) contiene tres escenarios, cuentas públicas ficticias, enlaces por asignación y borradores locales sin firma. No consulta ni modifica Huli. La [auditoría simulada actual](AUDITORIA_SIMULADA_2026-10-16.md) detalla aplicabilidad, numerales, evidencia y criterios de cierre de NOM-004, 013, 024, 005, 016, 087 y 229. En la demo, **Controles y evidencia** permite consultar esta matriz y descargarla como TXT o JSON sin pacientes, notas ni credenciales. La [revisión de fuentes y estrategia](REVISION_COFEPRIS_2026-10-16.md) distingue los certificados públicos de Huli V29/019 y V30/020; la cuenta y su integración aún requieren cotejo privado.
+
+El alcance sigue siendo demostrativo. No se acreditan documentos, instalaciones, expediente completo, firma, conservación ni autorización en servidor para pacientes reales. El uso del enlace reduce contenido en la conversación y exige permisos en cada acceso de una futura implementación real; no elimina obligaciones sanitarias o de privacidad.
 
 Estado: preparación técnica de un piloto administrativo. No autorizado en este expediente para afirmar conformidad integral, expediente electrónico validado, IA diagnóstica ni certificación COFEPRIS.
 
-## Cierre de esta revisión técnica
+La [verificación técnica del 16/10/2026](verificacion-demo-2026-10-16.json) registra 231 pruebas Node aprobadas, una omitida, 34 de Rails, 12 de PostgreSQL local y QA de escritorio/móvil. Los hallazgos técnicos corregidos y las limitaciones se detallan en la auditoría simulada; los pendientes reales siguen abiertos.
+
+## Evidencia histórica del piloto administrativo — septiembre de 2026
 
 29 pruebas locales aprobadas; 44 comprobaciones de servidor aprobadas en producción, sin fallos en la repetición final. Lint de los archivos modificados aprobado y build de producción completado. El despliegue final se identifica en `verificacion-despliegue.json`. Ambos dominios conservan identidad Stratos y rechazan acceso sin sesión.
 

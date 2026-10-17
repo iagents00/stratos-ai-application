@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "clientDate": "2026-10-16",
+  "clientTimezone": "America/Los_Angeles",
+  "generatedAt": "2026-10-17T00:47:40.127823+00:00",
+  "scope": "Pruebas locales de demo sintética; sin pacientes reales. No es dictamen ni aprobación sanitaria.",
+  "baseCommit": "8bc2b4bd",
+  "branch": "codex/clinical-regulatory-audit",
+  "testedState": "Árbol de trabajo antes del commit; huellas de fuentes incluidas.",
+  "node": {
+    "tests": 232,
+    "passed": 231,
+    "failed": 0,
+    "skipped": 1,
+    "clinicalSpecificTests": 31
+  },
+  "rails": {
+    "passed": 34
+  },
+  "postgresLocal": {
+    "passed": 12
+  },
+  "checksPassed": [
+    "check:project",
+    "check:runtime",
+    "ESLint de archivos clínicos cambiados",
+    "build",
+    "tenant-modules",
+    "tenant-route",
+    "verificar-docs",
+    "verificar-rpc",
+    "ops:check",
+    "verificar-migraciones",
+    "verificar-contexto",
+    "verificar-rails",
+    "verificar-lenguaje"
+  ],
+  "browserQa": ".impeccable/review/clinical-regulatory-audit-2026-10-16/qa-browser.json",
+  "browser": {
+    "desktopChecksPassed": 27,
+    "desktopChecksFailed": 0,
+    "mobileViewports": [
+      {
+        "width": 390,
+        "height": 844
+      },
+      {
+        "width": 320,
+        "height": 740
+      }
+    ]
+  },
+  "noRemoteSupabaseChanges": true,
+  "noHuliPatientDataUsed": true,
+  "officialApproval": false,
+  "realClinicalUseEnabled": false,
+  "sourceSha256": {
+    "src/dental-demo/ClinicalDemoApp.jsx": "8a5abed17e94a4ff08555b5e08f9f914cf8122c653d0a887df8f4294b50fb067",
+    "src/dental-demo/ClinicalReadiness.jsx": "5f6944046322b6cd5cc9b163b8d805524b976891f4113c169fefb1774c0d26e7",
+    "src/dental-demo/clinical-audit.mjs": "2f8e0a1c76011f3d32c85725bb98a1bb4af654f0bfd6af15b62cc99d75be7587",
+    "src/dental-demo/clinical-demo-model.mjs": "71599d5a1d7b3091905d170ddef684434fc3bb8c66be4201d574c6e6e27de468",
+    "src/dental-demo/clinical-demo-session.mjs": "4c008a3eab6c38686b464b9b5ccef4309a3809e581c7617690d47e05c9672e26",
+    "src/dental-demo/clinical-readiness.mjs": "ee23f2e6023ba7d3875c3b3be43363634b0d1742c5039fab8604a7d13bd66a13",
+    "src/dental-demo/clinical-demo-app.css": "40f860f5c7064b52df06a2ff73c4829f202b753bcd2206ef13198b70ec2c0f0d",
+    "src/dental-demo/clinical-readiness.css": "fd285a85da890642d53fb1b7ece63f46648cb5824856794ae31473ff90858995"
+  },
+  "limitations": [
+    "No inspección física ni cotejo de documentos originales de una clínica.",
+    "No cuenta privada Huli ni API/configuración efectiva cotejadas.",
+    "No detector general de datos identificables ni anonimización de campos libres.",
+    "No expediente completo, firma, conservación o bitácora clínica persistente.",
+    "El login y los roles públicos de la demo sólo se simulan en navegador.",
+    "335 avisos adicionales de lint preexistentes; check:runtime sin errores bloqueantes."
+  ]
+}

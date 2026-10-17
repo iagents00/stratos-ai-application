@@ -15,17 +15,17 @@ import {
   DEMO_CLINICS,
   DEMO_PATIENTS,
   DEMO_USERS,
+  appendDemoNote,
   answerDemoCopilot,
   canReadRecord,
-  createDemoNote,
   getAccessiblePatients,
-  getDemoRecord,
+  getDemoRecordWithDrafts,
 } from "./clinical-demo-model.mjs";
 import {
   DEMO_ACCESS_PASSWORD,
-  DEMO_IDLE_MS,
   clinicalDemoRecordHref,
   isClinicalDemoSessionActive,
+  observeClinicalDemoSession,
   requestedDemoRecord,
   signInClinicalDemo,
   touchClinicalDemoSession,
@@ -61,7 +61,7 @@ function DemoLogin({
         <a className="clinical-demo-wordmark" href="/">
           Stratos <span>AI</span>
         </a>
-        <h1>
+        <h1 tabIndex={-1}>
           El expediente correcto.
           <br />
           Para la persona autorizada.
@@ -194,6 +194,16 @@ function DemoRecord({
   const [pendingNote, setPendingNote] = useState(null);
   const [notice, setNotice] = useState("");
   const log = useRef(null);
+  const heading = useRef(null);
+  const recordInput = useRef(null);
+  const noteInput = useRef(null);
+  const isReviewingNote = Boolean(pendingNote);
+  useEffect(() => {
+    heading.current?.focus();
+  }, []);
+  useEffect(() => {
+    if (isReviewingNote) noteInput.current?.focus();
+  }, [isReviewingNote]);
   useEffect(() => {
     if (log.current) log.current.scrollTop = log.current.scrollHeight;
   }, [messages]);
@@ -226,9 +236,10 @@ function DemoRecord({
     setNotice(
       "Borrador guardado sólo en la memoria de esta demo. No es una nota firmada ni se envió a Huli.",
     );
+    recordInput.current?.focus();
   }
   return (
-    <div className="clinical-demo-record">
+    <main className="clinical-demo-record">
       <button
         type="button"
         className="clinical-demo-secondary"
@@ -239,7 +250,9 @@ function DemoRecord({
       </button>
       <header className="clinical-demo-record-heading">
         <div>
-          <h1>Expediente de {record.patientName}</h1>
+          <h1 ref={heading} tabIndex={-1}>
+            Expediente de {record.patientName}
+          </h1>
           <p>{record.specialty} · Datos ficticios</p>
         </div>
         <span>
@@ -384,14 +397,16 @@ function DemoRecord({
               </label>
               <textarea
                 id="clinical-demo-note-text"
+                ref={noteInput}
                 value={pendingNote.text}
                 onChange={(event) =>
                   setPendingNote({ ...pendingNote, text: event.target.value })
                 }
                 maxLength={2000}
                 rows={4}
+                aria-describedby="clinical-demo-note-help"
               />
-              <p>
+              <p id="clinical-demo-note-help">
                 Se guardará como borrador ficticio, sin firma y sólo mientras
                 esta demo esté abierta.
               </p>
@@ -408,7 +423,10 @@ function DemoRecord({
                 <button
                   type="button"
                   className="clinical-demo-secondary"
-                  onClick={() => setPendingNote(null)}
+                  onClick={() => {
+                    setPendingNote(null);
+                    recordInput.current?.focus();
+                  }}
                 >
                   Descartar
                 </button>
@@ -431,11 +449,13 @@ function DemoRecord({
             <div>
               <input
                 id="clinical-demo-record-input"
+                ref={recordInput}
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 maxLength={1000}
                 autoComplete="off"
                 placeholder="Consulta datos o escribe: prepara nota…"
+                aria-describedby="clinical-demo-record-help"
               />
               <button
                 type="submit"
@@ -446,14 +466,20 @@ function DemoRecord({
                 <ArrowUp size={18} />
               </button>
             </div>
+            <p id="clinical-demo-record-help" className="clinical-demo-limit">
+              Usa sólo datos ficticios. No introduzcas información de pacientes
+              reales.
+            </p>
           </form>
         </section>
       </div>
-    </div>
+    </main>
   );
 }
 
 export default function ClinicalDemoApp() {
+  const clinicalDemoRoot = useRef(null);
+  const sessionRef = useRef(null);
   const [clinicId, setClinicId] = useState(
     () =>
       DEMO_PATIENTS.find(
@@ -470,8 +496,13 @@ export default function ClinicalDemoApp() {
   const [events, setEvents] = useState([]);
   const [notice, setNotice] = useState("");
   const [resetVersion, setResetVersion] = useState(0);
-  const user = DEMO_USERS.find((item) => item.id === session?.userId);
+  const activeSession = isClinicalDemoSessionActive(session) ? session : null;
+  const activeUserId = activeSession?.userId;
+  const user = DEMO_USERS.find((item) => item.id === activeUserId);
   const clinic = DEMO_CLINICS.find((item) => item.id === clinicId);
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
   useEffect(() => {
     document.title = "Stratos AI · Demo clínica";
   }, []);
@@ -494,8 +525,10 @@ export default function ClinicalDemoApp() {
   }, []);
   useEffect(() => {
     if (!session) return;
-    const timer = setTimeout(
-      () => {
+    return observeClinicalDemoSession({
+      getSession: () => sessionRef.current,
+      onExpire: () => {
+        sessionRef.current = null;
         setSession(null);
         setRecords({});
         setEvents([]);
@@ -503,10 +536,32 @@ export default function ClinicalDemoApp() {
           "La sesión demo caducó por inactividad. Vuelve a entrar para acceder al expediente.",
         );
       },
-      Math.max(0, session.lastActivityAt + DEMO_IDLE_MS - Date.now()),
-    );
-    return () => clearTimeout(timer);
+      onActivity: (nextSession) => {
+        sessionRef.current = nextSession;
+        setSession(nextSession);
+      },
+      activityTarget: clinicalDemoRoot.current,
+      windowTarget: window,
+      documentTarget: document,
+    });
   }, [session]);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      if (
+        sessionRef.current &&
+        !isClinicalDemoSessionActive(sessionRef.current)
+      )
+        return;
+      const heading = clinicalDemoRoot.current?.querySelector(
+        "main h1, .clinical-demo-record h1",
+      );
+      if (heading) {
+        heading.tabIndex = -1;
+        heading.focus();
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeUserId, view, recordId, resetVersion]);
   function audit(action) {
     if (!isClinicalDemoSessionActive(session)) {
       endSession("La sesión demo caducó. Vuelve a entrar.");
@@ -525,18 +580,6 @@ export default function ClinicalDemoApp() {
       ].slice(-40),
     );
     return true;
-  }
-  function touchActivity() {
-    if (!session) return;
-    const now = Date.now();
-    if (!isClinicalDemoSessionActive(session, now)) {
-      endSession("La sesión demo caducó. Vuelve a entrar.");
-      return;
-    }
-    // Typing and reviewing are activity too; throttle memory updates and keep
-    // the activity log free of keystrokes, prompts and draft contents.
-    if (now - session.lastActivityAt > 5000)
-      setSession((previous) => touchClinicalDemoSession(previous, now));
   }
   function login(email, password) {
     const result = signInClinicalDemo(email, password, clinicId);
@@ -558,10 +601,15 @@ export default function ClinicalDemoApp() {
   }
   function openRecord(id) {
     if (!audit("record_link_opened")) return;
+    if (!canReadRecord(session, id)) {
+      setNotice("Esta cuenta demo no tiene permiso para ese expediente.");
+      return;
+    }
     window.history.pushState({}, "", clinicalDemoRecordHref(id));
     setRecordId(id);
   }
   function closeRecord() {
+    if (!audit("record_closed")) return;
     const url = new URL(window.location.href);
     url.searchParams.delete("record");
     window.history.pushState({}, "", `${url.pathname}${url.search}`);
@@ -570,36 +618,24 @@ export default function ClinicalDemoApp() {
   function saveNote(id, text) {
     if (!audit("draft_reviewed")) return { error: "La sesión demo caducó." };
     try {
-      const note = createDemoNote(session, id, text);
-      const existing = getDemoRecord(session, id);
-      if (!existing)
-        return { error: "Esta cuenta no puede editar ese expediente." };
+      const updated = appendDemoNote(session, id, records, text);
       setRecords((previous) => ({
         ...previous,
-        [id]: {
-          ...(previous[id] || existing),
-          notes: [...(previous[id]?.notes || existing.notes || []), note],
-        },
+        [id]: updated,
       }));
-      return { note };
+      return { note: updated.notes.at(-1) };
     } catch (error) {
       return { error: error.message };
     }
   }
   const record =
-    session && recordId && canReadRecord(session, recordId)
-      ? records[recordId] || getDemoRecord(session, recordId)
+    activeSession && recordId
+      ? getDemoRecordWithDrafts(activeSession, recordId, records)
       : null;
   return (
-    <div
-      className="clinical-demo-app"
-      data-theme="dark"
-      onKeyDownCapture={touchActivity}
-      onPointerDownCapture={touchActivity}
-    >
-      {!session ? (
+    <div ref={clinicalDemoRoot} className="clinical-demo-app" data-theme="dark">
+      {!activeSession ? (
         <DemoLogin
-          key={clinicId}
           clinicId={clinicId}
           setClinicId={setClinicId}
           onLogin={login}
@@ -632,8 +668,8 @@ export default function ClinicalDemoApp() {
           {recordId ? (
             record ? (
               <DemoRecord
-                key={`${session.userId}-${recordId}`}
-                session={session}
+                key={`${activeSession.userId}-${recordId}`}
+                session={activeSession}
                 record={record}
                 records={records}
                 onBack={closeRecord}
@@ -698,6 +734,7 @@ export default function ClinicalDemoApp() {
                   type="button"
                   className="clinical-demo-reset"
                   onClick={() => {
+                    if (!audit("demo_reset")) return;
                     clearPrivateDemoState();
                     setResetVersion((previous) => previous + 1);
                     setNotice(
@@ -716,7 +753,10 @@ export default function ClinicalDemoApp() {
               )}
               {view === "controls" ? (
                 <main className="clinical-demo-controls">
-                  <ClinicalReadiness metadata={{ mode: "demo" }} />
+                  <h1 tabIndex={-1}>Auditoría de preparación</h1>
+                  <ClinicalReadiness
+                    metadata={{ mode: "demo", scenario: clinicId }}
+                  />
                   <section
                     className="clinical-demo-audit"
                     aria-labelledby="clinical-demo-audit-title"
@@ -747,7 +787,9 @@ export default function ClinicalDemoApp() {
                                 record_link_opened:
                                   "Apertura de enlace de expediente",
                                 record_query: "Consulta dentro del expediente",
+                                record_closed: "Cierre del visor de expediente",
                                 draft_reviewed: "Revisión de borrador",
+                                demo_reset: "Reinicio de datos temporales",
                                 view_changed: "Cambio de sección",
                                 copilot_query: "Consulta de Copilot",
                               }[event.action] || "Acción de demostración"}
@@ -760,9 +802,9 @@ export default function ClinicalDemoApp() {
                 </main>
               ) : (
                 <ClinicalDemoWorkspace
-                  key={`${session.userId}-${clinicId}-${view}-${resetVersion}`}
-                  session={session}
-                  patients={getAccessiblePatients(session)}
+                  key={`${activeSession.userId}-${clinicId}-${view}-${resetVersion}`}
+                  session={activeSession}
+                  patients={getAccessiblePatients(activeSession)}
                   view={view}
                   onOpenRecord={openRecord}
                   onAudit={audit}

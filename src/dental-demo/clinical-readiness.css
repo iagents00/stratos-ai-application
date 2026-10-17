@@ -170,6 +170,126 @@
   outline: 2px solid var(--clinical-demo-accent, #6ee7c2);
   outline-offset: 4px;
 }
+.clinical-audit-matrix {
+  margin-block: 28px;
+}
+.clinical-audit-matrix > p,
+.clinical-audit-matrix details > p,
+.clinical-audit-decision p,
+.clinical-sources > p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--clinical-demo-muted, #b6c7dc);
+  max-width: 75ch;
+}
+.clinical-audit-decision {
+  padding-block: 18px;
+  border-block: 1px solid var(--clinical-demo-line, #344358);
+}
+.clinical-audit-decision > strong {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #f0d69a;
+}
+.clinical-audit-controls,
+.clinical-audit-standards,
+.clinical-audit-blockers {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.clinical-audit-controls > li,
+.clinical-audit-standards > li,
+.clinical-audit-blockers > li {
+  border-block-end: 1px solid var(--clinical-demo-line, #344358);
+  padding-block: 12px;
+}
+.clinical-audit-matrix summary,
+.clinical-documents-group > summary {
+  min-height: 44px;
+  cursor: pointer;
+  padding-block: 12px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.clinical-audit-standards summary > span {
+  display: block;
+  color: var(--clinical-demo-muted, #b6c7dc);
+  font-size: 13px;
+  margin-block-start: 5px;
+}
+.clinical-audit-matrix details > span,
+.clinical-audit-blockers > li > span {
+  display: block;
+  font-size: 12px;
+  color: #f0d69a;
+  line-height: 1.7;
+  margin-block: 8px;
+}
+.clinical-audit-matrix dl > div {
+  margin-block: 14px;
+}
+.clinical-audit-matrix dt {
+  font-size: 12px;
+  color: var(--clinical-demo-muted, #b6c7dc);
+  line-height: 1.6;
+  margin-block-end: 5px;
+}
+.clinical-audit-matrix dd {
+  font-size: 14px;
+  line-height: 1.8;
+  margin: 0;
+  max-width: 75ch;
+}
+.clinical-audit-matrix a,
+.clinical-sources a {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  min-height: 44px;
+  padding-block: 10px;
+  color: var(--clinical-demo-accent, #a4eed5);
+  text-underline-offset: 4px;
+  font-size: 14px;
+}
+.clinical-audit-blockers strong {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.clinical-audit-blockers p {
+  font-size: 14px;
+  line-height: 1.8;
+  max-width: 75ch;
+  color: var(--clinical-demo-muted, #b6c7dc);
+}
+.clinical-documents-group {
+  margin-block: 24px;
+}
+.clinical-documents-group > summary {
+  font-weight: 550;
+}
+.clinical-audit-downloads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block: 20px;
+}
+@media (max-width: 700px) {
+  .clinical-audit-matrix > p,
+  .clinical-audit-matrix details > p,
+  .clinical-audit-decision p,
+  .clinical-audit-blockers p,
+  .clinical-audit-matrix dd,
+  .clinical-sources > p {
+    font-size: 16px;
+  }
+  .clinical-audit-matrix summary,
+  .clinical-documents-group > summary,
+  .clinical-audit-matrix a,
+  .clinical-sources a {
+    font-size: 15px;
+  }
+}
 @media (max-width: 700px) {
   [data-theme] .clinical-readiness {
     padding: 20px;

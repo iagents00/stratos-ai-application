@@ -2,6 +2,10 @@
 // they are not authentication, authorization or a security boundary for production.
 export const DEMO_SECURITY_NOTICE =
   "Simulación con datos sintéticos. Estos permisos locales no constituyen una barrera de seguridad para producción; una implementación real requiere autenticación y autorización verificadas en el servidor.";
+export const DEMO_MAX_DRAFTS = 20;
+export const DEMO_MAX_RECORD_REPLY = 10000;
+export const DEMO_DRAFT_STATUS = "Borrador demo sin firma";
+const INVALID_NOTE_CONTROLS = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
 export const DEMO_CLINICS = [
   {
     id: "demo-clinic-complex",
@@ -303,8 +307,8 @@ export function createDemoNote(session, recordId, text) {
   if (
     typeof text !== "string" ||
     !text.trim() ||
-    text.trim().length > 2000 ||
-    /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(text)
+    text.length > 2000 ||
+    INVALID_NOTE_CONTROLS.test(text)
   )
     throw new Error("Escribe una nota ficticia de entre 1 y 2000 caracteres.");
   const user = actor(session);
@@ -312,10 +316,25 @@ export function createDemoNote(session, recordId, text) {
     id: `demo-n-${globalThis.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`}`,
     recordId,
     text: text.trim(),
+    authorId: user.id,
     author: user.name,
     createdAt: new Date().toISOString(),
-    status: "Borrador demo sin firma",
+    status: DEMO_DRAFT_STATUS,
   };
+}
+export function appendDemoNote(session, recordId, records, text) {
+  const record = getDemoRecordWithDrafts(session, recordId, records);
+  if (!record)
+    throw new Error(
+      "Tu perfil demo no tiene permiso para documentar este expediente.",
+    );
+  const baseline = getDemoRecord(session, recordId);
+  if (record.notes.length - baseline.notes.length >= DEMO_MAX_DRAFTS)
+    throw new Error(
+      `La demo admite hasta ${DEMO_MAX_DRAFTS} borradores por expediente. Reinicia la demo para comenzar otro ejemplo.`,
+    );
+  const note = createDemoNote(session, recordId, text);
+  return { ...record, notes: [...record.notes, note] };
 }
 const denied = () => ({
   type: "denied",
@@ -329,7 +348,7 @@ const linksFor = (session, patients) =>
       recordId: patient.recordId,
       label: `Abrir expediente demo · ${patient.name}`,
     }));
-function recordWithDrafts(session, recordId, records) {
+export function getDemoRecordWithDrafts(session, recordId, records) {
   const canonical = getDemoRecord(session, recordId);
   if (!canonical) return null;
   const candidate = Array.isArray(records)
@@ -337,31 +356,66 @@ function recordWithDrafts(session, recordId, records) {
     : records?.[recordId];
   if (
     !candidate ||
-    (candidate.id !== undefined && candidate.id !== recordId) ||
-    (candidate.clinicId !== undefined &&
-      candidate.clinicId !== canonical.clinicId)
+    typeof candidate !== "object" ||
+    Array.isArray(candidate) ||
+    candidate.id !== recordId ||
+    candidate.clinicId !== canonical.clinicId ||
+    candidate.patientId !== canonical.patientId ||
+    candidate.demo !== true
   )
     return canonical;
-  if (Array.isArray(candidate.notes))
-    canonical.notes = candidate.notes
-      .filter(
-        (note) =>
-          note &&
-          typeof note.text === "string" &&
-          note.text.length <= 2000 &&
-          (!note.recordId || note.recordId === recordId),
+  const user = actor(session);
+  const seen = new Set(canonical.notes.map((note) => note.id));
+  // Keep the original synthetic example intact. Only bounded, well-formed
+  // drafts from this session's canonical actor can augment it; no override
+  // can introduce a clinical signature or replace the patient identity.
+  if (Array.isArray(candidate.notes)) {
+    const candidates = candidate.notes.slice(
+      0,
+      DEMO_MAX_DRAFTS + canonical.notes.length,
+    );
+    let accepted = 0;
+    for (const note of candidates) {
+      if (
+        accepted >= DEMO_MAX_DRAFTS ||
+        !note ||
+        typeof note !== "object" ||
+        Array.isArray(note) ||
+        typeof note.id !== "string" ||
+        !/^demo-n-[a-zA-Z0-9-]{1,80}$/.test(note.id) ||
+        seen.has(note.id) ||
+        note.recordId !== recordId ||
+        note.authorId !== user.id ||
+        typeof note.text !== "string" ||
+        !note.text.trim() ||
+        note.text.length > 2000 ||
+        INVALID_NOTE_CONTROLS.test(note.text) ||
+        typeof note.createdAt !== "string" ||
+        !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(note.createdAt) ||
+        !Number.isFinite(Date.parse(note.createdAt)) ||
+        new Date(note.createdAt).toISOString() !== note.createdAt
       )
-      .map((note) => ({
-        text: note.text,
-        author:
-          typeof note.author === "string" ? note.author : "Profesional demo",
-        date: note.date || note.createdAt || "",
-        status:
-          typeof note.status === "string"
-            ? note.status
-            : "Borrador demo sin firma",
-      }));
+        continue;
+      seen.add(note.id);
+      accepted += 1;
+      canonical.notes.push({
+        id: note.id,
+        recordId,
+        text: note.text.trim(),
+        authorId: user.id,
+        author: user.name,
+        createdAt: note.createdAt,
+        status: DEMO_DRAFT_STATUS,
+      });
+    }
+  }
   return canonical;
+}
+function boundedRecordReply(reply) {
+  if (reply.length <= DEMO_MAX_RECORD_REPLY) return reply;
+  const notice =
+    "\n… Se omitió contenido por el límite de la demo. Consulta los borradores completos en el visor.";
+  return reply.slice(0, DEMO_MAX_RECORD_REPLY - notice.length) + notice;
 }
 function targetPatient(text) {
   const match = normalized(text).match(/\bpaciente\s+(?:demo\s+)?0*(\d+)\b/);
@@ -413,14 +467,14 @@ export function answerDemoCopilot(text, { session, recordId, records } = {}) {
     : accessible;
   const links = linksFor(session, permitted);
   if (
-    /\b(cofepris|nom(?:\s|-)?0(?:04|13|24)|auditoria|normativa|cumplimiento|certificacion)\b/.test(
+    /\b(cofepris|nom(?:\s|-)?(?:0(?:04|05|13|16|24|87)|229)|rpbi|radiolog\w*|rayos\s+x|auditoria|normativa|cumplimiento|certificacion)\b/.test(
       command,
     )
   )
     return {
       type: "guidance",
       reply:
-        "Esta demo no acredita cumplimiento ni certificación. La preparación para una auditoría requiere comprobar el expediente, las responsabilidades de la clínica, los accesos, el aviso de privacidad, la conservación de registros y el alcance vigente del proveedor. NOM-004, NOM-013 y NOM-024 tienen alcances distintos; usar Huli o un servidor con estándares de seguridad no certifica por sí mismo a Stratos. Consulta la guía de preparación y evidencia en Mi clínica.",
+        "Esta demo no acredita cumplimiento ni certificación. Revisa en Controles y evidencia el alcance aplicable: expediente (NOM-004), consulta ambulatoria (NOM-005), odontología (NOM-013), hospitales y especialidades (NOM-016), sistemas de información (NOM-024), RPBI (NOM-087) y rayos X (NOM-229). La aplicabilidad depende de los servicios efectivos del establecimiento. Usar Huli o un servidor con estándares de seguridad no certifica por sí mismo a Stratos. La guía identifica evidencias pendientes y no sustituye una revisión sanitaria.",
     };
   if (/\b(huli|conexion|conectad[oa]|sincroniz\w*)\b/.test(command))
     return {
@@ -456,7 +510,7 @@ export function answerDemoCopilot(text, { session, recordId, records } = {}) {
           "Abre un expediente demo asignado para consultar su contenido o preparar una nota. El enlace pide una cuenta demo con permiso para ese paciente.",
         links,
       };
-    const record = recordWithDrafts(session, selectedId, records);
+    const record = getDemoRecordWithDrafts(session, selectedId, records);
     if (noteMatch) {
       const draftText = noteMatch[1].trim();
       try {
@@ -504,7 +558,9 @@ export function answerDemoCopilot(text, { session, recordId, records } = {}) {
     else detail = record.summary;
     return {
       type: "record",
-      reply: `${record.patientName} · expediente sintético\n${detail}\nConsulta de lo registrado, sin interpretación ni indicación médica.`,
+      reply: boundedRecordReply(
+        `${record.patientName} · expediente sintético\n${detail}\nConsulta de lo registrado, sin interpretación ni indicación médica.`,
+      ),
       links,
     };
   }

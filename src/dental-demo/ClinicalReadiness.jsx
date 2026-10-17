@@ -8,6 +8,94 @@ import {
 } from "./clinical-readiness.mjs";
 import "./clinical-readiness.css";
 
+function AuditMatrix({ audit }) {
+  if (!audit) return null;
+  return (
+    <div className="clinical-audit-matrix">
+      <div
+        className="clinical-audit-decision"
+        role="note"
+        aria-label="Resultado de la auditoría simulada"
+      >
+        <strong>Expedientes reales: uso no habilitado</strong>
+        <p>
+          {audit.scenario.name}. {audit.decision} Esta revisión es interna; no
+          es una visita ni aprobación de COFEPRIS.
+        </p>
+      </div>
+      <h3>Controles que puedes probar en la demo</h3>
+      <ul className="clinical-audit-controls">
+        {audit.demonstratedControls.map((item) => (
+          <li key={item.id}>
+            <details>
+              <summary>{item.name}</summary>
+              <p>{item.limit}</p>
+              <span>{item.status}</span>
+            </details>
+          </li>
+        ))}
+      </ul>
+      <h3>Criterios por actividad</h3>
+      <p>
+        Fuentes revisadas el {audit.sourceReviewDate}. La aplicabilidad
+        definitiva depende de los servicios, equipos y establecimientos reales.
+        No se marca una norma como cumplida o exenta desde esta pantalla.
+      </p>
+      <ul className="clinical-audit-standards">
+        {audit.standards.map((item) => (
+          <li key={item.id}>
+            <details>
+              <summary>
+                <strong>{item.name}</strong>
+                <span>{item.applicability}</span>
+              </summary>
+              <dl>
+                <div>
+                  <dt>Numerales de referencia</dt>
+                  <dd>{item.clauses}</dd>
+                </div>
+                <div>
+                  <dt>Actividad</dt>
+                  <dd>{item.activity}</dd>
+                </div>
+                <div>
+                  <dt>Evidencia necesaria</dt>
+                  <dd>{item.evidence}</dd>
+                </div>
+                <div>
+                  <dt>Resultado de la revisión</dt>
+                  <dd>
+                    {item.finding} {item.status}.
+                  </dd>
+                </div>
+              </dl>
+              <a href={item.url} target="_blank" rel="noreferrer">
+                Consultar texto oficial{" "}
+                <ExternalLink size={14} aria-hidden="true" />
+              </a>
+            </details>
+          </li>
+        ))}
+      </ul>
+      <h3>Requisitos para una versión clínica real</h3>
+      <p>
+        Estos bloqueos permanecen abiertos. Para cerrar cada uno se necesita
+        documento identificable, vigencia, sede y servicio, responsable y
+        resultado de verificación.
+      </p>
+      <ul className="clinical-audit-blockers">
+        {audit.realUseBlockers.map((item) => (
+          <li key={item.id}>
+            <strong>{item.title}</strong>
+            <p>{item.evidence}</p>
+            <span>{item.status} · Responsable por designar</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export default function ClinicalReadiness({ metadata }) {
   const simulation = metadata?.mode === "demo";
   const headingId = useId();
@@ -25,23 +113,38 @@ export default function ClinicalReadiness({ metadata }) {
     return () => controller.abort();
   }, []);
   const report = buildClinicalReadiness(metadata, release);
-  function download() {
+  function download(format = "text") {
     let url;
     try {
       const snapshot = buildClinicalReadiness(metadata, release);
       url = URL.createObjectURL(
-        new Blob([clinicalReadinessText(snapshot)], {
-          type: "text/plain;charset=utf-8",
-        }),
+        new Blob(
+          [
+            format === "json"
+              ? JSON.stringify(snapshot, null, 2)
+              : clinicalReadinessText(snapshot),
+          ],
+          {
+            type:
+              format === "json"
+                ? "application/json;charset=utf-8"
+                : "text/plain;charset=utf-8",
+          },
+        ),
       );
       const link = document.createElement("a");
       link.href = url;
-      link.download = `stratos-huli-preparacion-${snapshot.generatedAt.slice(0, 10)}.txt`;
+      const date = new Intl.DateTimeFormat("en-CA", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date(snapshot.generatedAt));
+      link.download = `stratos-clinica-auditoria-${date}.${format === "json" ? "json" : "txt"}`;
       document.body.append(link);
       link.click();
       link.remove();
       setExportStatus(
-        "Ficha descargada. Reúne los documentos pendientes junto con esta ficha.",
+        "Informe descargado sin pacientes, notas ni credenciales. Los requisitos de una operación real permanecen pendientes.",
       );
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch {
@@ -92,37 +195,76 @@ export default function ClinicalReadiness({ metadata }) {
           <dd>Pendiente de documento, versión y alcance de la integración</dd>
         </div>
       </dl>
-      <h3>
-        {simulation
-          ? "Antes de una versión real"
-          : "Documentos que debes reunir"}
-      </h3>
-      <ul className="clinical-documents">
-        {report.pendingDocuments.map((item) => (
-          <li key={item.id}>
-            <strong>{item.title}</strong>
-            <p>{item.detail}</p>
-            <span>Pendiente de verificar</span>
-          </li>
-        ))}
-      </ul>
+      <AuditMatrix audit={report.audit} />
+      <details className="clinical-documents-group">
+        <summary>
+          {simulation
+            ? "Índice de documentos antes de una versión real"
+            : "Documentos que debes reunir"}{" "}
+          ({report.pendingDocuments.length})
+        </summary>
+        <ul className="clinical-documents">
+          {report.pendingDocuments.map((item) => (
+            <li key={item.id}>
+              <strong>{item.title}</strong>
+              <p>{item.detail}</p>
+              <span>Pendiente de verificar</span>
+            </li>
+          ))}
+        </ul>
+      </details>
       <p>
         {simulation ? "Para una futura integración real, solicita" : "Solicita"}{" "}
         a Huli el certificado DGIS vigente y la versión exacta habilitada en tu
         cuenta, incluida la confirmación del alcance de la API. La certificación
         del proveedor no se extiende automáticamente a Stratos.
       </p>
-      <button type="button" className="huli-secondary" onClick={download}>
-        <Download size={16} aria-hidden="true" />
-        Descargar ficha de integración
-      </button>
+      <div className="clinical-audit-downloads">
+        <button
+          type="button"
+          className="huli-secondary"
+          onClick={() => download("text")}
+        >
+          <Download size={16} aria-hidden="true" />
+          Descargar informe de preparación
+        </button>
+        <button
+          type="button"
+          className="huli-secondary"
+          onClick={() => download("json")}
+        >
+          <Download size={16} aria-hidden="true" />
+          Descargar matriz JSON
+        </button>
+      </div>
       <p className="clinical-export-status" role="status">
         {exportStatus}
       </p>
       <details className="clinical-sources">
         <summary>Consultar normas y guías oficiales</summary>
         <ul>
-          {CLINICAL_SOURCES.map((source) => (
+          {CLINICAL_SOURCES.filter(
+            (source) => source.authority !== "provider",
+          ).map((source) => (
+            <li key={source.url}>
+              <a href={source.url} target="_blank" rel="noreferrer">
+                {source.label}
+                <ExternalLink size={13} aria-hidden="true" />
+              </a>
+            </li>
+          ))}
+        </ul>
+      </details>
+      <details className="clinical-sources">
+        <summary>Guías del proveedor Huli</summary>
+        <p>
+          Información del proveedor; no sustituye el cotejo del certificado, la
+          cuenta ni la configuración de la integración.
+        </p>
+        <ul>
+          {CLINICAL_SOURCES.filter(
+            (source) => source.authority === "provider",
+          ).map((source) => (
             <li key={source.url}>
               <a href={source.url} target="_blank" rel="noreferrer">
                 {source.label}
