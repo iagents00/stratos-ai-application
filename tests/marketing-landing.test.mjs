@@ -27,7 +27,7 @@ test('the public site preserves commercial terms, contact and fixed login routes
     const ids = new Set([...html.matchAll(/id="([^"]+)"/g)].map(match => match[1]));
     for (const href of links) {
       if (href.startsWith('#') && href !== '#') assert.ok(ids.has(href.slice(1)), `Broken anchor ${href}`);
-      if (href.startsWith('https://wa.me/')) assert.equal(new URL(href).pathname, '/17479779711');
+      if (href.startsWith('https://wa.me/')) assert.equal(new URL(href).pathname, '/529842803001');
     }
     for (const route of ['https://app.getstratosai.com/login', '/diagnostico', '/politica-de-privacidad', '/terminos-stratos-ai.html']) assert.ok(links.includes(route), route);
     for (const match of html.matchAll(/<img[^>]+src="([^"]+)"/g)) {
