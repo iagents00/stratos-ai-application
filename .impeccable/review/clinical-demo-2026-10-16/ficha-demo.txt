@@ -1,0 +1,38 @@
+Ficha de preparación de la demo clínica Stratos AI
+Generado: 2026-10-17T00:32:04.381Z
+
+Demostración con datos ficticios y permisos simulados en el navegador. No consulta Huli ni protege expedientes reales. Preparación técnica; no es un certificado, dictamen sanitario ni expediente clínico. La certificación de Huli no acredita automáticamente esta integración.
+
+ALCANCE
+- Tres escenarios ficticios: consulta, odontología y multiespecialidad
+- Enlaces a expedientes con acceso y roles simulados
+- Consulta y revisión de borradores ficticios con Copilot, sin envío a modelos de IA externos
+En esta demo sólo se consultan expedientes sintéticos y se preparan borradores sin firma. Antes de una versión real, validar dónde y cómo el profesional registra, firma y cierra la atención.
+
+VERIFICACIÓN TÉCNICA
+Conexión autenticada Huli: Sin evidencia verificable en esta ficha
+Versión Stratos: Pendiente de identificar
+
+DOCUMENTOS PENDIENTES
+- Identidad y autorizaciones de la clínica: Antes de una versión real: pendiente de evidencia. Responsable: Por designar.
+  Nombre, domicilio, servicios, profesionales y cédulas; aviso de funcionamiento, responsable sanitario y licencia cuando corresponda al servicio.
+- Certificado y configuración de Huli: Antes de una versión real: pendiente de evidencia. Responsable: Por designar.
+  Certificado DGIS vigente, versión exacta de tu cuenta, activación NOM-024 y confirmación escrita del alcance de la API e integración.
+- Expedientes y consentimientos: Antes de una versión real: pendiente de evidencia. Responsable: Por designar.
+  Comprobar en Huli contenido, autoría, fecha, hora, firma, cierre y conservación del expediente. Para odontología, revisar también la NOM-013.
+- Privacidad y contratos: Antes de una versión real: pendiente de evidencia. Responsable: Por designar.
+  Aviso de privacidad de la clínica, finalidades, base jurídica del tratamiento, derechos ARCO y contratos con Huli, Stratos y sus proveedores.
+- Accesos individuales y bajas: Antes de una versión real: pendiente de evidencia. Responsable: Por designar.
+  Antes de una versión real, implementar cuentas individuales, autorización en servidor por clínica y expediente, revisión de roles, caducidad y revocación de sesiones.
+- Bitácoras y recuperación: Antes de una versión real: pendiente de evidencia. Responsable: Por designar.
+  Acreditar retención y acceso a registros, copias de seguridad, restauración probada, incidentes y continuidad. Los logs del servidor no son una bitácora clínica firmada.
+
+FUENTES
+NOM-004 · Expediente clínico: https://dof.gob.mx/normasOficiales/4909/SALUD/SALUD.html
+NOM-013 · Atención odontológica: https://sidof.segob.gob.mx/notas/docFuente/5462039
+NOM-024 · Sistemas de información en salud: https://sidof.segob.gob.mx/notas/docFuente/5280847
+COFEPRIS · Guía de autoverificación de consultorios: https://www.gob.mx/cofepris/documentos/guia-autoverificacion-establecimientos-de-atencion-medica-ambulatoria-o-consultorios-medicos-generales-y-de-especialidad
+DGIS · Certificado publicado de HuliPractice: http://www.dgis.salud.gob.mx/intercambio/certificados/02_HULILABS_Certificado_20260918_v29.pdf?v=2026.09.21
+Huli · Activación y uso de la certificación: https://help.hulipractice.com/es/collections/10394899-certificaciones
+
+Esta ficha se genera en el navegador. Conservar junto con los documentos originales, su vigencia, responsables y las pruebas fechadas de la clínica. No incluye información de pacientes.

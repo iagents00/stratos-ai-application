@@ -1,0 +1,37 @@
+{
+  "scope": "Demo clínica local; datos sintéticos; sin despliegue ni consultas Huli",
+  "date": "2026-10-16",
+  "baseUrl": "http://127.0.0.1:4176/clinica-dental-demo",
+  "checks": {
+    "complexClinicDoctorAssignedLinks": "PASS: Paciente Demo 01 y 02",
+    "dentalClinicDoctorPatientList": "PASS: Paciente Demo 04 y 05; buscar 01 devuelve vacío",
+    "simpleClinicDirectLink": "PASS: preselecciona Consulta General y abre 06 para médico asignado; Copilot ofrece 06 y 07",
+    "anonymousRecordLink": "PASS: requiere acceso demo",
+    "receptionRecordLink": "PASS: acceso denegado; Copilot no devuelve links de expediente",
+    "noteReview": "PASS: lista mantiene 1 nota antes de confirmar; guardar produce 2; estado borrador sin firma",
+    "idleAndActivity": "PASS con Playwright Clock: 14 min, tecla, 2 min mantiene sesión; 15 min inactivo vuelve al login",
+    "expiryDeletesDrafts": "PASS: al reingresar queda únicamente 1 nota sintética inicial",
+    "conversationClear": "PASS: elimina mensajes anteriores y devuelve foco al compositor",
+    "repeatedReset": "PASS: dos ciclos consecutivos consulta/reinicio; ambos reducen 3 mensajes a 1 aun repitiendo el mismo aviso",
+    "readinessAutonomousStyles": "PASS: capturas desktop/mobile actualizadas e inspeccionadas; padding 24px/20px y botón descarga 44px en ambos tamaños",
+    "readinessDownload": "PASS: ficha TXT descargada; alcance y pendientes sin pacientes, borradores ni credenciales",
+    "clinicalPersistence": "PASS: sin keys demo en localStorage ni sessionStorage",
+    "networkIsolation": "PASS: sin requests Supabase/Huli, incluso con token ficticio preexistente; fixture removida al terminar",
+    "horizontalOverflow": "PASS: documentWidth/bodyWidth iguales al viewport 1440, 390 y 320",
+    "workspaceInputSize": "PASS: textarea 16px",
+    "workspaceLint": "PASS: ESLint focalizado y git diff --check"
+  },
+  "visualCaptures": [
+    "login-final-desktop.png",
+    "login-final-mobile.png",
+    "record-final-desktop.png",
+    "record-final-mobile.png",
+    "evidence-final-desktop.png",
+    "evidence-final-mobile.png",
+    "copilot-final-desktop.png",
+    "copilot-final-mobile.png",
+    "copilot-final-narrow.png"
+  ],
+  "visualFindingHandedToRoot": "Resuelto y confirmado: ClinicalReadiness tiene padding, borde y botón de descarga autónomos de 44px; evidencia desktop/mobile actualizada.",
+  "detector": "Ejecutado una vez. Inter inherited-warning y advisories DESIGN.md Rails fuera de alcance; sin fallos mecánicos de overflow, foco o jerarquía detectados."
+}

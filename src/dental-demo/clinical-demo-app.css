@@ -1,0 +1,658 @@
+.clinical-demo-app {
+  --clinical-demo-bg: #080d16;
+  --clinical-demo-panel: #101925;
+  --clinical-demo-text: #e5e7eb;
+  --clinical-demo-muted: #b7c8dc;
+  --clinical-demo-line: #344358;
+  --clinical-demo-accent: #6ee7c2;
+  background: var(--clinical-demo-bg);
+  color: var(--clinical-demo-text);
+  min-height: 100dvh;
+  font-family: Inter, system-ui, sans-serif;
+  overflow-wrap: anywhere;
+  color-scheme: dark;
+}
+.clinical-demo-app * {
+  box-sizing: border-box;
+}
+.clinical-demo-app button,
+.clinical-demo-app input,
+.clinical-demo-app select,
+.clinical-demo-app textarea {
+  font: inherit;
+}
+.clinical-demo-app input,
+.clinical-demo-app select,
+.clinical-demo-app textarea {
+  background: #0b1320;
+  color: var(--clinical-demo-text);
+  border: 1px solid #52657e;
+  border-radius: 8px;
+  min-height: 44px;
+  padding: 11px 12px;
+  width: 100%;
+  font-size: 16px;
+}
+.clinical-demo-app input::placeholder {
+  color: #aabbd0;
+}
+.clinical-demo-app :focus-visible {
+  outline: 2px solid var(--clinical-demo-accent);
+  outline-offset: 4px;
+}
+.clinical-demo-app ::selection {
+  background: var(--clinical-demo-accent);
+  color: #08261d;
+}
+.clinical-demo-app textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+.clinical-demo-app button,
+.clinical-demo-app a {
+  -webkit-tap-highlight-color: transparent;
+}
+.clinical-demo-wordmark {
+  color: #f5f8fc;
+  text-decoration: none;
+  font-size: 23px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.clinical-demo-wordmark span {
+  color: var(--clinical-demo-accent);
+}
+.clinical-demo-primary,
+.clinical-demo-secondary {
+  min-height: 44px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 15px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 14px !important;
+  text-decoration: none;
+}
+.clinical-demo-primary {
+  background: var(--clinical-demo-accent);
+  color: #09281e;
+  font-weight: 600;
+}
+.clinical-demo-primary:hover:not(:disabled) {
+  background: #9df0d7;
+}
+.clinical-demo-secondary {
+  background: var(--clinical-demo-panel);
+  color: var(--clinical-demo-text);
+  border-color: var(--clinical-demo-line);
+}
+.clinical-demo-secondary:hover:not(:disabled) {
+  border-color: var(--clinical-demo-accent);
+}
+.clinical-demo-app button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.clinical-demo-login {
+  max-width: 1160px;
+  margin: auto;
+  min-height: calc(100dvh - 80px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(28px, 5vw, 88px);
+  align-items: start;
+  padding: 60px 32px;
+}
+.clinical-demo-login-intro {
+  padding-block: 10px;
+}
+.clinical-demo-login h1 {
+  font-size: clamp(30px, 3.5vw, 44px);
+  font-weight: 550;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  margin: 56px 0 20px;
+  text-wrap: balance;
+}
+.clinical-demo-login-intro > p {
+  color: var(--clinical-demo-muted);
+  font-size: 16px;
+  line-height: 1.8;
+  max-width: 48ch;
+}
+.clinical-demo-login-intro .clinical-demo-demo-label {
+  color: var(--clinical-demo-accent);
+  font-size: 14px;
+  margin-top: 30px;
+}
+.clinical-demo-login-intro ol {
+  padding-inline-start: 20px;
+  margin-block: 25px;
+  line-height: 2;
+  color: var(--clinical-demo-muted);
+  font-size: 14px;
+}
+.clinical-demo-limit {
+  color: var(--clinical-demo-muted);
+  font-size: 13px !important;
+  line-height: 1.8;
+}
+.clinical-demo-access {
+  background: var(--clinical-demo-panel);
+  border: 1px solid var(--clinical-demo-line);
+  border-radius: 14px;
+  padding: 26px;
+  min-width: 0;
+}
+.clinical-demo-access h2 {
+  font-size: 22px;
+  font-weight: 550;
+  margin: 0 0 25px;
+}
+.clinical-demo-access h3 {
+  font-size: 14px;
+  margin: 24px 0 12px;
+}
+.clinical-demo-access label {
+  display: block;
+  font-size: 14px;
+  margin: 16px 0 8px;
+}
+.clinical-demo-clinic-description {
+  font-size: 13px;
+  color: var(--clinical-demo-muted);
+  line-height: 1.7;
+  margin: 10px 0;
+}
+.clinical-demo-account-list {
+  display: grid;
+  gap: 8px;
+}
+.clinical-demo-account-list button {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: start;
+  padding: 12px;
+  min-height: 58px;
+  color: var(--clinical-demo-text);
+  background: transparent;
+  border: 1px solid var(--clinical-demo-line);
+  border-radius: 8px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.clinical-demo-account-list button:hover {
+  border-color: var(--clinical-demo-accent);
+  background: #152630;
+}
+.clinical-demo-account-list strong {
+  font-size: 13px;
+  font-weight: 550;
+}
+.clinical-demo-account-list span {
+  font-size: 12px;
+  color: var(--clinical-demo-muted);
+}
+.clinical-demo-access .clinical-demo-primary {
+  width: 100%;
+  margin-top: 12px;
+}
+.clinical-demo-public-password {
+  font-size: 12px;
+  color: var(--clinical-demo-muted);
+  line-height: 1.7;
+}
+.clinical-demo-notice {
+  font-size: 13px;
+  color: #c4dbef;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+.clinical-demo-error {
+  font-size: 14px;
+  color: #ffb5a9;
+  line-height: 1.7;
+}
+.clinical-demo-app-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 20px 32px;
+  border-block-end: 1px solid var(--clinical-demo-line);
+}
+.clinical-demo-app-header > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+.clinical-demo-app-header strong {
+  font-size: 15px;
+  font-weight: 550;
+}
+.clinical-demo-app-header span {
+  font-size: 12px;
+  color: var(--clinical-demo-muted);
+}
+.clinical-demo-app-disclosure {
+  background: #122820;
+  color: #b8e8d8;
+  padding: 10px 32px;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.clinical-demo-app-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 14px 32px;
+  border-block-end: 1px solid var(--clinical-demo-line);
+}
+.clinical-demo-app-nav button {
+  background: transparent;
+  color: var(--clinical-demo-muted);
+  min-height: 44px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.clinical-demo-app-nav button[aria-current="page"] {
+  background: #173c32;
+  color: #b8f0dd;
+  border-color: #477c69;
+}
+.clinical-demo-app-nav button:hover {
+  color: var(--clinical-demo-text);
+  border-color: #52657e;
+}
+.clinical-demo-app-nav .clinical-demo-reset {
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+}
+.clinical-demo-app-notice {
+  max-width: 1200px;
+  margin: 12px auto;
+  padding-inline: 32px;
+  color: var(--clinical-demo-muted);
+  font-size: 14px;
+}
+.clinical-demo-app-footer {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  max-width: 1200px;
+  margin: 24px auto 0;
+  padding: 20px 32px 28px;
+  font-size: 12px;
+  color: var(--clinical-demo-muted);
+  line-height: 1.8;
+}
+.clinical-demo-app-footer svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.clinical-demo-controls {
+  max-width: 1060px;
+  margin: auto;
+  padding: 8px 32px 30px;
+}
+.clinical-demo-controls .clinical-readiness {
+  background: var(--clinical-demo-panel);
+}
+.clinical-demo-audit {
+  margin-top: 32px;
+}
+.clinical-demo-audit h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 19px;
+}
+.clinical-demo-audit > p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--clinical-demo-muted);
+  max-width: 75ch;
+}
+.clinical-demo-audit ol {
+  padding: 0;
+  list-style: none;
+}
+.clinical-demo-audit li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-block: 13px;
+  border-block-end: 1px solid var(--clinical-demo-line);
+  font-size: 13px;
+}
+.clinical-demo-audit time {
+  font-variant-numeric: tabular-nums;
+  color: var(--clinical-demo-muted);
+}
+.clinical-demo-audit small {
+  margin-inline-start: auto;
+  color: var(--clinical-demo-muted);
+}
+.clinical-demo-denied {
+  max-width: 720px;
+  margin: 50px auto;
+  padding: 32px;
+}
+.clinical-demo-denied > svg {
+  color: var(--clinical-demo-accent);
+}
+.clinical-demo-denied h1 {
+  font-size: 28px;
+  font-weight: 550;
+}
+.clinical-demo-denied p {
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--clinical-demo-muted);
+}
+.clinical-demo-denied > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+.clinical-demo-record {
+  max-width: 1300px;
+  margin: auto;
+  padding: 28px 32px;
+}
+.clinical-demo-record-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-block: 28px;
+}
+.clinical-demo-record-heading h1 {
+  font-size: 28px;
+  font-weight: 550;
+  margin: 0 0 10px;
+  line-height: 1.3;
+}
+.clinical-demo-record-heading p {
+  font-size: 14px;
+  color: var(--clinical-demo-muted);
+  margin: 0;
+}
+.clinical-demo-record-heading > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--clinical-demo-accent);
+  font-size: 13px;
+}
+.clinical-demo-record-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+.clinical-demo-record-content,
+.clinical-demo-record-copilot {
+  border: 1px solid var(--clinical-demo-line);
+  background: var(--clinical-demo-panel);
+  border-radius: 14px;
+  padding: 24px;
+  min-width: 0;
+}
+.clinical-demo-record-grid h2 {
+  font-size: 19px;
+  font-weight: 550;
+  margin: 0 0 15px;
+}
+.clinical-demo-record-grid h3 {
+  font-size: 16px;
+  font-weight: 550;
+  margin: 28px 0 14px;
+}
+.clinical-demo-record-grid p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--clinical-demo-muted);
+  white-space: pre-wrap;
+}
+.clinical-demo-record-content dl > div {
+  padding-block: 13px;
+  border-block-end: 1px solid var(--clinical-demo-line);
+}
+.clinical-demo-record-content dt {
+  font-size: 12px;
+  color: var(--clinical-demo-muted);
+  margin-bottom: 6px;
+}
+.clinical-demo-record-content dd {
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.7;
+}
+.clinical-demo-history,
+.clinical-demo-notes {
+  padding: 0;
+  list-style: none;
+}
+.clinical-demo-history li,
+.clinical-demo-notes li {
+  border-block-end: 1px solid var(--clinical-demo-line);
+  padding-block: 13px;
+  font-size: 14px;
+}
+.clinical-demo-history time {
+  display: block;
+  font-size: 12px;
+  color: var(--clinical-demo-muted);
+  margin-bottom: 8px;
+}
+.clinical-demo-history strong,
+.clinical-demo-notes strong {
+  font-size: 14px;
+  font-weight: 550;
+}
+.clinical-demo-notes small {
+  color: var(--clinical-demo-muted);
+  font-size: 12px;
+}
+.clinical-demo-record-suggestions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-block: 20px;
+}
+.clinical-demo-record-suggestions button {
+  min-height: 40px;
+  padding: 9px 11px;
+  border: 1px solid #52657e;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--clinical-demo-text);
+  cursor: pointer;
+  font-size: 12px;
+}
+.clinical-demo-record-suggestions button:hover {
+  border-color: var(--clinical-demo-accent);
+}
+.clinical-demo-record-messages {
+  max-height: 360px;
+  overflow: auto;
+  scrollbar-color: #52657e transparent;
+  padding-inline-end: 8px;
+  overscroll-behavior: contain;
+}
+.clinical-demo-record-message {
+  padding: 15px 0;
+  border-block-end: 1px solid var(--clinical-demo-line);
+}
+.clinical-demo-record-message > span {
+  font-size: 12px;
+  color: var(--clinical-demo-accent);
+}
+.clinical-demo-record-message.user > span {
+  color: var(--clinical-demo-muted);
+}
+.clinical-demo-record-message p {
+  margin: 7px 0 0;
+}
+.clinical-demo-record-composer label,
+.clinical-demo-note-review label {
+  display: block;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+.clinical-demo-record-composer > div {
+  display: flex;
+  gap: 8px;
+  align-items: start;
+}
+.clinical-demo-record-composer input {
+  min-width: 0;
+  flex: 1;
+}
+.clinical-demo-record-composer button {
+  flex-shrink: 0;
+}
+.clinical-demo-note-review {
+  margin-top: 20px;
+  padding-block: 20px;
+  border-block: 1px solid #477c69;
+}
+.clinical-demo-note-review > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.clinical-demo-note-review p {
+  font-size: 12px;
+}
+@media (max-width: 800px) {
+  .clinical-demo-login {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 28px 20px;
+  }
+  .clinical-demo-login h1 {
+    margin-top: 30px;
+    font-size: 32px;
+  }
+  .clinical-demo-login-intro ol {
+    display: none;
+  }
+  .clinical-demo-app-header {
+    padding: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .clinical-demo-app-header .clinical-demo-wordmark {
+    font-size: 20px;
+  }
+  .clinical-demo-app-header .clinical-demo-secondary {
+    font-size: 12px !important;
+  }
+  .clinical-demo-app-disclosure {
+    padding: 10px 16px;
+  }
+  .clinical-demo-app-nav {
+    padding: 10px 12px;
+    gap: 2px;
+  }
+  .clinical-demo-app-nav button {
+    padding: 10px;
+    font-size: 13px;
+  }
+  .clinical-demo-app-nav .clinical-demo-reset {
+    margin-inline-start: 0;
+  }
+  .clinical-demo-record {
+    padding: 22px 16px;
+  }
+  .clinical-demo-record-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+  .clinical-demo-record-heading h1 {
+    font-size: 25px;
+  }
+  .clinical-demo-record-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .clinical-demo-record-content,
+  .clinical-demo-record-copilot {
+    padding: 20px;
+  }
+  .clinical-demo-record-grid p,
+  .clinical-demo-record-content dd {
+    font-size: 16px;
+  }
+  .clinical-demo-controls {
+    padding: 8px 16px 24px;
+  }
+  .clinical-demo-app-footer {
+    padding: 18px 16px 28px;
+  }
+  .clinical-demo-audit small {
+    width: 100%;
+    margin: 0;
+  }
+  .clinical-demo-access {
+    padding: 20px;
+  }
+  .clinical-demo-public-password,
+  .clinical-demo-account-list span {
+    font-size: 13px;
+  }
+  .clinical-demo-denied {
+    margin: 24px auto;
+    padding: 24px;
+  }
+  .clinical-demo-record-messages {
+    max-height: 380px;
+  }
+  .clinical-demo-record-composer > div {
+    flex-wrap: wrap;
+  }
+  .clinical-demo-record-composer input {
+    flex-basis: calc(100% - 60px);
+  }
+  .clinical-demo-record-copilot .clinical-demo-notice {
+    font-size: 14px;
+  }
+}
+@media (max-width: 800px) {
+  .clinical-demo-app-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .clinical-demo-app-header > .clinical-demo-wordmark {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .clinical-demo-app-header > button {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .clinical-demo-app-header > div {
+    grid-column: 1/-1;
+    grid-row: 2;
+  }
+  .clinical-demo-app-header > div strong,
+  .clinical-demo-app-header > div span {
+    overflow-wrap: normal;
+  }
+}
