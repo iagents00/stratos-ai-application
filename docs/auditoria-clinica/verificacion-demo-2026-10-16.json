@@ -71,5 +71,18 @@
     "No expediente completo, firma, conservación o bitácora clínica persistente.",
     "El login y los roles públicos de la demo sólo se simulan en navegador.",
     "335 avisos adicionales de lint preexistentes; check:runtime sin errores bloqueantes."
-  ]
+  ],
+  "postPublicationCorrection": {
+    "observedOnCommit": "b69c685527bfd1a9231344c068cbc4717b7ede4f",
+    "issue": "Worker devolvía referencia de versión anterior desde caché en la ficha clínica.",
+    "fix": "Bypass release.json y solicitudes no-store; URL única de ficha para workers anteriores.",
+    "regressionTestsPassed": 2,
+    "testScope": "VM: sin interceptación o lectura de caché de entrega; estrategia normal de manifest conservada. No prueba de desconexión real.",
+    "sourceSha256": {
+      "public/sw.js": "2e3484f242fb52e239859585ecefad41f831300b06ec74ea5337d7e292cdcde1",
+      "src/dental-demo/ClinicalReadiness.jsx": "8a91d9c1050c4de1eb6a0fa25fdc0807f1b71089ab36616970d4f4a2fd8b2c4f",
+      "tests/service-worker-release.test.mjs": "7f5678c00188ce8c44138dc699d10f02028c9523871df788ed0161fc15246c94"
+    },
+    "releaseVerification": "Comparar SHA de ambos dominios y de la ficha visible/descargada antes de entregar."
+  }
 }

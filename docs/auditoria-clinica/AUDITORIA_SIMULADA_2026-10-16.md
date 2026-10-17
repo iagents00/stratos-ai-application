@@ -76,3 +76,9 @@ Se verificó el árbol de trabajo de `codex/clinical-regulatory-audit`, con base
 - Corregidos: caducidad al reanudar pestaña, límites de 20 borradores por expediente y 10.000 caracteres por respuesta, sobrescrituras de autor/identidad/firma, fechas imposibles, metadatos ajenos al informe, foco y controles táctiles. La entrada libre sigue sin detector general de datos personales; se mantiene prohibida para pacientes reales.
 
 Las seis medidas de prototipo son simulaciones verificadas dentro de este alcance. Los siete bloqueos de una versión clínica real y los hallazgos REAL permanecen pendientes de evidencia y responsables. La revisión física, los documentos originales, la firma/conservación y la cuenta/configuración/API efectiva de Huli no fueron inspeccionados.
+
+## Corrección detectada en la primera prueba publicada
+
+La primera comprobación de producción del commit `b69c6855` mostró una pantalla actualizada y una referencia de versión anterior. El service worker trataba los JSON como recursos stale-while-revalidate y podía devolver una copia previa de `release.json`, incluso ante un fetch `no-store`. Por ello, comprobar sólo el endpoint con un parámetro nuevo no acreditaba qué referencia mostraba la ficha.
+
+Se excluyen de la caché del worker el manifiesto de entrega y las solicitudes `no-store`, sin borrar el runtime ni recargar sesiones. La ficha usa además una URL única para evitar la entrada vieja mientras un worker anterior controla la primera visita. Dos regresiones ejecutan el worker con una copia obsoleta y comprueban que no intercepta ni lee esa caché, mientras los recursos normales mantienen su estrategia. Estas pruebas VM no son una prueba de desconexión real del navegador. La liberación requiere cotejar además el SHA visible y el de la descarga con el publicado.
