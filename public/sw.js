@@ -139,6 +139,11 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
+  // La referencia de una entrega debe venir de red, incluso si un worker
+  // anterior dejó el JSON en runtime. Respetar también el no-store del caller;
+  // una copia vieja no es evidencia de la versión vigente ni fallback offline.
+  if ((url.origin === self.location.origin && url.pathname === '/release.json') || request.cache === 'no-store') return;
+
   // ── Supabase: network-only (no cachear; deja que la app maneje fallos) ──
   if (isSupabaseRequest(url)) {
     return;

@@ -103,7 +103,12 @@ export default function ClinicalReadiness({ metadata }) {
   const [exportStatus, setExportStatus] = useState("");
   useEffect(() => {
     const controller = new AbortController();
-    fetch("/release.json", { cache: "no-store", signal: controller.signal })
+    // Older workers may still control the first visit after an update. A unique
+    // URL prevents their stale-while-revalidate rule from returning old evidence.
+    fetch(`/release.json?readiness=${Date.now()}`, {
+      cache: "no-store",
+      signal: controller.signal,
+    })
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
         if (!controller.signal.aborted)

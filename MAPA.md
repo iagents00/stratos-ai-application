@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**272 archivos · 84.342 líneas**
+**272 archivos · 84.347 líneas**
 
 ---
 
@@ -368,7 +368,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `clinical-demo-workspace.css` | 496 | _sin describir_ |
 | `ClinicalDemoWorkspace.jsx` | 445 | _sin describir_ |
 | `clinical-readiness.css` | 301 | _sin describir_ |
-| `ClinicalReadiness.jsx` | 285 | _sin describir_ |
+| `ClinicalReadiness.jsx` | 290 | _sin describir_ |
 | `DentalDemo.jsx` | 63 | _sin describir_ |
 | `HuliWorkspace.jsx` | 43 | _sin describir_ |
 | `ClinicalProfile.jsx` | 16 | _sin describir_ |
@@ -739,7 +739,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cerrar navegación | `src/app/features/Admin/PlatformAdminConsole.jsx:253` |
 | Cerrar sesión | `src/app/App.jsx:2010` |
 | Cerrar vista previa | `src/app/views/LandingPages/LandingPagePreview.jsx:205` |
-| Certificación de tu cuenta Huli | `src/dental-demo/ClinicalReadiness.jsx:194` |
+| Certificación de tu cuenta Huli | `src/dental-demo/ClinicalReadiness.jsx:199` |
 | Chats | `src/app/views/WhatsApp.jsx:633` |
 | Cierres | `src/app/views/Team.jsx:116` |
 | Citas asignadas al presentador principal | `src/app/views/ZoomControl/Graficas.jsx:244` |
@@ -826,9 +826,9 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/Admin/PipelineConfiguratorAdmin.jsx` (312 líneas)
 - `src/clients/clinica-dental/config.js` (311 líneas)
 - `src/dental-demo/clinical-readiness.css` (301 líneas)
+- `src/dental-demo/ClinicalReadiness.jsx` (290 líneas)
 - `src/lib/lead-save.js` (288 líneas)
 - `src/app/features/Admin/PlatformAdminConsole.jsx` (285 líneas)
-- `src/dental-demo/ClinicalReadiness.jsx` (285 líneas)
 - `src/landing/ManualGasil.jsx` (285 líneas)
 - `src/landing/ManualNSG.jsx` (285 líneas)
 - `src/app/views/ZoomControl/Graficas.jsx` (284 líneas)
