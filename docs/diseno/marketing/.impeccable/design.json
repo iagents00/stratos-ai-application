@@ -105,7 +105,7 @@
       "reviewStatus": "ship: revisión independiente acotada sin correcciones materiales; 23 comprobaciones locales de navegador y 201 pruebas aprobadas. Producción requiere comprobación después de integrar.",
       "previousMotionReview": ".impeccable/review/motion-2026-10-16/REVIEW.md",
       "showcaseLayout": "Los seis paneles comparten una retícula para conservar la altura del contenido más alto; los inactivos permanecen ocultos y sin interacción.",
-      "header": "Header con wordmark Stratos AI sin icono; footer conserva logo S original.",
+      "header": "Header y footer con el mismo wordmark Stratos AI sin icono; hubs ilustrativos conservan logo S original.",
       "playback": "Sin botones de reproducción. Seis módulos y siete titulares recorren todas las opciones con cualquier preferencia de movimiento; reduced elimina desplazamientos. Hover no detiene la galería; teclado, hidden y offscreen conservan pausa.",
       "copilotCloseup": {
         "asset": "public/marketing/modules/copilot-closeup-20261016/copilot.webp",
