@@ -22,7 +22,7 @@ No incluir datos de pacientes ni credenciales en este archivo o repositorio. Los
 | Autorizaciones de radiología si se presta ese servicio | Alcance por determinar |
 | Responsable de publicidad y materiales que se difundirán | No definidos |
 | Certificado DGIS Huli vigente, ambas caras y folio; versión exacta activa en la cuenta | Pendiente de cotejo con el proveedor y la cuenta |
-| Aclaración versión 29 de ficha/PDF DGIS frente a versión 30 del listado del mismo folio | Pendiente de respuesta documental |
+| Identificación del certificado que corresponde a la versión efectiva de la cuenta: versión 29 / folio DGIS-CER-P-019-2026-09 o versión 30 / folio DGIS-CER-P-020-2026-09 | Ambos folios públicos cotejados; configuración de la cuenta pendiente. La consulta actual corrige la lectura previa: no existe discrepancia del mismo folio |
 | Confirmación de API, módulos y configuración incluidos en el alcance certificado | No aportada; una API Key funcional no demuestra cobertura |
 | Declaración de aplicabilidad de GIIS para la integración y cualquier ampliación a expediente | No realizada para Stratos |
 | Evidencia de exportación del expediente fuente, firmas, trazabilidad y conservación | No aportada ni ensayada con una muestra autorizada |

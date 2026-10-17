@@ -102,3 +102,68 @@ test("demo report describes simulation and future requirements without claiming 
     /una cuenta administradora|SENSITIVE-PATIENT/,
   );
 });
+
+test("timestamps reject comments, impossible dates and private content instead of exporting raw values", () => {
+  for (const timestamp of [
+    "2026-10-16 (SENSITIVE-PATIENT)",
+    "2026-10-16T12:30:00.000Z SENSITIVE-TOKEN",
+    "2026-02-30T12:30:00.000Z",
+    "2026-10-16T12:30:00.000+00:00",
+  ]) {
+    assert.equal(
+      verifiedClinicalRelease({ ...release, builtAt: timestamp }),
+      null,
+    );
+    const report = buildClinicalReadiness(
+      {
+        ...metadata,
+        verification: { ...metadata.verification, checkedAt: timestamp },
+      },
+      release,
+    );
+    assert.equal(report.technicalChecks.authenticatedHuliConnection, false);
+    assert.equal(report.technicalChecks.checkedAt, undefined);
+    assert.doesNotMatch(
+      JSON.stringify(report) + clinicalReadinessText(report),
+      /SENSITIVE/,
+    );
+  }
+  assert.equal(
+    verifiedClinicalRelease({ ...release, builtAt: "2026-10-16T12:00:00Z" })
+      .builtAt,
+    release.builtAt,
+  );
+});
+
+test("demo TXT and JSON contain the same public matrix and distinguish provider sources", () => {
+  const report = buildClinicalReadiness(
+    {
+      mode: "demo",
+      scenario: "demo-clinic-dental",
+      patient: "SENSITIVE-PATIENT",
+      prompt: "SENSITIVE-PROMPT",
+      notes: ["SENSITIVE-NOTE"],
+      password: "SENSITIVE-PASSWORD",
+      audit: { officialApproval: true, scenario: "SENSITIVE-PATIENT" },
+    },
+    { ...release, patient: "SENSITIVE-PATIENT" },
+    new Date("2026-10-16T12:00:00Z"),
+  );
+  const txt = clinicalReadinessText(report);
+  assert.equal(report.schemaVersion, 2);
+  assert.equal(report.audit.scenario.id, "demo-clinic-dental");
+  assert.equal(report.audit.officialApproval, false);
+  assert.equal(report.audit.realClinicalUseEnabled, false);
+  assert.match(txt, /BLOQUEOS PARA USAR EXPEDIENTES REALES/);
+  for (const norm of report.audit.standards) assert.ok(txt.includes(norm.name));
+  assert.match(txt, /Guía del proveedor · Huli/);
+  assert.match(txt, /Fuente oficial · NOM-005/);
+  assert.ok(
+    report.sources.some((item) => /versión 29, folio 019/.test(item.label)),
+  );
+  assert.ok(
+    report.sources.some((item) => /versión 30, folio 020/.test(item.label)),
+  );
+  assert.doesNotMatch(JSON.stringify(report) + txt, /SENSITIVE/);
+  assert.equal(buildClinicalReadiness(metadata, release).audit, null);
+});

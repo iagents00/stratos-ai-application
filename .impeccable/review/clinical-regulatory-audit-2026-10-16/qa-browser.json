@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 1,
+  "clientDate": "2026-10-16",
+  "clientTimezone": "America/Los_Angeles",
+  "generatedAt": "2026-10-17T00:46:02.427303+00:00",
+  "scope": "QA funcional y de accesibilidad de la demo sintética; no dictamen sanitario ni certificación WCAG.",
+  "route": "http://127.0.0.1:4177/clinica-dental-demo",
+  "uiAutomation": "Exclusivamente mcp__cua_repl: cua tab, AX snapshots, documented Playwright locators/read-only DOM evaluation and screenshots.",
+  "desktopViewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "desktopResult": {
+    "passed": 27,
+    "failed": 0,
+    "checks": [
+      {
+        "id": "login-demo-disclosure",
+        "status": "passed",
+        "evidence": "Las cuentas públicas, simulación, datos ficticios y ausencia de conexión Huli se explican antes de entrar."
+      },
+      {
+        "id": "login-landmarks-focus",
+        "status": "passed",
+        "evidence": "Un main, un h1 y foco en h1 al cargar."
+      },
+      {
+        "id": "workspace-focus",
+        "status": "passed",
+        "evidence": "Al entrar como médico el foco llega al h1 Copilot de la clínica."
+      },
+      {
+        "id": "assigned-links-keyboard",
+        "status": "passed",
+        "evidence": "Buscar expediente y abrir Paciente Demo 01 mediante Enter; sólo aparecen 01 y 02 asignados."
+      },
+      {
+        "id": "record-landmark-focus",
+        "status": "passed",
+        "evidence": "El expediente tiene main, h1 y foco inicial en el título."
+      },
+      {
+        "id": "note-review-focus",
+        "status": "passed",
+        "evidence": "Preparar nota de ejemplo mediante Enter enfoca el textarea de revisión."
+      },
+      {
+        "id": "empty-note-disabled",
+        "status": "passed",
+        "evidence": "Un borrador con sólo espacios deshabilita Guardar borrador demo."
+      },
+      {
+        "id": "note-keyboard-save",
+        "status": "passed",
+        "evidence": "Tab desde textarea llega a Guardar borrador demo y Enter guarda como borrador sin firma."
+      },
+      {
+        "id": "note-save-focus",
+        "status": "passed",
+        "evidence": "Tras guardar, el foco vuelve a clinical-demo-record-input."
+      },
+      {
+        "id": "record-input-help",
+        "status": "passed",
+        "evidence": "Consulta y revisión tienen etiquetas y aria-describedby para instrucciones."
+      },
+      {
+        "id": "copilot-regulatory-guidance",
+        "status": "passed",
+        "evidence": "Consulta NOM-229 y radiología presenta las siete NOM, límites y botón Abrir guía de preparación."
+      },
+      {
+        "id": "controls-heading-focus",
+        "status": "passed",
+        "evidence": "Controles y evidencia tiene h1 Auditoría de preparación con foco y main."
+      },
+      {
+        "id": "matrix-counts",
+        "status": "passed",
+        "evidence": "La matriz muestra 7 NOM, 6 controles demostrables y 7 bloqueos para uso real."
+      },
+      {
+        "id": "matrix-keyboard-details",
+        "status": "passed",
+        "evidence": "Disclosure NOM-004 se abre con Enter y muestra cláusulas, actividad, evidencia y resultado no acreditado."
+      },
+      {
+        "id": "sources-separation",
+        "status": "passed",
+        "evidence": "Normas y guías oficiales están separadas de Guías del proveedor Huli."
+      },
+      {
+        "id": "visible-touch-targets",
+        "status": "passed",
+        "evidence": "En la vista de controles con fuentes desplegadas ningún a/button/summary visible mide menos de 44 px de alto."
+      },
+      {
+        "id": "txt-download",
+        "status": "passed",
+        "evidence": "Descargar informe de preparación produce TXT con fecha local 2026-10-16."
+      },
+      {
+        "id": "json-download",
+        "status": "passed",
+        "evidence": "Descargar matriz JSON produce JSON válido con 7 normas, 6 controles y 7 bloqueos."
+      },
+      {
+        "id": "export-scope",
+        "status": "passed",
+        "evidence": "TXT/JSON no contienen la nota sintética de QA, Paciente Demo 01, cuenta example.invalid, clave demo o consulta ingresada."
+      },
+      {
+        "id": "reception-denied",
+        "status": "passed",
+        "evidence": "Un enlace al expediente 01 abierto con recepción muestra denegación, sin record-content y con foco h1."
+      },
+      {
+        "id": "admin-denied",
+        "status": "passed",
+        "evidence": "Dirección no puede abrir el expediente 01."
+      },
+      {
+        "id": "nonassigned-doctor-denied",
+        "status": "passed",
+        "evidence": "El segundo médico no asignado no puede abrir el expediente 01."
+      },
+      {
+        "id": "cross-clinic-denied",
+        "status": "passed",
+        "evidence": "El médico dental no puede abrir el expediente del centro multiespecialidad."
+      },
+      {
+        "id": "dental-applicability",
+        "status": "passed",
+        "evidence": "El escenario dental actualiza la matriz a Odontología y NOM-013 revisar para atención odontológica real."
+      },
+      {
+        "id": "general-applicability",
+        "status": "passed",
+        "evidence": "Consulta General actualiza NOM-005 revisar para consulta no especializada real."
+      },
+      {
+        "id": "clinic-select-focus-reset",
+        "status": "passed",
+        "evidence": "Cambiar clínica limpia cuenta/clave; con selector enfocado conserva activeElement clinical-demo-clinic."
+      },
+      {
+        "id": "console-errors",
+        "status": "passed",
+        "evidence": "La consola local devuelve cero entradas de error en los flujos ejercidos."
+      }
+    ]
+  },
+  "publicBaseline": {
+    "url": "https://getstratosai.com/clinica-dental-demo",
+    "verified": [
+      "Login demo médico",
+      "Enlaces asignados",
+      "Rechazo de prescripción/dosis",
+      "Nota vacía deshabilitada",
+      "Cierre elimina estado",
+      "Recepción denegada",
+      "Recepción sin enlaces a expedientes",
+      "Búsqueda sin resultados con recuperación",
+      "Ficha sin pacientes ni credenciales"
+    ]
+  },
+  "resolvedFindings": [
+    {
+      "severity": "P1",
+      "finding": "Expediente sin landmark main",
+      "resolution": "DemoRecord usa main."
+    },
+    {
+      "severity": "P2",
+      "finding": "Foco perdido al navegar entre pantallas",
+      "resolution": "Lifecycle enfoca h1; expediente enfoca título al montar."
+    },
+    {
+      "severity": "P2",
+      "finding": "Revisión de borrador no recibe foco ni ayuda asociada",
+      "resolution": "Textarea se enfoca al proponer; ayuda aria-describedby y retorno a entrada al guardar/descartar."
+    },
+    {
+      "severity": "P2",
+      "finding": "Controles y evidencia no tenía h1",
+      "resolution": "Título Auditoría de preparación."
+    },
+    {
+      "severity": "P2",
+      "finding": "Targets táctiles menores de 44px",
+      "resolution": "Wordmark, sugerencias y enlaces oficiales aumentados a mínimo44px."
+    },
+    {
+      "severity": "P2",
+      "finding": "Selector clínico se remonta y pierde foco",
+      "resolution": "Eliminado key clinicId; limpieza y foco del selector comprobados."
+    }
+  ],
+  "exports": {
+    "textBytes": 13468,
+    "jsonBytes": 18070,
+    "leakAssertions": {
+      "syntheticQaNote": false,
+      "syntheticPatientName": false,
+      "demoPassword": false,
+      "demoEmail": false,
+      "enteredPrompt": false
+    },
+    "note": "Comprobaciones sobre exportes concretos. No representan un filtro general de datos personales en campos libres."
+  },
+  "screenshots": [
+    "/tmp/stratos-clinical-regulatory-audit-2026-10-16/public-controls-baseline.png",
+    "/tmp/stratos-clinical-regulatory-audit-2026-10-16/desktop-record.png",
+    "/tmp/stratos-clinical-regulatory-audit-2026-10-16/desktop-controls.png",
+    "/tmp/stratos-clinical-regulatory-audit-2026-10-16/desktop-denied.png",
+    "/tmp/stratos-clinical-regulatory-audit-2026-10-16/mobile-390-record.png",
+    "/tmp/stratos-clinical-regulatory-audit-2026-10-16/mobile-390-controls.png",
+    "/tmp/stratos-clinical-regulatory-audit-2026-10-16/mobile-320-nom229.png",
+    "/tmp/stratos-clinical-regulatory-audit-2026-10-16/mobile-320-record.png"
+  ],
+  "mobile": {
+    "status": "passed",
+    "provenance": "root-evidence: ejecutado por el agente root mediante mcp__cua_repl en su pestaña aislada; este subagente revisó las capturas 390-record y 320-nom229.",
+    "viewports": [
+      {
+        "width": 390,
+        "height": 844,
+        "flows": [
+          "login",
+          "Copilot",
+          "enlaces asignados",
+          "visor de expediente",
+          "controles"
+        ]
+      },
+      {
+        "width": 320,
+        "height": 740,
+        "flows": [
+          "login",
+          "visor dental",
+          "NOM-229 desplegada"
+        ]
+      }
+    ],
+    "assertions": [
+      "Sin desbordamiento horizontal en todos los flujos",
+      "main único y h1 activo",
+      "aria-describedby clinical-demo-record-help",
+      "Cero targets visibles con altura menor de44px en controles320",
+      "7 normas,6 controles y7 bloqueos"
+    ],
+    "viewportReset": true,
+    "screenshots": [
+      "/tmp/stratos-clinical-regulatory-audit-2026-10-16/mobile-390-record.png",
+      "/tmp/stratos-clinical-regulatory-audit-2026-10-16/mobile-390-controls.png",
+      "/tmp/stratos-clinical-regulatory-audit-2026-10-16/mobile-320-nom229.png",
+      "/tmp/stratos-clinical-regulatory-audit-2026-10-16/mobile-320-record.png"
+    ],
+    "toolLimitation": "El subagente no podía cambiar viewport IAB ni compartir su pestaña en el inventario root; root completó el lote móvil de forma independiente."
+  },
+  "limitations": [
+    "No se usaron Huli ni Supabase remotos.",
+    "No se introdujeron pacientes reales ni credenciales privadas.",
+    "No se simuló una espera de 15 minutos en UI; caducidad/reanudación está cubierta por pruebas unitarias del agente de seguridad.",
+    "No se afirma conformidad clínica real, cumplimiento completo de todas las NOM, certificación sanitaria ni auditoría WCAG completa.",
+    "Contraste, rendimiento y compatibilidad de lectores de pantalla no recibieron un ensayo exhaustivo independiente."
+  ]
+}

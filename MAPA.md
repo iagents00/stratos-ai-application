@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**272 archivos · 84.028 líneas**
+**272 archivos · 84.342 líneas**
 
 ---
 
@@ -363,12 +363,12 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `ClinicalDemoApp.jsx` | 790 | _sin describir_ |
-| `clinical-demo-app.css` | 659 | _sin describir_ |
+| `ClinicalDemoApp.jsx` | 832 | _sin describir_ |
+| `clinical-demo-app.css` | 669 | _sin describir_ |
 | `clinical-demo-workspace.css` | 496 | _sin describir_ |
 | `ClinicalDemoWorkspace.jsx` | 445 | _sin describir_ |
-| `clinical-readiness.css` | 181 | _sin describir_ |
-| `ClinicalReadiness.jsx` | 143 | _sin describir_ |
+| `clinical-readiness.css` | 301 | _sin describir_ |
+| `ClinicalReadiness.jsx` | 285 | _sin describir_ |
 | `DentalDemo.jsx` | 63 | _sin describir_ |
 | `HuliWorkspace.jsx` | 43 | _sin describir_ |
 | `ClinicalProfile.jsx` | 16 | _sin describir_ |
@@ -572,6 +572,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Activa tu Copilot AI | `src/app/views/Copilot.jsx:1977` |
 | Activar para el equipo | `src/app/features/Admin/RailsSettings.jsx:72` |
 | Activar solo lectura | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:230` |
+| Actividad | `src/dental-demo/ClinicalReadiness.jsx:58` |
 | Actividad del equipo IA — hoy | `src/app/views/IACRM.jsx:299` |
 | Actividad reciente | `src/app/views/CRM/index.jsx:5904` |
 | Actividad registrada | `src/app/features/Admin/PlatformCompanyCRM.jsx:246` |
@@ -614,7 +615,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Agregar una columna propia a la hoja | `src/app/views/Marketing.jsx:1466` |
 | Ahora no | `src/app/views/Copilot.jsx:1922` |
 | ALDEA ZAMA · TULUM | `src/app/views/LandingPages/index.jsx:307` |
-| Alergias registradas | `src/dental-demo/ClinicalDemoApp.jsx:259` |
+| Alergias registradas | `src/dental-demo/ClinicalDemoApp.jsx:272` |
 | Alta intención | `src/app/views/ZoomControl/index.jsx:597` |
 | Alta intención — señal de cierre en el Zoom | `src/app/views/ZoomControl/index.jsx:710` |
 | Amenidades (separadas por coma) | `src/app/views/LandingPages/index.jsx:762` |
@@ -642,6 +643,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Asignar responsable | `src/app/features/MetaPanel/index.jsx:1000` |
 | Asistió (sem.) | `src/app/views/ZoomControl/Resumen.jsx:421` |
 | Atención Inmediata | `src/app/views/Dash.jsx:235` |
+| Auditoría de preparación | `src/dental-demo/ClinicalDemoApp.jsx:756` |
 | Aún no configuras un correo de recuperación. | `src/app/views/Profile.jsx:379` |
 | Aún no hay documentos | `src/app/features/MetaPanel/index.jsx:1874` |
 | Aún no hay usuarios activos. | `src/app/features/Admin/CajaPermissionsAdmin.jsx:127` |
@@ -649,7 +651,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Badge | `src/app/views/LandingPages/index.jsx:664` |
 | Bajar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:288` |
 | Bajo · Medio · Alto | `src/app/views/CRM/components.jsx:3431` |
-| Borradores de esta demo | `src/dental-demo/ClinicalDemoApp.jsx:290` |
+| Borradores de esta demo | `src/dental-demo/ClinicalDemoApp.jsx:303` |
 | Buscar (⌘K) | `src/app/App.jsx:2434` |
 | Buscar asesor… | `src/app/views/CRM/components.jsx:3188` |
 | Buscar candidato... | `src/app/views/RRHHModule.jsx:416` |
@@ -737,7 +739,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cerrar navegación | `src/app/features/Admin/PlatformAdminConsole.jsx:253` |
 | Cerrar sesión | `src/app/App.jsx:2010` |
 | Cerrar vista previa | `src/app/views/LandingPages/LandingPagePreview.jsx:205` |
-| Certificación de tu cuenta Huli | `src/dental-demo/ClinicalReadiness.jsx:91` |
+| Certificación de tu cuenta Huli | `src/dental-demo/ClinicalReadiness.jsx:194` |
 | Chats | `src/app/views/WhatsApp.jsx:633` |
 | Cierres | `src/app/views/Team.jsx:116` |
 | Citas asignadas al presentador principal | `src/app/views/ZoomControl/Graficas.jsx:244` |
@@ -768,11 +770,9 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Conectando tu clínica con Huli… | `src/dental-demo/TenantHuliWorkspace.jsx:8` |
 | Conectando… | `src/app/views/ConectarWhatsApp.jsx:122` |
 | Conectar mi WhatsApp | `src/app/views/ConectarWhatsApp.jsx:123` |
-| Conexión Huli | `src/dental-demo/ClinicalReadiness.jsx:73` |
-| Conexión real · Sólo consulta | `src/dental-demo/HuliWorkspace.jsx:28` |
 
 
-_(803 textos más — usá `npm run buscar "texto"`)_
+_(814 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -793,14 +793,14 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/landing/DeliveryHubCRM.jsx` (881 líneas)
 - `src/app/views/RRHHModule.jsx` (846 líneas)
 - `src/app/features/Admin/Rails.css` (832 líneas)
-- `src/dental-demo/ClinicalDemoApp.jsx` (790 líneas)
+- `src/dental-demo/ClinicalDemoApp.jsx` (832 líneas)
 - `src/landing/ManualCRM.jsx` (790 líneas)
 - `src/app/views/InformeAvances.jsx` (747 líneas)
 - `src/app/views/ERP.jsx` (722 líneas)
 - `src/lib/auth.js` (702 líneas)
 - `src/landing/OnboardingCallCenter.jsx` (687 líneas)
+- `src/dental-demo/clinical-demo-app.css` (669 líneas)
 - `src/app/views/WhatsApp.jsx` (667 líneas)
-- `src/dental-demo/clinical-demo-app.css` (659 líneas)
 - `src/app/data/catalogoProyectos.js` (611 líneas)
 - `src/app/views/Caja.jsx` (593 líneas)
 - `src/app/views/ChatEquipo.jsx` (569 líneas)
@@ -825,8 +825,10 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/App.css` (321 líneas)
 - `src/app/features/Admin/PipelineConfiguratorAdmin.jsx` (312 líneas)
 - `src/clients/clinica-dental/config.js` (311 líneas)
+- `src/dental-demo/clinical-readiness.css` (301 líneas)
 - `src/lib/lead-save.js` (288 líneas)
 - `src/app/features/Admin/PlatformAdminConsole.jsx` (285 líneas)
+- `src/dental-demo/ClinicalReadiness.jsx` (285 líneas)
 - `src/landing/ManualGasil.jsx` (285 líneas)
 - `src/landing/ManualNSG.jsx` (285 líneas)
 - `src/app/views/ZoomControl/Graficas.jsx` (284 líneas)
@@ -859,7 +861,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/components/Chat.jsx` (182 líneas)
 - `src/app/views/CRM/CallActionButton.jsx` (182 líneas)
 - `src/clients/muebleria/config.js` (182 líneas)
-- `src/dental-demo/clinical-readiness.css` (181 líneas)
 - `src/lib/recordatorios-locales.js` (179 líneas)
 - `src/hooks/useWhatsAppInbox.js` (178 líneas)
 - `src/app/views/CRM/RequiresHumanButton.jsx` (177 líneas)
@@ -876,7 +877,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/CRM/LeadChatHistory.jsx` (152 líneas)
 - `src/app/views/ISpaceBoard.jsx` (148 líneas)
 - `src/app/views/CRM/ScheduledCallBadge.jsx` (144 líneas)
-- `src/dental-demo/ClinicalReadiness.jsx` (143 líneas)
 - `src/clients/brasa-y-piedra/config.js` (140 líneas)
 - `src/app/components/CopilotCapabilities.jsx` (131 líneas)
 - `src/app/constants/pipeline.js` (129 líneas)

@@ -1,3 +1,4 @@
+import { buildClinicalAudit } from "./clinical-audit.mjs";
 const RELEASE_PROJECT = "stratos-ai-application";
 const RELEASE_PROJECT_ID = "prj_Epv30SFnQmJGnxy3LdYLKV8NwDLi";
 const REPOSITORY = "iagents00/stratos-ai-application";
@@ -27,6 +28,43 @@ export const CLINICAL_SOURCES = Object.freeze([
   {
     label: "Huli · Activación y uso de la certificación",
     url: "https://help.hulipractice.com/es/collections/10394899-certificaciones",
+    authority: "provider",
+  },
+  {
+    label: "NOM-005 · Consultorios no especializados",
+    url: "https://sidof.segob.gob.mx/notas/docFuente/5596456",
+  },
+  {
+    label: "NOM-016 · Especialidades y hospitales",
+    url: "https://sidof.segob.gob.mx/notas/docFuente/5284306",
+  },
+  {
+    label: "NOM-087 · Residuos biológico-infecciosos",
+    url: "https://sidof.segob.gob.mx/notas/docFuente/704675",
+  },
+  {
+    label: "NOM-229 · Diagnóstico con rayos X",
+    url: "https://sidof.segob.gob.mx/notas/docFuente/4931612",
+  },
+  {
+    label: "NOM-229 · Modificación 2011",
+    url: "https://sidof.segob.gob.mx/notas/docFuente/5228052",
+  },
+  {
+    label: "NOM-229 · Modificación 2014",
+    url: "https://sidof.segob.gob.mx/notas/docFuente/5377616",
+  },
+  {
+    label: "LFPDPPP · Protección de datos personales",
+    url: "https://www.diputados.gob.mx/LeyesBiblio/pdf/LFPDPPP.pdf",
+  },
+  {
+    label: "DGIS · HuliPractice versión 29, folio 019",
+    url: "http://www.dgis.salud.gob.mx/intercambio/certificados/DGIS-CER-P-019-2026-09_gobmx.html",
+  },
+  {
+    label: "DGIS · HuliPractice versión 30, folio 020",
+    url: "http://www.dgis.salud.gob.mx/intercambio/certificados/DGIS-CER-P-020-2026-09_gobmx.html",
   },
 ]);
 
@@ -67,7 +105,34 @@ export const CLINICAL_DOCUMENTS = Object.freeze([
     detail:
       "Acreditar retención y acceso a registros, copias de seguridad, restauración probada, incidentes y continuidad. Los logs del servidor no son una bitácora clínica firmada.",
   },
+  {
+    id: "facilities",
+    title: "Infraestructura, equipos y servicios",
+    detail:
+      "Inspección física y documental por sede y servicio: consulta no especializada (NOM-005), especialidades u hospital (NOM-016) y requisitos adicionales antes de ofrecer actividades fuera del prototipo.",
+  },
+  {
+    id: "waste",
+    title: "Residuos y radiología cuando corresponda",
+    detail:
+      "Clasificar los RPBI generados y verificar su manejo (NOM-087). Para rayos X, identificar modalidad y equipo, autorizaciones, responsables, calidad y protección radiológica; evaluar NOM-229 y otras disposiciones aplicables.",
+  },
 ]);
+
+function canonicalUtcTimestamp(value) {
+  if (
+    typeof value !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(value)
+  )
+    return null;
+  const time = Date.parse(value);
+  if (!Number.isFinite(time)) return null;
+  const normalized = new Date(time).toISOString();
+  return normalized ===
+    (value.includes(".") ? value : value.replace("Z", ".000Z"))
+    ? normalized
+    : null;
+}
 
 export function verifiedClinicalRelease(release) {
   if (
@@ -76,14 +141,14 @@ export function verifiedClinicalRelease(release) {
     release.repository !== REPOSITORY ||
     !/^[a-f0-9]{40}$/i.test(release.commit || "") ||
     release.dirty !== false ||
-    !Number.isFinite(Date.parse(release.builtAt))
+    !canonicalUtcTimestamp(release.builtAt)
   )
     return null;
   return {
     project: RELEASE_PROJECT,
     repository: REPOSITORY,
     commit: release.commit,
-    builtAt: release.builtAt,
+    builtAt: canonicalUtcTimestamp(release.builtAt),
   };
 }
 
@@ -95,12 +160,12 @@ export function buildClinicalReadiness(metadata, release, now = new Date()) {
     metadata?.mode === "read-only" &&
     verification?.status === 200 &&
     UUID.test(verification?.requestId || "") &&
-    Number.isFinite(Date.parse(verification?.checkedAt));
+    !!canonicalUtcTimestamp(verification?.checkedAt);
   const safeRelease = verifiedClinicalRelease(release);
   // Explicit allowlist. Never export patients, prompts, sessions, raw metadata,
   // API keys, contact information, or clinical documents in this preparation file.
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     simulation,
     generatedAt: now.toISOString(),
     title: simulation
@@ -127,13 +192,14 @@ export function buildClinicalReadiness(metadata, release, now = new Date()) {
       authenticatedHuliConnection: connectionVerified,
       ...(connectionVerified
         ? {
-            checkedAt: verification.checkedAt,
+            checkedAt: canonicalUtcTimestamp(verification.checkedAt),
             requestId: verification.requestId,
           }
         : {}),
       identifiedRelease: !!safeRelease,
     },
     release: safeRelease,
+    audit: simulation ? buildClinicalAudit(metadata?.scenario) : null,
     pendingDocuments: CLINICAL_DOCUMENTS.map((item) => ({
       ...item,
       ...(simulation && item.id === "access"
@@ -148,7 +214,10 @@ export function buildClinicalReadiness(metadata, release, now = new Date()) {
       responsible: "Por designar",
       verifiedAt: null,
     })),
-    sources: CLINICAL_SOURCES.map((item) => ({ ...item })),
+    sources: CLINICAL_SOURCES.map((item) => ({
+      authority: "official",
+      ...item,
+    })),
   };
 }
 
@@ -172,6 +241,40 @@ export function clinicalReadinessText(report) {
         ]
       : []),
     `Versión Stratos: ${report.release?.commit || "Pendiente de identificar"}`,
+    ...(report.audit
+      ? [
+          "",
+          "AUDITORÍA SIMULADA",
+          report.audit.notice,
+          report.audit.decision,
+          `Escenario: ${report.audit.scenario.name}`,
+          `Actividad ilustrada: ${report.audit.scenario.services}`,
+          `Fuentes revisadas: ${report.audit.sourceReviewDate}`,
+          "",
+          "CONTROLES DEL PROTOTIPO",
+          ...report.audit.demonstratedControls.map(
+            (item) => `- ${item.name}: ${item.status}. ${item.limit}`,
+          ),
+          "",
+          "MATRIZ POR ACTIVIDAD (NO ES CONFORMIDAD)",
+          ...report.audit.standards.flatMap((item) => [
+            `- ${item.name} · ${item.clauses}`,
+            `  Aplicabilidad: ${item.applicability}. ${item.activity}`,
+            `  Evidencia necesaria: ${item.evidence}`,
+            `  Hallazgo: ${item.finding}`,
+            `  Estado: ${item.status}`,
+            `  Fuente oficial: ${item.url}`,
+          ]),
+          "",
+          "BLOQUEOS PARA USAR EXPEDIENTES REALES",
+          ...report.audit.realUseBlockers.flatMap((item) => [
+            `- ${item.title}: ${item.status}. Responsable: ${item.responsible}.`,
+            `  Cierre: ${item.evidence}`,
+          ]),
+          "",
+          `Cada cierre requiere: ${report.audit.evidenceFields.join("; ")}.`,
+        ]
+      : []),
     "",
     "DOCUMENTOS PENDIENTES",
     ...report.pendingDocuments.flatMap((item) => [
@@ -180,7 +283,10 @@ export function clinicalReadinessText(report) {
     ]),
     "",
     "FUENTES",
-    ...report.sources.map((item) => `${item.label}: ${item.url}`),
+    ...report.sources.map(
+      (item) =>
+        `${item.authority === "provider" ? "Guía del proveedor" : "Fuente oficial"} · ${item.label}: ${item.url}`,
+    ),
     "",
     "Esta ficha se genera en el navegador. Conservar junto con los documentos originales, su vigencia, responsables y las pruebas fechadas de la clínica. No incluye información de pacientes.",
   ].join("\n");
