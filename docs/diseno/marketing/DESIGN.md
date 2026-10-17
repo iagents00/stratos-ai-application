@@ -227,7 +227,7 @@ Cada tarjeta observa su propio diagrama con `IntersectionObserver`: se inicia al
 
 Los controles tienen esquinas suavizadas; los grandes paneles de producto y las tarjetas motion usan la curva amplia de (24 px) fijada por la referencia. Las tarjetas de precio conservan un radio intermedio. Las pestañas del demostrador son cápsulas; en móvil cada una tiene su propio borde y la retícula prescinde del riel exterior. Los bordes son de (1 px); el plan destacado cambia el color del borde, sin desplazamiento ni sombra. Los radios de la cabecera describen estas anatomías locales, no una sustitución de los radios del CRM.
 
-El header utiliza únicamente el wordmark **Stratos AI** como marca. El logo S conserva la identidad y colores proporcionados por el usuario en el footer y los hubs ilustrativos; su [metadato de procedencia](../../../public/branding/stratos-logo-web-20261016.webp.json) registra la conversión a WebP, sin generación de imagen.
+El header y el footer utilizan únicamente el wordmark **Stratos AI** como marca, con el mismo estilo y sin icono. El logo S conserva la identidad y colores proporcionados por el usuario en los hubs ilustrativos; su [metadato de procedencia](../../../public/branding/stratos-logo-web-20261016.webp.json) registra la conversión a WebP, sin generación de imagen.
 
 ## Components
 
