@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**272 archivos · 84.333 líneas**
+**272 archivos · 84.360 líneas**
 
 ---
 
@@ -447,7 +447,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `HeroFlowBackdrop.jsx` | 70 | _sin describir_ |
 | `ModuleShowcase.css` | 66 | _sin describir_ |
 | `FeatureMotion.css` | 59 | _sin describir_ |
-| `HeroFlowBackdrop.css` | 31 | _sin describir_ |
+| `HeroFlowBackdrop.css` | 58 | _sin describir_ |
 
 ### `src/lib/`
 
