@@ -34,6 +34,29 @@ test('the public site preserves commercial terms, contact and fixed login routes
       assert.ok(match[1].startsWith('/'), 'Screenshots and brand stay self-hosted');
       assert.ok(existsSync(new URL(`../public${match[1]}`, import.meta.url)), match[1]);
     }
+    // Signals must stay on actual lattice edges, including across the quiet center.
+    const networks = [...html.matchAll(/<svg class="smk-hero-flow-network[^"]*"[\s\S]*?<\/svg>/g)].map(match => match[0]);
+    assert.equal(networks.length, 2);
+    for (const network of networks) {
+      assert.doesNotMatch(network, /<circle|smk-hero-flow-glint/);
+      const edgeNumbers = network.match(/class="smk-hero-flow-connections" d="([^"]+)"/)[1].match(/-?\d+/g).map(Number);
+      const edges = new Set();
+      for (let i = 0; i < edgeNumbers.length; i += 4) {
+        const from = edgeNumbers.slice(i, i + 2).join(','), to = edgeNumbers.slice(i + 2, i + 4).join(',');
+        edges.add(`${from}|${to}`); edges.add(`${to}|${from}`);
+      }
+      const routes = [...network.matchAll(/class="smk-hero-flow-signal smk-hero-flow-core" d="([^"]+)"/g)];
+      assert.equal(routes.length, 4);
+      const width = Number(network.match(/viewBox="0 0 (\d+)/)[1]);
+      for (const [, path] of routes) {
+        const points = path.match(/-?\d+/g).map(Number);
+        assert.ok(points[0] < 0 && points.at(-2) > width, 'Route crosses the entire viewport');
+        for (let i = 2; i < points.length; i += 2) {
+          assert.ok(points[i] > points[i - 2], 'Signals move consistently left to right');
+          assert.ok(edges.has(`${points.slice(i - 2, i).join(',')}|${points.slice(i, i + 2).join(',')}`), 'Signal follows a real edge');
+        }
+      }
+    }
     assert.match(html, /Capturas reales de Stratos AI con datos de demostración/);
     assert.equal((html.match(/src="\/marketing\/modules\/copilot-closeup-20261016\/copilot.webp"/g) || []).length, 2, 'Gallery and workflow share the legible Copilot capture');
   } finally { await vite.close(); }

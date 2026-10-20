@@ -1,50 +1,44 @@
 import { useEffect, useId, useRef, useState } from "react";
 import "./HeroFlowBackdrop.css";
 
-// One regular half-mesh is reflected, so both sides share exact geometry,
-// animation timing and an outward direction without independent offsets.
-function mesh(rows, diagonalWidth) {
-  const nodes = [], edges = [];
-  let previous = [];
-  rows.forEach(([y, xs]) => {
-    const current = xs.map(x => { nodes.push([x, y]); return nodes.length - 1; });
-    current.forEach((node, index) => {
-      if (index) edges.push([current[index - 1], node]);
-      previous.forEach(from => { if (Math.abs(nodes[from][0] - nodes[node][0]) === diagonalWidth) edges.push([from, node]); });
+// Every signal follows real edges in one connected, full-width lattice.
+function createNetwork(mobile) {
+  const step = mobile ? 66 : 96;
+  const columns = mobile ? 9 : 18;
+  const rows = Array.from({ length: mobile ? 10 : 9 }, (_, row) =>
+    Array.from({ length: columns }, (_, col) => [
+      -step + col * step + (row % 2) * step / 2,
+      (mobile ? 0 : -6) + row * (mobile ? 62 : 64),
+    ]));
+  const edges = [];
+  rows.forEach((nodes, row) => nodes.forEach((point, col) => {
+    if (col) edges.push([nodes[col - 1], point]);
+    if (row) rows[row - 1].forEach(previous => {
+      if (Math.abs(previous[0] - point[0]) === step / 2) edges.push([previous, point]);
     });
-    previous = current;
-  });
-  return { nodes, edges };
+  }));
+  const zigzag = row => rows[row].flatMap((point, col) => [point, rows[row + 1][col]]);
+  return { edges, routes: [rows[1], zigzag(2), zigzag(4), rows[7]] };
 }
-const desktopMesh = mesh(Array.from({ length: 7 }, (_, row) => [44 + row * 64, row % 2 ? [88, 184, 280] : [40, 136, 232, 328]]), 48);
-const mobileMesh = mesh(Array.from({ length: 9 }, (_, row) => [64 + row * 56, row % 2 ? [49] : [16, 82]]), 33);
-
-function HalfNetwork({ mobile, quiet, leader = false }) {
-  const { nodes, edges } = mobile ? mobileMesh : desktopMesh;
-  const routes = mobile ? [[4, 2, 0], [10, 11, 12]] : [[10, 9, 5, 1, 0], [17, 16, 19, 22, 21]];
-  const lights = routes.flatMap((route, index) => [
-    { node: route[1], tone: index ? "green" : "sky", delay: 0 },
-    { node: route.at(-1), tone: index ? "green" : "sky", delay: -3 },
-  ]);
-  return <>
-    <g className="smk-hero-flow-connections">{edges.map(([from, to]) => <line key={`${from}-${to}`} x1={nodes[from][0]} y1={nodes[from][1]} x2={nodes[to][0]} y2={nodes[to][1]} />)}</g>
-    {routes.map((route, index) => <g key={route.join("-")} className={`smk-hero-flow-tone-${index ? "green" : "sky"}`}>
-      {["trail", "core"].map(layer => <path key={layer} data-flow-cycle={leader && index === 0 && layer === "core" ? "true" : undefined} className={`smk-hero-flow-signal smk-hero-flow-${layer}`} d={route.map((node, step) => `${step ? "L" : "M"}${nodes[node].join(" ")}`).join(" ")} pathLength="100" />)}
-    </g>)}
-    {nodes.map(([x, y], index) => <g key={`${x}-${y}`} className="smk-hero-flow-node">{index % 5 === 0 && <circle className="smk-hero-flow-node-ring" cx={x} cy={y} r={mobile ? 7 : 9} />}<circle cx={x} cy={y} r={index % 5 === 0 ? 3.2 : 1.9} /></g>)}
-    {lights.map(({ node, tone, delay }, index) => <g key={`${node}-${index}`} className={`smk-hero-flow-glint smk-hero-flow-tone-${tone}`} style={{ '--flow-delay': `calc(${delay}s / 1.35)` }}><circle cx={nodes[node][0]} cy={nodes[node][1]} r={mobile ? 10 : 13} fill={`url(#${quiet}-${tone})`} /><circle className="smk-hero-flow-glint-core" cx={nodes[node][0]} cy={nodes[node][1]} r="2.8" /></g>)}
-  </>;
-}
+const desktopNetwork = createNetwork(false);
+const mobileNetwork = createNetwork(true);
+const pathData = points => points.map((point, index) => `${index ? "L" : "M"}${point.join(" ")}`).join(" ");
 
 function Network({ mobile, id }) {
   const quiet = `${id}-${mobile ? "mobile" : "desktop"}`;
+  const { edges, routes } = mobile ? mobileNetwork : desktopNetwork;
   return <svg className={`smk-hero-flow-network${mobile ? " smk-hero-flow-network-mobile" : ""}`} viewBox={mobile ? "0 0 390 560" : "0 0 1440 500"} preserveAspectRatio="none" aria-hidden="true">
-    <defs><radialGradient id={`${quiet}-field`} cx="50%" cy="45%" r="66%"><stop offset="34%" stopColor="#000" /><stop offset="96%" stopColor="#fff" /></radialGradient><mask id={quiet}><rect width="100%" height="100%" fill={`url(#${quiet}-field)`} /></mask>
-      {[['sky', '#59BFF4'], ['green', '#00DB40']].map(([tone, color]) => <radialGradient id={`${quiet}-${tone}`} key={tone}><stop offset="0" stopColor={color} stopOpacity=".81" /><stop offset=".4" stopColor={color} stopOpacity=".324" /><stop offset="1" stopColor={color} stopOpacity="0" /></radialGradient>)}
+    <defs>
+      <linearGradient id={`${quiet}-field`}>
+        {[[0, 1], [18, .75], [32, .12], [50, .045], [68, .12], [82, .75], [100, 1]].map(([offset, opacity]) => <stop key={offset} offset={`${offset}%`} stopColor="#fff" stopOpacity={opacity} />)}
+      </linearGradient>
+      <mask id={quiet}><rect width="100%" height="100%" fill={`url(#${quiet}-field)`} /></mask>
     </defs>
     <g mask={`url(#${quiet})`}>
-      <g className="smk-hero-flow-half"><HalfNetwork mobile={mobile} quiet={quiet} leader /></g>
-      <g className="smk-hero-flow-half" transform={`translate(${mobile ? 390 : 1440} 0) scale(-1 1)`}><HalfNetwork mobile={mobile} quiet={quiet} /></g>
+      <path className="smk-hero-flow-connections" d={edges.map(pathData).join(" ")} />
+      {routes.map((route, index) => <g key={index} className={`smk-hero-flow-tone-${index % 2 ? "green" : "sky"}`}>
+        {["trail", "core"].map(layer => <path key={layer} data-flow-cycle={index === 0 && layer === "core" ? "true" : undefined} className={`smk-hero-flow-signal smk-hero-flow-${layer}`} d={pathData(route)} pathLength="100" />)}
+      </g>)}
     </g>
   </svg>;
 }
