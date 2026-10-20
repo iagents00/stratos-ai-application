@@ -23,14 +23,25 @@ function boot(url, { installed = true, native = false } = {}) {
   return { fixed: attributes['data-standalone'] === '1', pinned: listeners.includes('scroll') };
 }
 test('installed marketing homepage retains document scrolling and zoom', () => {
-  for (const url of ['https://www.getstratosai.com/', 'http://localhost:5173/', 'http://127.0.0.1:5173/?source=campaign']) {
+  for (const url of ['https://getstratosai.com/', 'https://www.getstratosai.com/', 'http://localhost:5173/', 'http://127.0.0.1:5173/?source=campaign']) {
     assert.deepEqual(boot(url), { fixed: false, pinned: false }, url);
   }
 });
 test('installed CRM and native app retain viewport protection', () => {
-  for (const url of ['https://getstratosai.com/', 'https://app.getstratosai.com/', 'https://www.getstratosai.com/login', 'http://localhost:5173/?app', 'http://localhost:5173/?client=grupo28', 'http://localhost:5173/grupo28']) {
+  for (const url of ['https://app.getstratosai.com/', 'https://www.getstratosai.com/login', 'http://localhost:5173/?app', 'http://localhost:5173/?client=grupo28', 'http://localhost:5173/grupo28']) {
     assert.deepEqual(boot(url), { fixed: true, pinned: true }, url);
   }
   assert.deepEqual(boot('http://localhost/', { native: true }), { fixed: true, pinned: true });
   assert.deepEqual(boot('https://getstratosai.com/', { installed: false }), { fixed: false, pinned: false });
+});
+
+test('public-domain login redirects are scoped to public hosts and preserve app routes', () => {
+  const config = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'));
+  for (const host of ['getstratosai.com', 'www.getstratosai.com']) {
+    const rule = config.redirects.find(rule => rule.has?.some(condition => condition.type === 'host' && condition.value === host));
+    assert.equal(rule.source, '/login/:path*');
+    assert.equal(rule.destination, 'https://app.getstratosai.com/login/:path*');
+    assert.equal(rule.permanent, false);
+  }
+  assert.ok(!config.redirects.some(rule => !rule.has?.length), 'No global redirects over tenant or app routes');
 });
