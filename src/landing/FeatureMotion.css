@@ -10,9 +10,9 @@
 .stratos-marketing .smk-flow-lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .stratos-marketing .smk-flow-lines-vertical { --flow-play: paused; display: none; }
 .stratos-marketing .smk-flow-track { stroke: #D5DCE2; stroke-width: 1.5; fill: none; vector-effect: non-scaling-stroke; }
-.stratos-marketing .smk-flow-tone-sky { --flow-light: #59BFF4; }
-.stratos-marketing .smk-flow-tone-green { --flow-light: #00DB40; }
-.stratos-marketing .smk-flow-signal { --flow-peak: 1; stroke: var(--flow-light); stroke-width: 2.43; stroke-linecap: round; stroke-dasharray: 10 112; stroke-dashoffset: 12; fill: none; vector-effect: non-scaling-stroke; opacity: 0; animation: smk-flow-input-travel var(--smk-flow-duration) linear 1; animation-play-state: var(--flow-play); }
+.stratos-marketing .smk-flow-tone-sky { --flow-light: #20B8FF; }
+.stratos-marketing .smk-flow-tone-green { --flow-light: #12DA88; }
+.stratos-marketing .smk-flow-signal { --flow-peak: 1; stroke: var(--flow-light); stroke-width: 2.43; stroke-linecap: round; stroke-dasharray: 10 112; stroke-dashoffset: 12; fill: none; vector-effect: non-scaling-stroke; opacity: 0; animation: smk-flow-input-travel var(--smk-flow-duration) cubic-bezier(.32, 0, .15, 1) 1; animation-play-state: var(--flow-play); }
 .stratos-marketing .smk-flow-trail { --flow-peak: .216; stroke-width: 6; }
 .stratos-marketing .smk-flow-branch { animation-name: smk-flow-output-travel; }
 .stratos-marketing .smk-flow-glint { position: absolute; inset: -4px; border: 1px solid var(--flow-light); border-radius: inherit; pointer-events: none; opacity: 0; animation: smk-flow-output-arrival var(--smk-flow-duration) cubic-bezier(.45, 0, .25, 1) 1; animation-play-state: var(--flow-play); }
