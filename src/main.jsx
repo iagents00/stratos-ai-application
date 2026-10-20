@@ -8,8 +8,8 @@ import { isPortfolioPath } from "./lib/portfolio-route.js";
  *   3. Decidir qué experiencia mostrar según el hostname/URL
  *
  * ROUTING POR HOSTNAME (sin React Router — decisión intencional):
- *   getstratosai.com      →  Plataforma autenticada (App)
- *   app.getstratosai.com  →  Plataforma autenticada (App, compatibilidad)
+ *   getstratosai.com      →  Landing pública (LandingMarketing)
+ *   app.getstratosai.com  →  Plataforma autenticada (App)
  *   www.getstratosai.com  →  Landing pública (LandingMarketing)
  *   localhost:5173/?app          →  Plataforma (modo desarrollo)
  *   localhost:5173               →  Landing (modo desarrollo)
@@ -113,6 +113,7 @@ const params   = new URLSearchParams(window.location.search);
 const pathname = window.location.pathname;
 
 const LANDING_DOMAINS = [
+  "getstratosai.com",
   "www.getstratosai.com",
 ];
 
@@ -203,7 +204,7 @@ const isLanding = !esAppNativa && !commonEntry && !isExplicitClient && (
 const isApp = esAppNativa || (!isDentalDemo && !isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isManualMkt && !isManualNSG && !isManualLegacy && !isManualBrasa && !isManualGasil && !isManualMuebleria && !isDiagnostico && !isDukeLeadRouter && !isOnboardingCC && !isPublicLanding && !isLanding);
 
 // URL de la plataforma — usada por la landing para el CTA principal
-const APP_URL = hostname === "www.getstratosai.com" ? "https://getstratosai.com/login" : (import.meta.env.VITE_APP_URL || (window.location.origin + "/login"));
+const APP_URL = LANDING_DOMAINS.includes(hostname) ? "https://app.getstratosai.com/login" : (import.meta.env.VITE_APP_URL || (window.location.origin + "/login"));
 
 // ─── BRANDING POR CLIENTE ────────────────────────────────────────────────────
 // Cambio mínimo y observable: título de la pestaña + atributo en <html>.

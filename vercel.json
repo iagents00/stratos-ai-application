@@ -76,5 +76,29 @@
     }
   ],
   "name": "stratos-ai-application",
-  "version": 2
+  "version": 2,
+  "redirects": [
+    {
+      "source": "/login/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "getstratosai.com"
+        }
+      ],
+      "destination": "https://app.getstratosai.com/login/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/login/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.getstratosai.com"
+        }
+      ],
+      "destination": "https://app.getstratosai.com/login/:path*",
+      "permanent": false
+    }
+  ]
 }

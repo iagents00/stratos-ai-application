@@ -546,7 +546,7 @@
           if (nativeApp || (loc.pathname !== '/' && loc.pathname !== '')) return false;
           var query = new URLSearchParams(loc.search);
           if (query.has('client')) return false;
-          return loc.hostname === 'www.getstratosai.com' ||
+          return loc.hostname === 'getstratosai.com' || loc.hostname === 'www.getstratosai.com' ||
             ((loc.hostname === 'localhost' || loc.hostname === '127.0.0.1') && !query.has('app'));
         }
         var locked = false;

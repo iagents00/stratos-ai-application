@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**272 archivos · 84.360 líneas**
+**272 archivos · 84.361 líneas**
 
 ---
 
@@ -73,7 +73,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `main.jsx` | 435 | _sin describir_ |
+| `main.jsx` | 436 | _sin describir_ |
 | `index.css` | 278 | _sin describir_ |
 | `mobile-perf.css` | 121 | _sin describir_ |
 | `pagina-solo-web.jsx` | 47 | _sin describir_ |
@@ -704,7 +704,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cargando clientes… | `src/app/features/Admin/PlatformCompanyCRM.jsx:252` |
 | Cargando conversación… | `src/app/views/Copilot.jsx:1183` |
 | Cargando conversaciones… | `src/app/views/WhatsApp.jsx:263` |
-| Cargando demo dental… | `src/main.jsx:318` |
+| Cargando demo dental… | `src/main.jsx:319` |
 | Cargando el plan… | `src/app/views/PlanSemanal.jsx:369` |
 | Cargando el tablero… | `src/app/views/ComandoOps.jsx:127` |
 | Cargando empresas… | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:242` |
@@ -813,7 +813,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/CuentasCobro.jsx` (463 líneas)
 - `src/dental-demo/ClinicalDemoWorkspace.jsx` (445 líneas)
 - `src/app/views/FinanzasAdmin.jsx` (443 líneas)
-- `src/main.jsx` (435 líneas)
+- `src/main.jsx` (436 líneas)
 - `src/clients/gasil/config.js` (422 líneas)
 - `src/lib/next-action-engine.js` (371 líneas)
 - `src/lib/offline-mode.js` (351 líneas)

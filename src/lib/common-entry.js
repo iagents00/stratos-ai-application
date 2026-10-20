@@ -1,7 +1,7 @@
 // La entrada compartida conserva su URL. Las rutas y dominios de clientes
 // existentes siguen resolviendo sus propias portadas y redirecciones.
 const PLATFORM_HOSTS = new Set([
-  "getstratosai.com", "app.getstratosai.com",
+  "app.getstratosai.com",
   "stratoscapitalgroup.com", "app.stratoscapitalgroup.com",
 ]);
 
