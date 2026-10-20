@@ -1,11 +1,11 @@
 .stratos-marketing .smk-motion-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
-.stratos-marketing .smk-motion-card { --flow-play: paused; min-width: 0; padding: 36px; border-radius: 24px; background: #F6F7F8; }
+.stratos-marketing .smk-motion-card { --flow-play: paused; min-width: 0; padding: 32px; border-radius: 24px; background: #F6F7F8; }
 .stratos-marketing .smk-motion-card[data-running="true"] { --flow-play: running; }
 .stratos-marketing .smk-motion-card h3 { font-size: clamp(28px, 3vw, 36px); line-height: 1.13; }
-.stratos-marketing .smk-motion-card > p { max-width: 45ch; min-height: 84px; margin-top: 18px; color: var(--smk-muted); font-size: 15px; line-height: 1.7; }
+.stratos-marketing .smk-motion-card > p { max-width: 45ch; min-height: 51px; margin-top: 18px; color: var(--smk-muted); font-size: 15px; line-height: 1.7; }
 .stratos-marketing .smk-motion-card > a { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin-top: 8px; color: var(--smk-ink); font-size: 13px; font-weight: 500; text-decoration: underline; text-decoration-color: #A3B3C1; }
 .stratos-marketing .smk-motion-card > a:hover { text-decoration-color: currentColor; }
-.stratos-marketing .smk-flow-diagram { container-type: inline-size; margin-top: 24px; }
+.stratos-marketing .smk-flow-diagram { container-type: inline-size; margin-top: 16px; }
 .stratos-marketing .smk-flow-art { position: relative; height: 280px; color: var(--smk-ink); }
 .stratos-marketing .smk-flow-lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .stratos-marketing .smk-flow-lines-vertical { --flow-play: paused; display: none; }

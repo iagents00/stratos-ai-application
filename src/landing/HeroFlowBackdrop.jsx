@@ -32,7 +32,11 @@ function Network({ mobile, id }) {
       <linearGradient id={`${quiet}-field`}>
         {[[0, 1], [18, .75], [32, .12], [50, .045], [68, .12], [82, .75], [100, 1]].map(([offset, opacity]) => <stop key={offset} offset={`${offset}%`} stopColor="#fff" stopOpacity={opacity} />)}
       </linearGradient>
-      <mask id={quiet}><rect width="100%" height="100%" fill={`url(#${quiet}-field)`} /></mask>
+      <linearGradient id={`${quiet}-edges`} x1="0" y1="0" x2="0" y2="1">
+        {(mobile ? [[0, .35], [9, .2], [20, 0], [90, 0], [100, .2]] : [[0, .6], [12, .32], [24, 0], [80, 0], [100, .38]]).map(([offset, opacity]) => <stop key={offset} offset={`${offset}%`} stopColor="#fff" stopOpacity={opacity} />)}
+      </linearGradient>
+      {/* Lift the upper/lower lattice while retaining the quiet reading area. */}
+      <mask id={quiet}><rect width="100%" height="100%" fill={`url(#${quiet}-field)`} /><rect width="100%" height="100%" fill={`url(#${quiet}-edges)`} /></mask>
     </defs>
     <g mask={`url(#${quiet})`}>
       <path className="smk-hero-flow-connections" d={edges.map(pathData).join(" ")} />
