@@ -538,9 +538,20 @@
               !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
           } catch (e) { return false; }
         }
+        // The marketing homepage scrolls the document, including when installed.
+        // CRM and Capacitor keep their fixed viewport and internal scroll areas.
+        function isPublicHomepage() {
+          var loc = window.location;
+          var nativeApp = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+          if (nativeApp || (loc.pathname !== '/' && loc.pathname !== '')) return false;
+          var query = new URLSearchParams(loc.search);
+          if (query.has('client')) return false;
+          return loc.hostname === 'www.getstratosai.com' ||
+            ((loc.hostname === 'localhost' || loc.hostname === '127.0.0.1') && !query.has('app'));
+        }
         var locked = false;
         function lockZoom() {
-          if (locked || !isInstalledApp()) return;
+          if (locked || !isInstalledApp() || isPublicHomepage()) return;
           locked = true;
           try {
             // iOS: NO tocar el meta viewport — reescribirlo le hace PERDER el
