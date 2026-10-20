@@ -13,7 +13,7 @@
 .stratos-marketing .stratos-modules .stratos-modules__tabs .stratos-modules__tab:focus-visible { outline-offset: -4px; transform: none; transition: none; }
 .stratos-marketing .stratos-modules .stratos-modules__tab[aria-selected="true"]:focus-visible { outline-color: #fff; }
 .stratos-marketing .stratos-modules .stratos-modules__panels { display: grid; }
-.stratos-marketing .stratos-modules .stratos-modules__panel { grid-area: 1 / 1; display: grid; grid-template-columns: minmax(0, .68fr) minmax(0, 1.32fr); grid-template-areas: "intro visual" "details visual"; grid-template-rows: auto 1fr; gap: 24px 28px; align-items: start; padding: 28px; min-height: 510px; border: 1px solid var(--module-line); border-radius: 24px; background: #fff; animation: stratosModuleReveal 180ms var(--module-ease); }
+.stratos-marketing .stratos-modules .stratos-modules__panel { grid-area: 1 / 1; display: grid; grid-template-columns: minmax(0, .68fr) minmax(0, 1.32fr); grid-template-areas: "intro visual" "details visual"; grid-template-rows: auto 1fr; gap: 24px 28px; align-items: start; padding: 28px; min-height: 510px; border: 1px solid var(--module-line); border-radius: 24px; background: #fff; animation: stratosModuleReveal calc(180ms / 1.35) var(--module-ease); }
 .stratos-marketing .stratos-modules:has(:focus-visible) .stratos-modules__panel { animation: none; }
 /* Keep the tallest slide in the shared track without exposing inactive
    content to focus, hit testing or the accessibility tree. */

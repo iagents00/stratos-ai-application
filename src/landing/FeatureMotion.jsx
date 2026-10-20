@@ -33,7 +33,7 @@ function Connections({ vertical = false, width }) {
   return <svg className={`smk-flow-lines${vertical ? " smk-flow-lines-vertical" : ""}`} viewBox={`0 0 ${measuredWidth} ${vertical ? 310 : 280}`} preserveAspectRatio="none" aria-hidden="true">
     {connectionPaths(measuredWidth, vertical).map((path, index) => <g key={index} className={`smk-flow-tone-${index === 2 ? "green" : "sky"}`}>
       <path className="smk-flow-track" d={path} />
-      {["trail", "core"].map(layer => <path key={layer} className={`smk-flow-signal smk-flow-${layer}${index ? " smk-flow-branch" : " smk-flow-incoming"}`} d={path} pathLength="100" />)}
+      {["trail", "core"].map(layer => <path key={layer} data-flow-cycle={index === 0 && layer === "core" ? "true" : undefined} className={`smk-flow-signal smk-flow-${layer}${index ? " smk-flow-branch" : " smk-flow-incoming"}`} d={path} pathLength="100" />)}
     </g>)}
   </svg>;
 }
@@ -73,13 +73,8 @@ function FlowCard({ flow }) {
     media.addEventListener("change", preference);
     return () => { observer.disconnect(); safeMode.disconnect(); document.removeEventListener("visibilitychange", visibility); media.removeEventListener("change", preference); };
   }, []);
-  useEffect(() => {
-    if (!environment.visible || environment.hidden || environment.lowfx) return;
-    // One 6s input → hub → outputs pass, then 10s of rest (18s reduced).
-    const timer = setTimeout(() => setEnvironment(value => ({ ...value, cycle: value.cycle + 1 })), environment.reduced ? 24000 : 16000);
-    return () => clearTimeout(timer);
-  }, [environment.visible, environment.hidden, environment.reduced, environment.lowfx, environment.cycle]);
-  return <article className="smk-motion-card" data-running={environment.visible && !environment.hidden && !environment.lowfx}>
+  // Restart on completion, with no idle gap; finite passes retain mobile safeguards.
+  return <article onAnimationEnd={event => { if (event.target.dataset.flowCycle === "true" && environment.visible && !environment.hidden && !environment.lowfx && !environment.reduced) setEnvironment(value => ({ ...value, cycle: value.cycle + 1 })); }} className="smk-motion-card" data-running={environment.visible && !environment.hidden && !environment.lowfx && !environment.reduced}>
     <h3>{flow.title.split("\n").map((line, index) => <span key={line}>{index > 0 && <br />}{line}</span>)}</h3>
     <p>{flow.description}</p><FlowDiagram flow={flow} region={region} cycle={environment.cycle} /><a href="#modulos">{flow.link}<ArrowRight size={16} aria-hidden="true" /></a>
   </article>;
