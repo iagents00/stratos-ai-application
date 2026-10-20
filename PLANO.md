@@ -164,12 +164,12 @@ Servicios de terceros con los que habla el código.
 | `glulgyhkrqpykxmujodb.supabase.co` | 6 archivos |
 | `drive.google.com` | 3 archivos |
 | `docs.google.com` | 2 archivos |
+| `app.getstratosai.com` | 1 archivo |
 | `app.hulipractice.com` | 1 archivo |
 | `brokers.mycocay.com` | 1 archivo |
 | `brokers.simca.mx` | 1 archivo |
 | `cal.com` | 1 archivo |
 | `calendly.com` | 1 archivo |
-| `getstratosai.com` | 1 archivo |
 | `ionic.io` | 1 archivo |
 | `maps.app` | 1 archivo |
 
