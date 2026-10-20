@@ -45,14 +45,16 @@ test('the public site preserves commercial terms, contact and fixed login routes
         const from = edgeNumbers.slice(i, i + 2).join(','), to = edgeNumbers.slice(i + 2, i + 4).join(',');
         edges.add(`${from}|${to}`); edges.add(`${to}|${from}`);
       }
-      const routes = [...network.matchAll(/class="smk-hero-flow-signal smk-hero-flow-core" d="([^"]+)"/g)];
+      const routes = [...network.matchAll(/data-flow-route="([^"]+)"/g)];
       assert.equal(routes.length, 4);
       const width = Number(network.match(/viewBox="0 0 (\d+)/)[1]);
       for (const [, path] of routes) {
         const points = path.match(/-?\d+/g).map(Number);
-        assert.ok(points[0] < 0 && points.at(-2) > width, 'Route crosses the entire viewport');
+        if (points[1] === points.at(-1)) assert.ok(points[0] < 0 && points.at(-2) > width, 'Horizontal route crosses the viewport');
+        const dx = points[2] - points[0], dy = points[3] - points[1];
         for (let i = 2; i < points.length; i += 2) {
-          assert.ok(points[i] > points[i - 2], 'Signals move consistently left to right');
+          assert.ok(points[i] > points[i - 2], 'Route progresses without doubling back');
+          assert.equal((points[i] - points[0]) * dy, (points[i + 1] - points[1]) * dx, 'Meteor follows a straight line, never zigzags');
           assert.ok(edges.has(`${points.slice(i - 2, i).join(',')}|${points.slice(i, i + 2).join(',')}`), 'Signal follows a real edge');
         }
       }

@@ -3,37 +3,15 @@
 .stratos-marketing .smk-hero-flow-network { position: absolute; inset: 0; width: 100%; height: 100%; mask-image: linear-gradient(to bottom, transparent, #000 10%, #000 88%, transparent); }
 .stratos-marketing .smk-hero-flow-network-mobile { display: none; --flow-play: paused; }
 .stratos-marketing .smk-hero-flow-connections { fill: none; stroke: #A9BECD; stroke-width: .8; opacity: .65; vector-effect: non-scaling-stroke; }
-.stratos-marketing .smk-hero-flow-tone-sky { --flow-light: #20B8FF; }
-.stratos-marketing .smk-hero-flow-tone-green { --flow-light: #12DA88; }
-.stratos-marketing .smk-hero-flow-signal { --flow-peak: 1; fill: none; stroke: var(--flow-light); stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 3 110; stroke-dashoffset: 8; opacity: 0; vector-effect: non-scaling-stroke; animation: smk-hero-flow-travel 4s linear 1; animation-play-state: var(--flow-play); }
-.stratos-marketing .smk-hero-flow-trail { --flow-peak: .2; stroke-width: 4.5; }
-/* A calm entry, a short burst, then the return pass. All lanes share one clock. */
-.stratos-marketing .smk-hero-flow-tone-green .smk-hero-flow-signal { animation-name: smk-hero-flow-return; }
-@keyframes smk-hero-flow-travel {
-  0% { opacity: 0; stroke-dashoffset: 8; }
-  5% { opacity: var(--flow-peak); }
-  18% { stroke-dashoffset: -24; }
-  30% { stroke-dashoffset: -78; }
-  43% { opacity: var(--flow-peak); stroke-dashoffset: -100; }
-  48%, 52% { opacity: 0; stroke-dashoffset: -110; }
-  57% { opacity: var(--flow-peak); stroke-dashoffset: -100; }
-  69% { stroke-dashoffset: -76; }
-  80% { stroke-dashoffset: -22; }
-  95% { opacity: var(--flow-peak); stroke-dashoffset: 0; }
-  100% { opacity: 0; stroke-dashoffset: 8; }
-}
-@keyframes smk-hero-flow-return {
-  0% { opacity: 0; stroke-dashoffset: -110; }
-  5% { opacity: var(--flow-peak); }
-  18% { stroke-dashoffset: -78; }
-  30% { stroke-dashoffset: -24; }
-  43% { opacity: var(--flow-peak); stroke-dashoffset: 0; }
-  48%, 52% { opacity: 0; stroke-dashoffset: 8; }
-  57% { opacity: var(--flow-peak); stroke-dashoffset: 0; }
-  69% { stroke-dashoffset: -24; }
-  80% { stroke-dashoffset: -78; }
-  95% { opacity: var(--flow-peak); stroke-dashoffset: -100; }
-  100% { opacity: 0; stroke-dashoffset: -110; }
+.stratos-marketing .smk-hero-flow-tone-sky { color: #62B8E8; }
+.stratos-marketing .smk-hero-flow-tone-green { color: #56C99B; }
+.stratos-marketing .smk-hero-flow-comet { opacity: 0; animation: smk-hero-comet-travel 2.8s cubic-bezier(.35, .12, .2, 1) 1; animation-play-state: var(--flow-play); }
+.stratos-marketing .smk-hero-flow-head-halo { fill: currentColor; opacity: .15; }
+.stratos-marketing .smk-hero-flow-head { fill: #F2FCFF; stroke: currentColor; stroke-width: 1; }
+@keyframes smk-hero-comet-travel {
+  0% { opacity: 0; transform: translateX(0); }
+  8%, 75% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(var(--comet-distance)); }
 }
 @media (max-width: 760px) {
   .stratos-marketing .smk-hero-flow-network { display: none; --flow-play: paused; }
@@ -41,8 +19,7 @@
   .stratos-marketing .smk-hero-flow-connections { opacity: .54; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .stratos-marketing .smk-hero-flow-trail { display: none; }
-  .stratos-marketing .smk-hero-flow-signal { stroke-dasharray: none; stroke-dashoffset: 0; animation: none; opacity: .12; }
+  .stratos-marketing .smk-hero-flow-comet { display: none; animation: none; }
 }
 
 /* Broad color fields travel beneath the network. No blur filters or pinned GPU layers. */

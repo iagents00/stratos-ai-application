@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**272 archivos · 84.361 líneas**
+**272 archivos · 84.357 líneas**
 
 ---
 
@@ -444,10 +444,10 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `LandingMarketing.jsx` | 94 | _sin describir_ |
 | `ModuleShowcase.jsx` | 91 | _sin describir_ |
 | `FeatureMotion.jsx` | 90 | _sin describir_ |
-| `HeroFlowBackdrop.jsx` | 70 | _sin describir_ |
+| `HeroFlowBackdrop.jsx` | 89 | _sin describir_ |
 | `ModuleShowcase.css` | 66 | _sin describir_ |
 | `FeatureMotion.css` | 59 | _sin describir_ |
-| `HeroFlowBackdrop.css` | 58 | _sin describir_ |
+| `HeroFlowBackdrop.css` | 35 | _sin describir_ |
 
 ### `src/lib/`
 
@@ -902,6 +902,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/landing/ModuleShowcase.jsx` (91 líneas)
 - `src/clients/tgenius/config.js` (90 líneas)
 - `src/landing/FeatureMotion.jsx` (90 líneas)
+- `src/landing/HeroFlowBackdrop.jsx` (89 líneas)
 - `src/app/features/Admin/RailsSettings.css` (86 líneas)
 - `src/lib/backup.js` (85 líneas)
 - `src/contexts/ClientOrgGuard.jsx` (83 líneas)
@@ -913,7 +914,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/ringer.js` (72 líneas)
 - `src/lib/agenda.js` (71 líneas)
 - `src/contexts/ClientContext.jsx` (70 líneas)
-- `src/landing/HeroFlowBackdrop.jsx` (70 líneas)
 - `src/lib/supabase.js` (70 líneas)
 - `src/app/components/MobileHeaderMenu.jsx` (66 líneas)
 - `src/landing/ModuleShowcase.css` (66 líneas)
