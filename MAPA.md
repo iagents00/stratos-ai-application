@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**272 archivos · 84.329 líneas**
+**272 archivos · 84.333 líneas**
 
 ---
 
@@ -444,7 +444,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `LandingMarketing.jsx` | 94 | _sin describir_ |
 | `ModuleShowcase.jsx` | 91 | _sin describir_ |
 | `FeatureMotion.jsx` | 90 | _sin describir_ |
-| `HeroFlowBackdrop.jsx` | 66 | _sin describir_ |
+| `HeroFlowBackdrop.jsx` | 70 | _sin describir_ |
 | `ModuleShowcase.css` | 66 | _sin describir_ |
 | `FeatureMotion.css` | 59 | _sin describir_ |
 | `HeroFlowBackdrop.css` | 31 | _sin describir_ |
@@ -913,9 +913,9 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/ringer.js` (72 líneas)
 - `src/lib/agenda.js` (71 líneas)
 - `src/contexts/ClientContext.jsx` (70 líneas)
+- `src/landing/HeroFlowBackdrop.jsx` (70 líneas)
 - `src/lib/supabase.js` (70 líneas)
 - `src/app/components/MobileHeaderMenu.jsx` (66 líneas)
-- `src/landing/HeroFlowBackdrop.jsx` (66 líneas)
 - `src/landing/ModuleShowcase.css` (66 líneas)
 - `src/contexts/TenantConfigGate.jsx` (64 líneas)
 - `src/app/views/CRM/command-report.js` (63 líneas)
