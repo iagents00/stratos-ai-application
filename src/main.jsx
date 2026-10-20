@@ -203,7 +203,7 @@ const isLanding = !esAppNativa && !commonEntry && !isExplicitClient && (
 const isApp = esAppNativa || (!isDentalDemo && !isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isManualMkt && !isManualNSG && !isManualLegacy && !isManualBrasa && !isManualGasil && !isManualMuebleria && !isDiagnostico && !isDukeLeadRouter && !isOnboardingCC && !isPublicLanding && !isLanding);
 
 // URL de la plataforma — usada por la landing para el CTA principal
-const APP_URL = import.meta.env.VITE_APP_URL || (window.location.origin + "/login");
+const APP_URL = hostname === "www.getstratosai.com" ? "https://getstratosai.com/login" : (import.meta.env.VITE_APP_URL || (window.location.origin + "/login"));
 
 // ─── BRANDING POR CLIENTE ────────────────────────────────────────────────────
 // Cambio mínimo y observable: título de la pestaña + atributo en <html>.
