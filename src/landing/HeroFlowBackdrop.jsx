@@ -34,13 +34,8 @@ const desktopNetwork = createNetwork(false);
 const mobileNetwork = createNetwork(true);
 const pathData = points => points.map((point, index) => `${index ? "L" : "M"}${point.join(" ")}`).join(" ");
 
-// Independent deterministic sequences: no shared restart or repeating direction flip.
-const variation = seed => {
-  const value = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
-  return value - Math.floor(value);
-};
-function Meteor({ route, index, mobile, quiet, cycle }) {
-  const [pass, setPass] = useState(cycle);
+// Mirrored pairs share a clock; the three directions enter on successive beats.
+function Meteor({ route, index, mobile, quiet }) {
   // Keep the luminous head inside the SVG for the full flight.
   const first = route[0], last = route.at(-1);
   const delta = [last[0] - first[0], last[1] - first[1]];
@@ -56,15 +51,10 @@ function Meteor({ route, index, mobile, quiet, cycle }) {
   const distance = Math.hypot(end[0] - start[0], end[1] - start[1]);
   const angle = Math.atan2(end[1] - start[1], end[0] - start[0]) * 180 / Math.PI;
   const tail = mobile ? 170 : 360;
-  const seed = pass * 19 + index * 43;
-  // Shared pulse lengths give independent flights a rhythm without a fixed loop.
-  const beat = .12;
-  const phrase = Math.floor(variation(seed) * 5);
-  const duration = beat * [6, 7, 8, 10, 12][phrase] + variation(seed + 3) * .08;
-  const delay = beat * (variation(seed + 7) > .78 ? 2 : .25) + variation(seed + 11) * .09;
-  const easing = ["cubic-bezier(.32,.18,.64,.94)", "cubic-bezier(.22,.36,.72,.9)", "cubic-bezier(.4,.12,.7,.96)"][Math.floor(variation(seed + 13) * 3)];
+  const duration = 1.5;
+  const delay = -Math.floor(index / 2) * .5;
   return <g data-flow-route={pathData(route)} className={`smk-hero-flow-tone-${index % 2 ? "green" : "sky"}`} transform={`translate(${start.join(" ")}) rotate(${angle})`}>
-    <g key={pass} className="smk-hero-flow-comet" onAnimationEnd={event => { if (event.target === event.currentTarget) setPass(value => value + 1); }} style={{ "--comet-distance": `${distance}px`, "--comet-duration": `${duration.toFixed(3)}s`, "--comet-easing": easing, "--comet-delay": `${delay.toFixed(3)}s` }}>
+    <g className="smk-hero-flow-comet" data-brand-motion="true" style={{ "--comet-motion": `smk-hero-comet-travel ${duration}s cubic-bezier(.32,.28,.66,.74) ${delay}s infinite`, animation: "var(--comet-motion)", animationPlayState: "var(--flow-play)", "--comet-distance": `${distance}px`, "--comet-duration": `${duration.toFixed(3)}s`, "--comet-delay": `${delay.toFixed(3)}s` }}>
       <path d={`M${-tail} 0 L-4 -2 Q2 -2 2 0 Q2 2 -4 2 Z`} fill={`url(#${quiet}-comet-${index % 2 ? "green" : "sky"})`} />
       <ellipse className="smk-hero-flow-head-halo" rx="5" ry="3" />
       <ellipse className="smk-hero-flow-head" rx="2.2" ry="1.6" />
@@ -72,12 +62,12 @@ function Meteor({ route, index, mobile, quiet, cycle }) {
   </g>;
 }
 
-function Network({ mobile, id, cycle }) {
+function Network({ mobile, id }) {
   const quiet = `${id}-${mobile ? "mobile" : "desktop"}`;
   const { edges, routes } = mobile ? mobileNetwork : desktopNetwork;
   return <svg className={`smk-hero-flow-network${mobile ? " smk-hero-flow-network-mobile" : ""}`} viewBox={mobile ? "0 0 390 560" : "0 0 1440 500"} preserveAspectRatio="none" aria-hidden="true">
     <defs>
-      {[["sky", "#62B8E8"], ["green", "#56C99B"]].map(([tone, color]) => <linearGradient key={tone} id={`${quiet}-comet-${tone}`} gradientUnits="userSpaceOnUse" x1={mobile ? -170 : -360} y1="0" x2="0" y2="0">
+      {[["sky", "#79ACCA"], ["green", "#78B39D"]].map(([tone, color]) => <linearGradient key={tone} id={`${quiet}-comet-${tone}`} gradientUnits="userSpaceOnUse" x1={mobile ? -170 : -360} y1="0" x2="0" y2="0">
         <stop offset="0%" stopColor={color} stopOpacity="0" />
         <stop offset="45%" stopColor={color} stopOpacity=".38" />
         <stop offset="80%" stopColor={color} stopOpacity=".8" />
@@ -100,7 +90,7 @@ function Network({ mobile, id, cycle }) {
       <path className="smk-hero-flow-connections" d={edges.map(pathData).join(" ")} />
     </g>
     <g mask={`url(#${quiet}-motion)`}>
-      {routes.map((route, index) => <Meteor key={index} route={route} index={index} mobile={mobile} quiet={quiet} cycle={cycle} />)}
+      {routes.map((route, index) => <Meteor key={index} route={route} index={index} mobile={mobile} quiet={quiet} />)}
     </g>
   </svg>;
 }
@@ -129,6 +119,6 @@ export default function HeroFlowBackdrop() {
     media.addEventListener("change", preference);
     return () => { observer.disconnect(); safeMode.disconnect(); document.removeEventListener("visibilitychange", visibility); media.removeEventListener("change", preference); };
   }, []);
-  // Visibility changes restart the field; individual meteors manage their own cadence.
-  return <><div className="smk-hero-flow" data-motion-enabled={motionEnabled} ref={region} aria-hidden="true" data-running={environment.visible && !environment.hidden && !environment.lowfx && (!environment.reduced || motionEnabled)}><Network key={`desktop-${environment.cycle}`} id={id} cycle={environment.cycle} /><Network key={`mobile-${environment.cycle}`} id={id} cycle={environment.cycle} mobile /></div>{environment.reduced && <button type="button" className="smk-meteor-toggle" aria-pressed={motionEnabled} onClick={toggleMotion}>{motionEnabled ? "Pausar destellos" : "Activar destellos"}</button>}</>;
+  // Restart the shared rhythm on re-entry; CSS pauses every pair together.
+  return <><div className="smk-hero-flow" data-motion-enabled={motionEnabled} ref={region} aria-hidden="true" data-running={environment.visible && !environment.hidden && !environment.lowfx && (!environment.reduced || motionEnabled)}><Network key={`desktop-${environment.cycle}`} id={id} /><Network key={`mobile-${environment.cycle}`} id={id} mobile /></div>{environment.reduced && <button type="button" className="smk-meteor-toggle" aria-pressed={motionEnabled} onClick={toggleMotion}>{motionEnabled ? "Pausar destellos" : "Activar destellos"}</button>}</>;
 }

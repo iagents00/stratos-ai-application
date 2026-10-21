@@ -3,15 +3,15 @@
 .stratos-marketing .smk-hero-flow-network { position: absolute; inset: 0; width: 100%; height: 100%; mask-image: linear-gradient(to bottom, transparent, #000 10%, #000 96%, transparent); }
 .stratos-marketing .smk-hero-flow-network-mobile { display: none; --flow-play: paused; }
 .stratos-marketing .smk-hero-flow-connections { fill: none; stroke: #A9BECD; stroke-width: .8; opacity: .65; vector-effect: non-scaling-stroke; }
-.stratos-marketing .smk-hero-flow-tone-sky { color: #62B8E8; }
-.stratos-marketing .smk-hero-flow-tone-green { color: #56C99B; }
-.stratos-marketing .smk-hero-flow-comet { opacity: 0; animation: smk-hero-comet-travel var(--comet-duration) var(--comet-easing) var(--comet-delay) 1; animation-play-state: var(--flow-play); }
+.stratos-marketing .smk-hero-flow-tone-sky { color: #79ACCA; }
+.stratos-marketing .smk-hero-flow-tone-green { color: #78B39D; }
+.stratos-marketing .smk-hero-flow-comet { opacity: 0; }
 .stratos-marketing .smk-hero-flow-head-halo { fill: currentColor; opacity: .15; }
 .stratos-marketing .smk-hero-flow-head { fill: #F2FCFF; stroke: currentColor; stroke-width: 1; }
 @keyframes smk-hero-comet-travel {
   0% { opacity: 0; transform: translateX(0); }
-  5%, 92% { opacity: 1; }
-  100% { opacity: 0; transform: translateX(var(--comet-distance)); }
+  8%, 68% { opacity: 1; }
+  80%, 100% { opacity: 0; transform: translateX(var(--comet-distance)); }
 }
 @media (max-width: 760px) {
   .stratos-marketing .smk-hero-flow-network { display: none; --flow-play: paused; }
@@ -19,6 +19,8 @@
   .stratos-marketing .smk-hero-flow-connections { opacity: .54; }
 }
 @media (prefers-reduced-motion: reduce) {
+  /* The visitor explicitly enabled this field; visibility and low-FX still pause it. */
+  .stratos-marketing .smk-hero-flow[data-motion-enabled="true"] .smk-hero-flow-comet { animation: var(--comet-motion) !important; animation-play-state: var(--flow-play) !important; }
   .stratos-marketing .smk-hero-flow:not([data-motion-enabled="true"]) .smk-hero-flow-comet { display: none; animation: none; }
 }
 

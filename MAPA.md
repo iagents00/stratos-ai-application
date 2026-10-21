@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**274 archivos · 84.450 líneas**
+**274 archivos · 84.442 líneas**
 
 ---
 
@@ -440,7 +440,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ManualBrasa.jsx` | 235 | _sin describir_ |
 | `ManualMuebleria.jsx` | 224 | _sin describir_ |
 | `LoginScreenNative.jsx` | 183 | _sin describir_ |
-| `HeroFlowBackdrop.jsx` | 135 | _sin describir_ |
+| `HeroFlowBackdrop.jsx` | 125 | _sin describir_ |
 | `marketing-content.js` | 108 | _sin describir_ |
 | `LandingMarketing.jsx` | 96 | _sin describir_ |
 | `ModuleShowcase.jsx` | 91 | _sin describir_ |
@@ -448,7 +448,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ModuleShowcase.css` | 66 | _sin describir_ |
 | `FeatureMotion.css` | 59 | _sin describir_ |
 | `AppDownloads.jsx` | 29 | _sin describir_ |
-| `HeroFlowBackdrop.css` | 27 | _sin describir_ |
+| `HeroFlowBackdrop.css` | 29 | _sin describir_ |
 | `AppDownloads.css` | 24 | _sin describir_ |
 
 ### `src/lib/`
@@ -880,10 +880,10 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/ISpaceBoard.jsx` (148 líneas)
 - `src/app/views/CRM/ScheduledCallBadge.jsx` (144 líneas)
 - `src/clients/brasa-y-piedra/config.js` (140 líneas)
-- `src/landing/HeroFlowBackdrop.jsx` (135 líneas)
 - `src/app/components/CopilotCapabilities.jsx` (131 líneas)
 - `src/app/constants/pipeline.js` (129 líneas)
 - `src/lib/iagents-actions.js` (126 líneas)
+- `src/landing/HeroFlowBackdrop.jsx` (125 líneas)
 - `src/mobile-perf.css` (121 líneas)
 - `src/app/data/rivieraProperties.js` (119 líneas)
 - `src/app/views/IACRMPlanes.jsx` (119 líneas)
