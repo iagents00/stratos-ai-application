@@ -28,7 +28,7 @@ function createNetwork(mobile) {
     }
     return points;
   };
-  return { edges, routes: [...horizontal(1), ...horizontal(7), diagonal(-1, -1), diagonal(-1, 1), diagonal(1, -1), diagonal(1, 1)] };
+  return { edges, routes: [...horizontal(1), ...horizontal(mobile ? 8 : 7), diagonal(-1, -1), diagonal(-1, 1), diagonal(1, -1), diagonal(1, 1)] };
 }
 const desktopNetwork = createNetwork(false);
 const mobileNetwork = createNetwork(true);
@@ -72,7 +72,7 @@ function Network({ mobile, id, cycle }) {
         {[[0, 1], [18, .75], [32, .12], [50, .045], [68, .12], [82, .75], [100, 1]].map(([offset, opacity]) => <stop key={offset} offset={`${offset}%`} stopColor="#fff" stopOpacity={opacity} />)}
       </linearGradient>
       <linearGradient id={`${quiet}-edges`} x1="0" y1="0" x2="0" y2="1">
-        {(mobile ? [[0, .35], [9, .2], [20, 0], [90, 0], [100, .2]] : [[0, .6], [12, .32], [24, 0], [80, 0], [100, .38]]).map(([offset, opacity]) => <stop key={offset} offset={`${offset}%`} stopColor="#fff" stopOpacity={opacity} />)}
+        {(mobile ? [[0, .35], [9, .2], [20, 0], [78, 0], [87, .65], [96, .75], [100, .3]] : [[0, .6], [12, .32], [24, 0], [76, 0], [86, .6], [96, .75], [100, .3]]).map(([offset, opacity]) => <stop key={offset} offset={`${offset}%`} stopColor="#fff" stopOpacity={opacity} />)}
       </linearGradient>
       {/* Lift the upper/lower lattice while retaining the quiet reading area. */}
       <mask id={quiet}><rect width="100%" height="100%" fill={`url(#${quiet}-field)`} /><rect width="100%" height="100%" fill={`url(#${quiet}-edges)`} /></mask>
