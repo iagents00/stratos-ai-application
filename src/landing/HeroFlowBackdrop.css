@@ -21,14 +21,3 @@
 @media (prefers-reduced-motion: reduce) {
   .stratos-marketing .smk-hero-flow-comet { display: none; animation: none; }
 }
-
-/* Broad color fields travel beneath the network. No blur filters or pinned GPU layers. */
-.stratos-marketing .smk-hero-auras { position: absolute; inset: 0; overflow: hidden; }
-.stratos-marketing .smk-hero-aura { position: absolute; inset: -10% -15%; opacity: 0; animation: smk-aura-blue 20s cubic-bezier(.37, 0, .2, 1) 1; animation-play-state: var(--flow-play); background: radial-gradient(ellipse at center, rgb(46 163 239 / .18) 0%, rgb(77 182 244 / .1) 25%, rgb(116 205 249 / .035) 48%, transparent 70%); }
-.stratos-marketing .smk-hero-aura-green { animation-name: smk-aura-green; background: radial-gradient(ellipse at center, rgb(31 195 117 / .14) 0%, rgb(78 210 149 / .075) 25%, rgb(122 226 178 / .025) 48%, transparent 70%); }
-@keyframes smk-aura-blue { 0% { opacity: 0; transform: translateX(-45%); } 12% { opacity: .7; } 25% { opacity: 1; transform: translateX(0); } 42% { opacity: .6; } 50%, 100% { opacity: 0; transform: translateX(45%); } }
-@keyframes smk-aura-green { 0%, 50% { opacity: 0; transform: translateX(45%); } 62% { opacity: .7; } 75% { opacity: 1; transform: translateX(0); } 92% { opacity: .6; } 100% { opacity: 0; transform: translateX(-45%); } }
-@media (prefers-reduced-motion: reduce) {
-  .stratos-marketing .smk-hero-aura { animation: none; opacity: .35; transform: none; }
-  .stratos-marketing .smk-hero-aura-green { display: none; }
-}
