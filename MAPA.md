@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**272 archivos · 84.395 líneas**
+**274 archivos · 84.450 líneas**
 
 ---
 
@@ -442,12 +442,14 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `LoginScreenNative.jsx` | 183 | _sin describir_ |
 | `HeroFlowBackdrop.jsx` | 135 | _sin describir_ |
 | `marketing-content.js` | 108 | _sin describir_ |
-| `LandingMarketing.jsx` | 94 | _sin describir_ |
+| `LandingMarketing.jsx` | 96 | _sin describir_ |
 | `ModuleShowcase.jsx` | 91 | _sin describir_ |
 | `FeatureMotion.jsx` | 90 | _sin describir_ |
 | `ModuleShowcase.css` | 66 | _sin describir_ |
 | `FeatureMotion.css` | 59 | _sin describir_ |
+| `AppDownloads.jsx` | 29 | _sin describir_ |
 | `HeroFlowBackdrop.css` | 27 | _sin describir_ |
+| `AppDownloads.css` | 24 | _sin describir_ |
 
 ### `src/lib/`
 
@@ -898,7 +900,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/Admin/CompanySetupAdmin.jsx` (99 líneas)
 - `src/app/constants/areas.js` (97 líneas)
 - `src/app/views/CRM/date-range.js` (97 líneas)
-- `src/landing/LandingMarketing.jsx` (94 líneas)
+- `src/landing/LandingMarketing.jsx` (96 líneas)
 - `src/app/views/LandingPages/PublicLanding.jsx` (93 líneas)
 - `src/landing/ModuleShowcase.jsx` (91 líneas)
 - `src/clients/tgenius/config.js` (90 líneas)
