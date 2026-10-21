@@ -1,0 +1,23 @@
+.stratos-marketing .smk-service-flow { --service-play: paused; overflow: hidden; padding-block: 25px; background: #F7F9FC; border-block: 1px solid #E9EFF5; mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent); }
+.stratos-marketing .smk-service-flow[data-running="true"] { --service-play: running; }
+.stratos-marketing .smk-service-flow:hover, .stratos-marketing .smk-service-flow:focus-within { --service-play: paused; }
+.stratos-marketing .smk-service-flow:focus-visible { outline: 2px solid #356FA7; outline-offset: -4px; }
+.stratos-marketing .smk-service-flow-track { display: flex; width: max-content; }
+.stratos-marketing .smk-service-flow-group { display: flex; flex: 0 0 auto; align-items: center; gap: 40px; padding-right: 40px; }
+.stratos-marketing .smk-service-flow-group span { display: inline-flex; align-items: center; gap: 40px; color: #435E79; font: 500 19px/1.5 var(--marketing-display); letter-spacing: -.015em; white-space: nowrap; }
+.stratos-marketing .smk-service-flow-group span::after { content: ""; width: 4px; height: 4px; flex: 0 0 4px; border-radius: 50%; background: #A8BED4; }
+@keyframes smk-services-travel { to { transform: translateX(-50%); } }
+.stratos-marketing .smk-service-flow[data-static="true"] { mask-image: none; }
+.stratos-marketing .smk-service-flow[data-static="true"] .smk-service-flow-track { width: 100%; animation: none !important; }
+.stratos-marketing .smk-service-flow[data-static="true"] .smk-service-flow-group { flex-wrap: wrap; justify-content: center; padding: 0 24px; gap: 12px 28px; }
+.stratos-marketing .smk-service-flow[data-static="true"] .smk-service-flow-group[aria-hidden="true"] { display: none; }
+.stratos-marketing .smk-service-flow[data-static="true"] .smk-service-flow-group span::after { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .stratos-marketing .smk-service-flow[data-static="false"] .smk-service-flow-track { animation: var(--service-motion) !important; animation-play-state: var(--service-play) !important; }
+}
+@media (max-width: 760px) {
+  .stratos-marketing .smk-service-flow { padding-block: 21px; }
+  .stratos-marketing .smk-service-flow-group, .stratos-marketing .smk-service-flow-group span { gap: 28px; }
+  .stratos-marketing .smk-service-flow-group { padding-right: 28px; }
+  .stratos-marketing .smk-service-flow-group span { font-size: 17px; }
+}

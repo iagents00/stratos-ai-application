@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**274 archivos · 84.434 líneas**
+**276 archivos · 84.479 líneas**
 
 ---
 
@@ -435,21 +435,23 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `DukeLeadRouter.jsx` | 343 | _sin describir_ |
 | `ManualGasil.jsx` | 285 | _sin describir_ |
 | `ManualNSG.jsx` | 285 | _sin describir_ |
-| `LandingMarketing.css` | 278 | _sin describir_ |
+| `LandingMarketing.css` | 270 | _sin describir_ |
 | `ManualLegacy.jsx` | 246 | _sin describir_ |
 | `ManualBrasa.jsx` | 235 | _sin describir_ |
 | `ManualMuebleria.jsx` | 224 | _sin describir_ |
 | `LoginScreenNative.jsx` | 183 | _sin describir_ |
 | `HeroFlowBackdrop.jsx` | 120 | _sin describir_ |
 | `marketing-content.js` | 108 | _sin describir_ |
-| `LandingMarketing.jsx` | 96 | _sin describir_ |
+| `LandingMarketing.jsx` | 92 | _sin describir_ |
 | `ModuleShowcase.jsx` | 91 | _sin describir_ |
 | `FeatureMotion.jsx` | 90 | _sin describir_ |
 | `ModuleShowcase.css` | 66 | _sin describir_ |
 | `FeatureMotion.css` | 59 | _sin describir_ |
+| `ServicesTicker.jsx` | 33 | _sin describir_ |
 | `AppDownloads.jsx` | 29 | _sin describir_ |
 | `HeroFlowBackdrop.css` | 26 | _sin describir_ |
 | `AppDownloads.css` | 24 | _sin describir_ |
+| `ServicesTicker.css` | 24 | _sin describir_ |
 
 ### `src/lib/`
 
@@ -836,8 +838,8 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/ZoomControl/Graficas.jsx` (284 líneas)
 - `src/lib/native.js` (282 líneas)
 - `src/index.css` (278 líneas)
-- `src/landing/LandingMarketing.css` (278 líneas)
 - `src/clients/nsg/config.js` (270 líneas)
+- `src/landing/LandingMarketing.css` (270 líneas)
 - `src/lib/push-native.js` (265 líneas)
 - `src/app/features/MetaPanel/DocsStratos.jsx` (263 líneas)
 - `src/app/features/Admin/PlatformCompanyCRM.jsx` (258 líneas)
@@ -900,8 +902,8 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/Admin/CompanySetupAdmin.jsx` (99 líneas)
 - `src/app/constants/areas.js` (97 líneas)
 - `src/app/views/CRM/date-range.js` (97 líneas)
-- `src/landing/LandingMarketing.jsx` (96 líneas)
 - `src/app/views/LandingPages/PublicLanding.jsx` (93 líneas)
+- `src/landing/LandingMarketing.jsx` (92 líneas)
 - `src/landing/ModuleShowcase.jsx` (91 líneas)
 - `src/clients/tgenius/config.js` (90 líneas)
 - `src/landing/FeatureMotion.jsx` (90 líneas)

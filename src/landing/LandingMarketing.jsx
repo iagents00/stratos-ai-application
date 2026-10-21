@@ -4,13 +4,13 @@ import ModuleShowcase from "./ModuleShowcase.jsx";
 import FeatureMotion from "./FeatureMotion.jsx";
 import HeroFlowBackdrop from "./HeroFlowBackdrop.jsx";
 import AppDownloads from "./AppDownloads.jsx";
+import ServicesTicker from "./ServicesTicker.jsx";
 import { createModuleRotation, moduleScreenshotSrc } from "./module-showcase.mjs";
 import { plans, faqs, rotatingWords, marketingLoginUrl } from "./marketing-content.js";
 import "./LandingMarketing.css";
 
 const contact = (message = "Hola, quiero solicitar acceso a Stratos AI") => `https://wa.me/529842803001?text=${encodeURIComponent(message)}`;
 const navLinks = [["Solución", "#solución"], ["Características", "#modulos"], ["Precios", "#precios"], ["Enterprise", "#enterprise"], ["App", "#descargar"]];
-const services = ["Call Center + IA", "Marketing + IA", "CRM Inteligente", "Equipos de iAgents", "Avatars de IA", "ERPs Autónomos", "Automatización comercial", "Reportes en tiempo real"];
 
 
 function Brand({ showIcon = true }) {
@@ -52,10 +52,6 @@ function RotatingHeadline() {
 
 function Actions() {
   return <div className="smk-actions"><AccessButton /><a className="smk-button smk-secondary" href="/diagnostico">Iniciar diagnóstico<ArrowRight size={17} aria-hidden="true" /></a></div>;
-}
-
-function ServicesTicker() {
-  return <div className="smk-service-strip" aria-label="Soluciones de Stratos AI"><div className="smk-ticker-track"><div>{services.map(service => <span key={service}>{service}</span>)}</div><div aria-hidden="true">{services.map(service => <span key={service}>{service}</span>)}</div></div></div>;
 }
 
 const workflow = [

@@ -77,7 +77,7 @@ test('the public site preserves commercial terms, contact and fixed login routes
 });
 
 test('marketing styles cannot alter authenticated app surfaces', () => {
-  for (const file of ['LandingMarketing.css', 'FeatureMotion.css', 'HeroFlowBackdrop.css', 'AppDownloads.css']) {
+  for (const file of ['LandingMarketing.css', 'FeatureMotion.css', 'HeroFlowBackdrop.css', 'AppDownloads.css', 'ServicesTicker.css']) {
     const css = postcss.parse(readFileSync(new URL(`../src/landing/${file}`, import.meta.url), 'utf8'));
     css.walkRules(rule => {
       if (rule.parent.type === 'atrule' && rule.parent.name.endsWith('keyframes')) return;
