@@ -1,0 +1,23 @@
+.stratos-marketing .smk-download-panel { display: grid; grid-template-columns: 1.1fr 1fr; align-items: center; gap: 64px; padding: 56px; border-radius: 16px; background: var(--smk-ink); color: #fff; }
+.stratos-marketing .smk-download-copy > img { display: block; border-radius: 12px; margin-bottom: 28px; }
+.stratos-marketing .smk-download-copy h2 { color: #fff; font-size: clamp(36px, 4vw, 52px); line-height: 1.08; }
+.stratos-marketing .smk-download-copy > p { max-width: 34ch; margin-top: 22px; color: #C1CFDE; font-size: 16px; line-height: 1.7; }
+.stratos-marketing .smk-download-account { display: block; margin-top: 24px; color: #A8BDD3; font-size: 12px; }
+.stratos-marketing .smk-download-options { display: grid; gap: 30px; }
+.stratos-marketing .smk-download-label { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; font-size: 14px; }
+.stratos-marketing .smk-download-available, .stratos-marketing .smk-download-web { margin-left: auto; color: #A8CDF3; font-size: 11px; }
+.stratos-marketing .smk-download-web { color: #B5C4D5; }
+.stratos-marketing .smk-download-link { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 80px; padding: 16px 22px; border: 1px solid #fff; border-radius: 12px; background: #fff; color: var(--smk-ink); text-decoration: none; transition: background-color 160ms ease-out, border-color 160ms ease-out; }
+.stratos-marketing .smk-download-link small { display: block; font-size: 11px; line-height: 1.5; }
+.stratos-marketing .smk-download-link strong { display: block; font-size: 23px; font-weight: 500; line-height: 1.35; letter-spacing: -.02em; }
+.stratos-marketing .smk-download-link:hover { background: #E8F1FA; border-color: #E8F1FA; }
+.stratos-marketing .smk-download-link-web { color: #fff; background: transparent; border-color: #51657B; }
+.stratos-marketing .smk-download-link-web:hover { background: #172E47; border-color: #8CAAC8; }
+.stratos-marketing .smk-download-link:focus-visible { outline: 3px solid #8CC6FF; outline-offset: 5px; }
+.stratos-marketing .smk-download-note { margin-top: 10px; color: #B5C4D5; font-size: 12px; line-height: 1.5; }
+@media (max-width: 760px) {
+  .stratos-marketing .smk-download-panel { grid-template-columns: 1fr; gap: 32px; padding: 30px 24px; }
+  .stratos-marketing .smk-download-copy > img { margin-bottom: 22px; }
+  .stratos-marketing .smk-download-copy > p { max-width: 38ch; }
+  .stratos-marketing .smk-download-options { gap: 24px; }
+}
