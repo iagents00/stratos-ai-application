@@ -41,16 +41,27 @@ const variation = seed => {
 };
 function Meteor({ route, index, mobile, quiet, cycle }) {
   const [pass, setPass] = useState(cycle);
-  const start = route[0], end = route.at(-1);
+  // Keep the luminous head inside the SVG for the full flight.
+  const first = route[0], last = route.at(-1);
+  const delta = [last[0] - first[0], last[1] - first[1]];
+  let enter = 0, exit = 1;
+  [mobile ? 390 : 1440, mobile ? 560 : 500].forEach((size, axis) => {
+    if (!delta[axis]) return;
+    const bounds = [(8 - first[axis]) / delta[axis], (size - 8 - first[axis]) / delta[axis]].sort((a, b) => a - b);
+    enter = Math.max(enter, bounds[0]);
+    exit = Math.min(exit, bounds[1]);
+  });
+  const start = first.map((value, axis) => value + delta[axis] * enter);
+  const end = first.map((value, axis) => value + delta[axis] * exit);
   const distance = Math.hypot(end[0] - start[0], end[1] - start[1]);
   const angle = Math.atan2(end[1] - start[1], end[0] - start[0]) * 180 / Math.PI;
   const tail = mobile ? 170 : 360;
   const seed = pass * 19 + index * 43;
-  const duration = 1.8 + variation(seed) * 2;
-  const delay = .08 + variation(seed + 7) * 1.1;
+  const duration = 2.2 + variation(seed) * 1.7;
+  const delay = .04 + variation(seed + 7) * .22;
   return <g data-flow-route={pathData(route)} className={`smk-hero-flow-tone-${index % 2 ? "green" : "sky"}`} transform={`translate(${start.join(" ")}) rotate(${angle})`}>
-    <g key={pass} className="smk-hero-flow-comet" onAnimationEnd={event => { if (event.target === event.currentTarget) setPass(value => value + 1); }} style={{ "--comet-distance": `${distance + tail}px`, "--comet-duration": `${duration.toFixed(3)}s`, "--comet-delay": `${delay.toFixed(3)}s`, "--comet-acceleration": (.18 + variation(seed + 13) * .25).toFixed(3) }}>
-      <path d={`M${-tail} 0 L-4 -1.4 Q2 -1.4 2 0 Q2 1.4 -4 1.4 Z`} fill={`url(#${quiet}-comet-${index % 2 ? "green" : "sky"})`} />
+    <g key={pass} className="smk-hero-flow-comet" onAnimationEnd={event => { if (event.target === event.currentTarget) setPass(value => value + 1); }} style={{ "--comet-distance": `${distance}px`, "--comet-duration": `${duration.toFixed(3)}s`, "--comet-delay": `${delay.toFixed(3)}s` }}>
+      <path d={`M${-tail} 0 L-4 -2 Q2 -2 2 0 Q2 2 -4 2 Z`} fill={`url(#${quiet}-comet-${index % 2 ? "green" : "sky"})`} />
       <ellipse className="smk-hero-flow-head-halo" rx="5" ry="3" />
       <ellipse className="smk-hero-flow-head" rx="2.2" ry="1.6" />
     </g>
@@ -64,8 +75,8 @@ function Network({ mobile, id, cycle }) {
     <defs>
       {[["sky", "#62B8E8"], ["green", "#56C99B"]].map(([tone, color]) => <linearGradient key={tone} id={`${quiet}-comet-${tone}`} gradientUnits="userSpaceOnUse" x1={mobile ? -170 : -360} y1="0" x2="0" y2="0">
         <stop offset="0%" stopColor={color} stopOpacity="0" />
-        <stop offset="45%" stopColor={color} stopOpacity=".16" />
-        <stop offset="80%" stopColor={color} stopOpacity=".58" />
+        <stop offset="45%" stopColor={color} stopOpacity=".38" />
+        <stop offset="80%" stopColor={color} stopOpacity=".8" />
         <stop offset="100%" stopColor={color} stopOpacity=".95" />
       </linearGradient>)}
       <linearGradient id={`${quiet}-field`}>
@@ -74,11 +85,17 @@ function Network({ mobile, id, cycle }) {
       <linearGradient id={`${quiet}-edges`} x1="0" y1="0" x2="0" y2="1">
         {(mobile ? [[0, .35], [9, .2], [20, 0], [78, 0], [87, .65], [96, .75], [100, .3]] : [[0, .6], [12, .32], [24, 0], [76, 0], [86, .6], [96, .75], [100, .3]]).map(([offset, opacity]) => <stop key={offset} offset={`${offset}%`} stopColor="#fff" stopOpacity={opacity} />)}
       </linearGradient>
+      <linearGradient id={`${quiet}-signals`}>
+        {[[0, 1], [24, .95], [40, .3], [60, .3], [76, .95], [100, 1]].map(([offset, opacity]) => <stop key={offset} offset={`${offset}%`} stopColor="#fff" stopOpacity={opacity} />)}
+      </linearGradient>
+      <mask id={`${quiet}-motion`}><rect width="100%" height="100%" fill={`url(#${quiet}-signals)`} /></mask>
       {/* Lift the upper/lower lattice while retaining the quiet reading area. */}
       <mask id={quiet}><rect width="100%" height="100%" fill={`url(#${quiet}-field)`} /><rect width="100%" height="100%" fill={`url(#${quiet}-edges)`} /></mask>
     </defs>
     <g mask={`url(#${quiet})`}>
       <path className="smk-hero-flow-connections" d={edges.map(pathData).join(" ")} />
+    </g>
+    <g mask={`url(#${quiet}-motion)`}>
       {routes.map((route, index) => <Meteor key={index} route={route} index={index} mobile={mobile} quiet={quiet} cycle={cycle} />)}
     </g>
   </svg>;
