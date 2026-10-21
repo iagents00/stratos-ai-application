@@ -28,13 +28,13 @@ function createNetwork(mobile) {
     }
     return points;
   };
-  return { edges, routes: [...horizontal(1), diagonal(-1, 1, 8, centerColumn - 4), diagonal(-1, -1, 8, centerColumn + 4), diagonal(1, -1), diagonal(1, 1)] };
+  return { edges, routes: [...horizontal(1), diagonal(-1, 1, 8, centerColumn - 4), diagonal(-1, -1, 8, centerColumn + 4), diagonal(1, -1), diagonal(1, 1), diagonal(-1, -1, 8, centerColumn - 1), diagonal(-1, 1, 8, centerColumn + 1), diagonal(-1, -1, 8, centerColumn - 2), diagonal(-1, 1, 8, centerColumn + 2)] };
 }
 const desktopNetwork = createNetwork(false);
 const mobileNetwork = createNetwork(true);
 const pathData = points => points.map((point, index) => `${index ? "L" : "M"}${point.join(" ")}`).join(" ");
 
-// Mirrored pairs share a clock; the three directions enter on successive beats.
+// Mirrored pairs share a clock; outward blue signals enter between the main beats.
 function Meteor({ route, index, mobile, quiet }) {
   // Keep the luminous head inside the SVG for the full flight.
   const first = route[0], last = route.at(-1);
@@ -52,10 +52,11 @@ function Meteor({ route, index, mobile, quiet }) {
   const angle = Math.atan2(end[1] - start[1], end[0] - start[0]) * 180 / Math.PI;
   const tail = mobile ? 238 : 504;
   const duration = 1.5;
-  const delay = -Math.floor(index / 2) * .5;
-  return <g data-flow-route={pathData(route)} className={`smk-hero-flow-tone-${index % 2 ? "green" : "sky"}`} transform={`translate(${start.join(" ")}) rotate(${angle})`}>
+  const delay = index < 6 ? -Math.floor(index / 2) * .5 : -(.25 + Math.floor((index - 6) / 2) * .5);
+  const tone = index >= 6 ? "sky" : index % 2 ? "green" : "sky";
+  return <g data-flow-route={pathData(route)} className={`smk-hero-flow-tone-${tone}`} transform={`translate(${start.join(" ")}) rotate(${angle})`}>
     <g className="smk-hero-flow-comet" data-brand-motion="true" style={{ "--comet-motion": `smk-hero-comet-travel ${duration}s linear ${delay}s infinite`, animation: "var(--comet-motion)", animationPlayState: "var(--flow-play)", "--comet-distance": `${distance}px`, "--comet-duration": `${duration.toFixed(3)}s`, "--comet-delay": `${delay.toFixed(3)}s` }}>
-      <path d={`M${-tail} 0 L-3 -.65 Q1 -.65 1 0 Q1 .65 -3 .65 Z`} fill={`url(#${quiet}-comet-${index % 2 ? "green" : "sky"})`} />
+      <path d={`M${-tail} 0 L-3 -.65 Q1 -.65 1 0 Q1 .65 -3 .65 Z`} fill={`url(#${quiet}-comet-${tone})`} />
       <ellipse className="smk-hero-flow-head-halo" rx="2.6" ry="1.1" />
       <ellipse className="smk-hero-flow-head" rx="1.25" ry=".65" />
     </g>

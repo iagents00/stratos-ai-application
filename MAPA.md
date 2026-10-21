@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**276 archivos · 84.479 líneas**
+**276 archivos · 84.480 líneas**
 
 ---
 
@@ -440,7 +440,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ManualBrasa.jsx` | 235 | _sin describir_ |
 | `ManualMuebleria.jsx` | 224 | _sin describir_ |
 | `LoginScreenNative.jsx` | 183 | _sin describir_ |
-| `HeroFlowBackdrop.jsx` | 120 | _sin describir_ |
+| `HeroFlowBackdrop.jsx` | 121 | _sin describir_ |
 | `marketing-content.js` | 108 | _sin describir_ |
 | `LandingMarketing.jsx` | 92 | _sin describir_ |
 | `ModuleShowcase.jsx` | 91 | _sin describir_ |
@@ -886,7 +886,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/constants/pipeline.js` (129 líneas)
 - `src/lib/iagents-actions.js` (126 líneas)
 - `src/mobile-perf.css` (121 líneas)
-- `src/landing/HeroFlowBackdrop.jsx` (120 líneas)
+- `src/landing/HeroFlowBackdrop.jsx` (121 líneas)
 - `src/app/data/rivieraProperties.js` (119 líneas)
 - `src/app/views/IACRMPlanes.jsx` (119 líneas)
 - `src/app/views/ZoomControl/constants.js` (116 líneas)
