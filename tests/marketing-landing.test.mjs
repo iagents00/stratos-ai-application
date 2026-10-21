@@ -50,8 +50,13 @@ test('the public site preserves commercial terms, contact and fixed login routes
       const width = Number(network.match(/viewBox="0 0 (\d+)/)[1]);
       for (const [, path] of routes) {
         const points = path.match(/-?\d+/g).map(Number);
-        assert.ok(points[0] > width * .3 && points[0] < width * .65, 'Routes originate in the central area');
-        assert.ok(Math.abs(points.at(-2) - width / 2) > Math.abs(points[0] - width / 2), 'Routes travel outward');
+        if (points.at(-1) < points[1]) {
+          assert.ok(points.at(-2) > width * .3 && points.at(-2) < width * .65, 'Ascending routes converge near the upper center');
+          assert.ok(Math.abs(points.at(-2) - width / 2) < Math.abs(points[0] - width / 2), 'Ascending routes arrive from the lower sides');
+        } else {
+          assert.ok(points[0] > width * .3 && points[0] < width * .65, 'Other routes originate in the central area');
+          assert.ok(Math.abs(points.at(-2) - width / 2) > Math.abs(points[0] - width / 2), 'Other routes travel outward');
+        }
         const dx = points[2] - points[0], dy = points[3] - points[1];
         for (let i = 2; i < points.length; i += 2) {
           assert.ok((points[i] - points[i - 2]) * dx > 0, 'Route progresses without doubling back');

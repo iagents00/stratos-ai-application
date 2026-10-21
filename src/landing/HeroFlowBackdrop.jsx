@@ -19,16 +19,16 @@ function createNetwork(mobile) {
   }));
   const centerColumn = mobile ? 4 : 8;
   const horizontal = row => [rows[row].slice(0, centerColumn + 1).reverse(), rows[row].slice(centerColumn)];
-  const diagonal = (vertical, horizontal) => {
-    const points = [rows[4][centerColumn]];
-    for (let row = 4 + vertical; rows[row]; row += vertical) {
+  const diagonal = (vertical, horizontal, startRow = 4, startColumn = centerColumn) => {
+    const points = [rows[startRow][startColumn]];
+    for (let row = startRow + vertical; rows[row]; row += vertical) {
       const next = rows[row].find(point => point[0] === points.at(-1)[0] + horizontal * step / 2);
       if (!next) break;
       points.push(next);
     }
     return points;
   };
-  return { edges, routes: [...horizontal(1), ...horizontal(mobile ? 8 : 7), diagonal(-1, -1), diagonal(-1, 1), diagonal(1, -1), diagonal(1, 1)] };
+  return { edges, routes: [...horizontal(1), ...horizontal(mobile ? 8 : 7), diagonal(-1, 1, 8, centerColumn - 4), diagonal(-1, -1, 8, centerColumn + 4), diagonal(1, -1), diagonal(1, 1)] };
 }
 const desktopNetwork = createNetwork(false);
 const mobileNetwork = createNetwork(true);
