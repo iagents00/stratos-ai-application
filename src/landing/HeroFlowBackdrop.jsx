@@ -50,14 +50,14 @@ function Meteor({ route, index, mobile, quiet }) {
   const end = first.map((value, axis) => value + delta[axis] * exit);
   const distance = Math.hypot(end[0] - start[0], end[1] - start[1]);
   const angle = Math.atan2(end[1] - start[1], end[0] - start[0]) * 180 / Math.PI;
-  const tail = mobile ? 170 : 360;
+  const tail = mobile ? 238 : 504;
   const duration = 1.5;
   const delay = -Math.floor(index / 2) * .5;
   return <g data-flow-route={pathData(route)} className={`smk-hero-flow-tone-${index % 2 ? "green" : "sky"}`} transform={`translate(${start.join(" ")}) rotate(${angle})`}>
-    <g className="smk-hero-flow-comet" data-brand-motion="true" style={{ "--comet-motion": `smk-hero-comet-travel ${duration}s cubic-bezier(.32,.28,.66,.74) ${delay}s infinite`, animation: "var(--comet-motion)", animationPlayState: "var(--flow-play)", "--comet-distance": `${distance}px`, "--comet-duration": `${duration.toFixed(3)}s`, "--comet-delay": `${delay.toFixed(3)}s` }}>
-      <path d={`M${-tail} 0 L-4 -2 Q2 -2 2 0 Q2 2 -4 2 Z`} fill={`url(#${quiet}-comet-${index % 2 ? "green" : "sky"})`} />
-      <ellipse className="smk-hero-flow-head-halo" rx="5" ry="3" />
-      <ellipse className="smk-hero-flow-head" rx="2.2" ry="1.6" />
+    <g className="smk-hero-flow-comet" data-brand-motion="true" style={{ "--comet-motion": `smk-hero-comet-travel ${duration}s linear ${delay}s infinite`, animation: "var(--comet-motion)", animationPlayState: "var(--flow-play)", "--comet-distance": `${distance}px`, "--comet-duration": `${duration.toFixed(3)}s`, "--comet-delay": `${delay.toFixed(3)}s` }}>
+      <path d={`M${-tail} 0 L-3 -.65 Q1 -.65 1 0 Q1 .65 -3 .65 Z`} fill={`url(#${quiet}-comet-${index % 2 ? "green" : "sky"})`} />
+      <ellipse className="smk-hero-flow-head-halo" rx="2.6" ry="1.1" />
+      <ellipse className="smk-hero-flow-head" rx="1.25" ry=".65" />
     </g>
   </g>;
 }
@@ -67,7 +67,7 @@ function Network({ mobile, id }) {
   const { edges, routes } = mobile ? mobileNetwork : desktopNetwork;
   return <svg className={`smk-hero-flow-network${mobile ? " smk-hero-flow-network-mobile" : ""}`} viewBox={mobile ? "0 0 390 560" : "0 0 1440 500"} preserveAspectRatio="none" aria-hidden="true">
     <defs>
-      {[["sky", "#79ACCA"], ["green", "#78B39D"]].map(([tone, color]) => <linearGradient key={tone} id={`${quiet}-comet-${tone}`} gradientUnits="userSpaceOnUse" x1={mobile ? -170 : -360} y1="0" x2="0" y2="0">
+      {[["sky", "#63ACD8"], ["green", "#64B79D"]].map(([tone, color]) => <linearGradient key={tone} id={`${quiet}-comet-${tone}`} gradientUnits="userSpaceOnUse" x1={mobile ? -238 : -504} y1="0" x2="0" y2="0">
         <stop offset="0%" stopColor={color} stopOpacity="0" />
         <stop offset="45%" stopColor={color} stopOpacity=".38" />
         <stop offset="80%" stopColor={color} stopOpacity=".8" />
