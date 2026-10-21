@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**272 archivos · 84.357 líneas**
+**272 archivos · 84.375 líneas**
 
 ---
 
@@ -441,10 +441,10 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ManualMuebleria.jsx` | 224 | _sin describir_ |
 | `LoginScreenNative.jsx` | 183 | _sin describir_ |
 | `marketing-content.js` | 108 | _sin describir_ |
+| `HeroFlowBackdrop.jsx` | 107 | _sin describir_ |
 | `LandingMarketing.jsx` | 94 | _sin describir_ |
 | `ModuleShowcase.jsx` | 91 | _sin describir_ |
 | `FeatureMotion.jsx` | 90 | _sin describir_ |
-| `HeroFlowBackdrop.jsx` | 89 | _sin describir_ |
 | `ModuleShowcase.css` | 66 | _sin describir_ |
 | `FeatureMotion.css` | 59 | _sin describir_ |
 | `HeroFlowBackdrop.css` | 35 | _sin describir_ |
@@ -889,6 +889,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/clients/demo/config.js` (113 líneas)
 - `src/app/features/Admin/PlatformCompanyCRM.css` (111 líneas)
 - `src/landing/marketing-content.js` (108 líneas)
+- `src/landing/HeroFlowBackdrop.jsx` (107 líneas)
 - `src/lib/rails-config.js` (107 líneas)
 - `src/lib/chunk-recovery.js` (103 líneas)
 - `src/app/views/CRM/command-metrics.js` (101 líneas)
@@ -902,7 +903,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/landing/ModuleShowcase.jsx` (91 líneas)
 - `src/clients/tgenius/config.js` (90 líneas)
 - `src/landing/FeatureMotion.jsx` (90 líneas)
-- `src/landing/HeroFlowBackdrop.jsx` (89 líneas)
 - `src/app/features/Admin/RailsSettings.css` (86 líneas)
 - `src/lib/backup.js` (85 líneas)
 - `src/contexts/ClientOrgGuard.jsx` (83 líneas)

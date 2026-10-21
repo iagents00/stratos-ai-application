@@ -17,20 +17,52 @@ function createNetwork(mobile) {
       if (Math.abs(previous[0] - point[0]) === step / 2) edges.push([previous, point]);
     });
   }));
-  const diagonal = (column, upward = false) => Array.from({ length: 9 }, (_, row) =>
-    rows[upward ? 8 - row : row][column + Math.floor(row / 2)]);
-  return { edges, routes: [rows[1], diagonal(1), diagonal(columns - 6, true), rows[7]] };
+  const centerColumn = mobile ? 4 : 8;
+  const horizontal = row => [rows[row].slice(0, centerColumn + 1).reverse(), rows[row].slice(centerColumn)];
+  const diagonal = (vertical, horizontal) => {
+    const points = [rows[4][centerColumn]];
+    for (let row = 4 + vertical; rows[row]; row += vertical) {
+      const next = rows[row].find(point => point[0] === points.at(-1)[0] + horizontal * step / 2);
+      if (!next) break;
+      points.push(next);
+    }
+    return points;
+  };
+  return { edges, routes: [...horizontal(1), ...horizontal(7), diagonal(-1, -1), diagonal(-1, 1), diagonal(1, -1), diagonal(1, 1)] };
 }
 const desktopNetwork = createNetwork(false);
 const mobileNetwork = createNetwork(true);
 const pathData = points => points.map((point, index) => `${index ? "L" : "M"}${point.join(" ")}`).join(" ");
+
+// Independent deterministic sequences: no shared restart or repeating direction flip.
+const variation = seed => {
+  const value = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+  return value - Math.floor(value);
+};
+function Meteor({ route, index, mobile, quiet, cycle }) {
+  const [pass, setPass] = useState(cycle);
+  const start = route[0], end = route.at(-1);
+  const distance = Math.hypot(end[0] - start[0], end[1] - start[1]);
+  const angle = Math.atan2(end[1] - start[1], end[0] - start[0]) * 180 / Math.PI;
+  const tail = mobile ? 170 : 360;
+  const seed = pass * 19 + index * 43;
+  const duration = 1.8 + variation(seed) * 2;
+  const delay = .08 + variation(seed + 7) * 1.1;
+  return <g data-flow-route={pathData(route)} className={`smk-hero-flow-tone-${index % 2 ? "green" : "sky"}`} transform={`translate(${start.join(" ")}) rotate(${angle})`}>
+    <g key={pass} className="smk-hero-flow-comet" onAnimationEnd={event => { if (event.target === event.currentTarget) setPass(value => value + 1); }} style={{ "--comet-distance": `${distance + tail}px`, "--comet-duration": `${duration.toFixed(3)}s`, "--comet-delay": `${delay.toFixed(3)}s`, "--comet-acceleration": (.18 + variation(seed + 13) * .25).toFixed(3) }}>
+      <path d={`M${-tail} 0 L-4 -1.4 Q2 -1.4 2 0 Q2 1.4 -4 1.4 Z`} fill={`url(#${quiet}-comet-${index % 2 ? "green" : "sky"})`} />
+      <ellipse className="smk-hero-flow-head-halo" rx="5" ry="3" />
+      <ellipse className="smk-hero-flow-head" rx="2.2" ry="1.6" />
+    </g>
+  </g>;
+}
 
 function Network({ mobile, id, cycle }) {
   const quiet = `${id}-${mobile ? "mobile" : "desktop"}`;
   const { edges, routes } = mobile ? mobileNetwork : desktopNetwork;
   return <svg className={`smk-hero-flow-network${mobile ? " smk-hero-flow-network-mobile" : ""}`} viewBox={mobile ? "0 0 390 560" : "0 0 1440 500"} preserveAspectRatio="none" aria-hidden="true">
     <defs>
-      {[["sky", "#62B8E8"], ["green", "#56C99B"]].map(([tone, color]) => <linearGradient key={tone} id={`${quiet}-comet-${tone}`} gradientUnits="userSpaceOnUse" x1={mobile ? -90 : -180} y1="0" x2="0" y2="0">
+      {[["sky", "#62B8E8"], ["green", "#56C99B"]].map(([tone, color]) => <linearGradient key={tone} id={`${quiet}-comet-${tone}`} gradientUnits="userSpaceOnUse" x1={mobile ? -170 : -360} y1="0" x2="0" y2="0">
         <stop offset="0%" stopColor={color} stopOpacity="0" />
         <stop offset="45%" stopColor={color} stopOpacity=".16" />
         <stop offset="80%" stopColor={color} stopOpacity=".58" />
@@ -47,21 +79,7 @@ function Network({ mobile, id, cycle }) {
     </defs>
     <g mask={`url(#${quiet})`}>
       <path className="smk-hero-flow-connections" d={edges.map(pathData).join(" ")} />
-      {routes.map((route, index) => {
-        const reversed = (index + cycle) % 2 === 1;
-        const start = reversed ? route.at(-1) : route[0];
-        const end = reversed ? route[0] : route.at(-1);
-        const distance = Math.hypot(end[0] - start[0], end[1] - start[1]);
-        const angle = Math.atan2(end[1] - start[1], end[0] - start[0]) * 180 / Math.PI;
-        const tail = mobile ? 90 : 180;
-        return <g key={index} data-flow-route={pathData(route)} className={`smk-hero-flow-tone-${index % 2 ? "green" : "sky"}`} transform={`translate(${start.join(" ")}) rotate(${angle})`}>
-          <g data-flow-cycle={index === 0 ? "true" : undefined} className="smk-hero-flow-comet" style={{ "--comet-distance": `${distance + tail}px` }}>
-            <path d={`M${-tail} 0 L-4 -1.4 Q2 -1.4 2 0 Q2 1.4 -4 1.4 Z`} fill={`url(#${quiet}-comet-${index % 2 ? "green" : "sky"})`} />
-            <ellipse className="smk-hero-flow-head-halo" rx="5" ry="3" />
-            <ellipse className="smk-hero-flow-head" rx="2.2" ry="1.6" />
-          </g>
-        </g>;
-      })}
+      {routes.map((route, index) => <Meteor key={index} route={route} index={index} mobile={mobile} quiet={quiet} cycle={cycle} />)}
     </g>
   </svg>;
 }
@@ -83,6 +101,6 @@ export default function HeroFlowBackdrop() {
     media.addEventListener("change", preference);
     return () => { observer.disconnect(); safeMode.disconnect(); document.removeEventListener("visibilitychange", visibility); media.removeEventListener("change", preference); };
   }, []);
-  // Restart on completion, with no idle gap; finite passes retain mobile safeguards.
-  return <div className="smk-hero-flow" ref={region} onAnimationEnd={event => { if (event.target.dataset.flowCycle === "true" && environment.visible && !environment.hidden && !environment.lowfx && !environment.reduced) setEnvironment(value => ({ ...value, cycle: value.cycle + 1 })); }} aria-hidden="true" data-running={environment.visible && !environment.hidden && !environment.lowfx && !environment.reduced}><div className="smk-hero-auras" key={`auras-${auraCycle}`}><div className="smk-hero-aura smk-hero-aura-blue" onAnimationEnd={() => setAuraCycle(value => value + 1)} /><div className="smk-hero-aura smk-hero-aura-green" /></div><Network key={`desktop-${environment.cycle}`} id={id} cycle={environment.cycle} /><Network key={`mobile-${environment.cycle}`} id={id} cycle={environment.cycle} mobile /></div>;
+  // Visibility changes restart the field; individual meteors manage their own cadence.
+  return <div className="smk-hero-flow" ref={region} aria-hidden="true" data-running={environment.visible && !environment.hidden && !environment.lowfx && !environment.reduced}><div className="smk-hero-auras" key={`auras-${auraCycle}`}><div className="smk-hero-aura smk-hero-aura-blue" onAnimationEnd={() => setAuraCycle(value => value + 1)} /><div className="smk-hero-aura smk-hero-aura-green" /></div><Network key={`desktop-${environment.cycle}`} id={id} cycle={environment.cycle} /><Network key={`mobile-${environment.cycle}`} id={id} cycle={environment.cycle} mobile /></div>;
 }

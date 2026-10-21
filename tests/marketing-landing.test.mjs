@@ -46,14 +46,15 @@ test('the public site preserves commercial terms, contact and fixed login routes
         edges.add(`${from}|${to}`); edges.add(`${to}|${from}`);
       }
       const routes = [...network.matchAll(/data-flow-route="([^"]+)"/g)];
-      assert.equal(routes.length, 4);
+      assert.equal(routes.length, 8);
       const width = Number(network.match(/viewBox="0 0 (\d+)/)[1]);
       for (const [, path] of routes) {
         const points = path.match(/-?\d+/g).map(Number);
-        if (points[1] === points.at(-1)) assert.ok(points[0] < 0 && points.at(-2) > width, 'Horizontal route crosses the viewport');
+        assert.ok(points[0] > width * .3 && points[0] < width * .65, 'Routes originate in the central area');
+        assert.ok(Math.abs(points.at(-2) - width / 2) > Math.abs(points[0] - width / 2), 'Routes travel outward');
         const dx = points[2] - points[0], dy = points[3] - points[1];
         for (let i = 2; i < points.length; i += 2) {
-          assert.ok(points[i] > points[i - 2], 'Route progresses without doubling back');
+          assert.ok((points[i] - points[i - 2]) * dx > 0, 'Route progresses without doubling back');
           assert.equal((points[i] - points[0]) * dy, (points[i + 1] - points[1]) * dx, 'Meteor follows a straight line, never zigzags');
           assert.ok(edges.has(`${points.slice(i - 2, i).join(',')}|${points.slice(i, i + 2).join(',')}`), 'Signal follows a real edge');
         }
