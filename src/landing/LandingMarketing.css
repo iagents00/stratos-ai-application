@@ -53,7 +53,7 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
 .stratos-marketing .smk-menu-toggle { display: none; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 10px; border: 1px solid var(--smk-line); border-radius: 10px; color: var(--smk-ink); background: #fff; cursor: pointer; }
 .stratos-marketing .smk-mobile-menu { display: none; }
 
-.stratos-marketing .smk-hero { position: relative; padding-top: 72px; padding-bottom: 20px; text-align: center; }
+.stratos-marketing .smk-hero { position: relative; padding-top: 72px; padding-bottom: 64px; text-align: center; }
 .stratos-marketing .smk-hero-heading { position: relative; width: min(940px, 100%); margin-inline: auto; }
 .stratos-marketing .smk-hero h1 { font-size: 64px; line-height: 1.06; font-weight: 400; letter-spacing: -.025em; }
 .stratos-marketing .smk-hero h1 > span:not(.smk-sr-only) { display: block; }
@@ -195,7 +195,7 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
   .stratos-marketing h2 { font-size: 36px; }
   .stratos-marketing .smk-section-heading { display: block; margin-bottom: 32px; }
   .stratos-marketing .smk-section-heading > p { max-width: 54ch; margin-top: 20px; font-size: 16px; }
-  .stratos-marketing .smk-hero { position: relative; padding-top: 56px; padding-bottom: 8px; }
+  .stratos-marketing .smk-hero { position: relative; padding-top: 56px; padding-bottom: 64px; }
   .stratos-marketing .smk-hero h1 { font-size: 48px; }
   .stratos-marketing .smk-hero-copy { max-width: 48ch; font-size: 17px; margin-top: 24px; padding-inline: 20px; }
   .stratos-marketing .smk-modules-wrap .stratos-modules { padding-top: 40px; padding-bottom: 48px; }
