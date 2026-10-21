@@ -30,7 +30,7 @@ function clock() {
 test('rotation wraps all six modules and seven headline options every 2800 ms, including reduced motion', () => {
   assert.equal(MODULE_ROTATION_MS, 2800);
   assert.equal(SHOWCASE_MODULES.length, 6);
-  assert.equal(rotatingWords.length, 7);
+  assert.equal(rotatingWords.length, 6);
   for (const count of [SHOWCASE_MODULES.length, rotatingWords.length]) {
     for (const reducedMotion of [false, true]) {
       const timers = clock(), states = [];

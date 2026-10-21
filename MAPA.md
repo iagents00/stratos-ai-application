@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**276 archivos · 84.480 líneas**
+**276 archivos · 84.479 líneas**
 
 ---
 
@@ -441,7 +441,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ManualMuebleria.jsx` | 224 | _sin describir_ |
 | `LoginScreenNative.jsx` | 183 | _sin describir_ |
 | `HeroFlowBackdrop.jsx` | 121 | _sin describir_ |
-| `marketing-content.js` | 108 | _sin describir_ |
+| `marketing-content.js` | 107 | _sin describir_ |
 | `LandingMarketing.jsx` | 92 | _sin describir_ |
 | `ModuleShowcase.jsx` | 91 | _sin describir_ |
 | `FeatureMotion.jsx` | 90 | _sin describir_ |
@@ -893,7 +893,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/components/CopilotMark.jsx` (115 líneas)
 - `src/clients/demo/config.js` (113 líneas)
 - `src/app/features/Admin/PlatformCompanyCRM.css` (111 líneas)
-- `src/landing/marketing-content.js` (108 líneas)
+- `src/landing/marketing-content.js` (107 líneas)
 - `src/lib/rails-config.js` (107 líneas)
 - `src/lib/chunk-recovery.js` (103 líneas)
 - `src/app/views/CRM/command-metrics.js` (101 líneas)

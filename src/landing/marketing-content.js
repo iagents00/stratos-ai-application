@@ -94,8 +94,7 @@ export const rotatingWords = [
   "Equipos de iAgents",
   "CRM Inteligente",
   "ERPs Autónomos",
-  "Avatars de IA",
-  "seguimiento real"
+  "Avatars de IA"
 ];
 
 export function marketingLoginUrl(appUrl = "/login") {
