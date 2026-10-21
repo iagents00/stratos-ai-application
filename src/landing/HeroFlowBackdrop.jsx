@@ -86,6 +86,14 @@ function Network({ mobile, id, cycle }) {
 
 export default function HeroFlowBackdrop() {
   const id = useId();
+  const [motionEnabled, setMotionEnabled] = useState(() => {
+    try { return window.localStorage.getItem("stratos.marketing.meteors") === "enabled"; } catch { return false; }
+  });
+  const toggleMotion = () => setMotionEnabled(value => {
+    const next = !value;
+    try { window.localStorage.setItem("stratos.marketing.meteors", next ? "enabled" : "paused"); } catch { /* storage may be unavailable */ }
+    return next;
+  });
   const region = useRef(null);
   const [environment, setEnvironment] = useState(() => ({ visible: false, hidden: typeof document !== "undefined" && document.hidden, reduced: typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches, lowfx: typeof document !== "undefined" && document.documentElement.hasAttribute("data-lowfx"), cycle: 0 }));
   useEffect(() => {
@@ -101,5 +109,5 @@ export default function HeroFlowBackdrop() {
     return () => { observer.disconnect(); safeMode.disconnect(); document.removeEventListener("visibilitychange", visibility); media.removeEventListener("change", preference); };
   }, []);
   // Visibility changes restart the field; individual meteors manage their own cadence.
-  return <div className="smk-hero-flow" ref={region} aria-hidden="true" data-running={environment.visible && !environment.hidden && !environment.lowfx && !environment.reduced}><Network key={`desktop-${environment.cycle}`} id={id} cycle={environment.cycle} /><Network key={`mobile-${environment.cycle}`} id={id} cycle={environment.cycle} mobile /></div>;
+  return <><div className="smk-hero-flow" data-motion-enabled={motionEnabled} ref={region} aria-hidden="true" data-running={environment.visible && !environment.hidden && !environment.lowfx && (!environment.reduced || motionEnabled)}><Network key={`desktop-${environment.cycle}`} id={id} cycle={environment.cycle} /><Network key={`mobile-${environment.cycle}`} id={id} cycle={environment.cycle} mobile /></div>{environment.reduced && <button type="button" className="smk-meteor-toggle" aria-pressed={motionEnabled} onClick={toggleMotion}>{motionEnabled ? "Pausar destellos" : "Activar destellos"}</button>}</>;
 }

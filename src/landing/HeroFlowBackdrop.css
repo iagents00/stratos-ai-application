@@ -19,5 +19,8 @@
   .stratos-marketing .smk-hero-flow-connections { opacity: .54; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .stratos-marketing .smk-hero-flow-comet { display: none; animation: none; }
+  .stratos-marketing .smk-hero-flow:not([data-motion-enabled="true"]) .smk-hero-flow-comet { display: none; animation: none; }
 }
+
+.stratos-marketing .smk-meteor-toggle { position: absolute; right: 24px; bottom: 8px; min-height: 32px; padding: 4px 10px; border: 1px solid var(--smk-line); border-radius: 8px; background: #fff; color: var(--smk-muted); font: inherit; font-size: 11px; cursor: pointer; }
+.stratos-marketing .smk-meteor-toggle:focus-visible { outline: 2px solid var(--smk-ink); outline-offset: 3px; }
