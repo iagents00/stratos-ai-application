@@ -57,10 +57,14 @@ function Meteor({ route, index, mobile, quiet, cycle }) {
   const angle = Math.atan2(end[1] - start[1], end[0] - start[0]) * 180 / Math.PI;
   const tail = mobile ? 170 : 360;
   const seed = pass * 19 + index * 43;
-  const duration = 2.2 + variation(seed) * 1.7;
-  const delay = .04 + variation(seed + 7) * .22;
+  // Shared pulse lengths give independent flights a rhythm without a fixed loop.
+  const beat = .12;
+  const phrase = Math.floor(variation(seed) * 5);
+  const duration = beat * [6, 7, 8, 10, 12][phrase] + variation(seed + 3) * .08;
+  const delay = beat * (variation(seed + 7) > .78 ? 2 : .25) + variation(seed + 11) * .09;
+  const easing = ["cubic-bezier(.32,.18,.64,.94)", "cubic-bezier(.22,.36,.72,.9)", "cubic-bezier(.4,.12,.7,.96)"][Math.floor(variation(seed + 13) * 3)];
   return <g data-flow-route={pathData(route)} className={`smk-hero-flow-tone-${index % 2 ? "green" : "sky"}`} transform={`translate(${start.join(" ")}) rotate(${angle})`}>
-    <g key={pass} className="smk-hero-flow-comet" onAnimationEnd={event => { if (event.target === event.currentTarget) setPass(value => value + 1); }} style={{ "--comet-distance": `${distance}px`, "--comet-duration": `${duration.toFixed(3)}s`, "--comet-delay": `${delay.toFixed(3)}s` }}>
+    <g key={pass} className="smk-hero-flow-comet" onAnimationEnd={event => { if (event.target === event.currentTarget) setPass(value => value + 1); }} style={{ "--comet-distance": `${distance}px`, "--comet-duration": `${duration.toFixed(3)}s`, "--comet-easing": easing, "--comet-delay": `${delay.toFixed(3)}s` }}>
       <path d={`M${-tail} 0 L-4 -2 Q2 -2 2 0 Q2 2 -4 2 Z`} fill={`url(#${quiet}-comet-${index % 2 ? "green" : "sky"})`} />
       <ellipse className="smk-hero-flow-head-halo" rx="5" ry="3" />
       <ellipse className="smk-hero-flow-head" rx="2.2" ry="1.6" />
