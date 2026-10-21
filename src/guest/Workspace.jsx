@@ -15,10 +15,10 @@ function Workspace() {
     setGeneration(value => value + 1);
   };
   return <>
-    <aside aria-label="Modo invitado" title="Datos ficticios. Los cambios duran mientras esta demo está abierta. No introduzcas información personal." style={{ height: 52, boxSizing: 'border-box', display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px', background: P.bg, color: P.txt, fontFamily: font, fontSize: 12, borderBottom: `1px solid ${P.border}` }}>
-      <span style={{ flex: 1 }}>Invitado · Datos ficticios</span>
-      <button onClick={reset} style={{ color: P.accent, background: 'transparent', border: 0, minHeight: 36, font: 'inherit' }}>Reiniciar demo</button>
-      <a href="/index.html?app" style={{ color: P.accent, minHeight: 36, display: 'flex', alignItems: 'center' }}>Salir</a>
+    <aside aria-label="Modo invitado" title="Datos ficticios. Los cambios duran mientras esta demo está abierta. No introduzcas información personal." style={{ minHeight: 52, flexShrink: 0, boxSizing: 'border-box', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px 12px', padding: '8px 12px', background: P.bg, color: P.txt, fontFamily: font, fontSize: 12, lineHeight: 1.4, borderBottom: `1px solid ${P.border}` }}>
+      <span style={{ flex: '1 1 140px', minWidth: 0 }}>Invitado · Datos ficticios</span>
+      <button onClick={reset} style={{ color: P.accent, background: 'transparent', border: 0, minHeight: 44, padding: '4px 8px', flexShrink: 0, whiteSpace: 'nowrap', font: 'inherit' }}>Reiniciar demo</button>
+      <a href="/index.html?app" style={{ color: P.accent, minHeight: 44, padding: '4px 8px', boxSizing: 'border-box', flexShrink: 0, display: 'flex', alignItems: 'center' }}>Salir</a>
     </aside>
     <div className="guest-real-workspace"><ErrorBoundary><App key={generation} /></ErrorBoundary></div>
   </>;
