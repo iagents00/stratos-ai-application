@@ -28,7 +28,7 @@ function createNetwork(mobile) {
     }
     return points;
   };
-  return { edges, routes: [...horizontal(1), ...horizontal(mobile ? 8 : 7), diagonal(-1, 1, 8, centerColumn - 4), diagonal(-1, -1, 8, centerColumn + 4), diagonal(1, -1), diagonal(1, 1)] };
+  return { edges, routes: [...horizontal(1), diagonal(-1, 1, 8, centerColumn - 4), diagonal(-1, -1, 8, centerColumn + 4), diagonal(1, -1), diagonal(1, 1)] };
 }
 const desktopNetwork = createNetwork(false);
 const mobileNetwork = createNetwork(true);
@@ -86,7 +86,6 @@ function Network({ mobile, id, cycle }) {
 
 export default function HeroFlowBackdrop() {
   const id = useId();
-  const [auraCycle, setAuraCycle] = useState(0);
   const region = useRef(null);
   const [environment, setEnvironment] = useState(() => ({ visible: false, hidden: typeof document !== "undefined" && document.hidden, reduced: typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches, lowfx: typeof document !== "undefined" && document.documentElement.hasAttribute("data-lowfx"), cycle: 0 }));
   useEffect(() => {
@@ -102,5 +101,5 @@ export default function HeroFlowBackdrop() {
     return () => { observer.disconnect(); safeMode.disconnect(); document.removeEventListener("visibilitychange", visibility); media.removeEventListener("change", preference); };
   }, []);
   // Visibility changes restart the field; individual meteors manage their own cadence.
-  return <div className="smk-hero-flow" ref={region} aria-hidden="true" data-running={environment.visible && !environment.hidden && !environment.lowfx && !environment.reduced}><div className="smk-hero-auras" key={`auras-${auraCycle}`}><div className="smk-hero-aura smk-hero-aura-blue" onAnimationEnd={() => setAuraCycle(value => value + 1)} /><div className="smk-hero-aura smk-hero-aura-green" /></div><Network key={`desktop-${environment.cycle}`} id={id} cycle={environment.cycle} /><Network key={`mobile-${environment.cycle}`} id={id} cycle={environment.cycle} mobile /></div>;
+  return <div className="smk-hero-flow" ref={region} aria-hidden="true" data-running={environment.visible && !environment.hidden && !environment.lowfx && !environment.reduced}><Network key={`desktop-${environment.cycle}`} id={id} cycle={environment.cycle} /><Network key={`mobile-${environment.cycle}`} id={id} cycle={environment.cycle} mobile /></div>;
 }

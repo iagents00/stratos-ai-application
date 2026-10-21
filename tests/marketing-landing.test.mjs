@@ -34,6 +34,7 @@ test('the public site preserves commercial terms, contact and fixed login routes
       assert.ok(match[1].startsWith('/'), 'Screenshots and brand stay self-hosted');
       assert.ok(existsSync(new URL(`../public${match[1]}`, import.meta.url)), match[1]);
     }
+    assert.doesNotMatch(html, /smk-hero-aura/);
     // Signals must stay on actual lattice edges, including across the quiet center.
     const networks = [...html.matchAll(/<svg class="smk-hero-flow-network[^"]*"[\s\S]*?<\/svg>/g)].map(match => match[0]);
     assert.equal(networks.length, 2);
@@ -46,7 +47,7 @@ test('the public site preserves commercial terms, contact and fixed login routes
         edges.add(`${from}|${to}`); edges.add(`${to}|${from}`);
       }
       const routes = [...network.matchAll(/data-flow-route="([^"]+)"/g)];
-      assert.equal(routes.length, 8);
+      assert.equal(routes.length, 6);
       const width = Number(network.match(/viewBox="0 0 (\d+)/)[1]);
       for (const [, path] of routes) {
         const points = path.match(/-?\d+/g).map(Number);
