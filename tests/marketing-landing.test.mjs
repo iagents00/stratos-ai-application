@@ -52,11 +52,16 @@ test('the public site preserves commercial terms, contact and fixed login routes
         edges.add(`${from}|${to}`); edges.add(`${to}|${from}`);
       }
       const routes = [...network.matchAll(/data-flow-route="([^"]+)"/g)];
-      assert.equal(routes.length, 6);
+      assert.equal(routes.length, 10);
+      assert.equal(new Set(routes.map(match => match[1])).size, 10, "Each signal has its own route");
       const width = Number(network.match(/viewBox="0 0 (\d+)/)[1]);
-      for (const [, path] of routes) {
+      for (const [index, [, path]] of routes.entries()) {
         const points = path.match(/-?\d+/g).map(Number);
-        if (points.at(-1) < points[1]) {
+        if (index >= 6) {
+          assert.ok(points.at(-1) < points[1], 'New blue signals travel upward');
+          assert.ok(Math.abs(points.at(-2) - width / 2) > Math.abs(points[0] - width / 2), 'New signals travel toward the outer sides');
+          assert.match(network.slice(routes[index].index, routes[index].index + path.length + 110), /smk-hero-flow-tone-sky/, 'All four new signals are blue');
+        } else if (points.at(-1) < points[1]) {
           assert.ok(points.at(-2) > width * .3 && points.at(-2) < width * .65, 'Ascending routes converge near the upper center');
           assert.ok(Math.abs(points.at(-2) - width / 2) < Math.abs(points[0] - width / 2), 'Ascending routes arrive from the lower sides');
         } else {
