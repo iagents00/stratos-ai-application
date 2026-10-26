@@ -19,7 +19,7 @@
   .stratos-marketing .smk-hero-flow-connections { opacity: .54; }
 }
 @media (prefers-reduced-motion: reduce) {
-  /* The visitor explicitly enabled this field; visibility and low-FX still pause it. */
+  /* Brand motion is enabled by default; visibility and low-FX still pause it. */
   .stratos-marketing .smk-hero-flow[data-motion-enabled="true"] .smk-hero-flow-comet { animation: var(--comet-motion) !important; animation-play-state: var(--flow-play) !important; }
   .stratos-marketing .smk-hero-flow:not([data-motion-enabled="true"]) .smk-hero-flow-comet { display: none; animation: none; }
 }

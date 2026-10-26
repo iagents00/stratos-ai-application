@@ -77,7 +77,9 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
 .stratos-marketing .smk-workflow-tabs button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 48px; padding: 11px 18px; border: 1px solid var(--smk-line); border-radius: 10px; background: #fff; color: var(--smk-muted); font-size: 14px; cursor: pointer; transition: background-color 135ms ease-out, border-color 135ms ease-out, color 135ms ease-out; }
 .stratos-marketing .smk-workflow-tabs button[aria-pressed="true"] { border-color: var(--smk-ink); background: var(--smk-ink); color: #fff; }
 .stratos-marketing .smk-workflow-tabs button:hover:not([aria-pressed="true"]) { color: var(--smk-ink); border-color: #A3B3C1; }
-.stratos-marketing .smk-workflow-stage { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, .8fr); align-items: center; gap: 40px; padding: 28px; border: 1px solid var(--smk-line); border-radius: 24px; background: #fff; }
+.stratos-marketing .smk-workflow-panels { display: grid; }
+.stratos-marketing .smk-workflow-stage[aria-hidden="true"] { visibility: hidden; opacity: 0; pointer-events: none; }
+.stratos-marketing .smk-workflow-stage { grid-area: 1 / 1; opacity: 1; transition: opacity 220ms ease-out, visibility 220ms; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, .8fr); align-items: center; gap: 40px; padding: 28px; border: 1px solid var(--smk-line); border-radius: 24px; background: #fff; }
 .stratos-marketing .smk-workflow-stage img { width: 100%; height: auto; object-fit: contain; }
 .stratos-marketing .smk-workflow-stage > div { padding-right: 12px; }
 .stratos-marketing .smk-workflow-stage h3 { margin-bottom: 18px; }
@@ -264,6 +266,7 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
   .stratos-marketing .smk-price-card { padding-inline: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .stratos-marketing .smk-workflow-stage { transition: none; }
   .stratos-marketing .smk-rotating-word { transform: none; transition: opacity 160ms ease-out; }
   .stratos-marketing .smk-button, .stratos-marketing .smk-workflow-tabs button, .stratos-marketing .smk-faq summary > svg { transition: none; }
 }

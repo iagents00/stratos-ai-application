@@ -98,9 +98,7 @@ function Network({ mobile, id }) {
 
 export default function HeroFlowBackdrop() {
   const id = useId();
-  const [motionEnabled] = useState(() => {
-    try { return window.localStorage.getItem("stratos.marketing.meteors") === "enabled"; } catch { return false; }
-  });
+  const motionEnabled = true;
   const region = useRef(null);
   const [environment, setEnvironment] = useState(() => ({ visible: false, hidden: typeof document !== "undefined" && document.hidden, reduced: typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches, lowfx: typeof document !== "undefined" && document.documentElement.hasAttribute("data-lowfx"), cycle: 0 }));
   useEffect(() => {

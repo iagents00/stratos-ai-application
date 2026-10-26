@@ -62,8 +62,22 @@ const workflow = [
 
 function WorkflowPreview() {
   const [step, setStep] = useState(0);
-  const item = workflow[step];
-  return <div className="smk-workflow"><div className="smk-workflow-tabs" aria-label="Flujo de trabajo">{workflow.map(({ label, icon }, index) => <button type="button" key={label} aria-pressed={step === index} onClick={() => setStep(index)}>{createElement(icon, { size: 17, "aria-hidden": true })}{label}</button>)}</div><div className="smk-workflow-stage"><img src={moduleScreenshotSrc(item.image)} alt={`Captura real del módulo ${item.image} de Stratos AI con datos de demostración`} loading="lazy" width="1440" height="1020" /><div><h3>{item.title}</h3><p>{item.text}</p></div></div><p className="smk-caption">Capturas del sistema con datos de demostración.</p></div>;
+  const region = useRef(null);
+  const rotation = useRef(null);
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const controller = createModuleRotation({ count: workflow.length, intervalMs: 2500, pauseReasons: ["outside", ...(document.hidden ? ["hidden"] : [])], reducedMotion: media.matches, onUpdate: value => setStep(value.index) });
+    rotation.current = controller;
+    const visibility = () => controller.setPaused("hidden", document.hidden);
+    const observer = new IntersectionObserver(entries => controller.setPaused("outside", !entries[0].isIntersecting), { threshold: .15 });
+    observer.observe(region.current);
+    document.addEventListener("visibilitychange", visibility);
+    return () => { observer.disconnect(); controller.destroy(); rotation.current = null; document.removeEventListener("visibilitychange", visibility); };
+  }, []);
+  return <div className="smk-workflow" ref={region}>
+    <div className="smk-workflow-tabs" aria-label="Flujo de trabajo">{workflow.map(({ label, icon }, index) => <button type="button" key={label} aria-pressed={step === index} onClick={() => rotation.current?.select(index)}>{createElement(icon, { size: 17, "aria-hidden": true })}{label}</button>)}</div>
+    <div className="smk-workflow-panels">{workflow.map((item, index) => <div key={item.label} className="smk-workflow-stage" aria-hidden={step !== index}><img src={moduleScreenshotSrc(item.image)} alt={`Captura real del módulo ${item.image} de Stratos AI con datos de demostración`} loading="lazy" width="1440" height="1020" /><div><h3>{item.title}</h3><p>{item.text}</p></div></div>)}</div><p className="smk-caption">Capturas del sistema con datos de demostración.</p>
+  </div>;
 }
 
 function PricingCard({ plan }) {
