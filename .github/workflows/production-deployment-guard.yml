@@ -22,3 +22,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/check-production-deployment.mjs
+      - name: Comprobar todos los dominios, versión de main, Auth y base de datos
+        env:
+          EXPECTED_COMMIT: ${{ github.sha }}
+        run: node scripts/ops/doctor.mjs --expect "$EXPECTED_COMMIT"

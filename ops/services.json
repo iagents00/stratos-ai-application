@@ -5,6 +5,7 @@
     "team": "iagents-projects",
     "supabaseProject": "glulgyhkrqpykxmujodb",
     "origins": [
+      "https://app.getstratosai.com",
       "https://app.stratoscapitalgroup.com",
       "https://stratoscapitalgroup.com",
       "https://getstratosai.com"
