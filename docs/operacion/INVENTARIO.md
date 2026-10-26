@@ -8,6 +8,7 @@ Generado por scripts/ops/generate-system-index.mjs. No editar a mano. Identifica
 |---|---|
 | [api/dental-huli.js](../../api/dental-huli.js) | Verificar en su proveedor; existencia en Git no acredita publicación |
 | [api/og-landing.js](../../api/og-landing.js) | Verificar en su proveedor; existencia en Git no acredita publicación |
+| [api/payments.js](../../api/payments.js) | Verificar en su proveedor; existencia en Git no acredita publicación |
 | [api/push/refresh.js](../../api/push/refresh.js) | Verificar en su proveedor; existencia en Git no acredita publicación |
 
 ## Entradas Edge de Supabase
@@ -75,6 +76,7 @@ VITE_ se publica al navegador. Las demás necesitan clasificación y custodia de
 | META_LEAD_ADS_POST_SECRET | [supabase/functions/meta-lead-ads/index.ts](../../supabase/functions/meta-lead-ads/index.ts) |
 | META_LEAD_ADS_VERIFY_TOKEN | [supabase/functions/meta-lead-ads/index.ts](../../supabase/functions/meta-lead-ads/index.ts) |
 | META_PAGE_ACCESS_TOKEN | [supabase/functions/meta-lead-ads/index.ts](../../supabase/functions/meta-lead-ads/index.ts) |
+| MODE | [src/app/components/PaymentsReadiness.jsx](../../src/app/components/PaymentsReadiness.jsx) |
 | N8N_ADVISOR_WA_SECRET | [supabase/functions/meta-lead-ads/index.ts](../../supabase/functions/meta-lead-ads/index.ts) |
 | N8N_ADVISOR_WA_WEBHOOK | [supabase/functions/meta-lead-ads/index.ts](../../supabase/functions/meta-lead-ads/index.ts) |
 | N8N_RECOVERY_SECRET | [supabase/functions/password-recovery/index.ts](../../supabase/functions/password-recovery/index.ts) |

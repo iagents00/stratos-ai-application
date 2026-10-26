@@ -1,3 +1,4 @@
+import RecoveryForm from "./RecoveryForm";
 import { P } from "../design-system/tokens";
 import { useState } from "react";
 import { Eye, EyeOff, LogIn } from "lucide-react";
@@ -14,6 +15,7 @@ const font = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Robo
  */
 export default function LoginScreenNative({ onLogin }) {
   const { config } = useClient();
+  const [recovering, setRecovering] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -37,6 +39,8 @@ export default function LoginScreenNative({ onLogin }) {
       setLoading(false);
     }
   };
+
+  if (recovering) return <main style={styles.page}><div style={{ width: "min(100%, 440px)" }}><RecoveryForm T={P} initialEmail={email} onBack={() => setRecovering(false)} /></div></main>;
 
   return (
     <main style={styles.page}>
@@ -88,6 +92,8 @@ export default function LoginScreenNative({ onLogin }) {
             {loading ? "Entrando…" : "Entrar"}
           </button>
         </form>
+
+        <button type="button" disabled={loading} onClick={() => setRecovering(true)} style={{ ...styles.guest, width: "100%", background: "transparent" }}>¿Olvidaste tu contraseña?</button>
 
         <a href="/guest.html" style={styles.guest}>
           Entrar como invitado

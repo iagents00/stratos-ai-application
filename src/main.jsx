@@ -1,3 +1,5 @@
+import { readEmailConfirmation } from "./lib/email-confirmation.js";
+const emailConfirmation = readEmailConfirmation(window.location, window.history);
 import { isPortfolioPath } from "./lib/portfolio-route.js";
 /**
  * main.jsx — Entry point de Stratos AI
@@ -31,6 +33,7 @@ import { isCommonEntryLocation } from "./lib/common-entry";
 
 // Code-splitting: solo se carga el bundle de la experiencia que el usuario
 // realmente abrió. Antes este import era estático y arrastraba todo a 922KB.
+const EmailConfirmation = lazy(() => import("./landing/EmailConfirmation.jsx"));
 const DentalDemo = lazy(() => import("./dental-demo/DentalProfileRouter.jsx"));
 const isDentalDemo = /^\/(?:demo-dental|clinica-dental-demo)(?:\/|$)/.test(window.location.pathname) || ["clinica-dental-demo"].includes(new URLSearchParams(window.location.search).get("client"));
 const App              = lazy(() => import("./app/App.jsx"));
@@ -316,7 +319,7 @@ createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BootSignal />
     <ErrorBoundary>
-      {isDentalDemo ? <Suspense fallback={<p>Cargando demo dental…</p>}><DentalDemo /></Suspense> : <ClientProvider config={clientConfig}>
+      {emailConfirmation ? <Suspense fallback={null}><EmailConfirmation confirmation={emailConfirmation} /></Suspense> : isDentalDemo ? <Suspense fallback={<p>Cargando demo dental…</p>}><DentalDemo /></Suspense> : <ClientProvider config={clientConfig}>
         <AuthProvider>
           {/* Bloquea la interfaz del tenant equivocado durante la redirección.
               Las páginas públicas pasan sin cambios. */}
