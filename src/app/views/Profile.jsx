@@ -26,6 +26,9 @@ import { useClient } from "../../hooks/useClient";
 import { supabase } from "../../lib/supabase";
 import { logAuthEvent } from "../../lib/audit";
 import { deleteMyAccount } from "../../lib/auth";
+import PaymentsReadiness from "../components/PaymentsReadiness";
+import LoginEmailPanel from "../components/LoginEmailPanel";
+import { boundedAccountOperation } from "../../lib/account-security";
 import { changeOwnPassword } from "../../lib/password-change";
 import {
   getPairingStatus,
@@ -71,7 +74,7 @@ export default function Profile({ theme = "dark", T: Tprop }) {
           color: isLight ? T.txt3 : "rgba(255,255,255,0.36)",
           fontFamily: fontDisp,
         }}>
-          Perfil
+          Cuenta y configuración
         </p>
         <h1 style={{
           margin: "0 0 6px",
@@ -90,8 +93,10 @@ export default function Profile({ theme = "dark", T: Tprop }) {
       {/* Va PRIMERO a proposito: si los avisos no llegan, es lo que la persona
           vino a buscar. Dentro del navegador no se muestra. */}
       <EstadoAvisos T={T} isLight={isLight} userId={user?.id} />
+      <LoginEmailPanel T={T} user={user} />
       <PasswordPanel T={T} isLight={isLight} user={user} />
       <RecoveryEmailPanel T={T} isLight={isLight} user={user} />
+      <PaymentsReadiness T={T} user={user} />
       <SupportPanel T={T} isLight={isLight} clientConfig={clientConfig} />
       <TimezonePanel T={T} isLight={isLight} user={user} />
       <ConnectTelegramPanel T={T} isLight={isLight} botUsername={botUsername} manualPairing={manualPairing} />
@@ -240,6 +245,8 @@ function normalizeWaHref(value) {
 function PasswordPanel({ T = P, isLight = false, user }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [visible, setVisible] = useState(false);
+  const submitLock = useRef(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -247,15 +254,18 @@ function PasswordPanel({ T = P, isLight = false, user }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitLock.current) return;
     setMessage("");
     setErrorMsg("");
-    if (disabled) return setErrorMsg("Conéctate a Supabase para cambiar la contraseña.");
+    if (disabled) return setErrorMsg("Inicia sesión con conexión para cambiar tu contraseña.");
     if (password.length < 8) return setErrorMsg("Usa mínimo 8 caracteres.");
     if (password !== confirmPassword) return setErrorMsg("Las contraseñas no coinciden.");
 
     setBusy(true);
 
+    submitLock.current = true;
     const result = await changeOwnPassword(supabase, password);
+    submitLock.current = false;
     setBusy(false);
     if (!result.ok) return setErrorMsg(result.error);
     logAuthEvent("PASSWORD_UPDATE", result.user.id, {
@@ -274,18 +284,21 @@ function PasswordPanel({ T = P, isLight = false, user }) {
         </div>
         <div>
           <h2 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 400, color: T.txt, fontFamily: fontDisp }}>Contraseña</h2>
-          <p style={{ margin: 0, fontSize: 12.5, color: T.txt2 }}>Cambia tu contraseña de acceso sin pedir soporte.</p>
+          <p style={{ margin: 0, fontSize: 12.5, color: T.txt2 }}>Usa una contraseña única de al menos 8 caracteres.</p>
         </div>
       </div>
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 10 }}>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} aria-label="Nueva contraseña" placeholder="Nueva contraseña" autoComplete="new-password" disabled={disabled || busy} style={inputStyle(T, isLight)} />
-        <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} aria-label="Confirmar contraseña" placeholder="Confirmar contraseña" autoComplete="new-password" disabled={disabled || busy} style={inputStyle(T, isLight)} />
-        <button type="submit" disabled={disabled || busy} style={{ height: 40, borderRadius: 11, border: "none", background: disabled || busy ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: disabled || busy ? T.txt3 : T.onAccent, fontWeight: 500, fontFamily: fontDisp, cursor: disabled || busy ? "not-allowed" : "pointer" }}>
+        <label htmlFor="settings-password" style={{ color: T.txt2 }}>Nueva contraseña · mínimo 8 caracteres</label>
+        <input id="settings-password" required minLength={8} type={visible ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} aria-label="Nueva contraseña" placeholder="Nueva contraseña" autoComplete="new-password" disabled={disabled || busy} style={inputStyle(T, isLight)} />
+        <label htmlFor="settings-confirm" style={{ color: T.txt2 }}>Confirmar contraseña</label>
+        <input id="settings-confirm" required minLength={8} type={visible ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} aria-label="Confirmar contraseña" placeholder="Confirmar contraseña" autoComplete="new-password" disabled={disabled || busy} style={inputStyle(T, isLight)} />
+        <label style={{ color: T.txt2, minHeight: 44, display: "flex", alignItems: "center", gap: 8 }}><input type="checkbox" checked={visible} onChange={e => setVisible(e.target.checked)} />Mostrar contraseñas</label>
+        <button type="submit" disabled={disabled || busy} style={{ minHeight: 46, borderRadius: 11, border: "none", background: disabled || busy ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: disabled || busy ? T.txt3 : T.onAccent, fontWeight: 500, fontFamily: fontDisp, cursor: disabled || busy ? "not-allowed" : "pointer" }}>
           {busy ? "Actualizando..." : "Actualizar contraseña"}
         </button>
       </form>
       {(message || errorMsg) && (
-        <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 10, fontSize: 12.5, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : T.success, background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : T.successS, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : T.successB}` }}>
+        <div role={errorMsg ? "alert" : "status"} style={{ marginTop: 12, padding: "10px 12px", borderRadius: 10, fontSize: 12.5, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : T.success, background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : T.successS, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : T.successB}` }}>
           {errorMsg || message}
         </div>
       )}
@@ -299,6 +312,8 @@ function PasswordPanel({ T = P, isLight = false, user }) {
 
 function RecoveryEmailPanel({ T = P, isLight = false, user }) {
   const [current, setCurrent] = useState(null);
+  const [loaded, setLoaded] = useState(false);
+  const recoveryLock = useRef(false);
   const [draft, setDraft]     = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy]       = useState(false);
@@ -308,24 +323,32 @@ function RecoveryEmailPanel({ T = P, isLight = false, user }) {
 
   useEffect(() => {
     let mounted = true;
+    setLoaded(false); setLoading(true); setErrorMsg(""); setMessage("");
     if (disabled) { setLoading(false); return; }
-    supabase.rpc("fn_get_my_recovery_email").then(({ data, error }) => {
+    boundedAccountOperation(supabase.rpc("fn_get_my_recovery_email")).then(({ data, error }) => {
       if (!mounted) return;
+      if (error) { setErrorMsg("No se pudo cargar el correo. Recarga la página para reintentar."); setLoading(false); return; }
       const val = (!error && data) ? String(data) : "";
+      setLoaded(true);
       setCurrent(val || null);
       setDraft(val || "");
       setLoading(false);
-    });
+    }).catch(() => { if (mounted) { setErrorMsg("No se pudo cargar el correo. Revisa tu conexión y recarga la página."); setLoading(false); } });
     return () => { mounted = false; };
-  }, [disabled]);
+  }, [disabled, user?.id]);
 
   const save = async () => {
+    if (recoveryLock.current || !loaded) return;
     setMessage(""); setErrorMsg("");
     if (disabled) return setErrorMsg("Conéctate a tu cuenta real para configurar el correo de recuperación.");
     const clean = draft.trim().toLowerCase();
     if (clean && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) return setErrorMsg("Ingresa un correo válido.");
     setBusy(true);
-    const { data, error } = await supabase.rpc("fn_set_my_recovery_email", { p_email: clean });
+    recoveryLock.current = true;
+    let data, error;
+    try { ({ data, error } = await boundedAccountOperation(supabase.rpc("fn_set_my_recovery_email", { p_email: clean }))); }
+    catch { error = true; }
+    recoveryLock.current = false;
     setBusy(false);
     if (error) return setErrorMsg("No se pudo guardar. Intenta de nuevo.");
     const saved = data ? String(data) : null;
@@ -357,17 +380,19 @@ function RecoveryEmailPanel({ T = P, isLight = false, user }) {
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             <input
               type="email"
+              aria-label="Correo de recuperación"
+              maxLength={254}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder="tucorreo@ejemplo.com"
               autoComplete="email"
               disabled={disabled || busy}
-              style={{ ...inputStyle(T, isLight), flex: 1, minWidth: 200 }}
+              style={{ ...inputStyle(T, isLight), flex: 1, minWidth: 0, width: "100%" }}
             />
             <button
               type="button"
               onClick={save}
-              disabled={disabled || busy || !dirty}
+              disabled={disabled || busy || !dirty || !loaded}
               style={{ height: 40, padding: "0 16px", borderRadius: 11, border: "none", background: (disabled || busy || !dirty) ? (isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)") : T.accent, color: (disabled || busy || !dirty) ? T.txt3 : T.onAccent, fontWeight: 500, fontFamily: fontDisp, fontSize: 13, cursor: (disabled || busy || !dirty) ? "not-allowed" : "pointer" }}
             >
               {busy ? "Guardando..." : "Guardar"}
@@ -382,7 +407,7 @@ function RecoveryEmailPanel({ T = P, isLight = false, user }) {
       )}
 
       {(message || errorMsg) && (
-        <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 10, fontSize: 12.5, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : T.success, background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : T.successS, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : T.successB}` }}>
+        <div role={errorMsg ? "alert" : "status"} style={{ marginTop: 12, padding: "10px 12px", borderRadius: 10, fontSize: 12.5, color: errorMsg ? (isLight ? "#B91C1C" : "#FCA5A5") : T.success, background: errorMsg ? (isLight ? "rgba(225,29,72,0.08)" : "rgba(248,113,113,0.08)") : T.successS, border: `1px solid ${errorMsg ? (isLight ? "rgba(225,29,72,0.22)" : "rgba(248,113,113,0.22)") : T.successB}` }}>
           {errorMsg || message}
         </div>
       )}
@@ -416,7 +441,7 @@ function SupportPanel({ T = P, isLight = false, clientConfig }) {
 }
 
 function inputStyle(T, isLight) {
-  return { height: 40, borderRadius: 11, border: `1px solid ${T.border}`, background: isLight ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.045)", color: T.txt, padding: "0 12px", fontFamily: font, fontSize: 13, outline: "none" };
+  return { minHeight: 46, boxSizing: "border-box", minWidth: 0, borderRadius: 11, border: `1px solid ${T.border}`, background: isLight ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.045)", color: T.txt, padding: "0 12px", fontFamily: font, fontSize: 16 };
 }
 
 function supportButtonStyle(T, isLight, primary) {
@@ -533,7 +558,7 @@ function TimezonePanel({ T = P, isLight = false, user }) {
           width: "100%", height: 40, borderRadius: 11, padding: "0 12px",
           border: `1px solid ${T.border}`,
           background: isLight ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.045)",
-          color: T.txt, fontFamily: font, fontSize: 13, outline: "none",
+          color: T.txt, fontFamily: font, fontSize: 16,
           colorScheme: isLight ? "light" : "dark",
         }}
       >

@@ -23,6 +23,7 @@ export async function changeOwnPassword(client, password, { timeoutMs = 15000 } 
     const { data, error } = await bounded(client.auth.updateUser({ password }));
     if (error) {
       const message = error.code === 'same_password' ? 'Elige una contraseña distinta de la actual.'
+        : ['reauthentication_needed', 'reauthentication_not_valid'].includes(error.code) ? 'Por seguridad, vuelve a iniciar sesión antes de cambiar tu contraseña.'
         : error.code === 'weak_password' ? 'La contraseña no cumple los requisitos de seguridad. Elige una más segura.'
         : 'No se pudo actualizar la contraseña. Intenta de nuevo o vuelve a iniciar sesión.';
       return { ok: false, error: message };

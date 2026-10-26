@@ -118,6 +118,8 @@ export default function LoginScreen({ onLogin }) {
   }, []);
 
   const recoveryBusy = useRef(false);
+  const [resendSeconds, setResendSeconds] = useState(0);
+  useEffect(() => { if (!resendSeconds) return; const timer = setTimeout(() => setResendSeconds(value => Math.max(0, value - 1)), 1000); return () => clearTimeout(timer); }, [resendSeconds]);
   const [mode, setMode]       = useState(initialMode); // login | register | forgot | forgot-code | forgot-done
   const [name, setName]       = useState("");
   const [email, setEmail]     = useState("");
@@ -148,7 +150,7 @@ export default function LoginScreen({ onLogin }) {
   // Fuerza de contraseña
   const pw = (() => {
     let s = 0;
-    if (password.length >= 6)  s++;
+    if (password.length >= 8)  s++;
     if (password.length >= 10) s++;
     if (/[A-Z]/.test(password)) s++;
     if (/[0-9!@#$%^&*]/.test(password)) s++;
@@ -158,13 +160,13 @@ export default function LoginScreen({ onLogin }) {
   const strengthLabel = ["Muy débil","Débil","Buena","Fuerte"][pw - 1] || "";
 
   const reset = () => { setName(""); setEmail(""); setPass(""); setConfirm(""); setCode(""); setRecoveryEmail(""); setError(""); };
-  const go    = (m) => { setMode(m); reset(); };
+  const go    = (m) => { if (loading) return; const previousEmail = email; setMode(m); reset(); setShowP(false); setShowC(false); if (m === "forgot" || m === "login") setEmail(previousEmail); };
 
   const inputStyle = (field, hasErr) => ({
     width: "100%", padding: "12px 14px", borderRadius: 10, outline: "none",
     background: "rgba(255,255,255,0.04)",
     border: `1px solid ${hasErr ? "rgba(232,129,140,0.5)" : focused === field ? P.accentB : P.border}`,
-    color: P.txt, fontSize: 13, fontFamily: font, transition: "border-color 0.2s",
+    color: P.txt, fontSize: 16, fontFamily: font, transition: "border-color 0.2s",
   });
 
   const Label = ({ text, right, htmlFor }) => (
@@ -205,16 +207,16 @@ export default function LoginScreen({ onLogin }) {
 
   // Paso 1 — pedir el código de recuperación (se envía al correo de recuperación).
   const doForgot = async () => {
-    if (recoveryBusy.current) return;
+    if (recoveryBusy.current || resendSeconds > 0) return;
     setError("");
     if (!email.trim()) { setError("Ingresa tu correo."); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError("Correo inválido."); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setError("Correo inválido."); return; }
     recoveryBusy.current = true;
     setLoad(true);
     const r = await requestRecoveryCode(email.trim().toLowerCase());
     recoveryBusy.current = false;
     setLoad(false);
-    if (r.ok) { setPass(""); setConfirm(""); setCode(""); setError(""); setMode("forgot-code"); }
+    if (r.ok) { setResendSeconds(60); setPass(""); setConfirm(""); setCode(""); setError(""); setMode("forgot-code"); }
     else setError(r.error || "No se pudo enviar el código. Intenta de nuevo.");
   };
 
@@ -345,7 +347,7 @@ export default function LoginScreen({ onLogin }) {
               </div>
 
               <p style={{ fontSize: 13, color: P.txt2, lineHeight: 1.6, marginBottom: 18 }}>
-                Si la cuenta tiene un correo de recuperación configurado, recibirás un código de 6 dígitos. Revisa también spam. Usa el código más reciente; vence en 15 minutos. Si ya tienes uno, escríbelo aquí.
+                Solicitud para {email.trim()}. Si la cuenta tiene un correo de recuperación configurado, recibirás un código de 6 dígitos. Revisa también spam. Usa el código más reciente; vence en 15 minutos. Si ya tienes uno, escríbelo aquí.
               </p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
@@ -392,7 +394,7 @@ export default function LoginScreen({ onLogin }) {
 
               {error && (
                 <div style={{ padding: "10px 13px", borderRadius: 8, background: "rgba(232,129,140,0.07)", border: "1px solid rgba(232,129,140,0.2)", marginBottom: 14 }}>
-                  <p style={{ fontSize: 12, color: "#E8A0A0", fontFamily: font }}>{error}</p>
+                  <p role="alert" style={{ fontSize: 12, color: "#E8A0A0", fontFamily: font }}>{error}</p>
                 </div>
               )}
 
@@ -405,17 +407,18 @@ export default function LoginScreen({ onLogin }) {
                 {loading ? loadingLabel : "Cambiar contraseña →"}
               </button>
 
+              <button type="button" disabled={loading} onClick={() => go("forgot")} style={{ color: P.accent, background: "transparent", border: "none", minHeight: 44 }}>Corregir correo</button>
               <div style={{ display: "flex", gap: 8 }}>
-                <button type="button" onClick={doForgot} disabled={loading} style={{
+                <button type="button" onClick={doForgot} disabled={loading || resendSeconds > 0} style={{
                   flex: 1, padding: "10px", borderRadius: 10, cursor: loading ? "not-allowed" : "pointer",
                   border: `1px solid ${P.border}`, background: "transparent",
                   color: P.txt2, fontSize: 12, fontFamily: font,
-                }}>Reenviar código</button>
+                }}>{resendSeconds ? `Reenviar en ${resendSeconds} s` : "Reenviar código"}</button>
                 <button type="button" onClick={() => go("login")} disabled={loading} style={{
                   flex: 1, padding: "10px", borderRadius: 10, cursor: "pointer",
                   border: `1px solid ${P.border}`, background: "transparent",
                   color: P.txt2, fontSize: 12, fontFamily: font,
-                }}>← Cancelar</button>
+                }}>Volver al acceso</button>
               </div>
             </div>
           ) : (
@@ -527,7 +530,7 @@ export default function LoginScreen({ onLogin }) {
                   {/* ─ Error ─ */}
                   {error && (
                     <div style={{ padding: "10px 13px", borderRadius: 8, background: "rgba(232,129,140,0.07)", border: "1px solid rgba(232,129,140,0.2)", marginBottom: 14 }}>
-                      <p style={{ fontSize: 12, color: "#E8A0A0", fontFamily: font }}>{error}</p>
+                      <p role="alert" style={{ fontSize: 12, color: "#E8A0A0", fontFamily: font }}>{error}</p>
                     </div>
                   )}
 
@@ -619,14 +622,14 @@ export default function LoginScreen({ onLogin }) {
                   {/* ─ Error ─ */}
                   {error && (
                     <div style={{ padding: "10px 13px", borderRadius: 8, background: "rgba(232,129,140,0.07)", border: "1px solid rgba(232,129,140,0.2)", marginBottom: 14 }}>
-                      <p style={{ fontSize: 12, color: "#E8A0A0", fontFamily: font }}>{error}</p>
+                      <p role="alert" style={{ fontSize: 12, color: "#E8A0A0", fontFamily: font }}>{error}</p>
                     </div>
                   )}
 
                   {/* ─ Acción principal ─ */}
                   <button type="button"
                     onClick={mode === "login" ? doLogin : doForgot}
-                    disabled={loading}
+                    disabled={loading || (mode === "forgot" && resendSeconds > 0)}
                     style={{
                       width: "100%", padding: "13px 0", borderRadius: 11, border: `1px solid ${P.actionBorder}`,
                       cursor: loading ? "not-allowed" : "pointer",
@@ -642,7 +645,7 @@ export default function LoginScreen({ onLogin }) {
                     onMouseLeave={e => (e.currentTarget.style.boxShadow = loading ? "none" : `0 4px 20px ${P.accent}33`)}
                   >
                     {loading ? loadingLabel :
-                      mode === "login" ? "Iniciar sesión →" : "Enviar código de recuperación →"}
+                      mode === "login" ? "Iniciar sesión →" : resendSeconds ? `Reenviar en ${resendSeconds} s` : "Enviar código de recuperación →"}
                   </button>
 
                   {mode === "forgot" && (

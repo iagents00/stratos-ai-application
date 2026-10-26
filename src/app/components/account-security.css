@@ -1,0 +1,14 @@
+.account-security { color: var(--account-text); border: 1px solid var(--account-border); border-radius: 14px; padding: 24px; margin-bottom: 18px; overflow-wrap: anywhere; }
+.account-security h2 { margin: 0 0 8px; font-size: 18px; font-weight: 600; }
+.account-security p { color: var(--account-muted); font-size: 14px; line-height: 1.6; margin: 8px 0 16px; }
+.account-security form { display: grid; gap: 10px; }
+.account-security label { font-size: 14px; font-weight: 600; }
+.account-security input { width: 100%; min-width: 0; box-sizing: border-box; min-height: 46px; padding: 10px 12px; border: 1px solid var(--account-border); border-radius: 10px; background: transparent; color: inherit; font: inherit; font-size: 16px; }
+.account-security button { min-height: 46px; padding: 10px 16px; border-radius: 10px; border: 1px solid var(--account-border); background: var(--account-accent); color: var(--account-ink); font: inherit; cursor: pointer; }
+.account-security button:disabled { opacity: .55; cursor: not-allowed; }
+.account-security :is(input,button):focus-visible { outline: 2px solid var(--account-accent); outline-offset: 3px; }
+.account-security [role=alert] { color: var(--account-text); font-weight: 600; }
+
+.account-security .account-secondary { background: transparent; color: var(--account-text); }
+.account-security .account-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.account-security button:not(:disabled):hover { filter: brightness(.93); }
