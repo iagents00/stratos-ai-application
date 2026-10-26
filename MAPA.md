@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**276 archivos · 84.485 líneas**
+**283 archivos · 84.709 líneas**
 
 ---
 
@@ -40,7 +40,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | **Stratos RH** | `src/app/views/RRHHModule.jsx` | 846 |
 | **Papelera** | `src/app/views/Trash.jsx` | 285 |
 | **Planes** | _sin vista propia (redirige a otra)_ | — |
-| **Perfil** | `src/dental-demo/TenantHuliWorkspace.jsx`<br>`src/app/views/Profile.jsx` | 11<br>1098 |
+| **Perfil** | `src/dental-demo/TenantHuliWorkspace.jsx`<br>`src/app/views/Profile.jsx` | 11<br>1123 |
 | **Usuarios** | `src/app/features/Admin/AdminPanel.jsx` | 644 |
 | **Proceso** | `src/app/features/Admin/RailsSettings.jsx` | 141 |
 
@@ -73,7 +73,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `main.jsx` | 436 | _sin describir_ |
+| `main.jsx` | 439 | _sin describir_ |
 | `index.css` | 278 | _sin describir_ |
 | `mobile-perf.css` | 121 | _sin describir_ |
 | `pagina-solo-web.jsx` | 47 | _sin describir_ |
@@ -103,7 +103,10 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `Logo.jsx` | 87 | Logos SVG de Stratos AI. |
 | `MobileHeaderMenu.jsx` | 66 | _sin describir_ |
 | `PermissionGate.jsx` | 52 | Pantalla de acceso restringido por rol. |
+| `LoginEmailPanel.jsx` | 51 | _sin describir_ |
 | `MobileHeaderMenu.css` | 24 | _sin describir_ |
+| `account-security.css` | 15 | _sin describir_ |
+| `PaymentsReadiness.jsx` | 12 | _sin describir_ |
 
 ### `src/app/constants/`
 
@@ -176,7 +179,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `index.jsx` | 2081 | Generador de landing pages inmobiliarias |
 | `Copilot.jsx` | 2019 | v2 (15-jul) |
 | `index.jsx` | 1223 | Panel "Control de Zooms" — pestaña dentro de Comando Directivo (Duke). |
-| `Profile.jsx` | 1098 | vista de perfil del asesor. |
+| `Profile.jsx` | 1123 | vista de perfil del asesor. |
 | `ComandoDirectivo.jsx` | 962 | _sin describir_ |
 | `LeadWhatsAppChat.jsx` | 945 | _sin describir_ |
 | `RRHHModule.jsx` | 846 | _sin describir_ |
@@ -427,7 +430,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `Diagnostico.jsx` | 974 | _sin describir_ |
 | `DeliveryHubCRM.jsx` | 881 | _sin describir_ |
 | `ManualCRM.jsx` | 790 | _sin describir_ |
-| `LoginScreen.jsx` | 724 | Pantalla de autenticación completa para la app |
+| `LoginScreen.jsx` | 727 | Pantalla de autenticación completa para la app |
 | `manual-telegram-content.js` | 714 | Manual del COPILOT / Asistente IA (Duke del Caribe) |
 | `OnboardingCallCenter.jsx` | 687 | _sin describir_ |
 | `DataDeletion.jsx` | 554 | _sin describir_ |
@@ -439,19 +442,21 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ManualLegacy.jsx` | 246 | _sin describir_ |
 | `ManualBrasa.jsx` | 235 | _sin describir_ |
 | `ManualMuebleria.jsx` | 224 | _sin describir_ |
-| `LoginScreenNative.jsx` | 183 | _sin describir_ |
+| `LoginScreenNative.jsx` | 189 | _sin describir_ |
 | `HeroFlowBackdrop.jsx` | 119 | _sin describir_ |
 | `marketing-content.js` | 107 | _sin describir_ |
 | `LandingMarketing.jsx` | 106 | _sin describir_ |
 | `ModuleShowcase.jsx` | 91 | _sin describir_ |
 | `FeatureMotion.jsx` | 90 | _sin describir_ |
 | `ModuleShowcase.css` | 66 | _sin describir_ |
+| `RecoveryForm.jsx` | 60 | _sin describir_ |
 | `FeatureMotion.css` | 55 | _sin describir_ |
 | `AppDownloads.jsx` | 29 | _sin describir_ |
 | `ServicesTicker.jsx` | 29 | _sin describir_ |
 | `HeroFlowBackdrop.css` | 26 | _sin describir_ |
 | `AppDownloads.css` | 24 | _sin describir_ |
 | `ServicesTicker.css` | 23 | _sin describir_ |
+| `EmailConfirmation.jsx` | 19 | _sin describir_ |
 
 ### `src/lib/`
 
@@ -501,7 +506,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `common-entry.js` | 55 | _sin describir_ |
 | `rails-store.js` | 51 | _sin describir_ |
 | `financial-data.js` | 41 | _sin describir_ |
-| `password-change.js` | 38 | Change only the authenticated user's password; never trust a cached UI identity. |
+| `password-change.js` | 39 | Change only the authenticated user's password; never trust a cached UI identity. |
 | `copilot-demo.js` | 36 | Demo messages are local examples; they never claim to write to a real account. |
 | `read-all-rows.js` | 36 | _sin describir_ |
 | `app-review-access.native.js` | 32 | _sin describir_ |
@@ -509,9 +514,11 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `copilot-profile.js` | 29 | A failed profile lookup is not evidence that Copilot is disabled. |
 | `rails-gestion.js` | 24 | Valida el borrador una vez; un envío incierto se reintenta sin alterar su payload. |
 | `auth-events.js` | 22 | _sin describir_ |
+| `account-security.js` | 20 | Bound network waits without treating an uncertain write as success. |
 | `project-copilot.js` | 18 | _sin describir_ |
 | `app-review-access.js` | 12 | Implementación web: App Review no existe fuera del binario móvil. |
 | `huli.js` | 10 | _sin describir_ |
+| `email-confirmation.js` | 9 | Consume only email-change callbacks, without installing a URL-supplied session. |
 | `portfolio-route.js` | 8 | _sin describir_ |
 | `rails-preview.js` | 8 | La vista previa conserva la ruta y el cliente; nunca arrastra el hash de autenticación. |
 
@@ -586,7 +593,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Activos e inactivos | `src/app/features/Admin/PlatformUsersAdmin.jsx:121` |
 | Activos post-Zoom | `src/app/views/ComandoDirectivo.jsx:459` |
 | Activos post-Zoom: | `src/app/views/CRM/ZoomBoard.jsx:170` |
-| Actual: | `src/app/views/Profile.jsx:378` |
+| Actual: | `src/app/components/LoginEmailPanel.jsx:40` |
 | Actualización del sistema | `src/app/components/DynIsland.jsx:408` |
 | Actualización Importante | `src/app/components/DynamicIsland.jsx:132` |
 | Actualizando tu tablero… | `src/app/views/ISpaceBoard.jsx:129` |
@@ -648,7 +655,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Asistió (sem.) | `src/app/views/ZoomControl/Resumen.jsx:421` |
 | Atención Inmediata | `src/app/views/Dash.jsx:235` |
 | Auditoría de preparación | `src/dental-demo/ClinicalDemoApp.jsx:756` |
-| Aún no configuras un correo de recuperación. | `src/app/views/Profile.jsx:379` |
+| Aún no configuras un correo de recuperación. | `src/app/views/Profile.jsx:404` |
 | Aún no hay documentos | `src/app/features/MetaPanel/index.jsx:1874` |
 | Aún no hay usuarios activos. | `src/app/features/Admin/CajaPermissionsAdmin.jsx:127` |
 | Autor del hito | `src/app/views/CRM/ZoomBoard.jsx:244` |
@@ -704,11 +711,11 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | CANDIDATO IDENTIFICADO | `src/app/views/RRHHModule.jsx:747` |
 | Características | `src/app/views/LandingPages/index.jsx:706` |
 | Cargando accesos… | `src/app/features/Admin/PlatformAdminConsole.jsx:143` |
-| Cargando actividad… | `src/app/views/Profile.jsx:947` |
+| Cargando actividad… | `src/app/views/Profile.jsx:972` |
 | Cargando clientes… | `src/app/features/Admin/PlatformCompanyCRM.jsx:252` |
 | Cargando conversación… | `src/app/views/Copilot.jsx:1183` |
 | Cargando conversaciones… | `src/app/views/WhatsApp.jsx:263` |
-| Cargando demo dental… | `src/main.jsx:319` |
+| Cargando demo dental… | `src/main.jsx:322` |
 | Cargando el plan… | `src/app/views/PlanSemanal.jsx:369` |
 | Cargando el tablero… | `src/app/views/ComandoOps.jsx:127` |
 | Cargando empresas… | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:242` |
@@ -770,13 +777,13 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Compartir presentación | `src/app/views/LandingPages/index.jsx:1324` |
 | Complejidad: | `src/app/views/Marketing.jsx:2197` |
 | Comprobando la agenda de hoy… | `src/app/views/MiDia.jsx:134` |
-| Conectado | `src/app/views/Profile.jsx:700` |
+| Conectado | `src/app/views/Profile.jsx:725` |
 | Conectando tu clínica con Huli… | `src/dental-demo/TenantHuliWorkspace.jsx:8` |
 | Conectando… | `src/app/views/ConectarWhatsApp.jsx:122` |
 | Conectar mi WhatsApp | `src/app/views/ConectarWhatsApp.jsx:123` |
 
 
-_(814 textos más — usá `npm run buscar "texto"`)_
+_(820 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -817,7 +824,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/CuentasCobro.jsx` (463 líneas)
 - `src/dental-demo/ClinicalDemoWorkspace.jsx` (445 líneas)
 - `src/app/views/FinanzasAdmin.jsx` (443 líneas)
-- `src/main.jsx` (436 líneas)
+- `src/main.jsx` (439 líneas)
 - `src/clients/gasil/config.js` (422 líneas)
 - `src/lib/next-action-engine.js` (371 líneas)
 - `src/lib/offline-mode.js` (351 líneas)
@@ -860,8 +867,8 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/clients/vega/config.js` (196 líneas)
 - `src/lib/whatsapp-signup.js` (196 líneas)
 - `src/lib/lead-backup.js` (192 líneas)
+- `src/landing/LoginScreenNative.jsx` (189 líneas)
 - `src/lib/speech-native.js` (189 líneas)
-- `src/landing/LoginScreenNative.jsx` (183 líneas)
 - `src/app/components/Chat.jsx` (182 líneas)
 - `src/app/views/CRM/CallActionButton.jsx` (182 líneas)
 - `src/clients/muebleria/config.js` (182 líneas)
