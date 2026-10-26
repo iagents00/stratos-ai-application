@@ -1,6 +1,5 @@
 .stratos-marketing .smk-service-flow { --service-play: paused; overflow: hidden; padding-block: 25px; background: #F7F9FC; border-block: 1px solid #E9EFF5; mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent); }
 .stratos-marketing .smk-service-flow[data-running="true"] { --service-play: running; }
-.stratos-marketing .smk-service-flow:hover, .stratos-marketing .smk-service-flow:focus-within { --service-play: paused; }
 .stratos-marketing .smk-service-flow:focus-visible { outline: 2px solid #356FA7; outline-offset: -4px; }
 .stratos-marketing .smk-service-flow-track { display: flex; width: max-content; }
 .stratos-marketing .smk-service-flow-group { display: flex; flex: 0 0 auto; align-items: center; gap: 40px; padding-right: 40px; }

@@ -169,3 +169,19 @@ test('module gallery renders six named tabs linked to real panels and complete l
     assert.doesNotMatch(html, /supabase|access_token|https:\/\//i);
   } finally { await vite.close(); }
 });
+
+test('workflow cadence loops repeatedly and resumes after leaving the page', () => {
+  const timers = clock();
+  const rotation = createModuleRotation({ count: 3, intervalMs: 2500, timers, onUpdate() {} });
+  timers.advance(2500 * 10);
+  assert.equal(rotation.snapshot().index, 1);
+  assert.equal(timers.pending(), 1);
+  rotation.setPaused('hidden', true);
+  timers.advance(60000);
+  assert.equal(rotation.snapshot().index, 1);
+  rotation.setPaused('hidden', false);
+  timers.advance(2500);
+  assert.equal(rotation.snapshot().index, 2);
+  rotation.destroy();
+  assert.equal(timers.pending(), 0);
+});

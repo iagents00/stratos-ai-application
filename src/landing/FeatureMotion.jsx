@@ -74,7 +74,7 @@ function FlowCard({ flow }) {
     return () => { observer.disconnect(); safeMode.disconnect(); document.removeEventListener("visibilitychange", visibility); media.removeEventListener("change", preference); };
   }, []);
   // Restart on completion, with no idle gap; finite passes retain mobile safeguards.
-  return <article onAnimationEnd={event => { if (event.target.dataset.flowCycle === "true" && environment.visible && !environment.hidden && !environment.lowfx && !environment.reduced) setEnvironment(value => ({ ...value, cycle: value.cycle + 1 })); }} className="smk-motion-card" data-running={environment.visible && !environment.hidden && !environment.lowfx && !environment.reduced}>
+  return <article onAnimationEnd={event => { if (event.target.dataset.flowCycle === "true" && environment.visible && !environment.hidden && !environment.lowfx) setEnvironment(value => ({ ...value, cycle: value.cycle + 1 })); }} className="smk-motion-card" data-running={environment.visible && !environment.hidden && !environment.lowfx}>
     <h3>{flow.title.split("\n").map((line, index) => <span key={line}>{index > 0 && <br />}{line}</span>)}</h3>
     <p>{flow.description}</p><FlowDiagram flow={flow} region={region} cycle={environment.cycle} /><a href="#modulos">{flow.link}<ArrowRight size={16} aria-hidden="true" /></a>
   </article>;

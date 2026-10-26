@@ -52,7 +52,3 @@
   .stratos-marketing .smk-motion-card h3 { font-size: 28px; }
   .stratos-marketing .smk-motion-card > p { font-size: 14px; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .stratos-marketing .smk-flow-signal { stroke-dasharray: none; stroke-dashoffset: 0; animation: none; opacity: .4; }
-  .stratos-marketing .smk-flow-trail, .stratos-marketing .smk-flow-glint { display: none; animation: none; }
-}
