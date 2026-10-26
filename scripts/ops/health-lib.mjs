@@ -1,4 +1,6 @@
 /** Read-only probes. Never emit payloads, secrets or client records. */
+import { readFileSync } from "node:fs";
+const identity = JSON.parse(readFileSync(new URL("../../project-identity.json", import.meta.url), "utf8"));
 export async function probe(
   name,
   url,
@@ -66,7 +68,10 @@ export async function webProbe(origin, expectedCommit, fetcher = fetch) {
       fetcher,
       validate: async (r) => {
         const j = await r.json();
-        return /^[a-f0-9]{40}$/.test(j.commit || "") &&
+        return j.project === identity.vercelProjectName &&
+          j.projectId === identity.vercelProjectId &&
+          j.repository === "iagents00/stratos-ai-application" &&
+          /^[a-f0-9]{40}$/.test(j.commit || "") &&
           /^stratos-v\d+$/.test(j.serviceWorker || "") &&
           j.dirty === false &&
           (!expectedCommit || j.commit === expectedCommit)

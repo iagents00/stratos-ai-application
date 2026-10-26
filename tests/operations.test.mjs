@@ -7,7 +7,7 @@ import { createHash } from "node:crypto";
 import { webProbe } from "../scripts/ops/health-lib.mjs";
 import { verifyBackup } from "../scripts/ops/verify-backup.mjs";
 const sha = "a".repeat(40);
-function fake({ assetStatus = 200, sw = "stratos-v427", dirty = false } = {}) {
+function fake({ assetStatus = 200, sw = "stratos-v427", dirty = false, project = "stratos-ai-application", projectId = "prj_Epv30SFnQmJGnxy3LdYLKV8NwDLi", repository = "iagents00/stratos-ai-application" } = {}) {
   return async (url) => {
     const path = new URL(url).pathname;
     if (path === "/")
@@ -21,6 +21,9 @@ function fake({ assetStatus = 200, sw = "stratos-v427", dirty = false } = {}) {
       });
     if (path === "/release.json")
       return Response.json({
+        project,
+        projectId,
+        repository,
         commit: sha,
         serviceWorker: "stratos-v427",
         dirty,
@@ -28,7 +31,7 @@ function fake({ assetStatus = 200, sw = "stratos-v427", dirty = false } = {}) {
     return new Response(sw);
   };
 }
-test("diagnosis rejects HTTP 200 shells with broken scripts, dirty releases and mismatched versions", async () => {
+test("diagnosis rejects broken scripts, foreign projects, dirty releases and mismatched versions", async () => {
   assert.ok(
     (await webProbe("https://example.test", sha, fake())).every((c) => c.ok),
   );
@@ -36,6 +39,9 @@ test("diagnosis rejects HTTP 200 shells with broken scripts, dirty releases and 
     { assetStatus: 404 },
     { sw: "stratos-v426" },
     { dirty: true },
+    { project: "another-app" },
+    { projectId: "prj_other" },
+    { repository: "someone/another-app" },
   ])
     assert.ok(
       (await webProbe("https://example.test", sha, fake(options))).some(
