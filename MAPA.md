@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**289 archivos · 84.268 líneas**
+**289 archivos · 84.277 líneas**
 
 ---
 
@@ -220,7 +220,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `LeadChatHistory.jsx` | 152 | _sin describir_ |
 | `ISpaceBoard.jsx` | 148 | _sin describir_ |
 | `ScheduledCallBadge.jsx` | 144 | _sin describir_ |
-| `PortfolioDocument.css` | 134 | _sin describir_ |
+| `PortfolioDocument.css` | 143 | _sin describir_ |
 | `IACRMPlanes.jsx` | 119 | _sin describir_ |
 | `constants.js` | 116 | _sin describir_ |
 | `ZoomLista.jsx` | 107 | Lista compacta y clickeable de Zooms — la usan los apartados "Calentitos" y |
@@ -894,8 +894,8 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/CRM/LeadChatHistory.jsx` (152 líneas)
 - `src/app/views/ISpaceBoard.jsx` (148 líneas)
 - `src/app/views/CRM/ScheduledCallBadge.jsx` (144 líneas)
+- `src/app/views/LandingPages/PortfolioDocument.css` (143 líneas)
 - `src/clients/brasa-y-piedra/config.js` (140 líneas)
-- `src/app/views/LandingPages/PortfolioDocument.css` (134 líneas)
 - `src/app/components/CopilotCapabilities.jsx` (131 líneas)
 - `src/app/constants/pipeline.js` (129 líneas)
 - `src/lib/iagents-actions.js` (126 líneas)
