@@ -23,7 +23,7 @@ import { SignOutIcon } from "@phosphor-icons/react/dist/csr/SignOut";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { BellIcon } from "@phosphor-icons/react/dist/csr/Bell";
 import { HexagonIcon } from "@phosphor-icons/react/dist/csr/Hexagon";
-import { TargetIcon } from "@phosphor-icons/react/dist/csr/Target";
+import { RadioButtonIcon } from "@phosphor-icons/react/dist/csr/RadioButton";
 import { MegaphoneIcon } from "@phosphor-icons/react/dist/csr/Megaphone";
 import { NotebookIcon } from "@phosphor-icons/react/dist/csr/Notebook";
 import { UserCheckIcon } from "@phosphor-icons/react/dist/csr/UserCheck";
@@ -60,7 +60,7 @@ const icons = {
   search: MagnifyingGlassIcon,
   bell: BellIcon,
   lp: HexagonIcon,
-  miespacio: TargetIcon,
+  miespacio: RadioButtonIcon,
   mkt: MegaphoneIcon,
   mkt_reporte: NotebookIcon,
   mkt_equipo: UserCheckIcon,
@@ -74,7 +74,7 @@ const icons = {
   mi_espacio: CalendarBlankIcon,
 };
 
-// Keep the same open contours in selected and resting states, like the rail reference.
+// Keep stable shapes in selected and resting states. Mi Espacio uses a solid center.
 // Selection is communicated by the enclosing control and its foreground color.
 export function StratosIcon({ name, size = 24, color = "currentColor", style, title, ...rest }) {
   const Icon = icons[name] || SquaresFourIcon;
@@ -82,7 +82,7 @@ export function StratosIcon({ name, size = 24, color = "currentColor", style, ti
     <Icon
       {...rest}
       size={size}
-      weight="regular"
+      weight={name === "miespacio" ? "fill" : "regular"}
       color={color}
       role={title ? "img" : undefined}
       aria-hidden={title ? undefined : true}

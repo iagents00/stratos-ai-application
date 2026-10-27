@@ -1,3 +1,4 @@
+import { StratosIcon } from "../../icons/StratosIcon";
 /**
  * app/features/MetaPanel/index.jsx
  * ─────────────────────────────────────────────────────────────────────────────
@@ -6,7 +7,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import {
-  Target, Plus, Check, Minus, GripVertical, TrendingUp, ChevronRight,
+  Plus, Check, Minus, GripVertical, TrendingUp, ChevronRight,
   AlertCircle, Bell, X, Atom, CalendarDays, Clock, ChevronLeft, ChevronUp, ChevronDown,
   FileText, Table, Presentation, ClipboardList, HardDrive, BookOpen,
   PenTool, Palette, Video, Globe, Cloud, ExternalLink, Trash2, FolderOpen,
@@ -737,7 +738,7 @@ export default function MetaPanel({
             {/* Marca */}
             <div style={{ display:"flex", alignItems:"center", gap:13, minWidth:0, order: isMobile ? 1 : 0 }}>
               <div style={{ width:42, height:42, borderRadius:13, background:`linear-gradient(135deg, ${T.accent}26, ${T.accent}08)`, border:`1px solid ${T.accent}30`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, boxShadow:`inset 0 1px 0 ${T.accent}1F` }}>
-                <Target size={20} color={T.accent} strokeWidth={2} />
+                <StratosIcon name="miespacio" size={22} color={T.accent} />
               </div>
               <div style={{ minWidth:0 }}>
                 <p style={{ margin:0, fontSize:17, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.025em", color:T.txt, display:"flex", alignItems:"center", gap:8, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
