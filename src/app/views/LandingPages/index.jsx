@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { G, KPI, Pill, Ico } from "../../SharedComponents";
-import LandingPagePreview from "./LandingPagePreview";
+import CreateWorkspace from "./CreateWorkspace";
+import { orderedCreateProperties } from "./create-workflow.js";
 import { catalogToLandingProps, encodeLanding } from "./catalogAdapter";
 import { useAuth } from "../../../hooks/useAuth";
 import { useIsMobile } from "../../../hooks/useViewport";
@@ -1019,21 +1020,26 @@ const LandingPages = ({ T = P }) => {
   const publicOrigin = portfolioOrigin(window.location.origin);
   const [catalogRows, setCatalogRows] = useState([]);
   const [catalogError, setCatalogError] = useState("");
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogAttempt, setCatalogAttempt] = useState(0);
   const [agencyName, setAgencyName] = useState("");
   useEffect(() => {
     if (!orgId) return;
     let active = true;
+    setCatalogLoading(true);
+    setCatalogError("");
     Promise.all([
       supabase.from("catalogo_proyectos").select("*").eq("organization_id", orgId).eq("visible", true).order("created_at", { ascending: false }),
       supabase.from("organizations").select("name").eq("id", orgId).single(),
     ]).then(([catalog, organization]) => {
       if (!active) return;
-      if (catalog.error) setCatalogError("No se pudo cargar el catálogo. Vuelve a abrir Create para reintentar.");
+      setCatalogLoading(false);
+      if (catalog.error || organization.error) setCatalogError("No se pudo cargar el catálogo. Vuelve a abrir Create para reintentar.");
       else setCatalogRows(catalog.data || []);
       setAgencyName(organization.data?.name || "");
-    }).catch(() => { if (active) setCatalogError("No se pudo cargar el catálogo. Vuelve a abrir Create para reintentar."); });
+    }).catch(() => { if (active) { setCatalogLoading(false); setCatalogError("No se pudo cargar el catálogo. Reintenta para continuar."); } });
     return () => { active = false; };
-  }, [orgId]);
+  }, [orgId, catalogAttempt]);
   const isLight = T?.bg !== P.bg;
   const [step, setStep] = useState(0);
   const [clientName, setClientName] = useState("");
@@ -1045,7 +1051,6 @@ const LandingPages = ({ T = P }) => {
   const [clientBudgetMax, setClientBudgetMax] = useState(600000);
   const [clientPrefs, setClientPrefs] = useState({ beach: false, golf: false, marina: false, jungle: false, investment: false, retirement: false, family: false, boutique: false });
   const [selectedProps, setSelectedProps] = useState([]);
-  const [previewOpen, setPreviewOpen] = useState(false);
   const isMobile = useIsMobile();
   const [customProperties, setCustomProperties] = useState(() => {
     return readDraft("properties", "stratos_custom_props", "[]");
@@ -1068,16 +1073,14 @@ const LandingPages = ({ T = P }) => {
   const [lpTheme, setLpTheme] = useState("dark");
   const [generatedId, setGeneratedId] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState("");
   const [showCatalog, setShowCatalog] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [propSearch, setPropSearch] = useState("");
   const [catSearch, setCatSearch] = useState("");
   // Drive links per property (id → url), persisted in localStorage
   const [driveLinks, setDriveLinks] = useState(() => {
     return readDraft("driveLinks", "stratos_drive_links", "{}");
   });
-  const [editingLinkId, setEditingLinkId] = useState(null);
-  const [editLinkValue, setEditLinkValue] = useState("");
 
 
   // Persist drive links to localStorage whenever they change
@@ -1117,59 +1120,11 @@ const LandingPages = ({ T = P }) => {
     if (!isAdmin) setAsesorCal("");
   }, [user, advOpen, isAdmin]);
 
-  const budgetOptions = [
-    { label: "$120K", value: 120000 },
-    { label: "$200K", value: 200000 },
-    { label: "$300K", value: 300000 },
-    { label: "$400K", value: 400000 },
-    { label: "$500K", value: 500000 },
-    { label: "$750K", value: 750000 },
-    { label: "$1M+", value: 1000000 },
-    { label: "$1.5M+", value: 1500000 },
-  ];
-
-  const prefOptions = [
-    { key: "beach", label: "Cerca de playa", icon: Waves },
-    { key: "golf", label: "Campo de golf", icon: Palmtree },
-    { key: "marina", label: "Marina/Náutico", icon: Waves },
-    { key: "jungle", label: "Entorno de selva", icon: Palmtree },
-    { key: "investment", label: "Alta rentabilidad", icon: TrendingUp },
-    { key: "retirement", label: "Retiro/Lifestyle", icon: Heart },
-    { key: "family", label: "Familiar", icon: Users },
-    { key: "boutique", label: "Boutique/Exclusivo", icon: Crown },
-  ];
-
   const catalogProps = useMemo(() => {
     if (catalogRows.length) return catalogToLandingProps([{ id: "catalogo", items: catalogRows.map(row => ({ ...row, entregaComo: row.entrega_como })) }]);
     return orgId === "00000000-0000-0000-0000-000000000001" ? catalogToLandingProps() : [];
   }, [catalogRows, orgId]);
   const allProperties = useMemo(() => [...customProperties, ...catalogProps, ...(orgId === "00000000-0000-0000-0000-000000000001" ? rivieraProperties : [])], [customProperties, catalogProps, orgId]);
-
-  const inBudget = (p) => (!p.priceTo || p.priceTo <= 0) ? true : (p.priceFrom <= clientBudgetMax && p.priceTo >= clientBudgetMin);
-  const filteredProperties = useMemo(() => {
-    const nq = propSearch.trim().toLowerCase();
-    const base = nq
-      ? allProperties.filter(p => [p.name, p.location, p.zone, p.bedrooms, p.ticket]
-          .filter(Boolean).join(" ").toLowerCase().includes(nq))
-      : allProperties;
-    const inB = base.filter(p => inBudget(p));
-    const outB = base.filter(p => !inBudget(p));
-    return [...inB, ...outB];
-  }, [allProperties, clientBudgetMin, clientBudgetMax, propSearch]);
-
-  const saveDriveLink = (propId) => {
-    setDriveLinks(prev => ({ ...prev, [propId]: editLinkValue }));
-    // Also persist link inside the custom property object itself
-    setCustomProperties(prev => prev.map(p => p.id === propId ? { ...p, driveLink: editLinkValue } : p));
-    setEditingLinkId(null);
-    setEditLinkValue("");
-  };
-
-  const startEditLink = (propId, currentLink, e) => {
-    e.stopPropagation();
-    setEditingLinkId(propId);
-    setEditLinkValue(currentLink || "");
-  };
 
   const toggleProp = (id) => {
     if (!selectedProps.includes(id) && selectedProps.length >= 12) {
@@ -1182,8 +1137,8 @@ const LandingPages = ({ T = P }) => {
 
   const handleGenerate = async () => {
     if (generating) return;
-    const props = allProperties.filter(p => selectedProps.includes(p.id));
-    if (!agencyName || !props.length || props.length > 12) {
+    const props = orderedCreateProperties(allProperties, selectedProps);
+    if (!clientName.trim() || !agencyName || !props.length || props.length > 12) {
       setGenerationError("Espera a que cargue tu empresa y selecciona entre 1 y 12 propiedades.");
       return;
     }
@@ -1203,9 +1158,9 @@ const LandingPages = ({ T = P }) => {
         id: newId, url, client: clientName || "Cliente",
         date: new Date().toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }),
         propIds: [...selectedProps], props: props.length, status: "Generada",
-        budget: `$${(clientBudgetMin / 1000).toFixed(0)}K-$${(clientBudgetMax / 1000).toFixed(0)}K`, asesor,
+        budget: "Selección personalizada", asesor,
       }, ...prev]);
-      setPreviewOpen(true);
+
     } catch {
       setGenerationError("No se pudo crear el enlace. Revisa tu conexión y vuelve a generar la presentación. Tus datos siguen aquí.");
     } finally { setGenerating(false); }
@@ -1214,9 +1169,10 @@ const LandingPages = ({ T = P }) => {
     if (!url) return;
     try {
       await navigator.clipboard.writeText(url);
+      setCopyError("");
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
-    } catch { setCatalogError("No se pudo copiar el enlace. Ábrelo para copiarlo desde el navegador."); }
+    } catch { setCopyError("No se pudo copiar el enlace. Inténtalo de nuevo o selecciona el enlace para copiarlo manualmente."); }
   };
   const handleCopyLink = () => copyUrl(shortUrl);
 
@@ -1224,6 +1180,8 @@ const LandingPages = ({ T = P }) => {
     setStep(0);
     setClientName("");
     setLinkName(null);
+    setShortUrl(null);
+    setCopied(false);
     setGenerationError("");
     setClientBudgetMin(120000);
     setClientBudgetMax(500000);
@@ -1234,11 +1192,18 @@ const LandingPages = ({ T = P }) => {
     setShowShareModal(false);
   };
 
+  useEffect(() => {
+    setShortUrl(null);
+    setCopied(false);
+    setCopyError("");
+  }, [clientName, mensaje, asesor, asesorWA, asesorCal, agencyName, selectedProps, driveLinks, linkName, customProperties, catalogRows]);
+
   const statusColors = { Generada: T.blue, Enviada: T.emerald, Vista: T.accent, Expirada: T.rose };
 
   // ─── Step 0: Lista de Landing Pages ───
   if (step === 0) return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      {copyError && <p role="alert" style={{ color: T.txt2 }}>{copyError}</p>}
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
@@ -1273,7 +1238,7 @@ const LandingPages = ({ T = P }) => {
             onMouseEnter={e => { e.currentTarget.style.background = isLight ? (T.accentDark || T.accent) : T.accentSoft; e.currentTarget.style.transform = "translateY(-1px)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = T.accent; e.currentTarget.style.transform = "translateY(0)"; }}
           >
-            Nueva Landing Page
+            {clientName || selectedProps.length ? "Continuar portafolio" : "Nuevo portafolio"}
           </button>
         </div>
       </div>
@@ -1464,14 +1429,14 @@ const LandingPages = ({ T = P }) => {
                             <button onClick={() => { setSelectedProps([prop.id]); setStep(1); }} style={{ display: "flex", alignItems: "center", gap: 4, padding: "7px 14px", borderRadius: 999, border: `1px solid ${T.accent}4d`, background: T.accentB, cursor: "pointer", color: T.accent, fontSize: 11.5, fontWeight: 600, fontFamily: fontDisp, whiteSpace: "nowrap", boxShadow: `0 1px 6px ${T.accent}1f`, WebkitTapHighlightColor: "transparent", transition: "all 0.18s" }}
                               onMouseEnter={e => { e.currentTarget.style.background = `${T.accent}2a`; e.currentTarget.style.borderColor = `${T.accent}75`; e.currentTarget.style.boxShadow = `0 3px 11px ${T.accent}30`; }}
                               onMouseLeave={e => { e.currentTarget.style.background = T.accentB; e.currentTarget.style.borderColor = `${T.accent}4d`; e.currentTarget.style.boxShadow = `0 1px 6px ${T.accent}1f`; }}
-                            >Crear landing</button>
+                            >Crear portafolio</button>
                           </div>
                         </div>
                       ))}
                     </div>
                     {list.length > shown.length && (
                       <p style={{ fontSize: 12, color: T.txt3, marginTop: 12, textAlign: "center", fontFamily: font }}>
-                        Mostrando {shown.length} de {list.length} · busca arriba para encontrar cualquier desarrollo, o úsalos todos desde “Nueva Landing Page”.
+                        Mostrando {shown.length} de {list.length} · busca arriba para encontrar cualquier desarrollo, o úsalos todos desde “Nuevo portafolio”.
                       </p>
                     )}
                     {list.length === 0 && (
@@ -1569,502 +1534,18 @@ const LandingPages = ({ T = P }) => {
     </div>
   );
 
-  // ─── Step 1: Datos del Cliente ───
-  if (step === 1) return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 700, margin: "0 auto" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <button onClick={() => setStep(0)} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt2, fontSize: 12.5, fontFamily: font, display: "flex", alignItems: "center", gap: 4 }}>
-          <ChevronRight size={14} style={{ transform: "rotate(180deg)" }} /> Atrás
-        </button>
-        <div>
-          <p style={{ fontSize: 18, fontWeight: 400, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp }}>Crear Landing Page</p>
-          <p style={{ fontSize: 12, color: T.txt3, fontFamily: font }}>Paso 1 de 2 — Información del cliente</p>
-        </div>
-      </div>
-
-      {/* Progress */}
-      <div style={{ display: "flex", gap: 8 }}>
-        <div style={{ flex: 1, height: 3, borderRadius: 2, background: T.accent, boxShadow: `0 0 8px ${T.accent}40` }} />
-        <div style={{ flex: 1, height: 3, borderRadius: 2, background: T.border }} />
-      </div>
-
-      <G T={T}>
-        <p style={{ fontSize: 14, fontWeight: 500, color: T.txt, marginBottom: 16, fontFamily: fontDisp }}>Datos del Cliente</p>
-
-        <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 12, color: T.txt2, display: "block", marginBottom: 6, fontWeight: 400, letterSpacing: "0.03em" }}>Nombre del cliente</label>
-          <input
-            type="text" value={clientName} onChange={e => setClientName(e.target.value)}
-            placeholder="Ej: Familia Rodríguez, James Mitchell..."
-            style={{
-              width: "100%", padding: "12px 16px", borderRadius: 10, fontSize: 14,
-              background: T.glass, border: `1px solid ${T.border}`, color: T.txt,
-              fontFamily: font, outline: "none", transition: "border-color 0.2s",
-            }}
-            onFocus={e => e.target.style.borderColor = T.accent + "60"}
-            onBlur={e => e.target.style.borderColor = T.border}
-          />
-        </div>
-
-
-        <div style={{ marginBottom: 22 }}>
-          <label htmlFor="create-link-name" style={{ fontSize: 13, color: T.txt, display: "block", marginBottom: 6 }}>Nombre del enlace</label>
-          <input id="create-link-name" value={linkName ?? suggestedLinkName(clientName, agencyName)} maxLength={80}
-            onChange={e => setLinkName(e.target.value)} aria-describedby="create-link-help"
-            placeholder="Ej. Adoquín Inmobiliaria"
-            style={{ width: "100%", boxSizing: "border-box", padding: "12px 16px", borderRadius: 10, fontSize: 14, background: T.glass, border: `1px solid ${T.border}`, color: T.txt, fontFamily: font }} />
-          <p id="create-link-help" style={{ marginTop: 8, fontSize: 12, color: T.txt2, lineHeight: 1.6, overflowWrap: "anywhere" }}>
-            {publicOrigin}/p/{normalizeLinkName(linkName ?? suggestedLinkName(clientName, agencyName)) || "portafolio"}-código
-          </p>
-          <p style={{ marginTop: 6, fontSize: 12, color: T.txt2, lineHeight: 1.6 }}>El nombre se forma automáticamente con el cliente y tu inmobiliaria; puedes ajustarlo. Añadimos un código único. No necesitas comprar un dominio. Cualquier persona con el enlace podrá ver la presentación.</p>
-          <details style={{ marginTop: 10, fontSize: 12, color: T.txt2, lineHeight: 1.6 }}>
-            <summary style={{ cursor: "pointer" }}>¿Quieres usar tu propio dominio?</summary>
-            <p>Solicita a tu administrador conectar un subdominio, por ejemplo propiedades.tuinmobiliaria.com. Requiere verificar el dominio y configurar su DNS antes de activarlo. Mientras tanto, este enlace funciona en cualquier dispositivo.</p>
-          </details>
-        </div>
-
-        {/* Asesor: se toma de la CUENTA. Solo el admin puede usar otros datos. */}
-        <div style={{ marginBottom: 18, padding: "12px 14px", borderRadius: 10, background: T.glass, border: `1px solid ${T.border}` }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-              <Ico icon={User} sz={34} is={15} c={T.accent} />
-              <div style={{ minWidth: 0 }}>
-                <p style={{ fontSize: 13, fontWeight: 600, color: T.txt, fontFamily: fontDisp }}>{asesor || "Tu cuenta"}</p>
-                <p style={{ fontSize: 12, color: T.txt3, fontFamily: font }}>
-                  {asesorWA || "Agrega tu WhatsApp en tu perfil"}{asesorCal ? " · agenda ✓" : ""}
-                </p>
-              </div>
-            </div>
-            {isAdmin && (
-              <button onClick={() => setAdvOpen(o => !o)} style={{ padding: "7px 13px", borderRadius: 9, border: `1px solid ${advOpen ? T.accent + "60" : T.border}`, background: advOpen ? T.accentS : T.glass, cursor: "pointer", color: advOpen ? T.accent : T.txt2, fontSize: 12, fontWeight: 600, fontFamily: font, whiteSpace: "nowrap" }}>
-                {advOpen ? "Usar mi cuenta" : "Otros datos"}
-              </button>
-            )}
-          </div>
-          <p style={{ fontSize: 11, color: T.txt3, marginTop: 8, fontFamily: font }}>
-            El cliente verá estos datos de contacto en la landing. Se toman de tu cuenta automáticamente.
-          </p>
-          {isAdmin && advOpen && (
-            <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px dashed ${T.border}`, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div style={{ gridColumn: "1 / -1" }}>
-                <label style={{ fontSize: 11, color: T.txt2, display: "block", marginBottom: 5, fontWeight: 600 }}>Nombre del asesor a mostrar</label>
-                <input value={asesor} onChange={e => setAsesor(e.target.value)} placeholder="Nombre del asesor"
-                  style={{ width: "100%", padding: "9px 12px", borderRadius: 9, fontSize: 13, background: T.surface || T.glass, border: `1px solid ${T.border}`, color: T.txt, fontFamily: font, outline: "none", boxSizing: "border-box" }} />
-              </div>
-              <div>
-                <label style={{ fontSize: 11, color: T.txt2, display: "flex", alignItems: "center", gap: 5, marginBottom: 5, fontWeight: 600 }}><Phone size={10} color={T.emerald} /> WhatsApp</label>
-                <input value={asesorWA} onChange={e => setAsesorWA(e.target.value)} placeholder="+52 998 000 0000"
-                  style={{ width: "100%", padding: "9px 12px", borderRadius: 9, fontSize: 13, background: T.surface || T.glass, border: `1px solid ${T.border}`, color: T.txt, fontFamily: font, outline: "none", boxSizing: "border-box" }} />
-              </div>
-              <div>
-                <label style={{ fontSize: 11, color: T.txt2, display: "flex", alignItems: "center", gap: 5, marginBottom: 5, fontWeight: 600 }}><CalendarDays size={10} color={T.blue} /> Agenda (opcional)</label>
-                <input value={asesorCal} onChange={e => setAsesorCal(e.target.value)} placeholder="https://calendly.com/..."
-                  style={{ width: "100%", padding: "9px 12px", borderRadius: 9, fontSize: 13, background: T.surface || T.glass, border: `1px solid ${T.border}`, color: T.txt, fontFamily: font, outline: "none", boxSizing: "border-box" }} />
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 12, color: T.txt2, display: "block", marginBottom: 8, fontWeight: 400, letterSpacing: "0.03em" }}>Rango de presupuesto</label>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 11, color: T.txt3, marginBottom: 4 }}>Desde</p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {budgetOptions.slice(0, 5).map(b => (
-                  <button key={b.value} onClick={() => setClientBudgetMin(b.value)} style={{
-                    padding: "6px 14px", borderRadius: 8, fontSize: 12.5, fontWeight: 400,
-                    border: `1px solid ${clientBudgetMin === b.value ? T.accent + "60" : T.border}`,
-                    background: clientBudgetMin === b.value ? T.accentS : T.glass,
-                    color: clientBudgetMin === b.value ? T.accent : T.txt2,
-                    cursor: "pointer", fontFamily: fontDisp, transition: "all 0.2s",
-                  }}>{b.label}</button>
-                ))}
-              </div>
-            </div>
-            <div style={{ color: T.txt3, fontSize: 14 }}>—</div>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 11, color: T.txt3, marginBottom: 4 }}>Hasta</p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {budgetOptions.slice(2).map(b => (
-                  <button key={b.value} onClick={() => setClientBudgetMax(b.value)} style={{
-                    padding: "6px 14px", borderRadius: 8, fontSize: 12.5, fontWeight: 400,
-                    border: `1px solid ${clientBudgetMax === b.value ? T.accent + "60" : T.border}`,
-                    background: clientBudgetMax === b.value ? T.accentS : T.glass,
-                    color: clientBudgetMax === b.value ? T.accent : T.txt2,
-                    cursor: "pointer", fontFamily: fontDisp, transition: "all 0.2s",
-                  }}>{b.label}</button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 12, color: T.txt2, display: "block", marginBottom: 8, fontWeight: 400, letterSpacing: "0.03em" }}>Preferencias del cliente</label>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(130px, 100%), 1fr))", gap: 8 }}>
-            {prefOptions.map(pref => {
-              const active = clientPrefs[pref.key];
-              return (
-                <button key={pref.key} onClick={() => setClientPrefs(prev => ({ ...prev, [pref.key]: !prev[pref.key] }))} style={{
-                  display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-                  padding: "14px 8px", borderRadius: 10,
-                  border: `1px solid ${active ? T.accent + "50" : T.border}`,
-                  background: active ? T.accentS : T.glass,
-                  cursor: "pointer", transition: "all 0.2s",
-                }}>
-                  <pref.icon size={18} color={active ? T.accent : T.txt3} />
-                  <span style={{ fontSize: 11, color: active ? T.accent : T.txt2, fontWeight: 400, fontFamily: font, textAlign: "center" }}>{pref.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <WriterSection value={mensaje} onChange={setMensaje} clientName={clientName} T={T} />
-      </G>
-
-      <button onClick={() => setStep(2)} disabled={!clientName.trim()} style={{
-        display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-        padding: "14px 28px", borderRadius: 12, border: "none", cursor: clientName.trim() ? "pointer" : "not-allowed",
-        background: clientName.trim() ? T.accent : T.glass,
-        color: clientName.trim() ? T.onAccent : T.txt3,
-        fontSize: 14, fontWeight: 500, fontFamily: fontDisp,
-        boxShadow: clientName.trim() ? (isLight ? T.shadowMint || "0 4px 16px rgba(0,111,145,0.25)" : `0 4px 20px ${T.accent}26`) : "none",
-        transition: "all 0.25s", width: "100%",
-      }}>
-        Seleccionar Propiedades <ArrowRight size={16} />
-      </button>
-    </div>
-  );
-
-  // ─── Step 2: Selección de Propiedades ───
-  if (step === 2) return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      {/* Encabezado del paso 2: en MÓVIL el CTA baja a su propia fila full-width —
-          antes competía con el título en la misma fila y trituraba el texto en
-          una columna angosta (captura IMG_8503 de Ángel). */}
-      <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 10 : 14, flexWrap: "wrap" }}>
-        <button onClick={() => setStep(1)} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt2, fontSize: 12.5, fontFamily: font, display: "flex", alignItems: "center", gap: 4 }}>
-          <ChevronRight size={14} style={{ transform: "rotate(180deg)" }} /> Atrás
-        </button>
-        <div style={{ flex: "1 1 220px", minWidth: 0 }}>
-          <p style={{ fontSize: 18, fontWeight: 400, color: isLight ? T.txt : "#FFFFFF", fontFamily: fontDisp }}>Seleccionar Propiedades</p>
-          <p style={{ fontSize: 12, color: T.txt3, fontFamily: font }}>Paso 2 de 2 — Landing page para <span style={{ color: T.accent, fontWeight: 400 }}>{clientName}</span> · Presupuesto: <span style={{ color: T.emerald, fontWeight: 400 }}>${(clientBudgetMin / 1000).toFixed(0)}K – ${(clientBudgetMax / 1000).toFixed(0)}K</span></p>
-        </div>
-        {selectedProps.length > 0 && (
-          <button onClick={handleGenerate} disabled={generating || !agencyName} style={{
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 22px",
-            flex: isMobile ? "1 1 100%" : "0 0 auto",
-            borderRadius: 12, border: "none", cursor: "pointer",
-            background: T.accent,
-            color: T.onAccent,
-            fontSize: 13, fontWeight: 500, fontFamily: fontDisp,
-            boxShadow: isLight ? T.shadowMint || "0 4px 16px rgba(0,111,145,0.25)" : `0 4px 20px ${T.accent}26`,
-            transition: "all 0.25s",
-          }}
-            onMouseEnter={e => { e.currentTarget.style.background = isLight ? (T.accentDark || T.accent) : T.accentSoft; e.currentTarget.style.transform = "translateY(-1px)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = T.accent; e.currentTarget.style.transform = "translateY(0)"; }}
-          >
-            <Wand2 size={16} /> {generating ? "Creando enlace…" : `Generar Landing Page (${selectedProps.length})`}
-          </button>
-        )}
-      </div>
-
-      {generationError && <p role="alert" style={{ color: T.rose, fontSize: 13 }}>{generationError}</p>}
-      <div style={{ display: "flex", gap: 8 }}>
-        <div style={{ flex: 1, height: 3, borderRadius: 2, background: T.accent }} />
-        <div style={{ flex: 1, height: 3, borderRadius: 2, background: T.accent, boxShadow: `0 0 8px ${T.accent}40` }} />
-      </div>
-
-      {/* Toolbar: hint + register button */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 10, background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.025)", border: `1px solid ${T.border}` }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Image size={14} color={T.txt3} />
-          <span style={{ fontSize: 12, color: T.txt3, fontFamily: font }}>Haz clic para seleccionar · </span>
-          <span style={{ fontSize: 12, color: T.accent, fontWeight: 400, fontFamily: font }}>{filteredProperties.filter(inBudget).length} en presupuesto</span>
-          <span style={{ fontSize: 12, color: T.txt3, fontFamily: font }}>· {filteredProperties.length} totales</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ position: "relative" }}>
-            <Search size={13} color={T.txt3} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }} />
-            <input value={propSearch} onChange={e => setPropSearch(e.target.value)} placeholder="Buscar desarrollo o zona…"
-              style={{ padding: "8px 12px 8px 30px", borderRadius: 9, fontSize: 12.5, width: 220, background: T.glass, border: `1px solid ${T.border}`, color: T.txt, fontFamily: font, outline: "none" }} />
-          </div>
-        <button
-          onClick={() => setShowNewPropModal(true)}
-          style={{
-            display: "flex", alignItems: "center", gap: 7, padding: "8px 16px",
-            borderRadius: 9, border: `1px solid ${T.accent}40`, background: T.accentS,
-            cursor: "pointer", color: T.accent, fontSize: 12.5, fontWeight: 500, fontFamily: fontDisp,
-            transition: "all 0.2s", whiteSpace: "nowrap",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = T.accentB; e.currentTarget.style.borderColor = T.accent + "80"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = T.accentS; e.currentTarget.style.borderColor = T.accent + "40"; }}
-        >
-          <Plus size={14} /> Registrar propiedad
-        </button>
-        </div>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(560px, 100%), 1fr))", gap: 16 }}>
-        {filteredProperties.map(prop => {
-          const selected = selectedProps.includes(prop.id);
-          const driveLink = driveLinks[prop.id] || prop.driveLink || "";
-          const isEditingThis = editingLinkId === prop.id;
-          const matchesBudget = inBudget(prop);
-
-          return (
-            <div key={prop.id} style={{
-              borderRadius: 16, overflow: "visible", cursor: "pointer",
-              border: `2px solid ${selected ? T.accent : T.border}`,
-              background: T.glass, transition: "all 0.3s",
-              boxShadow: selected ? `0 0 24px ${T.accent}20` : "none",
-              transform: selected ? "scale(1.01)" : "scale(1)",
-              position: "relative",
-              opacity: matchesBudget ? 1 : 0.75,
-            }}>
-              {/* Clickable area for selection */}
-              <div onClick={() => toggleProp(prop.id)} style={{ cursor: "pointer" }}>
-                {/* Property Image Header */}
-                <div style={{
-                  height: 140, background: prop.img, position: "relative",
-                  display: "flex", alignItems: "flex-end", padding: 16,
-                  borderRadius: "14px 14px 0 0", overflow: "hidden",
-                }}>
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(0deg, rgba(0,0,0,0.7) 0%, transparent 60%)" }} />
-                  <div style={{ position: "relative", zIndex: 1, width: "100%" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-                      <div>
-                        <p style={{ fontSize: 18, fontWeight: 500, color: "#FFFFFF", fontFamily: fontDisp, letterSpacing: "-0.02em", textShadow: "0 1px 8px rgba(0,0,0,0.55)" }}>{prop.name}</p>
-                        {prop.brand && <p style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", fontFamily: font, textShadow: "0 1px 6px rgba(0,0,0,0.5)" }}>{prop.brand}</p>}
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <MapPin size={12} color="rgba(255,255,255,0.7)" />
-                        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", fontFamily: font }}>{prop.location}</span>
-                      </div>
-                    </div>
-                  </div>
-                  {selected && (
-                    <div style={{
-                      position: "absolute", top: 12, right: 12,
-                      width: 28, height: 28, borderRadius: "50%",
-                      background: T.accent, display: "flex", alignItems: "center", justifyContent: "center",
-                      boxShadow: `0 0 12px ${T.accent}60`,
-                    }}>
-                      <Check size={16} color={T.onAccent} strokeWidth={3} />
-                    </div>
-                  )}
-                  {!selected && !matchesBudget && (
-                    <div style={{
-                      position: "absolute", top: 12, right: 12,
-                      padding: "3px 8px", borderRadius: 6,
-                      background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.15)",
-                      fontSize: 10.5, color: "rgba(255,255,255,0.5)", fontFamily: font, whiteSpace: "nowrap",
-                    }}>Fuera de rango</div>
-                  )}
-                  {!selected && matchesBudget && (
-                    <div style={{
-                      position: "absolute", top: 12, right: 12,
-                      width: 28, height: 28, borderRadius: "50%",
-                      border: "2px solid rgba(255,255,255,0.3)", background: "rgba(0,0,0,0.3)",
-                    }} />
-                  )}
-                </div>
-
-                {/* Property Details */}
-                <div style={{ padding: "14px 16px 10px" }}>
-                  <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-                    {prop.type && <Pill color={prop.accent} s isLight={isLight}>{prop.type}</Pill>}
-                    {prop.roi && <Pill color={T.emerald} s isLight={isLight}>ROI {prop.roi}</Pill>}
-                    {prop.bedrooms && <Pill color={T.txt2} s isLight={isLight}>{prop.bedrooms}</Pill>}
-                  </div>
-                  {prop.ticket ? (
-                    <div style={{ padding: "8px 10px", borderRadius: 8, background: `${prop.accent}0A`, border: `1px solid ${prop.accent}18`, marginBottom: 10 }}>
-                      <p style={{ fontSize: 10.5, color: T.txt3, marginBottom: 2 }}>Precio</p>
-                      <p style={{ fontSize: 15, fontWeight: 500, textTransform: "uppercase", color: isLight ? `color-mix(in srgb, ${prop.accent}, #04120c 45%)` : prop.accent, fontFamily: fontDisp }}>{prop.ticket}</p>
-                    </div>
-                  ) : prop.priceFrom > 0 ? (
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-                    <div style={{ padding: "8px 10px", borderRadius: 8, background: `${prop.accent}0A`, border: `1px solid ${prop.accent}18` }}>
-                      <p style={{ fontSize: 10.5, color: T.txt3, marginBottom: 2 }}>Desde</p>
-                      <p style={{ fontSize: 16, fontWeight: 500, color: isLight ? `color-mix(in srgb, ${prop.accent}, #04120c 45%)` : prop.accent, fontFamily: fontDisp }}>${(prop.priceFrom / 1000).toFixed(0)}K</p>
-                    </div>
-                    <div style={{ padding: "8px 10px", borderRadius: 8, background: T.glass, border: `1px solid ${T.border}` }}>
-                      <p style={{ fontSize: 10.5, color: T.txt3, marginBottom: 2 }}>Hasta</p>
-                      <p style={{ fontSize: 16, fontWeight: 500, color: T.txt, fontFamily: fontDisp }}>${(prop.priceTo / 1000).toFixed(0)}K</p>
-                    </div>
-                  </div>
-                  ) : (
-                    <div style={{ padding: "8px 10px", borderRadius: 8, background: T.glass, border: `1px solid ${T.border}`, marginBottom: 10 }}>
-                      <p style={{ fontSize: 10.5, color: T.txt3, marginBottom: 2 }}>Precio</p>
-                      <p style={{ fontSize: 14, fontWeight: 400, color: T.txt2, fontFamily: fontDisp }}>A consultar</p>
-                    </div>
-                  )}
-                  <p style={{ fontSize: 12, color: T.txt2, lineHeight: 1.5, fontFamily: font, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{prop.description}</p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 10 }}>
-                    {prop.highlights.slice(0, 3).map((h, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <div style={{ width: 14, height: 14, borderRadius: "50%", background: `${prop.accent}18`, border: `1px solid ${prop.accent}40`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <CheckCircle2 size={8} color={prop.accent} />
-                        </div>
-                        <span style={{ fontSize: 11, color: T.txt2, fontFamily: font, lineHeight: 1.3 }}>{h}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* ─── Drive Link Bar ─── */}
-              <div onClick={e => e.stopPropagation()} style={{
-                borderTop: `1px solid ${T.border}`,
-                padding: "10px 14px",
-                background: isLight ? "rgba(0,0,0,0.04)" : "rgba(0,0,0,0.2)",
-                borderRadius: "0 0 14px 14px",
-              }}>
-                {isEditingThis ? (
-                  /* Edit mode */
-                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <ExternalLink size={13} color={T.txt3} style={{ flexShrink: 0 }} />
-                    <input
-                      autoFocus
-                      value={editLinkValue}
-                      onChange={e => setEditLinkValue(e.target.value)}
-                      onKeyDown={e => { if (e.key === "Enter") saveDriveLink(prop.id); if (e.key === "Escape") { setEditingLinkId(null); setEditLinkValue(""); } }}
-                      placeholder="Pega aquí el link de Google Drive..."
-                      style={{
-                        flex: 1, padding: "6px 10px", borderRadius: 7, fontSize: 12,
-                        background: T.glass, border: `1px solid ${T.accent}50`, color: T.txt,
-                        fontFamily: font, outline: "none",
-                      }}
-                    />
-                    <button onClick={() => saveDriveLink(prop.id)} style={{ padding: "6px 12px", borderRadius: 7, border: "none", background: T.accent, color: T.onAccent, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp, whiteSpace: "nowrap" }}>
-                      Guardar
-                    </button>
-                    <button onClick={() => { setEditingLinkId(null); setEditLinkValue(""); }} style={{ padding: "6px 8px", borderRadius: 7, border: `1px solid ${T.border}`, background: T.glass, cursor: "pointer", color: T.txt3 }}>
-                      <X size={12} />
-                    </button>
-                  </div>
-                ) : (
-                  /* View mode */
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-                      <ExternalLink size={12} color={driveLink ? T.accent : T.txt3} style={{ flexShrink: 0 }} />
-                      <span style={{
-                        fontSize: 12, color: driveLink ? T.accent : T.txt3, fontFamily: font,
-                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        maxWidth: 200,
-                      }} title={driveLink || ""}>
-                        {driveLink
-                          ? (driveLink.length > 38 ? driveLink.slice(0, 35) + "…" : driveLink)
-                          : "Sin link de imágenes"}
-                      </span>
-                    </div>
-                    <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                      {driveLink && (
-                        <a
-                          href={driveLink} target="_blank" rel="noreferrer"
-                          onClick={e => e.stopPropagation()}
-                          style={{
-                            display: "flex", alignItems: "center", gap: 5, padding: "5px 12px",
-                            borderRadius: 7, border: `1px solid ${prop.accent}50`,
-                            background: `${prop.accent}12`, color: prop.accent,
-                            fontSize: 12, fontWeight: 500, textDecoration: "none",
-                            fontFamily: fontDisp, transition: "all 0.2s",
-                          }}
-                        >
-                          <Image size={11} /> Ver imágenes
-                        </a>
-                      )}
-                      <button
-                        onClick={e => startEditLink(prop.id, driveLink, e)}
-                        title={driveLink ? "Cambiar link" : "Agregar link de Drive"}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 5, padding: "5px 10px",
-                          borderRadius: 7, border: `1px solid ${T.border}`,
-                          background: T.glass, color: T.txt3, cursor: "pointer",
-                          fontSize: 12, fontFamily: font, transition: "all 0.2s",
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderH; e.currentTarget.style.color = T.txt; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.txt3; }}
-                      >
-                        {driveLink ? <><Copy size={11} /> Cambiar</> : <><Plus size={11} /> Agregar link</>}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {filteredProperties.length === 0 && (
-        <G T={T} style={{ textAlign: "center", padding: 40 }}>
-          <Building2 size={40} color={T.txt3} style={{ margin: "0 auto 12px", opacity: 0.4 }} />
-          <p style={{ fontSize: 14, color: T.txt2, fontFamily: fontDisp }}>No hay propiedades que mostrar</p>
-          <p style={{ fontSize: 12.5, color: T.txt3, marginTop: 4 }}>Revisa tu búsqueda o registra una propiedad</p>
-          <button onClick={() => setShowNewPropModal(true)} style={{ marginTop: 14, padding: "10px 20px", borderRadius: 10, border: `1px solid ${T.accent}40`, background: T.accentS, color: T.accent, fontSize: 12.5, fontWeight: 500, cursor: "pointer", fontFamily: fontDisp }}>
-            <Plus size={13} style={{ marginRight: 6, verticalAlign: "middle" }} />Registrar propiedad nueva
-          </button>
-        </G>
-      )}
-
-      {selectedProps.length > 0 && (
-        <div style={{
-          position: "sticky", bottom: 0, padding: isMobile ? "12px 14px" : "14px 20px",
-          background: isLight ? "rgba(255,255,255,0.98)" : `${T.surface}F2`, backdropFilter: "blur(16px)",
-          borderRadius: 14, border: `1px solid ${T.border}`,
-          display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10,
-          boxShadow: isLight ? T.shadow2 || "0 -4px 20px rgba(15,23,42,0.10)" : "0 -8px 32px rgba(0,0,0,0.4)",
-        }}>
-          <div style={{ minWidth: 0 }}>
-            <p style={{ fontSize: 13, color: T.txt, fontWeight: 400 }}>{selectedProps.length} propiedad{selectedProps.length > 1 ? "es" : ""} seleccionada{selectedProps.length > 1 ? "s" : ""} <span style={{ color: T.txt3, fontWeight: 400 }}>· para {clientName}</span></p>
-          </div>
-          <button onClick={handleGenerate} disabled={generating || !agencyName} style={{
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 28px",
-            flex: isMobile ? "1 1 100%" : "0 0 auto",
-            borderRadius: 12, border: "none", cursor: "pointer",
-            background: T.accent,
-            color: T.onAccent,
-            fontSize: 14, fontWeight: 500, fontFamily: fontDisp,
-            boxShadow: isLight ? T.shadowMint || "0 4px 16px rgba(0,111,145,0.25)" : `0 4px 20px ${T.accent}26`,
-          }}>
-            <Wand2 size={16} /> {generating ? "Creando enlace…" : "Generar Landing Page"}
-          </button>
-        </div>
-      )}
-
-      {/* New Property Modal */}
-      {showNewPropModal && (
-        <NewPropertyModal
-          onClose={() => { setShowNewPropModal(false); setEditingProp(null); }}
-          onSave={saveCustomProp}
-          initialData={editingProp}
-          T={T}
-        />
-      )}
-
-      {/* Full-screen Landing Page Preview */}
-      {previewOpen && createPortal(
-        <LandingPagePreview
-          shareUrl={shortUrl}
-          client={clientName}
-          asesor={asesor}
-          asesorWA={asesorWA}
-          asesorCal={asesorCal}
-          mensaje={mensaje}
-          agencyName={agencyName}
-          properties={allProperties.filter(p => selectedProps.includes(p.id))}
-          driveLinks={driveLinks}
-          onClose={() => { setPreviewOpen(false); resetForm(); }}
-          onCopyLink={handleCopyLink}
-          copied={copied}
-        />,
-        document.body
-      )}
-    </div>
-  );
+  if (step > 0) return <>
+    <CreateWorkspace T={T}
+      value={{ client: clientName, mensaje, asesor, asesorWA, asesorCal, agencyName, linkName }}
+      change={(key, value) => ({ client: setClientName, mensaje: setMensaje, asesor: setAsesor, asesorWA: setAsesorWA, asesorCal: setAsesorCal, linkName: setLinkName })[key](value)}
+      properties={allProperties} selectedIds={selectedProps} onSelect={toggleProp} onReorder={setSelectedProps}
+      driveLinks={driveLinks} onMaterial={(id, url) => setDriveLinks(previous => ({ ...previous, [id]: url }))}
+      onNew={() => { resetForm(); setStep(1); }} onAdd={() => setShowNewPropModal(true)} onBack={() => setStep(0)} onGenerate={handleGenerate}
+      generating={generating} error={generationError || copyError} catalogLoading={catalogLoading} catalogError={catalogError}
+      onRetry={() => setCatalogAttempt(attempt => attempt + 1)} url={shortUrl} onCopy={handleCopyLink} copied={copied}
+      isAdmin={isAdmin} advanced={advOpen} onAdvanced={() => setAdvOpen(open => !open)} />
+    {showNewPropModal && <NewPropertyModal onClose={() => { setShowNewPropModal(false); setEditingProp(null); }} onSave={saveCustomProp} initialData={editingProp} T={T} />}
+  </>;
 
   return null;
 };

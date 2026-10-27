@@ -52,7 +52,7 @@ export default function PortfolioDocument({ client, asesor, asesorWA, asesorCal,
           <table><caption>Comparación de la selección · precios de referencia en USD</caption><thead><tr><th scope="col">Propiedad</th><th scope="col">Precio de referencia</th><th scope="col">Tipología</th><th scope="col">Entrega</th><th scope="col">Detalle de la ficha</th></tr></thead><tbody>{visible.map(({ property, index }) => <tr key={index}><th scope="row"><button onClick={() => jump(`property-${index}`)}>{property.name}<ArrowUpRight size={14} /></button><small>{property.location || 'Por confirmar'}</small></th><td>{portfolioPrice(property)}</td><td>{property.bedrooms || property.type || 'Por confirmar'}</td><td>{property.delivery || 'Por confirmar'}</td><td>{property.highlights?.[0] || property.amenities?.[0] || 'Consulta los detalles con tu asesor'}</td></tr>)}</tbody></table>
         </div>}
         <div className="pd-properties">{visible.map(({ property, index }) => {
-          const material = safePortfolioUrl(driveLinks[property.id] || property.driveLink);
+          const material = safePortfolioUrl(driveLinks[property.id] ?? property.driveLink);
           const maps = safePortfolioUrl(property.mapsUrl);
           const favorite = favorites.includes(index);
           const facts = [['Tipo', property.type], ['Tipología', property.bedrooms], ['Superficie', (property.sizes || []).join(' · ')], ['Entrega', property.delivery], ['Zona', property.zone || property.location]].filter(([, value]) => value);
