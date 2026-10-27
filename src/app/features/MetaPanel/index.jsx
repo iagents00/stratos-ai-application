@@ -663,9 +663,9 @@ export default function MetaPanel({
     .mp-body::-webkit-scrollbar-thumb{background:var(--mp-scroll);border-radius:99px;border:4px solid transparent;background-clip:padding-box}
     .mp-body::-webkit-scrollbar-thumb:hover{background:var(--mp-txt3)}
     .mp-topbar{position:sticky;top:0;z-index:20;flex-shrink:0;padding-top:var(--safe-area-inset-top, env(safe-area-inset-top, 0px));background:var(--mp-topbar);backdrop-filter:var(--mp-blur);-webkit-backdrop-filter:var(--mp-blur);box-shadow:inset 0 -0.5px 0 var(--mp-hairline),var(--mp-spec)}
-    .mp-seg{display:inline-flex;gap:2px;padding:3px;border-radius:14px;background:var(--mp-seg-bg);box-shadow:inset 0 0 0 0.5px var(--mp-hairline)}
-    .mp-seg>button{appearance:none;-webkit-appearance:none;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:500;letter-spacing:-.015em;color:var(--mp-txt2);padding:9px 20px;border-radius:11px;white-space:nowrap;transition:color .2s ease,background .2s ease,box-shadow .2s ease}
-    .mp-strategy-nav{display:flex;gap:24px;border-bottom:1px solid var(--mp-hairline)}
+    .mp-seg{box-sizing:border-box;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);width:100%;max-width:420px;gap:4px;padding:4px;border-radius:14px;background:var(--mp-seg-bg);box-shadow:inset 0 0 0 0.5px var(--mp-hairline)}
+    .mp-seg>button{appearance:none;-webkit-appearance:none;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:500;letter-spacing:-.015em;color:var(--mp-txt2);box-sizing:border-box;min-width:0;min-height:44px;display:flex;align-items:center;justify-content:center;padding:10px 12px;line-height:20px;border-radius:10px;white-space:nowrap;transition:color .2s ease,background .2s ease,box-shadow .2s ease}
+    .mp-strategy-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;max-width:420px;gap:16px;border-bottom:1px solid var(--mp-hairline)}
     .mp-strategy-nav>button{appearance:none;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--mp-txt2);font:inherit;font-size:14px;min-height:44px;padding:10px 2px;cursor:pointer}
     .mp-strategy-nav>button[aria-pressed="true"]{color:var(--mp-txt);border-bottom-color:var(--mp-accent);font-weight:600}
     .mp-strategy-nav>button:hover{color:var(--mp-txt)}
@@ -715,7 +715,7 @@ export default function MetaPanel({
     .mp-fade{animation:mpFade .3s cubic-bezier(.16,1,.3,1) both}
     @keyframes mpFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     @media(prefers-reduced-motion:reduce){.mp,.mp-fade,.mp-due-popover{animation:none!important}.mp-row,.mp-datechip,.mp-calday,.mp-timebtn,.mp-quickchip,.mp-iconbtn{transition-duration:.01ms!important}.mp-row:hover,.mp-datechip:hover,.mp-calday:hover,.mp-timebtn:hover,.mp-quickchip:hover,.mp-iconbtn:hover{transform:none!important}}
-    @media(max-width:768px){.mp-seg{display:flex;flex-wrap:nowrap;width:100%;min-width:0;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scroll-padding-inline:4px;scrollbar-width:none;border-radius:14px;padding:4px;gap:4px}.mp-seg::-webkit-scrollbar{display:none}.mp-seg>button{flex:0 0 auto;min-height:44px;padding:10px 16px;font-size:13px;line-height:20px}.mp-mobilebody [style*="grid-template-columns"]{grid-template-columns:1fr!important}.mp-mobilebody [style*="min-width"]{min-width:0!important}}
+    @media(max-width:768px){.mp-seg{max-width:none}.mp-seg>button{padding:10px 4px;font-size:clamp(11px,3.08vw,12px)}.mp-strategy-nav{max-width:none}.mp-mobilebody [style*="grid-template-columns"]{grid-template-columns:1fr!important}.mp-mobilebody [style*="min-width"]{min-width:0!important}}
   `;
 
   return (
@@ -731,7 +731,7 @@ export default function MetaPanel({
         {/* ── Barra superior (sticky, translúcida, alineada al contenedor) ── */}
         <div className="mp-topbar">
           <div style={{
-            width:"100%", maxWidth:1840, margin:"0 auto",
+            width:"100%", maxWidth:1840, margin:"0 auto", boxSizing:"border-box",
             padding: isMobile ? "12px 16px" : "0 48px",
             minHeight: isMobile ? 0 : 72,
             display:"flex", alignItems:"center", justifyContent:"center", gap:12,
@@ -739,10 +739,10 @@ export default function MetaPanel({
             {/* Control segmentado */}
             <div className="mp-seg" role="group" aria-label="Secciones de Space" style={{ minWidth:0, flex: isMobile ? "1 1 0" : undefined }}>
               {tabs.map(({ id, label }) => (
-                <button key={id} aria-pressed={activeTab===id} data-on={activeTab===id ? "1" : "0"} onClick={event => { setMetaTab(id); if (isMobile) event.currentTarget.scrollIntoView({ block:"nearest", inline:"nearest" }); }}>{label}</button>
+                <button key={id} aria-pressed={activeTab===id} data-on={activeTab===id ? "1" : "0"} onClick={() => setMetaTab(id)}>{label}</button>
               ))}
             </div>
-            {/* Cerrar permanece fijo junto a las pestañas desplazables. */}
+            {/* Cerrar permanece alineado al centro del menú. */}
             {isMobile && (<button onClick={onClose} title="Cerrar" aria-label="Cerrar Space" style={{
               flexShrink:0,
               width:44, height:44, borderRadius:"50%", border:`1px solid ${T.border}`,
@@ -756,7 +756,7 @@ export default function MetaPanel({
         {/* ── Cuerpo scrolleable ── */}
         <div className={"mp-body meta-body" + (isMobile ? " mp-mobilebody" : "")}>
           <div className="mp-fade" key={metaTab} style={{
-            width:"100%", maxWidth:1840, margin:"0 auto",
+            width:"100%", maxWidth:1840, margin:"0 auto", boxSizing:"border-box",
             padding: isMobile ? "18px 16px calc(28px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))" : "40px 48px 72px",
           }}>
 
