@@ -27,7 +27,13 @@ test('public feature page provides complete content, working destinations and lo
     const { default: Page } = await vite.ssrLoadModule('/src/landing/Functionalities.jsx');
     const html = renderToStaticMarkup(createElement(Page));
     assert.equal((html.match(/<h1>/g) || []).length, 1);
-    assert.equal((html.match(/<details>/g) || []).length, FEATURES.length);
+    assert.equal((html.match(/scope="row"/g) || []).length, FEATURES.length);
+    assert.match(html, /Listado comparativo/);
+    for (const feature of FEATURES) {
+      assert.ok(html.includes(feature.title), feature.title);
+      assert.ok(html.includes(feature.benefit), feature.benefit);
+      assert.ok(html.includes(feature.condition), feature.condition);
+    }
     assert.match(html, /Ejemplo ilustrativo con datos ficticios/);
     assert.match(html, /https:\/\/cal.com\/ivanrr.oficial\/nsg/);
     const ids = new Set([...html.matchAll(/id="([^"]+)"/g)].map(match => match[1]));

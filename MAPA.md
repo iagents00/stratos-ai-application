@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**292 archivos · 84.464 líneas**
+**292 archivos · 84.499 líneas**
 
 ---
 
@@ -449,14 +449,14 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ManualBrasa.jsx` | 235 | _sin describir_ |
 | `ManualMuebleria.jsx` | 224 | _sin describir_ |
 | `LoginScreenNative.jsx` | 189 | _sin describir_ |
-| `Functionalities.css` | 151 | _sin describir_ |
+| `Functionalities.css` | 183 | _sin describir_ |
 | `HeroFlowBackdrop.jsx` | 119 | _sin describir_ |
 | `marketing-content.js` | 107 | _sin describir_ |
 | `LandingMarketing.jsx` | 104 | _sin describir_ |
 | `ModuleShowcase.jsx` | 91 | _sin describir_ |
 | `FeatureMotion.jsx` | 90 | _sin describir_ |
 | `ModuleShowcase.css` | 66 | _sin describir_ |
-| `Functionalities.jsx` | 60 | _sin describir_ |
+| `Functionalities.jsx` | 63 | _sin describir_ |
 | `RecoveryForm.jsx` | 60 | _sin describir_ |
 | `FeatureMotion.css` | 55 | _sin describir_ |
 | `AppDownloads.jsx` | 29 | _sin describir_ |
@@ -878,6 +878,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/lead-backup.js` (192 líneas)
 - `src/landing/LoginScreenNative.jsx` (189 líneas)
 - `src/lib/speech-native.js` (189 líneas)
+- `src/landing/Functionalities.css` (183 líneas)
 - `src/app/components/Chat.jsx` (182 líneas)
 - `src/app/views/CRM/CallActionButton.jsx` (182 líneas)
 - `src/clients/muebleria/config.js` (182 líneas)
@@ -896,7 +897,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/Admin/CajaPermissionsAdmin.jsx` (154 líneas)
 - `src/app/components/DynamicIsland.jsx` (153 líneas)
 - `src/app/views/CRM/LeadChatHistory.jsx` (152 líneas)
-- `src/landing/Functionalities.css` (151 líneas)
 - `src/app/views/ISpaceBoard.jsx` (148 líneas)
 - `src/app/views/CRM/ScheduledCallBadge.jsx` (144 líneas)
 - `src/clients/brasa-y-piedra/config.js` (140 líneas)
@@ -944,4 +944,5 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/contexts/TenantConfigGate.jsx` (64 líneas)
 - `src/app/views/CRM/command-report.js` (63 líneas)
 - `src/dental-demo/DentalDemo.jsx` (63 líneas)
+- `src/landing/Functionalities.jsx` (63 líneas)
 - `src/lib/telefono.js` (61 líneas)
