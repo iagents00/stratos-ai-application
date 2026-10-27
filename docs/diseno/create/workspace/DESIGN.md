@@ -75,7 +75,7 @@ El alcance es el creador dentro de Operate. Hereda los temas claros y oscuros de
 
 Los colores normativos son variables enlazadas al tema recibido: fondo a `T.bg`, panel a `T.surface`, texto a `T.txt`, secundario a `T.txt2`, línea a `T.borderH || T.border`, acento a `T.accent` y texto sobre acento a `T.onAccent`.
 
-El hover secundario mezcla 7% del texto con transparente; el paso activo usa 6%. Las filas elegidas usan 7% del acento. Los valores no fijan una paleta distinta para claro y oscuro. La barra de vista previa utiliza el verde y marfil del dossier.
+El hover secundario mezcla 7% del texto con transparente; el paso activo usa 6%. Las filas elegidas usan 7% del acento. Los valores no fijan una paleta distinta para claro y oscuro. La barra de vista previa utiliza azul negro y blanco azulado, coherentes con el dossier.
 
 ## Typography
 
@@ -130,3 +130,7 @@ El éxito muestra enlace seleccionable y acciones para copiar, abrir, WhatsApp y
 - **Don't** imponer los tokens del dossier o de Rails a este creador.
 
 Documentación local del código; no acredita despliegue ni una revisión integral de toda la aplicación.
+
+## Ajuste verificado de la vista previa
+
+La barra de la vista previa adopta fondo azul negro `#0b1523`, texto `#f6f8fb`, separador `#2b3748` y botón `#e8f0fb` con texto `#06070a`, en consonancia con el dossier. El contenedor utiliza `#06070a`, `color-scheme: dark` y `scroll-padding-top: 84px` para reservar espacio bajo la barra fija al navegar entre secciones.
