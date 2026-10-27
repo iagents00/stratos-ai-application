@@ -1,90 +1,91 @@
+export const DEMO_URL = "https://cal.com/ivanrr.oficial/nsg";
+export const formatUSD = value => value.toLocaleString("en-US");
+
 export const plans = [
   {
-    "name": "Start",
-    "desc": "Entra rápido. Ordena seguimiento y logra adopción real del sistema.",
-    "price": 37,
-    "regular": 147,
-    "users": "3 usuarios incluidos",
-    "cta": "Activar Start",
-    "features": [
-      "CRM base y pipeline",
-      "Registro por voz o texto",
-      "Notas, tareas y seguimiento",
-      "Dashboard ejecutivo básico",
-      "Onboarding guiado",
-      "Soporte incluido"
+    id: "connect", name: "Connect",
+    desc: "CRM y Copilot para ordenar clientes, dar seguimiento y dirigir a tu equipo con contexto.",
+    implementation: 1750, monthly: 297, includedMonths: 3,
+    cta: "Agendar demo de Connect",
+    features: [
+      "CRM, cartera, etapas y expediente del cliente",
+      "Copilot por texto y dictado; notas y contexto",
+      "Agenda, tareas y próximas acciones",
+      "Catálogo y materiales de tu empresa",
+      "Métricas por asesor y para la dirección",
+      "Disciplina comercial y notificaciones configuradas",
+      "Configuración del proceso y permisos",
+      "Capacitación y seguimiento de adopción"
     ]
   },
   {
-    "name": "Growth",
-    "desc": "Para equipos que ya venden y necesitan más velocidad y visibilidad.",
-    "price": 97,
-    "regular": 297,
-    "badge": "Más elegido",
-    "highlight": true,
-    "users": "10 usuarios incluidos",
-    "cta": "Escalar con Growth",
-    "features": [
-      "Todo lo de Start",
-      "Hasta 10 usuarios",
-      "Reportes por asesor",
-      "Flujos de reactivación",
-      "Recomendaciones de siguiente paso",
-      "Prioridad en soporte",
-      "Visibilidad completa para dirección"
+    id: "connect-voice", name: "Connect + Call Center",
+    desc: "Toda tu operación comercial, conectada con un agente de voz que atiende y da continuidad.",
+    implementation: 3200, monthly: 549, includedMonths: 3,
+    badge: "CRM + voz con IA", highlight: true,
+    cta: "Agendar demo con voz",
+    features: [
+      "Todo lo incluido en Connect",
+      "Configuración de tu agente de voz con IA",
+      "Guion y criterios de calificación de clientes",
+      "Llamadas según los flujos acordados",
+      "Agendamiento o transferencia al equipo",
+      "Historial y contexto de llamadas disponibles",
+      "Integración del flujo de voz con el CRM",
+      "Capacitación para operar y supervisar el agente"
     ]
   },
   {
-    "name": "Scale",
-    "desc": "Estructura, workflows y advisory mensual para empresas en crecimiento.",
-    "price": 297,
-    "regular": 797,
-    "users": "25 usuarios incluidos",
-    "cta": "Activar Scale",
-    "features": [
-      "Todo lo de Growth",
-      "Hasta 25 usuarios",
-      "Advisory estratégico mensual",
-      "Workflows y playbooks",
-      "Revisión ejecutiva periódica",
-      "Soporte prioritario",
-      "Optimización continua"
+    id: "enterprise", name: "Enterprise",
+    desc: "Desarrollo a medida para construir la operación y el equipo interno de IA que tu empresa necesita.",
+    implementation: 12000, monthly: 1200, accompanimentMonths: 3, custom: true,
+    cta: "Definir mi proyecto",
+    features: [
+      "Consultoría inicial y definición del alcance",
+      "Diseño de procesos y arquitectura de la solución",
+      "Agentes e integraciones según el proyecto",
+      "Aplicación o software a medida según alcance",
+      "Preparación de tu equipo interno de IA",
+      "Capacitación sobre la solución entregada",
+      "Soporte y acompañamiento durante tres meses",
+      "Continuidad posterior definida en la propuesta"
     ]
   }
 ];
+export const enterprisePlan = plans.find(plan => plan.id === "enterprise");
 
 export const faqs = [
   {
-    "q": "¿Cuánto tiempo tarda la implementación?",
-    "a": "Start puede estar activo en 24-48 horas. Growth y Scale incluyen onboarding guiado de 1 a 2 semanas para garantizar adopción real. Enterprise varía según alcance."
+    q: "¿Qué incluye el costo de implementación?",
+    a: "Definimos el proceso, configuramos permisos y flujos, capacitamos al equipo y damos seguimiento a la adopción según el alcance acordado. Connect tiene una implementación de USD 1,750; Connect + Call Center, USD 3,200 en total. Enterprise parte de USD 12,000 y se cotiza a medida."
   },
   {
-    "q": "¿Pueden migrar nuestros datos desde otro CRM?",
-    "a": "Sí. Acompañamos la migración desde cualquier sistema: Excel, HubSpot, Salesforce, Pipedrive o cualquier base de datos existente."
+    q: "¿Cuándo empieza el cobro mensual?",
+    a: "En la oferta de lanzamiento de Connect y Connect + Call Center, las primeras tres mensualidades están incluidas. La mensualidad se cobra desde el mes 4: USD 297 para Connect y USD 549 para Connect + Call Center. La implementación sí se paga al inicio."
   },
   {
-    "q": "¿Qué pasa al terminar el periodo de oferta especial?",
-    "a": "Tu cuenta pasa al precio regular del plan elegido. Siempre avisamos con al menos 30 días de anticipación. Sin cargos automáticos sin previo aviso."
+    q: "¿Cuánto ahorro con las tres mensualidades incluidas?",
+    a: "Connect incluye USD 891 en mensualidades (3 × USD 297). Connect + Call Center incluye USD 1,647 (3 × USD 549). Este beneficio corresponde a la suscripción; no elimina el costo de implementación ni los consumos que se acuerden por separado."
   },
   {
-    "q": "¿Puedo agregar usuarios adicionales?",
-    "a": "Sí. En cualquier plan puedes agregar usuarios adicionales con un costo mensual por asiento. Consulta la tarifa exacta en tu diagnóstico."
+    q: "¿Hay un costo por agregar usuarios?",
+    a: "No hay cargo por usuario adicional en estos paquetes de lanzamiento. Definimos los roles y permisos de cada persona durante la implementación. Esto no implica consumo ilimitado de telefonía, IA o servicios externos."
   },
   {
-    "q": "¿El agente de voz funciona en WhatsApp?",
-    "a": "El registro por texto funciona desde cualquier canal. La integración completa con WhatsApp está disponible como módulo adicional."
+    q: "¿La telefonía y los minutos de IA están incluidos?",
+    a: "El alcance de telefonía, minutos, consumo de IA y servicios externos se especifica en la propuesta antes de contratar. Las tres mensualidades incluidas de Connect y Connect + Call Center corresponden a la suscripción de la plataforma."
   },
   {
-    "q": "¿Qué tan difícil es que el equipo adopte el sistema?",
-    "a": "Esa es la razón de existir de Stratos AI. El registro por voz o texto elimina la fricción principal. El onboarding guiado asegura que el equipo vea el valor desde el primer día."
+    q: "¿Cómo se cotiza Enterprise?",
+    a: "La implementación parte de USD 12,000. El soporte y acompañamiento se cotizan desde USD 1,200 al mes durante tres meses, por separado de la implementación. El desarrollo, las integraciones y la continuidad posterior se definen en la consultoría inicial. La promoción de mensualidades incluidas corresponde a Connect y Connect + Call Center."
   },
   {
-    "q": "¿Ofrecen soporte en español y en mi zona horaria?",
-    "a": "Sí. El equipo opera en español con soporte en horario de negocio México/Latinoamérica. Growth, Scale y Enterprise tienen acceso a soporte prioritario."
+    q: "¿Pueden migrar nuestros datos y capacitar al equipo?",
+    a: "Revisamos tus datos y herramientas actuales para definir la migración y las conexiones necesarias. La capacitación se adapta a los roles del equipo; el calendario de implementación y seguimiento se acuerda según el alcance del proyecto."
   },
   {
-    "q": "¿Puedo subir de plan después?",
-    "a": "Completamente. La escalera está diseñada para que crezcas conforme ves utilidad real. Subir de plan preserva todos tus datos, flujos e historial."
+    q: "¿Puedo empezar con Connect y añadir el Call Center después?",
+    a: "Sí. En la demo podemos definir una primera etapa con Connect y cotizar después la ampliación al Call Center. El costo de la ampliación y las condiciones aplicables se confirman en la propuesta."
   }
 ];
 
