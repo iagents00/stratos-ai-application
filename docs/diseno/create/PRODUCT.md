@@ -2,7 +2,7 @@
 
 Documento local de la superficie de portafolios de Stratos AI. No sustituye PRODUCT.md de la raíz ni define Rails, el CRM o el resto de Create.
 
-**Preferencia persistente explícita:** el usuario exige el negro original e Inter para este dossier y rechazó verde con serif. Mantener esta dirección salvo nueva petición explícita.
+**Preferencia persistente explícita:** el usuario exige el negro original e Inter para este dossier y rechazó verde con serif. La petición posterior añade un degradado azul suave sobre negro, prioridad móvil y movimiento sutil. Mantener Inter y el nombre completo protagonista.
 
 El asesor prepara una selección del catálogo para un cliente. El cliente necesita explorarla desde el móvil, comparar datos disponibles, identificar favoritas, anotar prioridades y consultar con su asesor sin perder el contexto de las propiedades elegidas.
 
@@ -20,3 +20,6 @@ La entrega es un dossier personal con portada negra y nombre completo del client
 Fuente de comportamiento: `src/app/views/LandingPages/PortfolioDocument.jsx`, `portfolio-presentation.js` y `LandingPagePreview.jsx`. Fuente visual: `PortfolioDocument.css`.
 
 Esta documentación describe la implementación local. La revisión fresca `black_cover_reviewer` dio disposición `ship` al código y cinco capturas de `.impeccable/review/create-black/`. La comprobación responsive cubrió 320, 390, 768 y 1440px y nombres largos sin desbordamiento de página en preview demo; no acredita una prueba autenticada ni publicación en producción.
+## Refinamiento azul y movimiento
+
+La portada abre con una luz azul tenue que se asienta una sola vez en 800 ms; el contenido permanece visible e interactivo desde el inicio. No hay animación continua ni efectos ligados al scroll. Los saltos conservan el foco accesible y la preferencia de movimiento reducido elimina la entrada y el desplazamiento animado. En móvil, el botón de portada ocupa el ancho disponible y las acciones de propiedades se adaptan al tacto; la comparación conserva sus columnas y explica cómo desplazarlas.
