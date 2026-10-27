@@ -163,13 +163,13 @@ Servicios de terceros con los que habla el código.
 | `personal-n8n.suwsiw.easypanel.host` | 15 archivos |
 | `glulgyhkrqpykxmujodb.supabase.co` | 6 archivos |
 | `drive.google.com` | 3 archivos |
+| `cal.com` | 2 archivos |
 | `docs.google.com` | 2 archivos |
 | `app.getstratosai.com` | 1 archivo |
 | `app.hulipractice.com` | 1 archivo |
 | `apps.apple.com` | 1 archivo |
 | `brokers.mycocay.com` | 1 archivo |
 | `brokers.simca.mx` | 1 archivo |
-| `cal.com` | 1 archivo |
 | `ionic.io` | 1 archivo |
 | `maps.app` | 1 archivo |
 

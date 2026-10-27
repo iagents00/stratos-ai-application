@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**289 archivos · 84.277 líneas**
+**291 archivos · 84.494 líneas**
 
 ---
 
@@ -73,7 +73,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `main.jsx` | 439 | _sin describir_ |
+| `main.jsx` | 443 | _sin describir_ |
 | `index.css` | 278 | _sin describir_ |
 | `mobile-perf.css` | 121 | _sin describir_ |
 | `pagina-solo-web.jsx` | 47 | _sin describir_ |
@@ -444,11 +444,12 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `DukeLeadRouter.jsx` | 343 | _sin describir_ |
 | `ManualGasil.jsx` | 285 | _sin describir_ |
 | `ManualNSG.jsx` | 285 | _sin describir_ |
-| `LandingMarketing.css` | 273 | _sin describir_ |
+| `LandingMarketing.css` | 276 | _sin describir_ |
 | `ManualLegacy.jsx` | 246 | _sin describir_ |
 | `ManualBrasa.jsx` | 235 | _sin describir_ |
 | `ManualMuebleria.jsx` | 224 | _sin describir_ |
 | `LoginScreenNative.jsx` | 189 | _sin describir_ |
+| `Functionalities.css` | 151 | _sin describir_ |
 | `HeroFlowBackdrop.jsx` | 119 | _sin describir_ |
 | `marketing-content.js` | 107 | _sin describir_ |
 | `LandingMarketing.jsx` | 106 | _sin describir_ |
@@ -456,6 +457,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `FeatureMotion.jsx` | 90 | _sin describir_ |
 | `ModuleShowcase.css` | 66 | _sin describir_ |
 | `RecoveryForm.jsx` | 60 | _sin describir_ |
+| `Functionalities.jsx` | 59 | _sin describir_ |
 | `FeatureMotion.css` | 55 | _sin describir_ |
 | `AppDownloads.jsx` | 29 | _sin describir_ |
 | `ServicesTicker.jsx` | 29 | _sin describir_ |
@@ -719,7 +721,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cargando clientes… | `src/app/features/Admin/PlatformCompanyCRM.jsx:252` |
 | Cargando conversación… | `src/app/views/Copilot.jsx:1183` |
 | Cargando conversaciones… | `src/app/views/WhatsApp.jsx:263` |
-| Cargando demo dental… | `src/main.jsx:322` |
+| Cargando demo dental… | `src/main.jsx:324` |
 | Cargando el catálogo de tu empresa… | `src/app/views/LandingPages/CreateWorkspace.jsx:46` |
 | Cargando el plan… | `src/app/views/PlanSemanal.jsx:369` |
 | Cargando el tablero… | `src/app/views/ComandoOps.jsx:127` |
@@ -830,7 +832,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/CuentasCobro.jsx` (463 líneas)
 - `src/dental-demo/ClinicalDemoWorkspace.jsx` (445 líneas)
 - `src/app/views/FinanzasAdmin.jsx` (443 líneas)
-- `src/main.jsx` (439 líneas)
+- `src/main.jsx` (443 líneas)
 - `src/clients/gasil/config.js` (422 líneas)
 - `src/lib/next-action-engine.js` (371 líneas)
 - `src/lib/offline-mode.js` (351 líneas)
@@ -851,7 +853,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/ZoomControl/Graficas.jsx` (284 líneas)
 - `src/lib/native.js` (282 líneas)
 - `src/index.css` (278 líneas)
-- `src/landing/LandingMarketing.css` (273 líneas)
+- `src/landing/LandingMarketing.css` (276 líneas)
 - `src/clients/nsg/config.js` (270 líneas)
 - `src/lib/push-native.js` (265 líneas)
 - `src/app/features/MetaPanel/DocsStratos.jsx` (263 líneas)
@@ -892,6 +894,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/Admin/CajaPermissionsAdmin.jsx` (154 líneas)
 - `src/app/components/DynamicIsland.jsx` (153 líneas)
 - `src/app/views/CRM/LeadChatHistory.jsx` (152 líneas)
+- `src/landing/Functionalities.css` (151 líneas)
 - `src/app/views/ISpaceBoard.jsx` (148 líneas)
 - `src/app/views/CRM/ScheduledCallBadge.jsx` (144 líneas)
 - `src/app/views/LandingPages/PortfolioDocument.css` (143 líneas)
