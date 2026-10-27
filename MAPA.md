@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**286 archivos · 84.626 líneas**
+**286 archivos · 84.682 líneas**
 
 ---
 
@@ -220,19 +220,19 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `LeadChatHistory.jsx` | 152 | _sin describir_ |
 | `ISpaceBoard.jsx` | 148 | _sin describir_ |
 | `ScheduledCallBadge.jsx` | 144 | _sin describir_ |
+| `PortfolioDocument.css` | 131 | _sin describir_ |
 | `IACRMPlanes.jsx` | 119 | _sin describir_ |
 | `constants.js` | 116 | _sin describir_ |
 | `ZoomLista.jsx` | 107 | Lista compacta y clickeable de Zooms — la usan los apartados "Calentitos" y |
 | `command-metrics.js` | 101 | _sin describir_ |
 | `date-range.js` | 97 | _sin describir_ |
 | `PublicLanding.jsx` | 93 | _sin describir_ |
-| `PortfolioDocument.css` | 91 | _sin describir_ |
 | `plan-semanal.js` | 91 | la lógica pura del Plan Semanal. |
-| `PortfolioDocument.jsx` | 79 | _sin describir_ |
+| `PortfolioDocument.jsx` | 86 | _sin describir_ |
 | `dates.js` | 76 | Helpers de fecha del Control de Zooms, compartidos entre el panel CRUD |
 | `command-report.js` | 63 | _sin describir_ |
+| `portfolio-presentation.js` | 34 | Display helpers shared by the client dossier and its verification. |
 | `MiDia.css` | 30 | _sin describir_ |
-| `portfolio-presentation.js` | 25 | Display helpers shared by the client dossier and its verification. |
 | `productivity-metrics.js` | 20 | _sin describir_ |
 | `link-name.js` | 15 | _sin describir_ |
 | `portfolio-origin.js` | 9 | _sin describir_ |
@@ -545,6 +545,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | ¿Eliminar usuario? | `src/app/features/Admin/AdminPanel.jsx:511` |
 | ¿En qué empresa? (opcional) | `src/app/views/Marketing.jsx:2460` |
 | ¿Qué necesitas? (ej. Flyer promo…) * | `src/app/views/Marketing.jsx:2190` |
+| ¿Qué te interesa de esta propiedad? | `src/app/views/LandingPages/PortfolioDocument.jsx:74` |
 | ¿Quieres usar tu propio dominio? | `src/app/views/LandingPages/index.jsx:1621` |
 | A consultar | `src/app/views/LandingPages/index.jsx:1901` |
 | Abre el enlace y revisa un borrador de nota. | `src/dental-demo/ClinicalDemoApp.jsx:79` |
@@ -611,7 +612,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Agenda (opcional) | `src/app/views/LandingPages/index.jsx:1660` |
 | Agenda dental | `src/dental-demo/DentalDemo.jsx:47` |
 | Agenda, lista de acción, documentos y plan | `src/app/App.jsx:3110` |
-| Agendar conversación | `src/app/views/LandingPages/PortfolioDocument.jsx:21` |
+| Agendar conversación | `src/app/views/LandingPages/PortfolioDocument.jsx:23` |
 | Agendar en Huli | `src/dental-demo/HuliWorkspace.jsx:38` |
 | Agendar fecha | `src/app/views/CRM/index.jsx:4659` |
 | Agendar llamada | `src/app/views/LandingPages/LandingPagePreview.jsx:114` |
@@ -630,7 +631,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Alergias registradas | `src/dental-demo/ClinicalDemoApp.jsx:272` |
 | Alta intención | `src/app/views/ZoomControl/index.jsx:597` |
 | Alta intención — señal de cierre en el Zoom | `src/app/views/ZoomControl/index.jsx:710` |
-| Amenidades | `src/app/views/LandingPages/PortfolioDocument.jsx:65` |
+| Amenidades | `src/app/views/LandingPages/PortfolioDocument.jsx:70` |
 | Amenidades (separadas por coma) | `src/app/views/LandingPages/index.jsx:762` |
 | Análisis IA | `src/app/views/CRM/components.jsx:5378` |
 | Analizar | `src/app/views/CRM/index.jsx:5316` |
@@ -783,10 +784,9 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Conectando tu clínica con Huli… | `src/dental-demo/TenantHuliWorkspace.jsx:8` |
 | Conectando… | `src/app/views/ConectarWhatsApp.jsx:122` |
 | Conectar mi WhatsApp | `src/app/views/ConectarWhatsApp.jsx:123` |
-| Conexión Huli | `src/dental-demo/ClinicalReadiness.jsx:181` |
 
 
-_(834 textos más — usá `npm run buscar "texto"`)_
+_(838 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -893,6 +893,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/CRM/ScheduledCallBadge.jsx` (144 líneas)
 - `src/clients/brasa-y-piedra/config.js` (140 líneas)
 - `src/app/components/CopilotCapabilities.jsx` (131 líneas)
+- `src/app/views/LandingPages/PortfolioDocument.css` (131 líneas)
 - `src/app/constants/pipeline.js` (129 líneas)
 - `src/lib/iagents-actions.js` (126 líneas)
 - `src/mobile-perf.css` (121 líneas)
@@ -914,15 +915,14 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/constants/areas.js` (97 líneas)
 - `src/app/views/CRM/date-range.js` (97 líneas)
 - `src/app/views/LandingPages/PublicLanding.jsx` (93 líneas)
-- `src/app/views/LandingPages/PortfolioDocument.css` (91 líneas)
 - `src/landing/ModuleShowcase.jsx` (91 líneas)
 - `src/clients/tgenius/config.js` (90 líneas)
 - `src/landing/FeatureMotion.jsx` (90 líneas)
 - `src/app/features/Admin/RailsSettings.css` (86 líneas)
+- `src/app/views/LandingPages/PortfolioDocument.jsx` (86 líneas)
 - `src/lib/backup.js` (85 líneas)
 - `src/contexts/ClientOrgGuard.jsx` (83 líneas)
 - `src/clients/i-space/config.js` (80 líneas)
-- `src/app/views/LandingPages/PortfolioDocument.jsx` (79 líneas)
 - `src/lib/avisos-nativos.js` (79 líneas)
 - `src/lib/transcribir.js` (77 líneas)
 - `src/hooks/useTeam.js` (74 líneas)

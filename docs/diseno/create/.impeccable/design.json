@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-27T00:00:00Z",
+  "generatedAt": "2026-10-27T09:04:45.432918+00:00",
   "title": "Design System: Create · dossier de propiedades",
   "extensions": {
     "colorMeta": {
@@ -15,6 +15,18 @@
       "accent": {
         "role": "primary",
         "displayName": "Verde de acción"
+      },
+      "cover": {
+        "role": "primary",
+        "displayName": "Verde de portada"
+      },
+      "gold": {
+        "role": "secondary",
+        "displayName": "Dorado tenue"
+      },
+      "ivory": {
+        "role": "neutral",
+        "displayName": "Marfil de acción"
       }
     },
     "shadows": [],
@@ -60,27 +72,50 @@
     {
       "name": "Entrada de índice",
       "kind": "nav",
-      "description": "Índice numerado; contenido ilustrativo, no dato de catálogo.",
-      "html": "<button class=\"ds-index\"><span>01</span><span><strong>Nombre de la propiedad</strong><small>Ubicación por confirmar</small></span><span aria-hidden=\"true\">↗</span></button>",
-      "css": ".ds-index{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;display:grid;grid-template-columns:24px 1fr 20px;gap:15px;align-items:center;text-align:left;width:100%;border:0;border-bottom:1px solid #d6dbd1;background:transparent;padding:18px 0;color:#213d34;cursor:pointer;transition:background .18s}.ds-index:hover{background:#e9ede2}.ds-index strong{display:block;font-size:18px;font-weight:550;line-height:1.3}.ds-index small{display:block;color:#5b665e;margin-top:5px;font-size:13px} .ds-index:focus-visible{outline:3px solid #29714f;outline-offset:4px} @media(prefers-reduced-motion:reduce){.ds-index{transition:none}}"
+      "description": "Índice de portada con precio; contenido ilustrativo, no dato de catálogo.",
+      "html": "<button class=\"ds-index\"><span>01</span><span><strong>Nombre de la propiedad</strong><small>Ubicación por confirmar</small><small class=\"ds-index-price\">Consultar precio</small></span><span aria-hidden=\"true\">↗</span></button>",
+      "css": ".ds-index{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;display:grid;grid-template-columns:24px 1fr 20px;gap:15px;align-items:center;text-align:left;width:100%;border:0;border-bottom:1px solid #496257;background:#193b32;padding:18px 0;color:#f6f4ee;cursor:pointer;transition:background .18s}.ds-index:hover{background:#274b3f}.ds-index strong{display:block;font-size:18px;font-weight:550;line-height:1.3}.ds-index small{display:block;color:#c0cfc4;margin-top:5px;font-size:13px} .ds-index:focus-visible{outline:3px solid #29714f;outline-offset:4px} @media(prefers-reduced-motion:reduce){.ds-index{transition:none}} .ds-index .ds-index-price{color:#e1d2aa;margin-top:8px}.ds-index:focus-visible{outline-color:#eee5ce}"
     },
     {
       "name": "Resumen de ficha",
       "kind": "card",
       "description": "Extracto visual del resumen tonal; contenido ilustrativo.",
       "html": "<section class=\"ds-summary\"><h3>Nombre de la propiedad</h3><p>Precio de referencia · USD</p><strong>Consultar precio</strong></section>",
-      "css": ".ds-summary{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;background:#e9edE3;color:#213d34;padding:clamp(24px,3vw,38px);border:1px solid #d6dbd1;border-radius:12px}.ds-summary h3{margin:0;font-family:Georgia,\"Times New Roman\",serif;font-size:clamp(29px,3vw,42px);font-weight:400;line-height:1.12;letter-spacing:-.025em}.ds-summary p{font-size:12px;color:#5b665e;margin:30px 0 7px}.ds-summary strong{font-size:clamp(21px,2.1vw,28px);font-weight:500;line-height:1.3} .ds-summary:focus-visible{outline:3px solid #29714f;outline-offset:4px} @media(prefers-reduced-motion:reduce){.ds-summary{transition:none}}",
+      "css": ".ds-summary{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;background:#e9ece3;color:#213d34;padding:clamp(24px,3vw,38px);border:1px solid #d6dbd1;border-radius:12px}.ds-summary h3{margin:0;font-family:Georgia,\"Times New Roman\",serif;font-size:clamp(32px,3.5vw,48px);font-weight:400;line-height:1.12;letter-spacing:-.025em}.ds-summary p{font-size:12px;color:#5b665e;margin:30px 0 7px}.ds-summary strong{font-size:clamp(21px,2.1vw,28px);font-weight:500;line-height:1.3} .ds-summary:focus-visible{outline:3px solid #29714f;outline-offset:4px} @media(prefers-reduced-motion:reduce){.ds-summary{transition:none}}",
       "refersTo": "property-summary"
+    },
+    {
+      "name": "Acción de portada",
+      "kind": "button",
+      "description": "Botón marfil de la portada verde.",
+      "html": "<button class=\"ds-primary\">Explorar la selección</button>",
+      "css": ".ds-primary{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;min-height:46px;display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:11px 17px;border:1px solid #bbc7ba;border-radius:8px;background:transparent;color:#193b32;text-decoration:none;font-size:14px;font-weight:550;line-height:1.4;cursor:pointer;transition:background .18s ease,color .18s ease;background:#eee5ce;border-color:#eee5ce;color:#193b32}.ds-primary:hover{background:#fff6df} .ds-primary:focus-visible{outline:3px solid #29714f;outline-offset:4px} @media(prefers-reduced-motion:reduce){.ds-primary{transition:none}}",
+      "refersTo": "button-cover"
+    },
+    {
+      "name": "Notas de propiedad",
+      "kind": "input",
+      "refersTo": "note-field",
+      "description": "Notas locales; ejemplo sin envío ni persistencia.",
+      "html": "<label class=\"ds-note-label\" for=\"ds-note\">¿Qué te interesa de esta propiedad?</label><textarea id=\"ds-note\" class=\"ds-note\" maxlength=\"600\" rows=\"2\" placeholder=\"Por ejemplo: conocer el plano, comparar formas de pago…\"></textarea>",
+      "css": ".ds-note-label{display:block;font:550 14px Inter,sans-serif;color:#213d34;margin-bottom:12px}.ds-note{width:100%;min-height:96px;resize:vertical;padding:14px 16px;border:1px solid #aab9a7;border-radius:8px;background:#fffdf8;color:#213d34;font:16px/1.5 Inter,sans-serif;caret-color:#235c46}.ds-note::placeholder{color:#687366}.ds-note:focus-visible{outline:3px solid #29714f;outline-offset:4px}"
+    },
+    {
+      "name": "Preguntas para decidir",
+      "kind": "custom",
+      "description": "Expansión nativa de orientación para la conversación.",
+      "html": "<details class=\"ds-decision\"><summary>Las preguntas que ayudan a decidir<span aria-hidden=\"true\">+</span></summary><div><h4>Tu presupuesto completo</h4><p>Confirma el precio de la unidad, los gastos de adquisición y las condiciones de pago.</p></div></details>",
+      "css": ".ds-decision{font-family:Inter,sans-serif;color:#213d34;border-block:1px solid #d6dbd1}.ds-decision summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:20px;min-height:56px;cursor:pointer;font-size:14px;font-weight:550}.ds-decision summary::-webkit-details-marker{display:none}.ds-decision summary span{font-size:22px;font-weight:400;transition:transform .18s ease}.ds-decision[open] summary span{transform:rotate(45deg)}.ds-decision div{padding-bottom:24px}.ds-decision h4{font-size:14px;font-weight:550}.ds-decision p{font-size:14px;color:#5b665e}.ds-decision summary:focus-visible{outline:3px solid #29714f;outline-offset:4px}@media(prefers-reduced-motion:reduce){.ds-decision summary span{transition:none}}"
     }
   ],
   "narrative": {
     "northStar": "Dossier personal de propiedades",
-    "overview": "Papel claro y verde profundo sostienen una lectura tranquila y una jerarquía editorial. La tipografía serif distingue al cliente y a cada propiedad; la sans serif organiza datos y acciones. La comparación y los próximos pasos tienen prioridad sobre el ornamento.\n\nEl alcance es exclusivamente el dossier implementado en PortfolioDocument. Los documentos de diseño y producto de la raíz corresponden a Rails y no son la autoridad visual de esta superficie. La barra y el panel de compartir del asesor conservan su sistema existente en LandingPagePreview; no se redefinen aquí.",
+    "overview": "Una portada verde profunda con marfil y acentos dorados presenta la selección con una jerarquía editorial más elegante. El título serif y el nombre secundario del cliente abren un dossier de papel claro. Los precios, los detalles comparables, las preguntas orientativas y las notas ayudan a preparar una consulta informada con el asesor.\n\nEl alcance es exclusivamente el dossier implementado en PortfolioDocument. Los documentos de diseño y producto de la raíz corresponden a Rails y no son la autoridad visual de esta superficie. La barra y el panel de compartir del asesor conservan su sistema existente en LandingPagePreview; no se redefinen aquí.",
     "keyCharacteristics": [
-      "Papel claro, texto verde profundo y separadores discretos.",
-      "Índice numerado y datos comparables antes de las fichas completas.",
+      "Portada verde profunda, marfil y dorado sobre un interior de papel claro.",
+      "Índice numerado con precios y comparación enriquecida con un detalle de ficha.",
       "Fichas con resumen tonal y detalle legible.",
-      "Acciones contextualizadas y navegación accesible."
+      "Preguntas expandibles, notas locales y consulta contextual accesible."
     ],
     "rules": [],
     "dos": [
@@ -90,7 +125,7 @@
     ],
     "donts": [
       "Don't inventar fotografías, disponibilidad, precios o predicciones de mercado.",
-      "Don't prometer persistencia de favoritas fuera del componente montado.",
+      "Don't prometer persistencia de favoritas o notas fuera del componente montado.",
       "Don't aplicar los tokens de Rails por una comparación automática con DESIGN.md de la raíz."
     ]
   }
