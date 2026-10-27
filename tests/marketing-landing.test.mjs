@@ -19,8 +19,11 @@ test('the public site preserves commercial terms, contact and fixed login routes
       ['/duke', '/duke'],
     ]) assert.equal(marketingLoginUrl(input), expected);
     const html = renderToStaticMarkup(createElement(Landing, { appUrl: 'https://app.getstratosai.com/' }));
-    for (const text of ['Connect', 'Connect + Call Center', 'Enterprise', '$1,750', '$3,200', '$12,000', '$297 USD/mes', '$549 USD/mes', '$1,200 USD/mes', '$891', '$1,647', 'Cobro desde el mes 4.', 'Sin cargo por usuario adicional']) assert.ok(html.includes(text), text);
-    for (const obsolete of ['$37', '$97', '$147/mes', '$797/mes', '$5,000', '3 usuarios incluidos', '10 usuarios incluidos', '25 usuarios incluidos', 'Implementación gratis', 'Activación sin costo', '75%']) assert.ok(!html.includes(obsolete), obsolete);
+    for (const text of ['Connect', 'Connect + Call Center', 'Enterprise', '$1,750', '$3,200', '$297', '$549', 'Cotización a medida', '$891', '$1,647', 'Cobro desde el mes 4.', 'Sin cargo por usuario adicional']) assert.ok(html.includes(text), text);
+    for (const obsolete of ['$12,000', '$1,200', 'USD 12,000', 'USD 1,200', '$37', '$97', '$147/mes', '$797/mes', '$5,000', '3 usuarios incluidos', '10 usuarios incluidos', '25 usuarios incluidos', 'Implementación gratis', 'Activación sin costo', '75%']) assert.ok(!html.includes(obsolete), obsolete);
+    assert.match(html, /class="smk-price"><span>\$297<\/span><span>USD\/mes/);
+    assert.match(html, /class="smk-price"><span>\$549<\/span><span>USD\/mes/);
+    assert.match(html, /class="smk-installation-price">Implementación: <strong>\$1,750 USD/);
     assert.match(html, /https:\/\/cal.com\/ivanrr.oficial\/nsg/);
     assert.equal((html.match(/<details>/g) || []).length, 8);
     assert.equal((html.match(/<h1>/g) || []).length, 1);
@@ -103,6 +106,7 @@ test('launch offer separates implementation, recurring fees and the three-month 
   assert.deepEqual([voice.implementation, voice.monthly, voice.includedMonths], [3200, 549, 3]);
   assert.equal(connect.monthly * connect.includedMonths, 891);
   assert.equal(voice.monthly * voice.includedMonths, 1647);
-  assert.deepEqual([enterprisePlan.implementation, enterprisePlan.monthly, enterprisePlan.accompanimentMonths], [12000, 1200, 3]);
+  assert.equal(enterprisePlan.implementation, undefined, 'Enterprise has no published implementation price');
+  assert.equal(enterprisePlan.monthly, undefined, 'Enterprise has no published monthly price');
   assert.equal(enterprisePlan.includedMonths, undefined, 'Do not extend the subscription waiver to Enterprise');
 });

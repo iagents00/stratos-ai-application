@@ -38,7 +38,7 @@ export const plans = [
   {
     id: "enterprise", name: "Enterprise",
     desc: "Desarrollo a medida para construir la operación y el equipo interno de IA que tu empresa necesita.",
-    implementation: 12000, monthly: 1200, accompanimentMonths: 3, custom: true,
+    accompanimentMonths: 3, custom: true,
     cta: "Definir mi proyecto",
     features: [
       "Consultoría inicial y definición del alcance",
@@ -57,7 +57,7 @@ export const enterprisePlan = plans.find(plan => plan.id === "enterprise");
 export const faqs = [
   {
     q: "¿Qué incluye el costo de implementación?",
-    a: "Definimos el proceso, configuramos permisos y flujos, capacitamos al equipo y damos seguimiento a la adopción según el alcance acordado. Connect tiene una implementación de USD 1,750; Connect + Call Center, USD 3,200 en total. Enterprise parte de USD 12,000 y se cotiza a medida."
+    a: "Definimos el proceso, configuramos permisos y flujos, capacitamos al equipo y damos seguimiento a la adopción según el alcance acordado. Connect tiene una implementación de USD 1,750; Connect + Call Center, USD 3,200 en total. Enterprise se cotiza a medida según el proyecto."
   },
   {
     q: "¿Cuándo empieza el cobro mensual?",
@@ -77,7 +77,7 @@ export const faqs = [
   },
   {
     q: "¿Cómo se cotiza Enterprise?",
-    a: "La implementación parte de USD 12,000. El soporte y acompañamiento se cotizan desde USD 1,200 al mes durante tres meses, por separado de la implementación. El desarrollo, las integraciones y la continuidad posterior se definen en la consultoría inicial. La promoción de mensualidades incluidas corresponde a Connect y Connect + Call Center."
+    a: "La inversión se define en una propuesta personalizada después de la consultoría inicial. Acordamos el desarrollo, la implementación, las integraciones, el acompañamiento y la continuidad posterior según tu proyecto. La promoción de mensualidades incluidas corresponde a Connect y Connect + Call Center."
   },
   {
     q: "¿Pueden migrar nuestros datos y capacitar al equipo?",
