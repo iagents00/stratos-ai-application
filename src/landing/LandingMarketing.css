@@ -270,3 +270,6 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
   .stratos-marketing .smk-rotating-word { transform: none; transition: opacity 160ms ease-out; }
   .stratos-marketing .smk-button, .stratos-marketing .smk-workflow-tabs button, .stratos-marketing .smk-faq summary > svg { transition: none; }
 }
+
+.stratos-marketing .smk-all-features{display:flex;align-items:center;justify-content:center;gap:8px;width:max-content;margin:24px auto 0;font-size:14px;color:#526477;text-decoration:none;padding:10px}
+.stratos-marketing .smk-all-features:hover{color:#006a91}
