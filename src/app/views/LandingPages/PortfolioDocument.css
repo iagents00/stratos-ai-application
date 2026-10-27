@@ -71,7 +71,7 @@
 .pd-empty{padding:50px 24px;text-align:center;border-block:1px solid var(--pd-line)}
 .pd-empty h3{font-size:24px;margin-block:12px}
 .pd-empty p{color:var(--pd-muted);margin-bottom:22px}
-.pd-next{background:#0e1117;padding-block:clamp(48px,6vw,80px)}
+.pd-next{background:linear-gradient(135deg,#101c2e,#0e1117 65%);padding-block:clamp(48px,6vw,80px)}
 .pd-next-layout{display:grid;grid-template-columns:1.2fr 1fr;gap:70px}
 .pd-next h2{font-size:clamp(29px,3.3vw,44px);font-weight:450;line-height:1.15;letter-spacing:-.03em;margin-top:20px}
 .pd-next p{margin-top:20px;color:var(--pd-muted);max-width:58ch}
@@ -90,14 +90,19 @@
 @media(prefers-reduced-motion:reduce){.portfolio-document *{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
 
 /* The client's full name is the cover; the selection starts after the personal letter. */
-.pd-cover{background:#06070a;border-bottom:1px solid var(--pd-line);min-height:min(900px,100svh);display:flex;flex-direction:column}
-.pd-cover .pd-masthead{min-height:88px}
+.pd-cover{position:relative;isolation:isolate;background:linear-gradient(155deg,#091321 0%,#080d15 44%,#06070a 80%);border-bottom:1px solid var(--pd-line);min-height:min(900px,100svh);display:flex;flex-direction:column}
+.pd-cover::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 82% 18%,rgba(52,112,185,.25),rgba(28,65,112,.12) 38%,transparent 70%);animation:pd-cover-light 800ms cubic-bezier(.16,1,.3,1) both}
+@keyframes pd-cover-light{from{opacity:.35}to{opacity:1}}
+.pd-cover .pd-masthead{min-height:88px;border-bottom-color:rgba(163,191,226,.16)}
 .pd-cover .pd-hero{display:flex;flex:1;align-items:center;padding-block:clamp(72px,10vw,144px)}
 .pd-cover .pd-introduction{max-width:1000px}
 .pd-cover .pd-introduction h1{font-size:clamp(48px,7.6vw,96px);font-weight:600;line-height:1.04;letter-spacing:-.035em;text-wrap:balance}
 .pd-cover .pd-introduction h1 span{display:block;color:var(--pd-muted);font-size:clamp(18px,2vw,24px);font-weight:400;letter-spacing:-.01em;line-height:1.4;margin-bottom:24px}
 .pd-cover-description{color:var(--pd-muted);font-size:clamp(16px,1.5vw,19px);max-width:48ch;margin-top:30px!important;line-height:1.7}
-.pd-cover .pd-introduction>.pd-button{margin-top:36px}
+.pd-cover .pd-introduction>.pd-button{margin-top:36px;background:#e8f0fb;border-color:#e8f0fb;transition:background .18s ease,transform .18s cubic-bezier(.16,1,.3,1)}
+.pd-cover .pd-introduction>.pd-button:active{transform:scale(.985)}
+@media(hover:hover) and (pointer:fine){.pd-cover .pd-introduction>.pd-button:hover{background:#fff}.pd-cover .pd-introduction>.pd-button:hover svg{transform:translateY(2px)}}
+.pd-cover .pd-introduction>.pd-button svg{transition:transform .18s cubic-bezier(.16,1,.3,1)}
 .pd-cover-foot{display:flex;justify-content:space-between;align-items:center;gap:24px;padding-block:25px;border-top:1px solid var(--pd-line);font-size:13px;color:var(--pd-muted)}
 .pd-cover-foot strong{display:block;font-weight:500;color:var(--pd-ink);margin-top:4px}
 .pd-cover-scroll{display:inline-flex;align-items:center;gap:14px;min-height:44px;padding:8px 0;border:0;background:transparent;color:var(--pd-muted);text-align:left}
@@ -113,7 +118,7 @@
 .pd-section-heading h2{font-weight:500;font-size:clamp(29px,3.4vw,44px);max-width:25ch}
 .pd-comparison table{min-width:820px}
 .pd-comparison td:last-child{min-width:180px;max-width:260px;color:var(--pd-muted)}
-.pd-property-summary{background:#11141b}
+.pd-property-summary{background:linear-gradient(145deg,#111b2a,#11141b 65%)}
 .pd-property-summary h3{font-size:clamp(32px,3.5vw,48px)}
 .pd-highlights{padding-block:4px 12px}
 .pd-decision{border-block:1px solid var(--pd-line);margin-top:28px}
@@ -130,4 +135,8 @@
 .pd-personal-note textarea{width:100%;display:block;min-height:96px;resize:vertical;padding:14px 16px;border:1px solid #586170;border-radius:8px;background:#090c12;color:var(--pd-ink);font:inherit;font-size:16px;line-height:1.5;caret-color:var(--pd-accent)}
 .pd-personal-note textarea::placeholder{color:#a0a9b8}
 .pd-next h2{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:clamp(32px,3.8vw,48px);font-weight:400}
-@media(max-width:760px){.pd-cover .pd-introduction h1{font-size:clamp(42px,10.5vw,72px)}.pd-cover .pd-hero{padding-block:72px}.pd-cover .pd-masthead{min-height:76px}.pd-cover-foot{align-items:start;gap:16px;flex-wrap:wrap}.pd-welcome{grid-template-columns:1fr}.pd-decision summary{padding-block:12px}.pd-comparison{position:relative}.pd-property-top{margin-bottom:8px}}
+@media(max-width:760px){.pd-cover{min-height:min(820px,100svh)}.pd-cover::before{background:radial-gradient(ellipse at 100% 24%,rgba(52,112,185,.28),rgba(28,65,112,.12) 44%,transparent 76%)}.pd-cover .pd-introduction h1{font-size:clamp(42px,11vw,68px);line-height:1.08}.pd-cover .pd-hero{padding-block:48px}.pd-cover .pd-introduction{width:100%}.pd-cover .pd-introduction>.pd-button{width:100%;min-height:52px;margin-top:30px}.pd-cover-description{max-width:35ch;margin-top:24px!important}.pd-cover .pd-masthead{min-height:76px;align-items:start}.pd-masthead>span{min-width:0}.pd-masthead>span:last-child{text-align:right;max-width:44%}.pd-cover-foot{align-items:start;gap:12px;flex-wrap:wrap;padding-bottom:max(24px,env(safe-area-inset-bottom))}.pd-welcome{grid-template-columns:1fr}.pd-decision summary{padding-block:12px}.pd-comparison{position:relative}.pd-property-top{margin-bottom:8px}}
+
+.pd-comparison-hint{display:none}
+@media(max-width:760px){.pd-comparison-hint{display:block;color:var(--pd-accent);margin-top:6px}.pd-letter .pd-message{font-size:16px;line-height:1.8}.pd-property-links,.pd-actions{width:100%}.pd-property-links>.pd-button,.pd-actions>.pd-button{flex:1 1 180px;min-height:48px}.pd-index-heading{align-items:start}.pd-index-heading>span{white-space:nowrap}.pd-footer{padding-bottom:max(40px,env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){.pd-cover::before{animation:none}.pd-cover .pd-introduction>.pd-button:active,.pd-cover .pd-introduction>.pd-button:hover svg{transform:none}}
