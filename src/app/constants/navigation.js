@@ -17,7 +17,7 @@ export const nav = [
   { id: "c",     l: "CRM",       i: Users      },
   // Mi Espacio como módulo VISIBLE bajo el CRM (reunión 11-ago): es una segunda
   // puerta al MISMO panel (metaOpen), no una vista nueva — no hay dos estados.
-  { id: "miespacio", l: "Mi Espacio", i: Target },
+  { id: "miespacio", l: "Space", i: Target },
   // "Plan Semanal" es la hoja que dirección repartió el 30-jul-2026 y que cada
   // quien mantiene toda la semana (los líderes la revisan el viernes). Va PRIMERA
   // de las secciones de trabajo a propósito: es la lista con la que abren el día.

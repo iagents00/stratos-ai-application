@@ -2321,7 +2321,7 @@ export default function App() {
               </div>
               {/* Una sola palabra: en el riel de 58px «Mi Espacio» partía en dos
                   renglones (Iván, 31-jul: «que quepa en un solo renglón»). */}
-              <span style={{ fontSize:7, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.08em", textTransform:"uppercase", textAlign:"center", lineHeight:1.5, whiteSpace:"nowrap", color: isLight ? "rgba(0,111,145,0.48)" : "rgba(0,209,255,0.66)", display:"block", marginTop:8, position:"relative", zIndex:1 }}>Espacio</span>
+              <span style={{ fontSize:7, fontWeight:500, fontFamily:fontDisp, letterSpacing:"0.08em", textTransform:"uppercase", textAlign:"center", lineHeight:1.5, whiteSpace:"nowrap", color: isLight ? "rgba(0,111,145,0.48)" : "rgba(0,209,255,0.66)", display:"block", marginTop:8, position:"relative", zIndex:1 }}>Space</span>
             </div>
             <div style={{ width:32, height:1, marginTop:10, background: isLight ? "linear-gradient(90deg, transparent, rgba(15,23,42,0.07), transparent)" : "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)" }} />
           </div>
@@ -3104,7 +3104,7 @@ export default function App() {
                 <StratosIcon name="miespacio" size={21} color={isLight ? "#2563EB" : "#7EB8F0"} />
               </div>
               <div style={{ minWidth:0 }}>
-                <p style={{ margin:0, fontSize:13, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.015em", color: isLight ? T.txt : "#FFFFFF", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>Mi Espacio{user?.name ? ` · ${user.name.split(" ")[0]}` : ""}</p>
+                <p style={{ margin:0, fontSize:13, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.015em", color: isLight ? T.txt : "#FFFFFF", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>Space</p>
                 <p style={{ margin:"2px 0 0", fontSize:11.5, fontFamily:font, color: isLight ? T.txt3 : "rgba(255,255,255,0.42)" }}>Agenda, lista de acción, documentos y plan</p>
               </div>
             </button>

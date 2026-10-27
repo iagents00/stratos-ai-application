@@ -18,7 +18,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 |---|---|---|
 | **Agenda** | `src/dental-demo/TenantHuliWorkspace.jsx` | 11 |
 | **CRM** | `src/dental-demo/TenantHuliWorkspace.jsx`<br>`src/app/views/CRM/index.jsx` | 11<br>6669 |
-| **Mi Espacio** | _sin vista propia (redirige a otra)_ | — |
+| **Space** | _sin vista propia (redirige a otra)_ | — |
 | **Plan Semanal** | `src/app/views/PlanSemanal.jsx` | 516 |
 | **Copilot** | `src/dental-demo/TenantHuliWorkspace.jsx`<br>`src/app/views/Copilot.jsx` | 11<br>2019 |
 | **Marketing** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 148<br>3084 |
@@ -754,9 +754,9 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cerrar formulario | `src/app/views/CRM/index.jsx:3257` |
 | Cerrar guía de funciones | `src/app/components/CopilotCapabilities.jsx:120` |
 | Cerrar menú | `src/app/components/MobileHeaderMenu.jsx:52` |
-| Cerrar Mi Espacio | `src/app/features/MetaPanel/index.jsx:739` |
 | Cerrar navegación | `src/app/features/Admin/PlatformAdminConsole.jsx:253` |
 | Cerrar sesión | `src/app/App.jsx:2010` |
+| Cerrar Space | `src/app/features/MetaPanel/index.jsx:739` |
 | Cerrar vista previa | `src/app/views/LandingPages/LandingPagePreview.jsx:152` |
 | Certificación de tu cuenta Huli | `src/dental-demo/ClinicalReadiness.jsx:199` |
 | Chats | `src/app/views/WhatsApp.jsx:633` |
@@ -792,7 +792,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Conectar mi WhatsApp | `src/app/views/ConectarWhatsApp.jsx:123` |
 
 
-_(845 textos más — usá `npm run buscar "texto"`)_
+_(844 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
