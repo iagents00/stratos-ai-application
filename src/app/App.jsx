@@ -64,7 +64,7 @@ import { buildMktIntelNotifs, buildMktIntelPhrases } from "./constants/intelMkt"
 import { applyPipelineConfig } from "./constants/pipeline";
 import { loadWhatsAppAdmin } from "../lib/whatsapp-admin";
 import PermissionGate     from "./components/PermissionGate";
-import { IosIcon }        from "./icons/ios-icons";
+import { StratosIcon }        from "./icons/StratosIcon";
 import Chat, { getResp }  from "./features/ChatPanel";
 import MetaPanel,
   { DEFAULT_META_PLAN, DEFAULT_META_PROTOCOL } from "./features/MetaPanel";
@@ -2076,9 +2076,7 @@ export default function App() {
         >
           {n.id === "copilot"
             ? <CopilotMark size={iconSize + 3} isLight={isLight} style={{ opacity: a ? 1 : (hasAccess ? 0.82 : 1) }} />
-            : n.id === "miespacio" && n.i
-            ? <n.i size={iconSize} strokeWidth={2} color={a ? activeIcon : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
-            : <IosIcon name={n.id} filled={a} size={iconSize} color={a ? activeIcon : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />}
+            : <StratosIcon name={n.id} size={iconSize} color={a ? activeIcon : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />}
         </button>
         <span style={{ width:"100%", fontSize:9, fontFamily:fontDisp, fontWeight: a ? 650 : 430, letterSpacing: a ? "0.01em" : "0.005em", textAlign:"center",
           color: a ? activeIcon : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"),
@@ -2339,7 +2337,7 @@ export default function App() {
               onMouseEnter={e => { if(!appsActive){ e.currentTarget.style.background = isLight ? "rgba(255,255,255,0.42)" : "rgba(255,255,255,0.045)"; e.currentTarget.style.borderColor = isLight ? "rgba(255,255,255,0.72)" : "rgba(190,245,225,0.09)"; } }}
               onMouseLeave={e => { e.currentTarget.style.background = appsActive ? (isLight ? "linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.50))" : "rgba(255,255,255,0.05)") : "transparent"; e.currentTarget.style.borderColor = appsActive ? (isLight ? "rgba(255,255,255,0.92)" : "rgba(190,245,225,0.14)") : "transparent"; }}
             >
-              <IosIcon name="menu" filled={appsActive} size={19} color={appsActive ? (isLight ? T.accent : "#E6FAFF") : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
+              <StratosIcon name="menu" size={19} color={appsActive ? (isLight ? T.accent : "#E6FAFF") : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
             </button>
             <span style={{ fontSize:9, fontFamily:fontDisp, fontWeight: appsActive ? 650 : 430, letterSpacing:"0.01em", userSelect:"none", color: appsActive ? (isLight ? T.accent : "#E6FAFF") : (isLight ? "rgba(15,23,42,0.38)" : "rgba(255,255,255,0.28)"), transition:"color 0.18s ease" }}>Apps</span>
           </div>
@@ -2432,7 +2430,7 @@ export default function App() {
                 {hasPlatformAccess && <button className="stratos-header-search" title="Empresas y administración global" aria-label="Empresas y administración global" onClick={() => setConsoleOpen(true)} style={iBtnBase} onMouseEnter={onIco} onMouseLeave={offIco}><Building2 size={18} color={T.accent} /></button>}
                 {clientConfig?.features?.crm !== false && (
                 <button className="stratos-header-search" title="Buscar (⌘K)" onClick={openHeaderSearch} style={iBtnBase} onMouseEnter={onIco} onMouseLeave={offIco} onMouseDown={dnIco} onMouseUp={upIco}>
-                  <IosIcon name="search" size={16} color={icoRest} />
+                  <StratosIcon name="search" size={16} color={icoRest} />
                 </button>
                 )}
                 {/* ── Botón "Llamar" (tenants con features.reunionButton, hoy NSG) ──
@@ -2502,7 +2500,7 @@ export default function App() {
                     onMouseDown={dnIco}
                     onMouseUp={upIco}
                   >
-                    <IosIcon name="bell" size={16} color={icoRest} />
+                    <StratosIcon name="bell" size={16} color={icoRest} />
                     {totalNotifUnread > 0 ? (
                       /* WhatsApp o Copilot sin leer mandan verde. */
                       <div style={{
@@ -2798,7 +2796,7 @@ export default function App() {
                   onMouseDown={e => { e.currentTarget.style.background = isLight ? "rgba(225,29,72,0.13)" : "rgba(239,68,68,0.18)"; }}
                   onMouseUp={e => { e.currentTarget.style.background = isLight ? "rgba(225,29,72,0.07)" : "rgba(239,68,68,0.10)"; }}
                 >
-                  <IosIcon name="exit" size={15} color={icoRest} />
+                  <StratosIcon name="exit" size={15} color={icoRest} />
                 </button>
               </div>
             </div>
@@ -2911,7 +2909,7 @@ export default function App() {
               }}>
                 {n.id === "copilot"
                   ? <CopilotMark size={23} isLight={isLight} style={{ opacity: a ? 1 : 0.85 }} />
-                  : <IosIcon name={n.id} filled={a} size={n.id === "d" ? 23 : n.id === "ia" ? 22 : n.id === "lp" ? 22 : n.id === "e" ? 21 : n.id === "c" ? 22 : 20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />}
+                  : <StratosIcon name={n.id} size={n.id === "d" ? 23 : n.id === "ia" ? 22 : n.id === "lp" ? 22 : n.id === "e" ? 21 : n.id === "c" ? 22 : 20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />}
                 <span style={{ fontSize:10.5, fontFamily:fontDisp, fontWeight: a ? 700 : 500, letterSpacing:"-0.01em", color: a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.34)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
               </button>
             );
@@ -2932,7 +2930,7 @@ export default function App() {
                 outline:"none", WebkitTapHighlightColor:"transparent",
                 transition:"background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
               }}>
-                <IosIcon name="menu" filled={a} size={20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
+                <StratosIcon name="menu" size={20} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.45)" : "rgba(255,255,255,0.40)")} />
                 <span style={{ fontSize:10.5, fontFamily:fontDisp, fontWeight: a ? 700 : 500, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.34)"), lineHeight:1 }}>Menú</span>
               </button>
             );
@@ -2956,7 +2954,7 @@ export default function App() {
             onTouchEnd={e => { e.currentTarget.style.transform = "scale(1)"; }}
             onTouchCancel={e => { e.currentTarget.style.transform = "scale(1)"; }}
           >
-            <IosIcon name="add" filled size={24} color={isLight ? "#FFFFFF" : "#04121C"} />
+            <StratosIcon name="add" size={24} color={isLight ? "#FFFFFF" : "#04121C"} />
           </button>
           )}
         </div>
@@ -3125,7 +3123,7 @@ export default function App() {
                   }}>
                     {n.id === "copilot"
                       ? <CopilotMark size={22} isLight={isLight} animated={false} style={{ opacity: a ? 1 : 0.85 }} />
-                      : <IosIcon name={n.id} filled={a} size={22} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)")} />}
+                      : <StratosIcon name={n.id} size={22} color={a ? activeColor : (isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)")} />}
                     <span style={{ fontSize:11, fontFamily:fontDisp, fontWeight: a ? 700 : 500, color: a ? activeColor : (isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.50)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
                   </button>
                 );
@@ -3139,17 +3137,17 @@ export default function App() {
                 border:`1px solid ${isLight ? "rgba(167,139,250,0.28)" : "rgba(167,139,250,0.30)"}`,
                 background: isLight ? "rgba(167,139,250,0.08)" : "rgba(181,181,181,0.10)",
               }}>
-                <IosIcon name="admin" filled size={16} color="#A78BFA" />
+                <StratosIcon name="admin" size={16} color="#A78BFA" />
                 <span style={{ fontSize:12.5, fontWeight:400, fontFamily:fontDisp, color: isLight ? "#6D45C9" : "#C9B8F5" }}>Gestión de usuarios</span>
               </button>
             )}
             <div style={{ display:"flex", gap:8, marginTop:8 }}>
               <button onClick={() => setTheme(isLight ? "dark" : "light")} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:7, padding:"11px 8px", borderRadius:13, border:`1px solid ${isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.07)"}`, background: isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.04)", cursor:"pointer" }}>
-                {isLight ? <IosIcon name="moon" filled size={15} color={T.txt2} /> : <IosIcon name="sun" filled size={15} color="rgba(255,255,255,0.60)" />}
+                {isLight ? <StratosIcon name="moon" size={15} color={T.txt2} /> : <StratosIcon name="sun" size={15} color="rgba(255,255,255,0.60)" />}
                 <span style={{ fontSize:12, fontWeight:400, fontFamily:fontDisp, color: isLight ? T.txt2 : "rgba(255,255,255,0.60)" }}>{isLight ? "Modo oscuro" : "Modo claro"}</span>
               </button>
               <button onClick={() => { setPlusOpen(false); onLogout(); }} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:7, padding:"11px 8px", borderRadius:13, border:`1px solid ${isLight ? "rgba(225,29,72,0.16)" : "rgba(232,129,140,0.18)"}`, background: isLight ? "rgba(225,29,72,0.05)" : "rgba(232,129,140,0.07)", cursor:"pointer" }}>
-                <IosIcon name="exit" filled size={15} color={isLight ? "#BE123C" : "#E8818C"} />
+                <StratosIcon name="exit" size={15} color={isLight ? "#BE123C" : "#E8818C"} />
                 <span style={{ fontSize:12, fontWeight:400, fontFamily:fontDisp, color: isLight ? "#BE123C" : "#E8818C" }}>Salir</span>
               </button>
             </div>
@@ -3195,7 +3193,7 @@ export default function App() {
                         dibujos distintos según por dónde entraras. */}
                     {n.id === "copilot"
                       ? <CopilotMark size={28} isLight={isLight} />
-                      : <IosIcon name={n.id} filled={act} size={26} color={act ? acol : (isLight ? "rgba(15,23,42,0.50)" : "rgba(255,255,255,0.55)")} />}
+                      : <StratosIcon name={n.id} size={26} color={act ? acol : (isLight ? "rgba(15,23,42,0.50)" : "rgba(255,255,255,0.55)")} />}
                     <span style={{ fontSize:12, fontFamily:fontDisp, fontWeight: act ? 700 : 500, letterSpacing:"-0.01em", color: act ? acol : (isLight ? "rgba(15,23,42,0.60)" : "rgba(255,255,255,0.62)"), lineHeight:1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:"100%" }}>{clientConfig?.navLabels?.[n.id] ?? n.l}</span>
                   </button>
                 );
@@ -3216,7 +3214,7 @@ export default function App() {
                   onMouseEnter={e => { if(v !== "admin") e.currentTarget.style.background = isLight ? "rgba(167,139,250,0.08)" : "rgba(167,139,250,0.08)"; }}
                   onMouseLeave={e => { if(v !== "admin") e.currentTarget.style.background = isLight ? "rgba(15,23,42,0.03)" : "rgba(255,255,255,0.03)"; }}
                   >
-                    <IosIcon name="admin" filled={v === "admin"} size={18} color="#A78BFA" />
+                    <StratosIcon name="admin" size={18} color="#A78BFA" />
                     <span style={{ fontSize:12.5, fontFamily:fontDisp, fontWeight:400, color: isLight ? T.txt2 : "rgba(255,255,255,0.74)" }}>Usuarios</span>
                   </button>
                 </div>

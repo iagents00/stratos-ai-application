@@ -170,8 +170,8 @@ Servicios de terceros con los que habla el código.
 | `brokers.mycocay.com` | 1 archivo |
 | `brokers.simca.mx` | 1 archivo |
 | `cal.com` | 1 archivo |
-| `ionic.io` | 1 archivo |
 | `maps.app` | 1 archivo |
+| `meet.google.com` | 1 archivo |
 
 ---
 

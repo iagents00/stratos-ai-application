@@ -10,7 +10,7 @@
  *      SIEMPRE aterriza en un módulo accesible → jamás «Acceso restringido».
  *   2. Con features.crm === false, NADIE ve el CRM ni la Papelera.
  *   3. No hay dos entradas visibles del menú con el MISMO nombre.
- *   4. Todo módulo visible tiene glifo propio en ios-icons (no cae al fallback
+ *   4. Todo módulo visible tiene glifo propio en StratosIcon (no cae al fallback
  *      de 4 cuadrados).
  *   5. Regla anti-duplicado: si el módulo mkt se llama «Actividades», la
  *      sección suelta mkt_reporte se oculta para quien puede abrir el módulo.
@@ -37,15 +37,12 @@ const clients = await server.ssrLoadModule("/src/clients/index.js");
 const managed = await server.ssrLoadModule("/src/clients/tenant/managed-features.js");
 
 // Glifos: los mapas no se exportan → se leen del archivo (solo las CLAVES).
-const iconsSrc = readFileSync(join(root, "src/app/icons/ios-icons.jsx"), "utf8");
+const iconsSrc = readFileSync(join(root, "src/app/icons/StratosIcon.jsx"), "utf8");
 const glyphKeys = new Set();
 {
-  // PREMIUM_ICON_OVERRIDES: multilínea con claves sin comillas
-  const prem = iconsSrc.match(/const PREMIUM_ICON_OVERRIDES\s*=\s*\{([\s\S]*?)\n\};/);
-  if (prem) for (const k of prem[1].matchAll(/^\s*([a-z_][a-z0-9_]*)\s*:/gim)) glyphKeys.add(k[1]);
-  // G: objeto en una sola línea con claves entre comillas ("c":{...})
-  const gLine = iconsSrc.split("\n").find((l) => l.includes("const G = {"));
-  if (gLine) for (const k of gLine.matchAll(/"([a-z_][a-z0-9_]*)":\{/g)) glyphKeys.add(k[1]);
+  const map = iconsSrc.match(/const icons\s*=\s*\{([\s\S]*?)\n\};/);
+  if (!map) throw new Error("No se encontró el mapa de iconos de Stratos");
+  for (const k of map[1].matchAll(/^\s*([a-z_][a-z0-9_]*)\s*:/gim)) glyphKeys.add(k[1]);
 }
 
 // Espejo de resolverAccesible() en App.jsx (mantener en sync).
@@ -94,7 +91,7 @@ for (const clientId of tenants) {
 
     // 4. Glifo por módulo visible
     for (const it of visibles) {
-      if (!glyphKeys.has(it.id)) fail(`${clientId}/${role}: módulo visible «${it.id}» SIN glifo en ios-icons (cae al fallback)`);
+      if (!glyphKeys.has(it.id)) fail(`${clientId}/${role}: módulo visible «${it.id}» SIN glifo en StratosIcon (cae al fallback)`);
     }
 
     // 5. Anti-duplicado Actividades
