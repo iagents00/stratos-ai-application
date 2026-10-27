@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**283 archivos · 84.709 líneas**
+**286 archivos · 84.626 líneas**
 
 ---
 
@@ -192,7 +192,6 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `PlanSemanal.jsx` | 516 | _sin describir_ |
 | `ComandoDirectivo.pdf.js` | 514 | _sin describir_ |
 | `Resumen.jsx` | 490 | _sin describir_ |
-| `LandingPagePreview.jsx` | 479 | Pantalla de preview completa — landing pública para el cliente |
 | `CuentasCobro.jsx` | 463 | _sin describir_ |
 | `FinanzasAdmin.jsx` | 443 | _sin describir_ |
 | `LeadNotesTimeline.jsx` | 438 | cronograma de notas individuales para un lead. |
@@ -207,6 +206,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ProductividadTab.jsx` | 225 | _sin describir_ |
 | `zoom-metrics.js` | 210 | _sin describir_ |
 | `LeadVoiceCalls.jsx` | 201 | Sección con las llamadas de voz hechas por Retell AI a este lead. |
+| `LandingPagePreview.jsx` | 201 | Pantalla de preview completa — landing pública para el cliente |
 | `catalogAdapter.js` | 199 | Puente entre el catálogo maestro y el generador de landings |
 | `Team.jsx` | 194 | vista "Asesores" |
 | `CallActionButton.jsx` | 182 | _sin describir_ |
@@ -226,10 +226,13 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `command-metrics.js` | 101 | _sin describir_ |
 | `date-range.js` | 97 | _sin describir_ |
 | `PublicLanding.jsx` | 93 | _sin describir_ |
+| `PortfolioDocument.css` | 91 | _sin describir_ |
 | `plan-semanal.js` | 91 | la lógica pura del Plan Semanal. |
+| `PortfolioDocument.jsx` | 79 | _sin describir_ |
 | `dates.js` | 76 | Helpers de fecha del Control de Zooms, compartidos entre el panel CRUD |
 | `command-report.js` | 63 | _sin describir_ |
 | `MiDia.css` | 30 | _sin describir_ |
+| `portfolio-presentation.js` | 25 | Display helpers shared by the client dossier and its verification. |
 | `productivity-metrics.js` | 20 | _sin describir_ |
 | `link-name.js` | 15 | _sin describir_ |
 | `portfolio-origin.js` | 9 | _sin describir_ |
@@ -541,8 +544,6 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | ¿De qué se habla acá? (opcional) | `src/app/views/ChatEquipo.jsx:529` |
 | ¿Eliminar usuario? | `src/app/features/Admin/AdminPanel.jsx:511` |
 | ¿En qué empresa? (opcional) | `src/app/views/Marketing.jsx:2460` |
-| ¿Listo para dar el siguiente paso? | `src/app/views/LandingPages/LandingPagePreview.jsx:459` |
-| ¿Por qué la Riviera Maya? | `src/app/views/LandingPages/LandingPagePreview.jsx:404` |
 | ¿Qué necesitas? (ej. Flyer promo…) * | `src/app/views/Marketing.jsx:2190` |
 | ¿Quieres usar tu propio dominio? | `src/app/views/LandingPages/index.jsx:1621` |
 | A consultar | `src/app/views/LandingPages/index.jsx:1901` |
@@ -609,11 +610,11 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Administrar Marketing | `src/app/features/Admin/PlatformUsersAdmin.jsx:142` |
 | Agenda (opcional) | `src/app/views/LandingPages/index.jsx:1660` |
 | Agenda dental | `src/dental-demo/DentalDemo.jsx:47` |
-| Agenda una llamada con | `src/app/views/LandingPages/LandingPagePreview.jsx:461` |
 | Agenda, lista de acción, documentos y plan | `src/app/App.jsx:3110` |
+| Agendar conversación | `src/app/views/LandingPages/PortfolioDocument.jsx:21` |
 | Agendar en Huli | `src/dental-demo/HuliWorkspace.jsx:38` |
 | Agendar fecha | `src/app/views/CRM/index.jsx:4659` |
-| Agendar llamada | `src/app/views/LandingPages/LandingPagePreview.jsx:167` |
+| Agendar llamada | `src/app/views/LandingPages/LandingPagePreview.jsx:114` |
 | Agente Ejecutivo | `src/app/components/Chat.jsx:74` |
 | Agente Stratos | `src/app/components/Chat.jsx:60` |
 | Agrega un teléfono…  +1 555 … | `src/app/views/CRM/components.jsx:1305` |
@@ -629,6 +630,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Alergias registradas | `src/dental-demo/ClinicalDemoApp.jsx:272` |
 | Alta intención | `src/app/views/ZoomControl/index.jsx:597` |
 | Alta intención — señal de cierre en el Zoom | `src/app/views/ZoomControl/index.jsx:710` |
+| Amenidades | `src/app/views/LandingPages/PortfolioDocument.jsx:65` |
 | Amenidades (separadas por coma) | `src/app/views/LandingPages/index.jsx:762` |
 | Análisis IA | `src/app/views/CRM/components.jsx:5378` |
 | Analizar | `src/app/views/CRM/index.jsx:5316` |
@@ -749,7 +751,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cerrar Mi Espacio | `src/app/features/MetaPanel/index.jsx:761` |
 | Cerrar navegación | `src/app/features/Admin/PlatformAdminConsole.jsx:253` |
 | Cerrar sesión | `src/app/App.jsx:2010` |
-| Cerrar vista previa | `src/app/views/LandingPages/LandingPagePreview.jsx:205` |
+| Cerrar vista previa | `src/app/views/LandingPages/LandingPagePreview.jsx:152` |
 | Certificación de tu cuenta Huli | `src/dental-demo/ClinicalReadiness.jsx:199` |
 | Chats | `src/app/views/WhatsApp.jsx:633` |
 | Cierres | `src/app/views/Team.jsx:116` |
@@ -781,9 +783,10 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Conectando tu clínica con Huli… | `src/dental-demo/TenantHuliWorkspace.jsx:8` |
 | Conectando… | `src/app/views/ConectarWhatsApp.jsx:122` |
 | Conectar mi WhatsApp | `src/app/views/ConectarWhatsApp.jsx:123` |
+| Conexión Huli | `src/dental-demo/ClinicalReadiness.jsx:181` |
 
 
-_(820 textos más — usá `npm run buscar "texto"`)_
+_(834 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -911,6 +914,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/constants/areas.js` (97 líneas)
 - `src/app/views/CRM/date-range.js` (97 líneas)
 - `src/app/views/LandingPages/PublicLanding.jsx` (93 líneas)
+- `src/app/views/LandingPages/PortfolioDocument.css` (91 líneas)
 - `src/landing/ModuleShowcase.jsx` (91 líneas)
 - `src/clients/tgenius/config.js` (90 líneas)
 - `src/landing/FeatureMotion.jsx` (90 líneas)
@@ -918,6 +922,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/backup.js` (85 líneas)
 - `src/contexts/ClientOrgGuard.jsx` (83 líneas)
 - `src/clients/i-space/config.js` (80 líneas)
+- `src/app/views/LandingPages/PortfolioDocument.jsx` (79 líneas)
 - `src/lib/avisos-nativos.js` (79 líneas)
 - `src/lib/transcribir.js` (77 líneas)
 - `src/hooks/useTeam.js` (74 líneas)
