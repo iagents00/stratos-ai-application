@@ -46,7 +46,7 @@ import { llamadaEnCurso, marcarLlamadaDespachada } from "../lib/llamadas";
 import { initPushContext, enablePushNotifications, onNotificationClick, getPushStatus, subscribeToPush, saveSubscriptionToBackend } from "../lib/push";
 
 import {
-  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, X, PhoneCall, PhoneOff, MessageCircle, Target, Sparkles, Bot, Building2,
+  Search, Bell, Settings, LogOut, Sun, Moon, ChevronDown, X, PhoneCall, PhoneOff, MessageCircle, Sparkles, Bot, Building2,
 } from "lucide-react";
 import "./App.css";
 
@@ -431,13 +431,13 @@ export default function App() {
   // cualquier vista (contador que CRM/index.jsx escucha — pedido de Ángel:
   // el FAB que aparecía/desaparecía se eliminó).
   const [crmNewLeadTick, setCrmNewLeadTick] = useState(0);
-  // Bottom-nav móvil: 4 slots primarios + "Más". Los primarios salen de
+  // Bottom-nav móvil: 3 accesos primarios + menú y alta. Los primarios salen de
   // MOBILE_PRIMARY_NAV, pero si a este usuario le faltan (p.ej. WhatsApp está
   // gateado, o el asesor no ve Comando/ERP) se RELLENAN con los siguientes
   // módulos accesibles — así la barra nunca queda con 1-2 botones sueltos.
-  const accessibleBarNav = nav.filter(n => !n.more && canAccessModule(n.id, user, clientConfig));
+  const accessibleBarNav = nav.filter(n => !n.more && n.id !== "lp" && canAccessModule(n.id, user, clientConfig));
   const mobilePrimaryBar = [
-    ...accessibleBarNav.filter(n => MOBILE_PRIMARY_NAV.includes(n.id)),
+    ...MOBILE_PRIMARY_NAV.map(id => accessibleBarNav.find(n => n.id === id)).filter(Boolean),
     ...accessibleBarNav.filter(n => !MOBILE_PRIMARY_NAV.includes(n.id)),
   ].slice(0, 3);
   // Cuadro "+" (todas las opciones): TODOS los módulos accesibles — también
@@ -3101,7 +3101,7 @@ export default function App() {
               border:`1px solid ${isLight ? "rgba(37,99,235,0.22)" : "rgba(126,184,240,0.25)"}`,
             }}>
               <div style={{ width:36, height:36, borderRadius:11, background: isLight ? "rgba(37,99,235,0.10)" : "rgba(126,184,240,0.14)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <Target size={19} color={isLight ? "#2563EB" : "#7EB8F0"} strokeWidth={2} />
+                <StratosIcon name="miespacio" size={21} color={isLight ? "#2563EB" : "#7EB8F0"} />
               </div>
               <div style={{ minWidth:0 }}>
                 <p style={{ margin:0, fontSize:13, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.015em", color: isLight ? T.txt : "#FFFFFF", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>Mi Espacio{user?.name ? ` · ${user.name.split(" ")[0]}` : ""}</p>
