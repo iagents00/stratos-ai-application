@@ -113,14 +113,23 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
 .stratos-marketing .smk-price-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
 .stratos-marketing .smk-price-card { display: flex; flex-direction: column; min-width: 0; padding: 28px; border: 1px solid var(--smk-line); border-radius: 16px; background: #fff; }
 .stratos-marketing .smk-price-card.smk-featured { border-color: var(--smk-navy); }
-.stratos-marketing .smk-plan-name { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; min-height: 34px; }
+.stratos-marketing .smk-plan-name { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; min-height: 66px; align-content: flex-start; align-items: flex-start; }
 .stratos-marketing .smk-plan-name h3 { font-size: 28px; font-weight: 400; }
 .stratos-marketing .smk-plan-name > span { padding: 4px 7px; border-radius: 6px; background: #DDF8FF; color: var(--smk-navy); font-size: 10px; line-height: 1.5; font-weight: 500; }
 .stratos-marketing .smk-plan-description { min-height: 72px; margin-top: 16px; color: var(--smk-muted); font-size: 14px; line-height: 1.7; }
 .stratos-marketing .smk-price { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-top: 24px; font-variant-numeric: lining-nums; }
 .stratos-marketing .smk-price > span:first-child { font: 400 56px/1 var(--marketing-display); letter-spacing: -.035em; }
 .stratos-marketing .smk-price > span:last-child { color: var(--smk-muted); font-size: 13px; white-space: nowrap; }
-.stratos-marketing .smk-regular-price { color: var(--smk-muted); margin-top: 12px; font-size: 12px; }
+.stratos-marketing .smk-price-label { margin-top: 24px; font-size: 12px; color: var(--smk-muted); }
+.stratos-marketing .smk-price-card .smk-price { margin-top: 10px; }
+.stratos-marketing .smk-plan-billing { min-height: 82px; margin-top: 22px; font-size: 13px; line-height: 1.6; color: var(--smk-muted); }
+.stratos-marketing .smk-plan-billing strong { font-size: 18px; font-weight: 500; color: var(--smk-ink); }
+.stratos-marketing .smk-plan-billing p + p { margin-top: 6px; }
+.stratos-marketing .smk-plan-benefit { min-height: 76px; padding: 14px 0; border-block: 1px solid var(--smk-line); font-size: 12px; line-height: 1.6; color: #17684e; }
+.stratos-marketing .smk-plan-benefit strong { display: block; font-weight: 550; }
+.stratos-marketing .smk-plan-benefit span { display: block; margin-top: 4px; color: var(--smk-muted); }
+.stratos-marketing .smk-price-card li > svg { flex-shrink: 0; }
+.stratos-marketing .smk-pricing { scroll-margin-top: 80px; }
 .stratos-marketing .smk-price-card > .smk-button { width: 100%; margin-top: 24px; padding-inline: 10px; }
 .stratos-marketing .smk-plan-users { margin-top: 12px; color: var(--smk-muted); text-align: center; font-size: 12px; }
 .stratos-marketing .smk-price-card ul { display: grid; align-content: start; gap: 15px; flex: 1; padding: 24px 0 0; margin: 24px 0 0; border-top: 1px solid var(--smk-line); list-style: none; }

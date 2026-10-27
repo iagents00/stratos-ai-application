@@ -5,7 +5,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { readFileSync, existsSync } from 'node:fs';
 import postcss from 'postcss';
-import { marketingLoginUrl } from '../src/landing/marketing-content.js';
+import { marketingLoginUrl, plans, enterprisePlan } from '../src/landing/marketing-content.js';
 
 test('the public site preserves commercial terms, contact and fixed login routes', async () => {
   const vite = await createServer({ appType: 'custom', logLevel: 'error', server: { middlewareMode: true, hmr: false }, optimizeDeps: { noDiscovery: true, include: [] } });
@@ -19,7 +19,9 @@ test('the public site preserves commercial terms, contact and fixed login routes
       ['/duke', '/duke'],
     ]) assert.equal(marketingLoginUrl(input), expected);
     const html = renderToStaticMarkup(createElement(Landing, { appUrl: 'https://app.getstratosai.com/' }));
-    for (const text of ['Start', 'Growth', 'Scale', '$37', '$97', '$297', '$147/mes', '$797/mes', '$1,200', '$5,000', '3 usuarios incluidos', '10 usuarios incluidos', '25 usuarios incluidos']) assert.ok(html.includes(text), text);
+    for (const text of ['Connect', 'Connect + Call Center', 'Enterprise', '$1,750', '$3,200', '$12,000', '$297 USD/mes', '$549 USD/mes', '$1,200 USD/mes', '$891', '$1,647', 'Cobro desde el mes 4.', 'Sin cargo por usuario adicional']) assert.ok(html.includes(text), text);
+    for (const obsolete of ['$37', '$97', '$147/mes', '$797/mes', '$5,000', '3 usuarios incluidos', '10 usuarios incluidos', '25 usuarios incluidos', 'Implementación gratis', 'Activación sin costo', '75%']) assert.ok(!html.includes(obsolete), obsolete);
+    assert.match(html, /https:\/\/cal.com\/ivanrr.oficial\/nsg/);
     assert.equal((html.match(/<details>/g) || []).length, 8);
     assert.equal((html.match(/<h1>/g) || []).length, 1);
     assert.match(html, /Call Centers de IA/);
@@ -91,4 +93,16 @@ test('marketing styles cannot alter authenticated app surfaces', () => {
   }
   const config = readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
   for (const path of ['marketing', 'fonts/marketing', 'branding/stratos-logo-web-20261016.webp']) assert.ok(config.includes(`'${path}'`), `Native build exclusion ${path}`);
+});
+
+test('launch offer separates implementation, recurring fees and the three-month subscription benefit', () => {
+  assert.equal(plans.length, 3);
+  const connect = plans.find(plan => plan.id === 'connect');
+  const voice = plans.find(plan => plan.id === 'connect-voice');
+  assert.deepEqual([connect.implementation, connect.monthly, connect.includedMonths], [1750, 297, 3]);
+  assert.deepEqual([voice.implementation, voice.monthly, voice.includedMonths], [3200, 549, 3]);
+  assert.equal(connect.monthly * connect.includedMonths, 891);
+  assert.equal(voice.monthly * voice.includedMonths, 1647);
+  assert.deepEqual([enterprisePlan.implementation, enterprisePlan.monthly, enterprisePlan.accompanimentMonths], [12000, 1200, 3]);
+  assert.equal(enterprisePlan.includedMonths, undefined, 'Do not extend the subscription waiver to Enterprise');
 });
