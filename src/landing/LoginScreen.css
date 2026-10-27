@@ -1,0 +1,44 @@
+/* Acceso claro independiente del tema del CRM. */
+.stratos-login { min-height:100dvh; display:grid; grid-template-columns:minmax(0,1fr) minmax(440px,.85fr); background:#fff; color:#10234b; color-scheme:light; font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+.stratos-login *, .stratos-login *::before, .stratos-login *::after { box-sizing:border-box; }
+.stratos-login p, .stratos-login h1, .stratos-login h2 { margin:0; }
+.login-brand-panel { position:relative; isolation:isolate; overflow:hidden; display:flex; flex-direction:column; justify-content:center; padding:64px clamp(32px,5vw,88px); background:linear-gradient(160deg,#f9fcff 20%,#edf6ff 100%); border-right:1px solid #e3ecf5; }
+.login-wordmark { display:flex; align-items:center; gap:12px; position:relative; z-index:1; margin-bottom:72px; }
+.login-wordmark>span { font-size:40px; font-weight:500; letter-spacing:-1.7px; line-height:1.1; }
+.login-wordmark>span>span { font-size:inherit; font-weight:400; }
+.login-wordmark img { object-fit:contain; border-radius:12px; }
+.login-intro { position:relative; z-index:1; max-width:490px; }
+.stratos-login .login-eyebrow { font-size:12px; font-weight:600; color:#466484; margin-bottom:18px; letter-spacing:.06em; }
+.login-intro h1 { font-size:clamp(30px,3.15vw,48px); font-weight:500; letter-spacing:-1.7px; line-height:1.15; }
+.login-intro h1 span { color:#26628e; }
+.stratos-login .login-description { margin-top:24px; color:#53677e; font-size:16px; line-height:1.8; }
+.login-capabilities { display:flex; flex-wrap:wrap; gap:32px; margin-top:42px; }
+.login-capabilities>div { display:flex; flex-direction:column; gap:7px; }
+.login-capabilities strong { font-size:17px; font-weight:600; }
+.login-capabilities span { font-size:12px; color:#53677e; max-width:140px; }
+.stratos-login .login-brand-caption { position:relative; z-index:1; margin-top:76px; font-size:12px; color:#53677e; }
+.login-orbit { position:absolute; width:680px; height:680px; border:1px solid #c7e2fa; border-radius:50%; right:-280px; bottom:-500px; z-index:0; box-shadow:0 0 0 38px #e4f1fb,0 0 0 39px #d5e8f8,0 0 0 90px #edf6fd,0 0 0 91px #deedf9; }
+.login-orbit i { position:absolute; width:7px; height:7px; border-radius:50%; background:#60a5db; top:22px; left:210px; }
+.login-orbit i:nth-child(2) { top:-38px;left:310px;width:5px;height:5px; }
+.login-orbit i:nth-child(3) { top:41px;left:65px;width:5px;height:5px;background:#71b8ad; }
+.login-form-panel { display:flex; align-items:center; justify-content:center; padding:48px 40px; background:#fff; }
+.login-form-content { width:100%; max-width:380px; }
+.stratos-login button, .stratos-login a { -webkit-tap-highlight-color:transparent; }
+.stratos-login button { min-height:44px; }
+.stratos-login button:disabled { opacity:.6; cursor:wait!important; }
+.stratos-login :is(button,a):focus-visible { outline:3px solid #6fadd6; outline-offset:3px; }
+.stratos-login input { min-height:48px; caret-color:#10234b; }
+.stratos-login input::placeholder { color:#748297; opacity:1; }
+.stratos-login input:-webkit-autofill { -webkit-text-fill-color:#10234b!important; caret-color:#10234b!important; box-shadow:0 0 0 1000px #f7fafd inset!important; }
+.stratos-login .login-text-button { min-height:32px; border:0; padding:0 4px; background:none; color:#006f91; cursor:pointer; font:inherit; font-weight:600; }
+@media(min-width:1500px) { .login-brand-panel { padding-left:max(80px,calc((100vw - 1280px)/2)); } }
+@media(max-width:800px) {
+ .stratos-login { display:flex; flex-direction:column; }
+ .login-brand-panel { padding:36px 24px 28px; align-items:center; border-right:0; border-bottom:1px solid #e3ecf5; }
+ .login-wordmark { margin-bottom:0; gap:9px; }
+ .login-wordmark>span { font-size:32px; letter-spacing:-1.2px; }
+ .login-wordmark img { width:38px; height:38px; }
+ .login-intro, .login-brand-caption, .login-orbit { display:none; }
+ .login-form-panel { flex:1; padding:32px 24px max(32px,env(safe-area-inset-bottom)); align-items:flex-start; }
+}
+@media(prefers-reduced-motion:reduce) { .stratos-login * { transition:none!important; animation:none!important; } }

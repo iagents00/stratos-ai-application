@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es" translate="no">
+<html lang="es" translate="no" data-entry="light">
   <head>
     <meta charset="UTF-8" />
     <!-- Verificacion del dominio ante Meta (portafolio Stratos AI / NSG New Strategy Group).
@@ -63,7 +63,8 @@
       })();
     </script>
     <meta name="google" content="notranslate" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#FFFFFF" />
+    <style>html[data-entry="light"],html[data-entry="light"] body{background:#fff!important;color-scheme:light}</style>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <!-- "black" (opaca) y NO "black-translucent": el translúcido tiene un bug
          conocido en iOS standalone que deja una FRANJA MUERTA de ~90pt bajo el
@@ -272,7 +273,7 @@
           d.setAttribute("style",
             "position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;" +
             "align-items:center;justify-content:center;gap:14px;padding:28px;text-align:center;" +
-            "background:#000000;color:#E2E8F0;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;");
+            "background:#FFFFFF;color:#10234B;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;");
           d.innerHTML =
             '<div style="font-size:17px;font-weight:600">La app no terminó de abrir</div>' +
             '<div style="font-size:14px;opacity:.7;max-width:300px;line-height:1.5">' +
@@ -331,12 +332,12 @@
          la app pinta su primer contenido. Reversible: borrar este bloque. -->
     <script>
       (function () {
-        var tema = "dark";
-        try { tema = localStorage.getItem("stratos_crm_theme") || "dark"; } catch (e) {}
+        var tema = "light";
+        try { tema = localStorage.getItem("stratos_crm_theme") || "light"; } catch (e) {}
         try { document.documentElement.setAttribute("data-theme", tema); } catch (e) {}
-        var claro = tema === "light";
-        var fondo = claro ? "#F1F3F6" : "#000000";
-        var tinta = claro ? "#1F2937" : "#E2E8F0";
+        // La entrada es clara incluso si el usuario eligió un CRM oscuro.
+        var fondo = "#FFFFFF";
+        var tinta = "#10234B";
         var azul = "#63AFFF";
 
         var s = document.createElement("div");
@@ -347,13 +348,13 @@
           "color:" + tinta + ";font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;" +
           "transition:opacity .28s ease");
         s.innerHTML =
-          '<div style="font-size:19px;font-weight:600;letter-spacing:.3px">Stratos<span style="color:' + azul + '"> AI</span></div>' +
+          '<div style="font-size:28px;font-weight:500;letter-spacing:-.7px">Stratos<span style="color:' + azul + '"> AI</span></div>' +
           '<div style="width:132px;height:2px;border-radius:2px;overflow:hidden;background:rgba(99,175,255,.16)">' +
           '<div id="stratos-splash-bar" style="width:38%;height:100%;border-radius:2px;background:' + azul + ';' +
           'animation:stratosSplash 1.15s ease-in-out infinite"></div></div>';
 
         var st = document.createElement("style");
-        st.textContent = "@keyframes stratosSplash{0%{transform:translateX(-115%)}100%{transform:translateX(285%)}}";
+        st.textContent = "@keyframes stratosSplash{0%{transform:translateX(-115%)}100%{transform:translateX(285%)}}@media(prefers-reduced-motion:reduce){#stratos-splash-bar{animation:none!important}}";
         document.head.appendChild(st);
 
         function poner() {
@@ -408,7 +409,7 @@
         // para que el fondo forzado del modo seguro respete el tema claro
         // (sin esto, las tarjetas quedaban azul-oscuro con texto oscuro).
         // App.jsx lo mantiene en sync al alternar el tema.
-        try { el.setAttribute("data-theme", localStorage.getItem("stratos_crm_theme") || "dark"); } catch (e) {}
+        try { el.setAttribute("data-theme", localStorage.getItem("stratos_crm_theme") || "light"); } catch (e) {}
 
         // Pausar animaciones cuando la pestaña no está visible (menos repaint
         // en segundo plano → menos presión de memoria en iOS).
