@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**292 archivos · 84.499 líneas**
+**293 archivos · 84.542 líneas**
 
 ---
 
@@ -448,15 +448,15 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ManualLegacy.jsx` | 246 | _sin describir_ |
 | `ManualBrasa.jsx` | 235 | _sin describir_ |
 | `ManualMuebleria.jsx` | 224 | _sin describir_ |
+| `Functionalities.css` | 203 | _sin describir_ |
 | `LoginScreenNative.jsx` | 189 | _sin describir_ |
-| `Functionalities.css` | 183 | _sin describir_ |
 | `HeroFlowBackdrop.jsx` | 119 | _sin describir_ |
 | `marketing-content.js` | 107 | _sin describir_ |
 | `LandingMarketing.jsx` | 104 | _sin describir_ |
 | `ModuleShowcase.jsx` | 91 | _sin describir_ |
 | `FeatureMotion.jsx` | 90 | _sin describir_ |
 | `ModuleShowcase.css` | 66 | _sin describir_ |
-| `Functionalities.jsx` | 63 | _sin describir_ |
+| `Functionalities.jsx` | 65 | _sin describir_ |
 | `RecoveryForm.jsx` | 60 | _sin describir_ |
 | `FeatureMotion.css` | 55 | _sin describir_ |
 | `AppDownloads.jsx` | 29 | _sin describir_ |
@@ -464,6 +464,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `HeroFlowBackdrop.css` | 26 | _sin describir_ |
 | `AppDownloads.css` | 24 | _sin describir_ |
 | `ServicesTicker.css` | 23 | _sin describir_ |
+| `CRMComparison.jsx` | 21 | _sin describir_ |
 | `EmailConfirmation.jsx` | 19 | _sin describir_ |
 | `MarketingBrand.jsx` | 4 | _sin describir_ |
 
@@ -871,6 +872,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/organize-notes.js` (220 líneas)
 - `src/app/constants/intelFeatures.js` (211 líneas)
 - `src/app/views/CRM/zoom-metrics.js` (210 líneas)
+- `src/landing/Functionalities.css` (203 líneas)
 - `src/hooks/useZoomAgendados.js` (202 líneas)
 - `src/lib/docx.js` (201 líneas)
 - `src/clients/vega/config.js` (196 líneas)
@@ -878,7 +880,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/lead-backup.js` (192 líneas)
 - `src/landing/LoginScreenNative.jsx` (189 líneas)
 - `src/lib/speech-native.js` (189 líneas)
-- `src/landing/Functionalities.css` (183 líneas)
 - `src/app/components/Chat.jsx` (182 líneas)
 - `src/app/views/CRM/CallActionButton.jsx` (182 líneas)
 - `src/clients/muebleria/config.js` (182 líneas)
@@ -941,8 +942,8 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/supabase.js` (70 líneas)
 - `src/app/components/MobileHeaderMenu.jsx` (66 líneas)
 - `src/landing/ModuleShowcase.css` (66 líneas)
+- `src/landing/Functionalities.jsx` (65 líneas)
 - `src/contexts/TenantConfigGate.jsx` (64 líneas)
 - `src/app/views/CRM/command-report.js` (63 líneas)
 - `src/dental-demo/DentalDemo.jsx` (63 líneas)
-- `src/landing/Functionalities.jsx` (63 líneas)
 - `src/lib/telefono.js` (61 líneas)

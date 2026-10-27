@@ -180,3 +180,23 @@
 .stratos-marketing .sf-view-switch button{flex:1;padding-inline:8px}
 .stratos-marketing .sf-hero-links{flex-direction:column;align-items:center}
 }
+
+.stratos-marketing .sf-rivals-section{border-top:1px solid #e3ecf2}
+.stratos-marketing .sf-comparison-method{font-size:12px;line-height:1.75;color:#526477;max-width:980px;margin:24px 0}
+.stratos-marketing .sf-rivals{border-collapse:separate;border-spacing:0;width:100%;min-width:1160px;table-layout:fixed;text-align:left;font-size:13px;line-height:1.6}
+.stratos-marketing .sf-rivals th,.stratos-marketing .sf-rivals td{padding:24px 18px;vertical-align:top;border-bottom:1px solid #e3ecf2;overflow-wrap:break-word}
+.stratos-marketing .sf-rivals th:first-child{width:19%}
+.stratos-marketing .sf-rivals thead th{position:sticky;top:0;z-index:2;background:#edf5fa;color:#143c55;font-weight:600;font-size:14px}
+.stratos-marketing .sf-rivals tbody th{font-size:16px;font-weight:550;color:#163a51}
+.stratos-marketing .sf-rivals td:nth-child(2){background:#f2faff}
+.stratos-marketing .sf-rivals td p{color:#526477;margin:12px 0}
+.stratos-marketing .sf-rivals tr:last-child>*{border-bottom:0}
+.stratos-marketing .sf-comparison-status{font-size:11px;font-weight:600;color:#36566d}
+.stratos-marketing .sf-rivals td:nth-child(2) .sf-comparison-status{color:#007797}
+.stratos-marketing .sf-cell-sources{display:flex;flex-wrap:wrap;gap:12px}
+.stratos-marketing .sf-cell-sources a{font-size:11px;color:#006889;text-underline-offset:3px}
+.stratos-marketing .sf-covered-features{font-weight:400;font-size:12px;margin-top:16px;color:#526477}
+.stratos-marketing .sf-covered-features summary{cursor:pointer;color:#006889;min-height:34px}
+.stratos-marketing .sf-covered-features ul{margin:4px 0 0;padding-left:16px}
+.stratos-marketing .sf-covered-features li{margin:7px 0}
+.stratos-marketing #comparar-crm,.stratos-marketing #catalogo{scroll-margin-top:76px}
