@@ -31,3 +31,12 @@ export function portfolioQuestions(property) {
     { title: property.delivery ? 'Tu horizonte de entrega' : 'El momento de compra', text: property.delivery ? 'Confirma la fecha de entrega y las condiciones para disponer de la propiedad.' : 'Pregunta por la etapa del proyecto, la fecha de entrega y la disponibilidad actual.' },
   ];
 }
+
+/** Keep catalog identity while lifting accent text for the dark dossier. */
+export function portfolioAccent(value) {
+  const raw = typeof value === 'string' && /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(value.trim()) ? value.trim() : '#7BA8E0';
+  const hex = raw.length === 4 ? raw.slice(1).split('').map(x => x + x).join('') : raw.slice(1);
+  const channels = [0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16));
+  const light = channels.map(channel => Math.round(channel * .4 + 255 * .6));
+  return { '--pd-property-color': `#${hex}`, '--pd-property-ink': `rgb(${light.join(', ')})` };
+}
