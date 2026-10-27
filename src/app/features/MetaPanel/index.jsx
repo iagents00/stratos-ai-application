@@ -718,7 +718,7 @@ export default function MetaPanel({
           dejando visibles el header y el menú izquierdo. En móvil (sin sidebar) ocupa
           toda la pantalla. La clase .mp trae position:fixed; inset:0 — acá sólo movemos
           top/left para dejar el marco de la app a la vista. */}
-      <div ref={panelRef} className="mp" role={isMobile ? "dialog" : "region"} aria-modal={isMobile || undefined} aria-label="Mi Espacio" tabIndex={-1} onKeyDown={onPanelKeyDown} style={{ ...mpVars, top: isMobile ? 0 : 52, left: isMobile ? 0 : 72 }}>
+      <div ref={panelRef} className="mp" role={isMobile ? "dialog" : "region"} aria-modal={isMobile || undefined} aria-label="Space" tabIndex={-1} onKeyDown={onPanelKeyDown} style={{ ...mpVars, top: isMobile ? 0 : 52, left: isMobile ? 0 : 72 }}>
         <style>{MP_CSS}</style>
 
         {/* ── Barra superior (sticky, translúcida, alineada al contenedor) ── */}
@@ -730,13 +730,13 @@ export default function MetaPanel({
             display:"flex", alignItems:"center", justifyContent:"center", gap:12,
           }}>
             {/* Control segmentado */}
-            <div className="mp-seg" role="group" aria-label="Secciones de Mi Espacio" style={{ minWidth:0, flex: isMobile ? "1 1 0" : undefined }}>
+            <div className="mp-seg" role="group" aria-label="Secciones de Space" style={{ minWidth:0, flex: isMobile ? "1 1 0" : undefined }}>
               {tabs.map(({ id, label }) => (
                 <button key={id} aria-pressed={metaTab===id} data-on={metaTab===id ? "1" : "0"} onClick={event => { setMetaTab(id); if (isMobile) event.currentTarget.scrollIntoView({ block:"nearest", inline:"nearest" }); }}>{label}</button>
               ))}
             </div>
             {/* Cerrar permanece fijo junto a las pestañas desplazables. */}
-            {isMobile && (<button onClick={onClose} title="Cerrar" aria-label="Cerrar Mi Espacio" style={{
+            {isMobile && (<button onClick={onClose} title="Cerrar" aria-label="Cerrar Space" style={{
               flexShrink:0,
               width:44, height:44, borderRadius:"50%", border:`1px solid ${T.border}`,
               background:T.glass, color:T.txt2, cursor:"pointer",
