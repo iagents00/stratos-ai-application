@@ -1,7 +1,7 @@
 /**
  * app/features/MetaPanel/index.jsx
  * ─────────────────────────────────────────────────────────────────────────────
- * Modal de cuatro pestañas: Lista de Acción · Documentos · Plan Estratégico · Protocolo de Ventas
+ * Space: Agenda · Documentos · Estrategia (Plan y Protocolo)
  * Extraído de App.jsx (ex líneas 3204–3998).
  * ─────────────────────────────────────────────────────────────────────────────
  */
@@ -412,15 +412,17 @@ export default function MetaPanel({
   const tabs = marketingMode ? [
     { id:"acciones",  label:"Agenda" },
     { id:"docs",      label:"Documentos" },
-    { id:"plan",      label:"Plan Estratégico" },
+    { id:"plan",      label:"Strategy" },
   ] : agendaOnly ? [
     { id:"acciones",  label:"Agenda" },
   ] : [
     { id:"acciones",  label:"Agenda" },
     { id:"docs",      label:"Documentos" },
-    { id:"plan",      label:"Plan Estratégico" },
-    { id:"protocolo", label:"Protocolo de Ventas" },
+    { id:"plan",      label:"Strategy" },
   ];
+
+  const strategyOpen = metaTab === "plan" || metaTab === "protocolo";
+  const activeTab = strategyOpen ? "plan" : metaTab;
 
   // En móvil la barra lateral (widget AVANCE que abre este panel en desktop)
   // no existe; el panel se abre desde el menú "+" y debe encajar en pantalla.
@@ -663,6 +665,11 @@ export default function MetaPanel({
     .mp-topbar{position:sticky;top:0;z-index:20;flex-shrink:0;padding-top:var(--safe-area-inset-top, env(safe-area-inset-top, 0px));background:var(--mp-topbar);backdrop-filter:var(--mp-blur);-webkit-backdrop-filter:var(--mp-blur);box-shadow:inset 0 -0.5px 0 var(--mp-hairline),var(--mp-spec)}
     .mp-seg{display:inline-flex;gap:2px;padding:3px;border-radius:14px;background:var(--mp-seg-bg);box-shadow:inset 0 0 0 0.5px var(--mp-hairline)}
     .mp-seg>button{appearance:none;-webkit-appearance:none;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:500;letter-spacing:-.015em;color:var(--mp-txt2);padding:9px 20px;border-radius:11px;white-space:nowrap;transition:color .2s ease,background .2s ease,box-shadow .2s ease}
+    .mp-strategy-nav{display:flex;gap:24px;border-bottom:1px solid var(--mp-hairline)}
+    .mp-strategy-nav>button{appearance:none;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--mp-txt2);font:inherit;font-size:14px;min-height:44px;padding:10px 2px;cursor:pointer}
+    .mp-strategy-nav>button[aria-pressed="true"]{color:var(--mp-txt);border-bottom-color:var(--mp-accent);font-weight:600}
+    .mp-strategy-nav>button:hover{color:var(--mp-txt)}
+    .mp-strategy-nav>button:focus-visible{outline:2px solid var(--mp-accent);outline-offset:3px;border-radius:4px}
     .mp-seg>button:hover{color:var(--mp-txt)}
     .mp-seg>button[data-on="1"]{color:var(--mp-txt);background:var(--mp-seg-on);box-shadow:0 0 0 0.5px var(--mp-hairline),0 1px 2px rgba(0,0,0,.12),0 3px 8px rgba(0,0,0,.10),var(--mp-spec)}
     .mp-edit{border-radius:6px;margin:0 -4px;padding:0 4px;transition:background .15s ease,box-shadow .15s ease;cursor:text}
@@ -732,7 +739,7 @@ export default function MetaPanel({
             {/* Control segmentado */}
             <div className="mp-seg" role="group" aria-label="Secciones de Space" style={{ minWidth:0, flex: isMobile ? "1 1 0" : undefined }}>
               {tabs.map(({ id, label }) => (
-                <button key={id} aria-pressed={metaTab===id} data-on={metaTab===id ? "1" : "0"} onClick={event => { setMetaTab(id); if (isMobile) event.currentTarget.scrollIntoView({ block:"nearest", inline:"nearest" }); }}>{label}</button>
+                <button key={id} aria-pressed={activeTab===id} data-on={activeTab===id ? "1" : "0"} onClick={event => { setMetaTab(id); if (isMobile) event.currentTarget.scrollIntoView({ block:"nearest", inline:"nearest" }); }}>{label}</button>
               ))}
             </div>
             {/* Cerrar permanece fijo junto a las pestañas desplazables. */}
@@ -752,6 +759,22 @@ export default function MetaPanel({
             width:"100%", maxWidth:1840, margin:"0 auto",
             padding: isMobile ? "18px 16px calc(28px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))" : "40px 48px 72px",
           }}>
+
+          {strategyOpen && (
+            <section aria-label="Strategy" style={{ marginBottom:24 }}>
+              <h2 style={{ margin:"0 0 8px", fontSize:isMobile ? 26 : 30, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.03em", color:T.txt }}>Strategy</h2>
+              <p style={{ margin:"0 0 18px", fontSize:14, lineHeight:1.5, color:T.txt2 }}>
+                {marketingMode ? "Define el rumbo y las prioridades del equipo." : "Define el rumbo y consulta cómo llevarlo a la práctica."}
+              </p>
+              {!marketingMode && !agendaOnly && (
+                <div className="mp-strategy-nav" role="group" aria-label="Contenido de Strategy">
+                  {[{ id:"plan", label:"Plan estratégico" }, { id:"protocolo", label:"Protocolo" }].map(({id,label}) => (
+                    <button key={id} aria-pressed={metaTab===id} onClick={() => setMetaTab(id)}>{label}</button>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
 
           {/* ═══ TAB 1: LISTA DE ACCIÓN ══════════════════════════════════ */}
           {metaTab === "acciones" && (
@@ -1912,11 +1935,6 @@ export default function MetaPanel({
           {/* ═══ TAB 3: PLAN ESTRATÉGICO ════════════════════════════════ */}
           {metaTab === "plan" && (
             <div>
-              <div style={{ textAlign:"center", marginBottom:18 }}>
-                <p style={{ margin:0, fontSize:25, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.045em", color:T.txt }}>{brandLabel.toUpperCase()}</p>
-                <p style={{ margin:"4px 0 0", fontSize:12, color:T.txt3, fontFamily:font, letterSpacing:"0.07em", textTransform:"uppercase" }}>Plan Estratégico · Una Página · Scaling Up® · Q2 2026</p>
-              </div>
-
               {/* CORE */}
               <div style={{ background:`${T.accent}06`, border:`1px solid ${T.accent}1F`, borderRadius:14, padding:"14px 16px", marginBottom:10 }}>
                 {sectionHd("CORE — Por qué existimos", T.accent)}
@@ -2058,35 +2076,7 @@ export default function MetaPanel({
           {metaTab === "protocolo" && (
             <div>
 
-              {/* ── Hero Header ── */}
-              <div style={{ marginBottom:14, padding:"18px 20px", borderRadius:15, background:isLight?`linear-gradient(135deg,${T.accent}14,rgba(126,184,240,0.06))`:`linear-gradient(135deg,${T.accent}0F,rgba(126,184,240,0.04))`, border:`1px solid ${T.accent}20`, display:"flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent:"space-between", gap:16 }}>
-                <div>
-                  <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:5 }}>
-                    <div style={{ width:3, height:18, borderRadius:2, background:`linear-gradient(180deg,${T.accent},${T.blue})` }} />
-                    <span style={{ fontSize:9.5, fontWeight:500, letterSpacing:"0.16em", textTransform:"uppercase", color:T.txt3, fontFamily:fontDisp }}>Protocolo Operativo · Stratos Capital Group</span>
-                  </div>
-                  <p style={{ margin:"0 0 4px", fontSize:25, fontWeight:500, color:T.txt, fontFamily:fontDisp, letterSpacing:"-0.045em" }}>Protocolo {brandLabel}</p>
-                  {/* El subtítulo sale del protocolo de CADA empresa. Estaba fijo en
-                      «Riviera Maya · Alta inversión» — de Duke — y aparecía también
-                      en NSG, que no vende propiedades (lo reportó Ángel). */}
-                  <p style={{ margin:0, fontSize:12.5, color:T.txt2, fontFamily:font }}>
-                    {metaProtocol.subtitulo || "Sistema de ventas consultivo · Riviera Maya · Alta inversión"}
-                  </p>
-                </div>
-                <div style={{ display:"flex", gap:8, flexShrink:0, flexWrap: isMobile ? "wrap" : "nowrap", width: isMobile ? "100%" : "auto" }}>
-                  {[
-                    { label:"Etapas", value:"10", color:T.accent },
-                    { label:"SLA Contacto", value:"5 min", color:T.blue },
-                    { label:"Seguimiento", value:"45+", color:T.violet },
-                    { label:"Tasa Meta", value:"25%", color:"#34D399" },
-                  ].map((s,i) => (
-                    <div key={i} style={{ textAlign:"center", padding:"9px 14px", borderRadius:11, background:isLight?"rgba(255,255,255,0.75)":"rgba(255,255,255,0.04)", border:`1px solid ${s.color}22` }}>
-                      <p style={{ margin:"0 0 1px", fontSize:18, fontWeight:500, color:s.color, fontFamily:fontDisp, letterSpacing:"-0.03em" }}>{s.value}</p>
-                      <p style={{ margin:0, fontSize:9.5, color:T.txt3, fontFamily:font, fontWeight:400, letterSpacing:"0.04em", textTransform:"uppercase" }}>{s.label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              {metaProtocol.subtitulo && <p style={{ margin:"0 0 20px", fontSize:14, lineHeight:1.5, color:T.txt2 }}>{metaProtocol.subtitulo}</p>}
 
               {/* ── A: Objetivo + Principios + Velocidad ── */}
               <div style={{ display:"grid", gridTemplateColumns:"1.1fr 1fr 1fr", gap:10, marginBottom:10 }}>
