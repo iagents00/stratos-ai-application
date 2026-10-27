@@ -7,7 +7,7 @@ import { StratosIcon } from "../../icons/StratosIcon";
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import {
-  Target, Plus, Check, Minus, GripVertical, TrendingUp, ChevronRight,
+  Plus, Check, Minus, GripVertical, TrendingUp, ChevronRight,
   AlertCircle, Bell, X, Atom, CalendarDays, Clock, ChevronLeft, ChevronUp, ChevronDown,
   FileText, Table, Presentation, ClipboardList, HardDrive, BookOpen,
   PenTool, Palette, Video, Globe, Cloud, ExternalLink, Trash2, FolderOpen,
