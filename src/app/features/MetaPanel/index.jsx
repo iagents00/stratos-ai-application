@@ -1,4 +1,3 @@
-import { StratosIcon } from "../../icons/StratosIcon";
 /**
  * app/features/MetaPanel/index.jsx
  * ─────────────────────────────────────────────────────────────────────────────
@@ -726,51 +725,25 @@ export default function MetaPanel({
         <div className="mp-topbar">
           <div style={{
             width:"100%", maxWidth:1840, margin:"0 auto",
-            // safe-area-top en móvil: el panel es fixed inset:0 (cubre todo,
-            // incl. el reloj) → sin esto "Mi Espacio" queda bajo la hora.
-            padding: isMobile ? "calc(12px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 16px 12px" : "0 48px",
+            padding: isMobile ? "12px 16px" : "0 48px",
             minHeight: isMobile ? 0 : 72,
-            display: isMobile ? "flex" : "grid",
-            gridTemplateColumns: isMobile ? undefined : "1fr auto 1fr",
-            alignItems:"center", gap:16,
-            flexWrap: isMobile ? "wrap" : undefined, rowGap: isMobile ? 12 : 0,
+            display:"flex", alignItems:"center", justifyContent:"center", gap:12,
           }}>
-            {/* Marca */}
-            <div style={{ display:"flex", alignItems:"center", gap:13, minWidth:0, order: isMobile ? 1 : 0 }}>
-              <div style={{ width:42, height:42, borderRadius:13, background:`linear-gradient(135deg, ${T.accent}26, ${T.accent}08)`, border:`1px solid ${T.accent}30`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, boxShadow:`inset 0 1px 0 ${T.accent}1F` }}>
-                <StratosIcon name="miespacio" size={22} color={T.accent} />
-              </div>
-              <div style={{ minWidth:0 }}>
-                <p style={{ margin:0, fontSize:17, fontWeight:500, fontFamily:fontDisp, letterSpacing:"-0.025em", color:T.txt, display:"flex", alignItems:"center", gap:8, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
-                  Mi Espacio
-                  {savingConfig && (
-                    <span style={{ fontSize:11, fontWeight:400, color:T.accent, background:`${T.accent}18`, borderRadius:99, padding:"2px 9px", letterSpacing:0, flexShrink:0 }}>guardando…</span>
-                  )}
-                </p>
-                <p style={{ margin:"2px 0 0", fontSize:12, color:T.txt3, fontFamily:font, letterSpacing:"0.02em", whiteSpace:"nowrap" }}>{user?.name || "Plan Estratégico · Scaling Up · 2026"}</p>
-              </div>
-            </div>
             {/* Control segmentado */}
-            <div className="mp-seg" role="group" aria-label="Secciones de Mi Espacio" style={{ order: isMobile ? 3 : 0, flexBasis: isMobile ? "100%" : "auto", justifySelf:"center" }}>
+            <div className="mp-seg" role="group" aria-label="Secciones de Mi Espacio" style={{ minWidth:0, flex: isMobile ? "1 1 0" : undefined }}>
               {tabs.map(({ id, label }) => (
                 <button key={id} aria-pressed={metaTab===id} data-on={metaTab===id ? "1" : "0"} onClick={event => { setMetaTab(id); if (isMobile) event.currentTarget.scrollIntoView({ block:"nearest", inline:"nearest" }); }}>{label}</button>
               ))}
             </div>
-            {/* Cerrar — en móvil el topbar es FLEX (no grid), así que `justifySelf`
-                no empujaba la X a la derecha: quedaba pegada al título. `marginLeft:auto`
-                sí la lleva al borde derecho de la fila. */}
+            {/* Cerrar permanece fijo junto a las pestañas desplazables. */}
             {isMobile && (<button onClick={onClose} title="Cerrar" aria-label="Cerrar Mi Espacio" style={{
-              order: 2, marginLeft:"auto", flexShrink:0,
+              flexShrink:0,
               width:44, height:44, borderRadius:"50%", border:`1px solid ${T.border}`,
               background:T.glass, color:T.txt2, cursor:"pointer",
               display:"flex", alignItems:"center", justifyContent:"center",
             }}><X size={18} strokeWidth={2} /></button>)}
-            <div aria-hidden="true" style={{
-              order: 0, justifySelf:"end", flexShrink:0,
-              width:isMobile ? 0 : 38, height:isMobile ? 0 : 38,
-              display: isMobile ? "none" : "block",
-            }} />
           </div>
+          {savingConfig && <p role="status" style={{ margin:0, padding:"0 16px 8px", textAlign:"center", fontSize:12, color:T.txt2 }}>Guardando…</p>}
         </div>
 
         {/* ── Cuerpo scrolleable ── */}
