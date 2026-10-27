@@ -29,7 +29,7 @@ test('the public site preserves commercial terms, contact and fixed login routes
       if (href.startsWith('#') && href !== '#') assert.ok(ids.has(href.slice(1)), `Broken anchor ${href}`);
       if (href.startsWith('https://wa.me/')) assert.equal(new URL(href).pathname, '/529842803001');
     }
-    for (const route of ['https://app.getstratosai.com/login', '/diagnostico', '/politica-de-privacidad', '/terminos-stratos-ai.html']) assert.ok(links.includes(route), route);
+    for (const route of ['https://app.getstratosai.com/login', '/diagnostico', '/funcionalidades', '/politica-de-privacidad', '/terminos-stratos-ai.html']) assert.ok(links.includes(route), route);
     for (const match of html.matchAll(/<img[^>]+src="([^"]+)"/g)) {
       assert.ok(match[1].startsWith('/'), 'Screenshots and brand stay self-hosted');
       assert.ok(existsSync(new URL(`../public${match[1]}`, import.meta.url)), match[1]);
@@ -82,7 +82,7 @@ test('the public site preserves commercial terms, contact and fixed login routes
 });
 
 test('marketing styles cannot alter authenticated app surfaces', () => {
-  for (const file of ['LandingMarketing.css', 'FeatureMotion.css', 'HeroFlowBackdrop.css', 'AppDownloads.css', 'ServicesTicker.css']) {
+  for (const file of ['LandingMarketing.css', 'FeatureMotion.css', 'HeroFlowBackdrop.css', 'AppDownloads.css', 'ServicesTicker.css', 'Functionalities.css']) {
     const css = postcss.parse(readFileSync(new URL(`../src/landing/${file}`, import.meta.url), 'utf8'));
     css.walkRules(rule => {
       if (rule.parent.type === 'atrule' && rule.parent.name.endsWith('keyframes')) return;

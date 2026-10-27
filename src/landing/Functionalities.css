@@ -1,0 +1,150 @@
+.stratos-marketing:where(.sf-page){background:#fff;color:#0a1b2e;overflow:clip}
+.stratos-marketing .sf-container{width:min(1180px,100% - 64px);margin-inline:auto}
+.stratos-marketing .sf-header{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.97);border-bottom:1px solid #e6edf2}
+.stratos-marketing .sf-header-inner{display:flex;align-items:center;justify-content:space-between;min-height:76px;gap:24px}
+.stratos-marketing .sf-header nav{display:flex;align-items:center;gap:28px;font-size:14px}
+.stratos-marketing .sf-header a{text-decoration:none;color:#294154}
+.stratos-marketing .sf-demo-link,.stratos-marketing .sf-text-link,.stratos-marketing .sf-back{display:inline-flex;align-items:center;gap:10px}
+.stratos-marketing .sf-demo-link{font-weight:600}
+.stratos-marketing .sf-hero{padding-top:30px;text-align:center}
+.stratos-marketing .sf-back{font-size:13px;color:#526477;text-decoration:none;display:flex;width:max-content}
+.stratos-marketing .sf-eyebrow{font-size:11px;letter-spacing:.15em;font-weight:650;color:#45687c;margin:0 0 24px}
+.stratos-marketing .sf-hero>.sf-eyebrow{margin-top:66px}
+.stratos-marketing .sf-hero h1{font-family:var(--marketing-display);font-size:clamp(58px,7.7vw,104px);line-height:1;letter-spacing:-.065em;font-weight:500;margin:0}
+.stratos-marketing .sf-hero h1 span{color:#007eab}
+.stratos-marketing .sf-intro{font-size:clamp(18px,2vw,23px);line-height:1.5;color:#526477;margin:28px 0 22px}
+.stratos-marketing .sf-text-link{color:#006a91;font-size:16px;font-weight:550;text-decoration:none}
+.stratos-marketing .sf-hero-product{margin:52px auto 0;max-width:850px;background:linear-gradient(145deg,#f4faff,#def5ff);padding:24px 36px 16px;border:1px solid #e1eff6;border-radius:28px}
+.stratos-marketing .sf-hero-product img{display:block;width:100%;height:auto;max-height:470px;object-fit:contain}
+.stratos-marketing .sf-hero-product>span{display:block;color:#4d6e82;font-size:12px;margin-top:14px}
+.stratos-marketing .sf-section{padding-block:110px}
+.stratos-marketing .sf-section h2{font-size:clamp(38px,4.3vw,60px);line-height:1.07;font-weight:500;letter-spacing:-.045em;margin:0}
+.stratos-marketing .sf-demo-section{margin-top:100px;background:#f5f9fc}
+.stratos-marketing .sf-scene-tabs{display:flex;gap:20px;border-bottom:1px solid #dce6ec;margin:44px 0 54px}
+.stratos-marketing .sf-scene-tabs button{border:0;border-bottom:2px solid transparent;background:none;font:inherit;font-size:14px;padding:18px 0;color:#627783;cursor:pointer;flex:1;text-align:left}
+.stratos-marketing .sf-scene-tabs button span{font-size:11px;margin-right:12px;color:#607b8b}
+.stratos-marketing .sf-scene-tabs button[aria-pressed=true]{color:#006c95;border-bottom-color:#008dbb;font-weight:600}
+.stratos-marketing .sf-scene{display:grid;grid-template-columns:.9fr 1.1fr;gap:64px;align-items:center;min-height:560px}
+.stratos-marketing .sf-scene-copy h3{white-space:pre-line;font-size:clamp(32px,3.6vw,48px);line-height:1.1;letter-spacing:-.04em;font-weight:500;margin:0 0 32px}
+.stratos-marketing .sf-before,.stratos-marketing .sf-after{margin:24px 0}
+.stratos-marketing .sf-before>span,.stratos-marketing .sf-after>span,.stratos-marketing .sf-detail-label{font-size:10px;letter-spacing:.12em;font-weight:650;color:#597181}
+.stratos-marketing .sf-after>span{color:#007696}
+.stratos-marketing .sf-scene-copy p{font-size:18px;line-height:1.55;margin:8px 0;color:#526477}
+.stratos-marketing .sf-scene-copy .sf-benefit{display:flex;gap:10px;align-items:center;color:#17684e;font-size:15px;margin-top:30px}
+.stratos-marketing .sf-benefit svg{flex-shrink:0}
+.stratos-marketing .sf-scene-stage{min-width:0}
+.stratos-marketing .sf-device{max-width:410px;min-height:480px;margin:auto;background:#fff;border:7px solid #e2ecf2;box-shadow:0 24px 65px #163e5710;border-radius:48px;padding:14px 24px 30px}
+.stratos-marketing .sf-island{width:100px;height:25px;background:#0b1420;border-radius:20px;margin:0 auto 24px}
+.stratos-marketing .sf-device-header{display:flex;align-items:center;gap:10px;font-size:17px;margin-bottom:24px}
+.stratos-marketing .sf-bubble{font-size:15px;line-height:1.5;border-radius:18px;padding:18px;margin-bottom:16px}
+.stratos-marketing .sf-user{background:#ecf7fd;margin-left:24px;color:#163e57}
+.stratos-marketing .sf-response{border:1px solid #e6edf2;background:#fff}
+.stratos-marketing .sf-response strong{display:block;font-weight:600}
+.stratos-marketing .sf-response p{font-size:15px;line-height:1.5;color:#526477}
+.stratos-marketing .sf-done{display:flex;align-items:center;gap:6px;font-size:11px;color:#167655;margin-bottom:16px}
+.stratos-marketing .sf-bubble dl{margin:16px 0 0}
+.stratos-marketing .sf-bubble dl>div{display:flex;justify-content:space-between;gap:12px;border-top:1px solid #edf2f5;padding:10px 0;font-size:12px}
+.stratos-marketing .sf-bubble dt{color:#627783}
+.stratos-marketing .sf-bubble dd{margin:0;text-align:right;font-weight:500}
+.stratos-marketing .sf-wave{height:40px;display:flex;align-items:center;justify-content:center;gap:5px;margin-top:12px}
+.stratos-marketing .sf-wave i{width:4px;background:#168fba;border-radius:4px}
+.stratos-marketing .sf-device-voice .sf-user>svg{vertical-align:middle;margin-right:8px}
+.stratos-marketing .sf-device-voice .sf-user>span{font-size:13px}
+.stratos-marketing .sf-transcript{font-size:13px;color:#627783;line-height:1.55;margin:12px 6px 20px}
+.stratos-marketing .sf-input{border:1px solid #e3edf2;border-radius:22px;padding:12px 14px;font-size:12px;color:#6a7d8b;display:flex;align-items:center;justify-content:space-between}
+.stratos-marketing .sf-device-notice{background:linear-gradient(160deg,#edfaff,#a9dbf5);min-height:480px}
+.stratos-marketing .sf-device-notice .sf-device-header{display:none}
+.stratos-marketing .sf-clock{text-align:center;font-size:68px;letter-spacing:-.06em;font-weight:500;margin:26px 0 38px;color:#153f5b}
+.stratos-marketing .sf-notification{border:1px solid #ffffffba;background:#ffffffcf;padding:18px;border-radius:22px}
+.stratos-marketing .sf-notification>div{display:flex;align-items:center;gap:8px;font-size:12px}
+.stratos-marketing .sf-notification>div>span{margin-left:auto;font-size:10px;color:#627783}
+.stratos-marketing .sf-notification h3{font-size:17px;margin:16px 0 8px}
+.stratos-marketing .sf-notification p{font-size:14px;line-height:1.5;margin:0;color:#3d596b}
+.stratos-marketing .sf-notice-label{display:flex;align-items:center;gap:6px;font-size:10px;color:#48697d;margin-top:14px}
+.stratos-marketing .sf-device-caption{font-size:11px;text-align:center;color:#45687c;margin:24px 0 0}
+.stratos-marketing .sf-example{font-size:10px;line-height:1.5;color:#627783;text-align:center;margin:20px auto 0;max-width:390px}
+.stratos-marketing .sf-call{min-height:480px;border-radius:30px;background:white;overflow:hidden;text-align:center;padding-top:62px;position:relative;border:1px solid #e5eff5}
+.stratos-marketing .sf-call h3{font-size:38px;font-weight:500;letter-spacing:-.045em;line-height:1.08;margin:20px 0}
+.stratos-marketing .sf-call-status{display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:#087494}
+.stratos-marketing .sf-call img{width:100%;height:180px;object-fit:cover;object-position:bottom;display:block;margin-top:45px}
+.stratos-marketing .sf-call>p{display:flex;justify-content:center;align-items:center;gap:8px;font-size:10px;background:#fff;padding:16px 8px;margin:0;color:#4c6a7c}
+.stratos-marketing .sf-scene-controls{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:28px}
+.stratos-marketing .sf-scene-controls>span{font-size:12px;margin-right:14px;color:#627783}
+.stratos-marketing .sf-scene-controls button{display:grid;place-items:center;width:44px;height:44px;border:1px solid #d7e5ee;border-radius:50%;background:white;color:#254b61;cursor:pointer}
+.stratos-marketing .sf-modules{display:grid;grid-template-columns:1fr 1fr;column-gap:70px;margin-top:44px}
+.stratos-marketing .sf-modules article{display:flex;gap:22px;padding:32px 0;border-top:1px solid #e2ebf1}
+.stratos-marketing .sf-module-number{font-size:12px;color:#6c899a;padding-top:5px}
+.stratos-marketing .sf-modules h3{font-size:26px;letter-spacing:-.03em;margin:0 0 10px;font-weight:500}
+.stratos-marketing .sf-modules p{font-size:16px;color:#526477;line-height:1.6;margin:0}
+.stratos-marketing .sf-modules ul{padding:0;margin:14px 0 0;list-style:none;font-size:12px;color:#54778b;line-height:1.8}
+.stratos-marketing .sf-library{background:#f7fafc}
+.stratos-marketing .sf-section-intro{font-size:18px;color:#526477;line-height:1.6;max-width:600px;margin-top:24px}
+.stratos-marketing .sf-search{display:flex;align-items:center;gap:14px;background:white;border:1px solid #d7e5ee;border-radius:12px;padding:0 18px;margin:36px 0 22px;max-width:650px;color:#54778b}
+.stratos-marketing .sf-search input{border:0;outline:0;background:transparent;color:#15364c;min-width:0;width:100%;height:58px;font:inherit;font-size:16px}
+.stratos-marketing .sf-search:focus-within{outline:2px solid #007ca8;outline-offset:3px}
+.stratos-marketing .sf-filters{display:flex;gap:8px;flex-wrap:wrap}
+.stratos-marketing .sf-filters button{font:inherit;font-size:12px;border:1px solid #dbe6ed;border-radius:24px;background:white;color:#4a6678;padding:10px 14px;min-height:40px;cursor:pointer}
+.stratos-marketing .sf-filters button[aria-pressed=true]{background:#123d57;border-color:#123d57;color:white}
+.stratos-marketing .sf-results{font-size:12px;color:#647e8f;margin:28px 0 16px}
+.stratos-marketing .sf-feature-list{border-top:1px solid #dce7ee}
+.stratos-marketing .sf-feature-list details{border-bottom:1px solid #dce7ee}
+.stratos-marketing .sf-feature-list summary{display:flex;align-items:center;justify-content:space-between;gap:24px;list-style:none;padding:23px 4px;cursor:pointer}
+.stratos-marketing .sf-feature-list summary::-webkit-details-marker{display:none}
+.stratos-marketing .sf-feature-list summary>span{display:grid;grid-template-columns:minmax(180px,1fr) 1fr;gap:48px;flex:1;align-items:center}
+.stratos-marketing .sf-feature-list summary strong{font-size:18px;font-weight:500;letter-spacing:-.02em}
+.stratos-marketing .sf-feature-list summary span>span{font-size:14px;color:#627783;line-height:1.5}
+.stratos-marketing .sf-feature-list summary>svg{color:#54778b;flex-shrink:0;transition:transform .2s}
+.stratos-marketing .sf-feature-list details[open] summary>svg{transform:rotate(45deg)}
+.stratos-marketing .sf-feature-detail{display:grid;grid-template-columns:1fr 1fr;gap:24px 48px;padding:8px 4px 28px;max-width:950px}
+.stratos-marketing .sf-feature-detail p{font-size:16px;line-height:1.6;color:#38566a;margin:8px 0 0}
+.stratos-marketing .sf-feature-detail .sf-condition{grid-column:1/-1;font-size:12px;color:#627783;padding-top:8px}
+.stratos-marketing .sf-empty{padding:50px 0}
+.stratos-marketing .sf-empty h3{font-size:24px}
+.stratos-marketing .sf-empty p{color:#526477}
+.stratos-marketing .sf-empty button{display:flex;align-items:center;gap:10px;border:0;background:transparent;color:#006d93;font:inherit;cursor:pointer;padding:12px 0}
+.stratos-marketing .sf-implementation{display:grid;grid-template-columns:1fr 1fr;gap:90px}
+.stratos-marketing .sf-implementation p{font-size:16px;line-height:1.7;color:#526477;max-width:440px;margin:24px 0 0}
+.stratos-marketing .sf-implementation ol{list-style:none;padding:0;margin:0}
+.stratos-marketing .sf-implementation li{display:flex;gap:24px;border-top:1px solid #dce7ee;padding:28px 0}
+.stratos-marketing .sf-implementation li>span{font-size:12px;color:#648194;padding-top:5px}
+.stratos-marketing .sf-implementation h3{font-size:23px;letter-spacing:-.03em;font-weight:500;margin:0}
+.stratos-marketing .sf-implementation li p{margin-top:12px}
+.stratos-marketing .sf-scope{border-top:1px solid #e2ebf1;border-bottom:1px solid #e2ebf1;padding-block:30px;display:grid;grid-template-columns:1fr 2fr;gap:40px}
+.stratos-marketing .sf-scope h3{font-size:20px;font-weight:500;margin:0}
+.stratos-marketing .sf-scope p{font-size:14px;line-height:1.7;color:#627783;margin:0}
+.stratos-marketing .sf-final{text-align:center;padding-block:120px}
+.stratos-marketing .sf-final p:not(.sf-eyebrow){font-size:18px;line-height:1.6;color:#526477;max-width:550px;margin:26px auto 30px}
+.stratos-marketing .sf-footer{display:flex;align-items:center;gap:30px;border-top:1px solid #e3ecf2;padding-block:30px;font-size:12px;color:#627783}
+.stratos-marketing .sf-footer p{flex:1}
+.stratos-marketing .sf-footer>a:last-child{color:#526477}
+.stratos-marketing .sf-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:760px){
+.stratos-marketing .sf-container{width:calc(100% - 36px)}
+.stratos-marketing .sf-header-inner{min-height:68px;gap:12px}
+.stratos-marketing .sf-header nav{gap:12px;font-size:12px}
+.stratos-marketing .sf-header nav>a:not(.sf-demo-link){display:none}
+.stratos-marketing .sf-hero>.sf-eyebrow{margin-top:48px;font-size:9px}
+.stratos-marketing .sf-hero h1{font-size:clamp(44px,15vw,64px)}
+.stratos-marketing .sf-hero-product{padding:16px 10px;border-radius:20px;margin-top:36px}
+.stratos-marketing .sf-section{padding-block:65px}
+.stratos-marketing .sf-demo-section{margin-top:64px}
+.stratos-marketing .sf-scene-tabs{gap:0;margin:26px 0 35px;display:grid;grid-template-columns:1fr 1fr}
+.stratos-marketing .sf-scene-tabs button{font-size:11px;padding:16px 4px}
+.stratos-marketing .sf-scene-tabs button span{margin-right:6px}
+.stratos-marketing .sf-scene{grid-template-columns:1fr;gap:30px;min-height:0}
+.stratos-marketing .sf-scene-copy h3{font-size:38px}
+.stratos-marketing .sf-scene-copy p{font-size:16px}
+.stratos-marketing .sf-device{padding-inline:18px;border-width:5px;max-width:370px}
+.stratos-marketing .sf-modules{grid-template-columns:1fr;margin-top:32px}
+.stratos-marketing .sf-feature-list summary>span{grid-template-columns:1fr;gap:8px}
+.stratos-marketing .sf-feature-detail{grid-template-columns:1fr;gap:20px}
+.stratos-marketing .sf-feature-list summary strong{font-size:17px}
+.stratos-marketing .sf-feature-list summary span>span{font-size:13px}
+.stratos-marketing .sf-implementation{grid-template-columns:1fr;gap:36px}
+.stratos-marketing .sf-scope{grid-template-columns:1fr;gap:16px}
+.stratos-marketing .sf-final{padding-block:80px}
+.stratos-marketing .sf-footer{gap:14px;flex-wrap:wrap}
+.stratos-marketing .sf-footer p{flex-basis:100%;order:3;margin:0}
+.stratos-marketing .sf-footer>a:last-child{margin-left:auto}
+}
+@media(prefers-reduced-motion:reduce){.stratos-marketing .sf-feature-list summary>svg{transition:none}}

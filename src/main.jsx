@@ -37,6 +37,7 @@ const EmailConfirmation = lazy(() => import("./landing/EmailConfirmation.jsx"));
 const DentalDemo = lazy(() => import("./dental-demo/DentalProfileRouter.jsx"));
 const isDentalDemo = /^\/(?:demo-dental|clinica-dental-demo)(?:\/|$)/.test(window.location.pathname) || ["clinica-dental-demo"].includes(new URLSearchParams(window.location.search).get("client"));
 const App              = lazy(() => import("./app/App.jsx"));
+const Functionalities = lazy(() => import("./landing/Functionalities.jsx"));
 const LandingMarketing = lazy(() => import("./landing/LandingMarketing.jsx"));
 const PrivacyPolicy    = lazy(() => import("./landing/PrivacyPolicy.jsx"));
 const PublicLanding    = lazy(() => import("./app/views/LandingPages/PublicLanding.jsx"));
@@ -175,6 +176,7 @@ const isDiagnosticoView = /^\/diagnostico\/view\/[A-Za-z0-9-]+\/?$/.test(pathnam
 const isDiagnostico = matchPath(DIAGNOSTICO_PATHS) || isDiagnosticoView;
 const isDukeLeadRouter = matchPath(DUKE_LEAD_ROUTER_PATHS);
 const isOnboardingCC = matchPath(ONBOARDING_CC_PATHS);
+const isFunctionalities = matchPath(["/funcionalidades"]);
 
 // Landing personalizada para el CLIENTE FINAL — pública, sin login. El asesor
 // la genera en el Marketing Studio (Create) y comparte /p#d=<payload>. Todo va
@@ -204,7 +206,7 @@ const isLanding = !esAppNativa && !commonEntry && !isExplicitClient && (
   || (hostname === "127.0.0.1" && !params.has("app"))
 );
 
-const isApp = esAppNativa || (!isDentalDemo && !isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isManualMkt && !isManualNSG && !isManualLegacy && !isManualBrasa && !isManualGasil && !isManualMuebleria && !isDiagnostico && !isDukeLeadRouter && !isOnboardingCC && !isPublicLanding && !isLanding);
+const isApp = esAppNativa || (!isDentalDemo && !isPrivacy && !isDeletion && !isDelivery && !isManual && !isManualTG && !isManualMkt && !isManualNSG && !isManualLegacy && !isManualBrasa && !isManualGasil && !isManualMuebleria && !isDiagnostico && !isDukeLeadRouter && !isOnboardingCC && !isFunctionalities && !isPublicLanding && !isLanding);
 
 // URL de la plataforma — usada por la landing para el CTA principal
 const APP_URL = LANDING_DOMAINS.includes(hostname) ? "https://app.getstratosai.com/login" : (import.meta.env.VITE_APP_URL || (window.location.origin + "/login"));
@@ -369,6 +371,8 @@ createRoot(document.getElementById("root")).render(
                         ? <DukeLeadRouter />
                       : isOnboardingCC
                         ? <OnboardingCallCenter />
+                      : isFunctionalities
+                        ? <Functionalities />
                       : isApp
                         ? <TenantConfigGate><App /></TenantConfigGate>
                         : <LandingMarketing appUrl={APP_URL} />
