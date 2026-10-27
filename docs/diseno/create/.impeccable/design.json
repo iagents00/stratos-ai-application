@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-27T19:14:17.306974+00:00",
+  "generatedAt": "2026-10-27T23:19:41.412984+00:00",
   "title": "Design System: Create · dossier de propiedades",
   "extensions": {
     "colorMeta": {
@@ -99,9 +99,9 @@
     {
       "name": "Resumen de ficha",
       "kind": "card",
-      "description": "Extracto visual del resumen tonal; contenido ilustrativo.",
+      "description": "Extracto con acento de respaldo aclarado; la propiedad real aporta su propio color.",
       "html": "<section class=\"ds-summary\"><h3>Nombre de la propiedad</h3><p>Precio de referencia · USD</p><strong>Consultar precio</strong></section>",
-      "css": "@font-face {\n  font-family: 'Stratos Montserrat';\n  font-style: normal;\n  font-weight: 400 700;\n  font-display: swap;\n  src: url('/fonts/portfolio/montserrat-latin-ext-variable.woff2') format('woff2');\n  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;\n}\n@font-face {\n  font-family: 'Stratos Montserrat';\n  font-style: normal;\n  font-weight: 400 700;\n  font-display: swap;\n  src: url('/fonts/portfolio/montserrat-latin-variable.woff2') format('woff2');\n  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n}\n.ds-summary{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;background:linear-gradient(145deg,#111b2a,#11141b 65%);color:#f6f8fb;padding:clamp(24px,3vw,38px);border:1px solid #2b3039;border-radius:12px}.ds-summary h3{margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;font-size:clamp(32px,3.5vw,48px);font-weight:400;line-height:1.12;letter-spacing:-.025em}.ds-summary p{font-size:12px;color:#b6bcc7;margin:30px 0 7px}.ds-summary strong{font-size:clamp(21px,2.1vw,28px);font-weight:500;line-height:1.3} .ds-summary:focus-visible{outline:3px solid #a4c4f0;outline-offset:4px} @media(prefers-reduced-motion:reduce){.ds-summary{transition:none}} .ds-summary h3{font-family:\"Stratos Montserrat\",Inter,sans-serif;font-size:clamp(29px,3.2vw,44px);font-weight:550;line-height:1.18;letter-spacing:-.025em}",
+      "css": "@font-face {\n  font-family: 'Stratos Montserrat';\n  font-style: normal;\n  font-weight: 400 700;\n  font-display: swap;\n  src: url('/fonts/portfolio/montserrat-latin-ext-variable.woff2') format('woff2');\n  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;\n}\n@font-face {\n  font-family: 'Stratos Montserrat';\n  font-style: normal;\n  font-weight: 400 700;\n  font-display: swap;\n  src: url('/fonts/portfolio/montserrat-latin-variable.woff2') format('woff2');\n  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n}\n.ds-summary{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;background:linear-gradient(145deg,#111b2a,#11141b 65%);color:#f6f8fb;padding:clamp(24px,3vw,38px);border:1px solid #2b3039;border-radius:12px}.ds-summary h3{margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;font-size:clamp(32px,3.5vw,48px);font-weight:400;line-height:1.12;letter-spacing:-.025em}.ds-summary p{font-size:12px;color:#b6bcc7;margin:30px 0 7px}.ds-summary strong{font-size:clamp(21px,2.1vw,28px);font-weight:500;line-height:1.3} .ds-summary:focus-visible{outline:3px solid #a4c4f0;outline-offset:4px} @media(prefers-reduced-motion:reduce){.ds-summary{transition:none}} .ds-summary h3{font-family:\"Stratos Montserrat\",Inter,sans-serif;font-size:clamp(29px,3.2vw,44px);font-weight:550;line-height:1.18;letter-spacing:-.025em} .ds-summary{--pd-property-color:#7BA8E0;--pd-property-ink:rgb(202,220,243);border-color:color-mix(in srgb,var(--pd-property-color) 28%,#2b3039);background:linear-gradient(145deg,color-mix(in srgb,var(--pd-property-color) 16%,#0b1019),#0c1017 75%)}.ds-summary h3{color:var(--pd-property-ink)}",
       "refersTo": "property-summary"
     },
     {
@@ -113,33 +113,25 @@
       "refersTo": "button-cover"
     },
     {
-      "name": "Notas de propiedad",
-      "kind": "input",
-      "refersTo": "note-field",
-      "description": "Notas locales; ejemplo sin envío ni persistencia.",
-      "html": "<label class=\"ds-note-label\" for=\"ds-note\">¿Qué te interesa de esta propiedad?</label><textarea id=\"ds-note\" class=\"ds-note\" maxlength=\"600\" rows=\"2\" placeholder=\"Por ejemplo: conocer el plano, comparar formas de pago…\"></textarea>",
-      "css": "@font-face {\n  font-family: 'Stratos Montserrat';\n  font-style: normal;\n  font-weight: 400 700;\n  font-display: swap;\n  src: url('/fonts/portfolio/montserrat-latin-ext-variable.woff2') format('woff2');\n  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;\n}\n@font-face {\n  font-family: 'Stratos Montserrat';\n  font-style: normal;\n  font-weight: 400 700;\n  font-display: swap;\n  src: url('/fonts/portfolio/montserrat-latin-variable.woff2') format('woff2');\n  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n}\n.ds-note-label{display:block;font:550 14px Inter,sans-serif;color:#f6f8fb;margin-bottom:12px}.ds-note{width:100%;min-height:96px;resize:vertical;padding:14px 16px;border:1px solid #586170;border-radius:8px;background:#090c12;color:#f6f8fb;font:16px/1.5 Inter,sans-serif;caret-color:#dce4f1}.ds-note::placeholder{color:#a0a9b8}.ds-note:focus-visible{outline:3px solid #a4c4f0;outline-offset:4px} .ds-note-label{font-family:\"Stratos Montserrat\",Inter,sans-serif;font-weight:600;line-height:1.5;letter-spacing:0}"
-    },
-    {
-      "name": "Preguntas para decidir",
-      "kind": "custom",
-      "description": "Expansión nativa de orientación para la conversación.",
-      "html": "<details class=\"ds-decision\"><summary>Las preguntas que ayudan a decidir<span aria-hidden=\"true\">+</span></summary><div><h4>Tu presupuesto completo</h4><p>Confirma el precio de la unidad, los gastos de adquisición y las condiciones de pago.</p></div></details>",
-      "css": "@font-face {\n  font-family: 'Stratos Montserrat';\n  font-style: normal;\n  font-weight: 400 700;\n  font-display: swap;\n  src: url('/fonts/portfolio/montserrat-latin-ext-variable.woff2') format('woff2');\n  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;\n}\n@font-face {\n  font-family: 'Stratos Montserrat';\n  font-style: normal;\n  font-weight: 400 700;\n  font-display: swap;\n  src: url('/fonts/portfolio/montserrat-latin-variable.woff2') format('woff2');\n  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n}\n.ds-decision{font-family:Inter,sans-serif;color:#f6f8fb;border-block:1px solid #2b3039}.ds-decision summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:20px;min-height:56px;cursor:pointer;font-size:14px;font-weight:550}.ds-decision summary::-webkit-details-marker{display:none}.ds-decision summary span{font-size:22px;font-weight:400;transition:transform .18s ease}.ds-decision[open] summary span{transform:rotate(45deg)}.ds-decision div{padding-bottom:24px}.ds-decision h4{font-size:14px;font-weight:550}.ds-decision p{font-size:14px;color:#b6bcc7}.ds-decision summary:focus-visible{outline:3px solid #a4c4f0;outline-offset:4px}@media(prefers-reduced-motion:reduce){.ds-decision summary span{transition:none}} .ds-decision summary,.ds-decision h4{font-family:\"Stratos Montserrat\",Inter,sans-serif;}.ds-decision h4{font-size:14px;font-weight:600;line-height:1.5;letter-spacing:0}"
-    },
-    {
       "name": "Portada personal",
       "kind": "custom",
       "description": "Nombre completo como protagonista; nombre ilustrativo, sin datos de catálogo.",
-      "html": "<section class=\"ds-cover\"><p>Portafolio personalizado</p><h1><span>Exclusivo para</span>María Fernanda Rodríguez</h1><p class=\"ds-cover-description\">Una selección de propiedades. Una perspectiva más clara para tu próxima decisión.</p></section>",
+      "html": "<section class=\"ds-cover\"><p>Portafolio personalizado</p><h1><span>Exclusivo para</span>María Fernanda Rodríguez</h1><p class=\"ds-cover-description\">Conoce qué ofrece cada propiedad, compara sus detalles y recibe atención directa de tu asesor.</p></section>",
       "css": "@font-face {\n  font-family: 'Stratos Montserrat';\n  font-style: normal;\n  font-weight: 400 700;\n  font-display: swap;\n  src: url('/fonts/portfolio/montserrat-latin-ext-variable.woff2') format('woff2');\n  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;\n}\n@font-face {\n  font-family: 'Stratos Montserrat';\n  font-style: normal;\n  font-weight: 400 700;\n  font-display: swap;\n  src: url('/fonts/portfolio/montserrat-latin-variable.woff2') format('woff2');\n  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n}\n.ds-cover{position:relative;isolation:isolate;background:linear-gradient(155deg,#091321 0%,#080d15 44%,#06070a 80%);color:#f6f8fb;font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;padding:48px 22px;overflow-wrap:anywhere}.ds-cover>p{color:#b6bcc7;font-size:13px}.ds-cover h1{margin:72px 0 0;font-size:clamp(48px,7.6vw,96px);font-weight:600;line-height:1.04;letter-spacing:-.035em;text-wrap:balance}.ds-cover h1 span{display:block;color:#b6bcc7;font-size:clamp(18px,2vw,24px);font-weight:400;line-height:1.4;letter-spacing:-.01em;margin-bottom:24px}.ds-cover .ds-cover-description{font-size:clamp(16px,1.5vw,19px);max-width:48ch;line-height:1.7;margin-top:30px}@media(max-width:760px){.ds-cover h1{font-size:clamp(42px,11vw,68px)}} .ds-cover::before{content:\"\";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 82% 18%,rgba(52,112,185,.25),rgba(28,65,112,.12) 38%,transparent 70%);animation:ds-cover-light 800ms cubic-bezier(.16,1,.3,1) both}@keyframes ds-cover-light{from{opacity:.35}to{opacity:1}}@media(max-width:760px){.ds-cover::before{background:radial-gradient(ellipse at 100% 24%,rgba(52,112,185,.28),rgba(28,65,112,.12) 44%,transparent 76%)}.ds-cover h1{line-height:1.08}.ds-cover .ds-cover-description{max-width:35ch}}@media(prefers-reduced-motion:reduce){.ds-cover::before{animation:none}} .ds-cover h1 span{font-family:\"Stratos Montserrat\",Inter,sans-serif;font-size:clamp(16px,1.6vw,21px);font-weight:500;letter-spacing:.015em;line-height:1.5}.ds-cover .ds-cover-description{line-height:1.75}"
     },
     {
       "name": "Cierre de próximos pasos",
       "kind": "custom",
       "description": "Fondo estático del cierre; extracto visual sin datos de cliente.",
-      "html": "<section class=\"ds-next\"><h2>Tu siguiente paso,<br>con una idea más clara.</h2></section>",
+      "html": "<section class=\"ds-next\"><h2>Conoce más.<br>Decide con tu asesor.</h2></section>",
       "css": "@font-face {\n  font-family: 'Stratos Montserrat';\n  font-style: normal;\n  font-weight: 400 700;\n  font-display: swap;\n  src: url('/fonts/portfolio/montserrat-latin-ext-variable.woff2') format('woff2');\n  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;\n}\n@font-face {\n  font-family: 'Stratos Montserrat';\n  font-style: normal;\n  font-weight: 400 700;\n  font-display: swap;\n  src: url('/fonts/portfolio/montserrat-latin-variable.woff2') format('woff2');\n  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n}\n.ds-next{background:linear-gradient(135deg,#101c2e,#0e1117 65%);padding:clamp(48px,6vw,80px) 22px;color:#f6f8fb;font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif}.ds-next h2{font-size:clamp(32px,3.8vw,48px);font-weight:400;line-height:1.15;letter-spacing:-.03em;margin:0} .ds-next h2{font-family:\"Stratos Montserrat\",Inter,sans-serif;font-size:clamp(29px,3.4vw,44px);font-weight:550;line-height:1.2;letter-spacing:-.025em}"
+    },
+    {
+      "name": "Consulta de propiedad",
+      "kind": "button",
+      "description": "Acción principal de ficha; muestra el acento de respaldo y no abre ni envía mensajes en este ejemplo.",
+      "html": "<button class=\"ds-property-contact\">Consultar por WhatsApp</button>",
+      "css": ".ds-property-contact{font:600 14px/1.4 Inter,sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:50px;padding:11px 17px;border:1px solid rgb(202,220,243);border-radius:8px;background:rgb(202,220,243);color:#06070a;cursor:pointer;transition:background .18s ease,color .18s ease}.ds-property-contact:hover{background:#fff;border-color:#fff}.ds-property-contact:focus-visible{outline:3px solid #a4c4f0;outline-offset:4px}@media(max-width:760px){.ds-property-contact{padding-inline:12px}}@media(prefers-reduced-motion:reduce){.ds-property-contact{transition:none}}"
     }
   ],
   "narrative": {
@@ -149,7 +141,7 @@
       "Portada negra con azul suave y el nombre completo del cliente en gran formato.",
       "Mensaje personal después de la portada, índice con precios y comparación útil.",
       "Fichas con resumen tonal y detalle legible.",
-      "Preguntas expandibles, notas locales y consulta contextual accesible."
+      "Información real de cada propiedad y consulta contextual por WhatsApp."
     ],
     "rules": [],
     "dos": [
@@ -159,9 +151,9 @@
       "Do usar este documento como autoridad local del dossier Create."
     ],
     "donts": [
-      "Don't reintroducir verde, dorado o serif sin petición explícita del usuario.",
+      "Don't sustituir la identidad negra y azul por verde, dorado o serif; sí conservar los acentos recibidos de cada propiedad.",
       "Don't inventar fotografías, disponibilidad, precios o predicciones de mercado.",
-      "Don't prometer persistencia de favoritas o notas fuera del componente montado.",
+      "Don't prometer persistencia de favoritas fuera del componente montado.",
       "Don't aplicar los tokens de Rails por una comparación automática con DESIGN.md de la raíz."
     ]
   }

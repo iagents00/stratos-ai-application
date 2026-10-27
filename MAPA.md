@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**294 archivos · 84.536 líneas**
+**294 archivos · 84.547 líneas**
 
 ---
 
@@ -212,7 +212,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `CallActionButton.jsx` | 182 | _sin describir_ |
 | `DateRangeControl.jsx` | 179 | Control ÚNICO de período del Comando / CRM. Presets rápidos (Hoy, Semana, Mes, |
 | `RequiresHumanButton.jsx` | 177 | _sin describir_ |
-| `PortfolioDocument.css` | 171 | _sin describir_ |
+| `PortfolioDocument.css` | 174 | _sin describir_ |
 | `MiDrive.jsx` | 171 | _sin describir_ |
 | `LeadDiscoveryPanel.jsx` | 158 | Render del perfilamiento extraído por la IA de voz (Retell) en la tabla |
 | `ConectarWhatsApp.jsx` | 156 | Conectar WhatsApp Business en tres clics |
@@ -226,13 +226,13 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ZoomLista.jsx` | 107 | Lista compacta y clickeable de Zooms — la usan los apartados "Calentitos" y |
 | `command-metrics.js` | 101 | _sin describir_ |
 | `date-range.js` | 97 | _sin describir_ |
-| `PortfolioDocument.jsx` | 93 | _sin describir_ |
 | `PublicLanding.jsx` | 93 | _sin describir_ |
+| `PortfolioDocument.jsx` | 92 | _sin describir_ |
 | `plan-semanal.js` | 91 | la lógica pura del Plan Semanal. |
 | `dates.js` | 76 | Helpers de fecha del Control de Zooms, compartidos entre el panel CRUD |
 | `CreateWorkspace.jsx` | 70 | _sin describir_ |
 | `command-report.js` | 63 | _sin describir_ |
-| `portfolio-presentation.js` | 34 | Display helpers shared by the client dossier and its verification. |
+| `portfolio-presentation.js` | 43 | Display helpers shared by the client dossier and its verification. |
 | `MiDia.css` | 30 | _sin describir_ |
 | `productivity-metrics.js` | 20 | _sin describir_ |
 | `create-workflow.js` | 17 | _sin describir_ |
@@ -553,7 +553,6 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | ¿Eliminar usuario? | `src/app/features/Admin/AdminPanel.jsx:511` |
 | ¿En qué empresa? (opcional) | `src/app/views/Marketing.jsx:2460` |
 | ¿Qué necesitas? (ej. Flyer promo…) * | `src/app/views/Marketing.jsx:2190` |
-| ¿Qué te interesa de esta propiedad? | `src/app/views/LandingPages/PortfolioDocument.jsx:81` |
 | Abre el enlace y revisa un borrador de nota. | `src/dental-demo/ClinicalDemoApp.jsx:79` |
 | Abriendo comprobante… | `src/app/views/Caja.jsx:555` |
 | Abriendo documento… | `src/app/views/CRM/components.jsx:4322` |
@@ -618,7 +617,6 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Administrar Marketing | `src/app/features/Admin/PlatformUsersAdmin.jsx:142` |
 | Agenda dental | `src/dental-demo/DentalDemo.jsx:47` |
 | Agenda, lista de acción, documentos y plan | `src/app/App.jsx:3113` |
-| Agendar conversación | `src/app/views/LandingPages/PortfolioDocument.jsx:23` |
 | Agendar en Huli | `src/dental-demo/HuliWorkspace.jsx:38` |
 | Agendar fecha | `src/app/views/CRM/index.jsx:4659` |
 | Agendar llamada | `src/app/views/LandingPages/LandingPagePreview.jsx:114` |
@@ -636,7 +634,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Alergias registradas | `src/dental-demo/ClinicalDemoApp.jsx:272` |
 | Alta intención | `src/app/views/ZoomControl/index.jsx:597` |
 | Alta intención — señal de cierre en el Zoom | `src/app/views/ZoomControl/index.jsx:710` |
-| Amenidades | `src/app/views/LandingPages/PortfolioDocument.jsx:77` |
+| Amenidades | `src/app/views/LandingPages/PortfolioDocument.jsx:78` |
 | Amenidades (separadas por coma) | `src/app/views/LandingPages/index.jsx:763` |
 | Análisis IA | `src/app/views/CRM/components.jsx:5378` |
 | Analizar | `src/app/views/CRM/index.jsx:5316` |
@@ -792,9 +790,11 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Conectando tu clínica con Huli… | `src/dental-demo/TenantHuliWorkspace.jsx:8` |
 | Conectando… | `src/app/views/ConectarWhatsApp.jsx:122` |
 | Conectar mi WhatsApp | `src/app/views/ConectarWhatsApp.jsx:123` |
+| Conexión Huli | `src/dental-demo/ClinicalReadiness.jsx:181` |
+| Conexión real · Sólo consulta | `src/dental-demo/HuliWorkspace.jsx:28` |
 
 
-_(845 textos más — usá `npm run buscar "texto"`)_
+_(843 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -888,7 +888,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/hooks/useWhatsAppInbox.js` (178 líneas)
 - `src/app/views/CRM/RequiresHumanButton.jsx` (177 líneas)
 - `src/lib/informe-doc.js` (175 líneas)
-- `src/app/views/LandingPages/PortfolioDocument.css` (171 líneas)
+- `src/app/views/LandingPages/PortfolioDocument.css` (174 líneas)
 - `src/app/views/MiDrive.jsx` (171 líneas)
 - `src/app/components/EstadoAvisos.jsx` (158 líneas)
 - `src/app/features/Admin/CatalogConfiguratorAdmin.jsx` (158 líneas)
@@ -923,8 +923,8 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/Admin/CompanySetupAdmin.jsx` (99 líneas)
 - `src/app/constants/areas.js` (97 líneas)
 - `src/app/views/CRM/date-range.js` (97 líneas)
-- `src/app/views/LandingPages/PortfolioDocument.jsx` (93 líneas)
 - `src/app/views/LandingPages/PublicLanding.jsx` (93 líneas)
+- `src/app/views/LandingPages/PortfolioDocument.jsx` (92 líneas)
 - `src/landing/ModuleShowcase.jsx` (91 líneas)
 - `src/clients/tgenius/config.js` (90 líneas)
 - `src/landing/FeatureMotion.jsx` (90 líneas)
