@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**291 archivos · 84.460 líneas**
+**291 archivos · 84.488 líneas**
 
 ---
 
@@ -212,6 +212,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `CallActionButton.jsx` | 182 | _sin describir_ |
 | `DateRangeControl.jsx` | 179 | Control ÚNICO de período del Comando / CRM. Presets rápidos (Hoy, Semana, Mes, |
 | `RequiresHumanButton.jsx` | 177 | _sin describir_ |
+| `PortfolioDocument.css` | 171 | _sin describir_ |
 | `MiDrive.jsx` | 171 | _sin describir_ |
 | `LeadDiscoveryPanel.jsx` | 158 | Render del perfilamiento extraído por la IA de voz (Retell) en la tabla |
 | `ConectarWhatsApp.jsx` | 156 | Conectar WhatsApp Business en tres clics |
@@ -220,7 +221,6 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `LeadChatHistory.jsx` | 152 | _sin describir_ |
 | `ISpaceBoard.jsx` | 148 | _sin describir_ |
 | `ScheduledCallBadge.jsx` | 144 | _sin describir_ |
-| `PortfolioDocument.css` | 143 | _sin describir_ |
 | `IACRMPlanes.jsx` | 119 | _sin describir_ |
 | `constants.js` | 116 | _sin describir_ |
 | `ZoomLista.jsx` | 107 | Lista compacta y clickeable de Zooms — la usan los apartados "Calentitos" y |
@@ -885,6 +885,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/hooks/useWhatsAppInbox.js` (178 líneas)
 - `src/app/views/CRM/RequiresHumanButton.jsx` (177 líneas)
 - `src/lib/informe-doc.js` (175 líneas)
+- `src/app/views/LandingPages/PortfolioDocument.css` (171 líneas)
 - `src/app/views/MiDrive.jsx` (171 líneas)
 - `src/app/components/EstadoAvisos.jsx` (158 líneas)
 - `src/app/features/Admin/CatalogConfiguratorAdmin.jsx` (158 líneas)
@@ -898,7 +899,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/landing/Functionalities.css` (151 líneas)
 - `src/app/views/ISpaceBoard.jsx` (148 líneas)
 - `src/app/views/CRM/ScheduledCallBadge.jsx` (144 líneas)
-- `src/app/views/LandingPages/PortfolioDocument.css` (143 líneas)
 - `src/clients/brasa-y-piedra/config.js` (140 líneas)
 - `src/app/components/CopilotCapabilities.jsx` (131 líneas)
 - `src/app/constants/pipeline.js` (129 líneas)

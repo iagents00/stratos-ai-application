@@ -24,21 +24,21 @@ typography:
     lineHeight: 1.04
     letterSpacing: "-.035em"
   property-title:
-    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-    fontSize: "clamp(32px, 3.5vw, 48px)"
-    fontWeight: 400
-    lineHeight: 1.12
+    fontFamily: '"Stratos Montserrat", Inter, sans-serif'
+    fontSize: "clamp(29px, 3.2vw, 44px)"
+    fontWeight: 550
+    lineHeight: 1.18
     letterSpacing: "-.025em"
   body:
     fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-    fontSize: "15px"
-    lineHeight: 1.6
+    fontSize: "16px"
+    lineHeight: 1.65
   section:
-    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-    fontSize: "clamp(29px, 3.4vw, 44px)"
-    fontWeight: 500
-    lineHeight: 1.15
-    letterSpacing: "-.03em"
+    fontFamily: '"Stratos Montserrat", Inter, sans-serif'
+    fontSize: "clamp(28px, 3.2vw, 42px)"
+    fontWeight: 550
+    lineHeight: 1.2
+    letterSpacing: "-.025em"
 rounded:
   button: "8px"
   property: "12px"
@@ -88,7 +88,7 @@ components:
 
 Una portada negra con un degradado azul suave, amplia y tipográfica presenta el nombre completo del cliente como elemento principal, precedido por «Exclusivo para». «Portafolio personalizado» identifica el documento. Después aparecen el mensaje personal del asesor, el índice y las propiedades con información útil para comparar y consultar.
 
-**Preferencia persistente explícita del usuario:** conservar el negro original y la tipografía Inter en todo el dossier. El usuario rechazó la dirección verde con serif; no reintroducirla sin una nueva petición explícita. Su nueva petición autoriza degradados azules suaves sobre el negro, prioridad móvil y movimiento sutil, preservando Inter y el protagonismo del nombre.
+**Preferencia persistente explícita del usuario:** conservar el negro original. La petición tipográfica más reciente incorpora Montserrat para subtítulos y jerarquía secundaria, mientras Inter conserva el nombre del cliente y la prosa. El usuario rechazó la dirección verde con serif; no reintroducirla sin una nueva petición explícita. Su nueva petición autoriza degradados azules suaves sobre el negro, prioridad móvil y movimiento sutil, preservando el protagonismo del nombre en Inter.
 
 El alcance es exclusivamente el dossier implementado en PortfolioDocument. Los documentos de diseño y producto de la raíz corresponden a Rails y no son la autoridad visual de esta superficie. La barra y el panel de compartir del asesor conservan su sistema existente en LandingPagePreview; no se redefinen aquí.
 
@@ -112,9 +112,13 @@ La paleta local utiliza negro, superficies oscuras y texto claro; el dossier dec
 
 ## Typography
 
-Inter y sus respaldos de sistema se aplican a todo el dossier: portada, encabezados, propiedades, datos y controles. El nombre completo del cliente es el h1, sin truncado. «Exclusivo para» aparece en un span secundario de `clamp(18px, 2vw, 24px)`, peso 400 y altura 1.4; no sustituye el nombre.
+Inter y sus respaldos de sistema mantienen el h1 del nombre completo, la prosa y los controles generales. La base es 16px con altura 1.65. Montserrat, mediante el alias local `Stratos Montserrat` y respaldo Inter, define h2, h3, h4, nombres del índice, summary de preguntas, etiquetas de notas y títulos de pasos. «Exclusivo para» utiliza también Montserrat, tamaño `clamp(16px, 1.6vw, 21px)`, peso 500, altura 1.5 y espaciado .015em.
 
-En móvil, el nombre usa `clamp(42px, 11vw, 68px)` con altura 1.08. La descripción de portada se limita a 48ch y a 35ch en móvil. El mensaje personal posterior usa 17px, altura 1.85 y hasta 62ch; en móvil pasa a 16px y altura 1.8. Las descripciones de propiedades llegan a 68ch. Los precios y números de índice usan cifras tabulares.
+La carta usa h2 de `clamp(26px, 2.8vw, 38px)`, peso 550, altura 1.24 y espaciado -.025em. El cierre usa `clamp(29px, 3.4vw, 44px)`, peso 550, altura 1.2 y espaciado -.025em. El título del índice usa 17px/600/1.4; sus nombres, 17px/550/1.45 y espaciado -.015em. Los h4 de destacados, amenidades y preguntas, y las etiquetas de notas, usan 14px, peso 600, altura 1.5 y espaciado normal. Los summary de preguntas mantienen 14px/550 y los títulos de pasos 16px/550.
+
+Las fuentes variables normales 400–700 se autoalojan en `public/fonts/portfolio/`, con `font-display: swap` y `unicode-range` para latin y latin-ext. El alias evita cambiar otras superficies. La procedencia Google Fonts y la licencia SIL OFL 1.1 están registradas en `README.md` y `OFL.txt` de esa carpeta. No se depende de una petición externa de fuente en runtime.
+
+En móvil, el nombre usa `clamp(42px, 11vw, 68px)` con altura 1.08. La descripción de portada tiene altura 1.75 y se limita a 48ch y a 35ch en móvil. El mensaje personal posterior usa 17px, altura 1.85 y hasta 62ch; en móvil pasa a 16px y altura 1.8. Las descripciones de propiedades llegan a 68ch. Los precios y números de índice usan cifras tabulares.
 
 ## Layout
 
@@ -175,7 +179,7 @@ El cierre reúne consulta por WhatsApp y agenda cuando hay datos válidos. Si no
 ## Do's and Don'ts
 
 ### Do:
-- **Do** conservar el negro original, Inter y el nombre completo del cliente como protagonista.
+- **Do** conservar el negro original, el nombre completo y la prosa en Inter, y Montserrat en la jerarquía secundaria.
 - **Do** conservar los datos del catálogo y los contactos recibidos.
 - **Do** mantener foco visible, controles táctiles y desplazamiento contenido en la comparación.
 - **Do** usar este documento como autoridad local del dossier Create.
@@ -187,3 +191,5 @@ El cierre reúne consulta por WhatsApp y agenda cuando hay datos válidos. Si no
 - **Don't** aplicar los tokens de Rails por una comparación automática con DESIGN.md de la raíz.
 
 Los avisos del detector que comparen estos tokens locales con Rails necesitan clasificación por alcance; no prueban una inconsistencia del dossier. La revisión de esta variante tuvo disposición `ship` sobre el diff y cuatro capturas en `.impeccable/review/create-blue/`. La comprobación en navegador cubrió 320, 390, 768 y 1440px sin desbordamiento de página. Runtime y build locales pasaron; la suite reportó 252 pruebas aprobadas y una omitida por falta del artefacto guest. No se midió rendimiento ni se probó un teléfono físico. Esta evidencia no acredita prueba autenticada, revisión integral ni despliegue.
+
+La revisión tipográfica local comprobó 320, 390, 768 y 1440px sin desbordamiento de página y confirmó `fonts.loaded: true`. El subconjunto latin pesa aproximadamente 35.5 KB; este dato de archivo no es una medición de rendimiento. No se declara publicación en producción.
