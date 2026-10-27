@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**291 archivos · 84.433 líneas**
+**292 archivos · 84.436 líneas**
 
 ---
 
@@ -452,12 +452,12 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `Functionalities.css` | 151 | _sin describir_ |
 | `HeroFlowBackdrop.jsx` | 119 | _sin describir_ |
 | `marketing-content.js` | 107 | _sin describir_ |
-| `LandingMarketing.jsx` | 106 | _sin describir_ |
+| `LandingMarketing.jsx` | 104 | _sin describir_ |
 | `ModuleShowcase.jsx` | 91 | _sin describir_ |
 | `FeatureMotion.jsx` | 90 | _sin describir_ |
 | `ModuleShowcase.css` | 66 | _sin describir_ |
+| `Functionalities.jsx` | 60 | _sin describir_ |
 | `RecoveryForm.jsx` | 60 | _sin describir_ |
-| `Functionalities.jsx` | 59 | _sin describir_ |
 | `FeatureMotion.css` | 55 | _sin describir_ |
 | `AppDownloads.jsx` | 29 | _sin describir_ |
 | `ServicesTicker.jsx` | 29 | _sin describir_ |
@@ -465,6 +465,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `AppDownloads.css` | 24 | _sin describir_ |
 | `ServicesTicker.css` | 23 | _sin describir_ |
 | `EmailConfirmation.jsx` | 19 | _sin describir_ |
+| `MarketingBrand.jsx` | 4 | _sin describir_ |
 
 ### `src/lib/`
 
@@ -912,7 +913,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/Admin/PlatformCompanyCRM.css` (111 líneas)
 - `src/landing/marketing-content.js` (107 líneas)
 - `src/lib/rails-config.js` (107 líneas)
-- `src/landing/LandingMarketing.jsx` (106 líneas)
+- `src/landing/LandingMarketing.jsx` (104 líneas)
 - `src/lib/chunk-recovery.js` (103 líneas)
 - `src/app/views/CRM/command-metrics.js` (101 líneas)
 - `src/clients/grupo28/config.js` (100 líneas)
