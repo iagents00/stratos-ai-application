@@ -21,3 +21,10 @@ test('advisor contact carries only the chosen properties and preserves the advis
   assert.equal(portfolioWhatsApp('123', 'Ana', []), null);
   assert.match(portfolioWhatsApp('+1 202 555 0123', 'Ana', []), /wa.me\/12025550123/);
 });
+
+test('personal priorities are encoded as text in the advisor consultation', () => {
+  const url = new URL(portfolioWhatsApp('9841234567', 'Ana', [{ name: 'Casa' }], '  Plano & pagos\n¿Terraza?  '));
+  assert.match(url.searchParams.get('text'), /Mis prioridades y dudas:\nPlano & pagos\n¿Terraza\?/);
+  assert.equal(url.searchParams.size, 1);
+  assert.doesNotMatch(new URL(portfolioWhatsApp('9841234567', 'Ana', [], '  ')).searchParams.get('text'), /Mis prioridades/);
+});
