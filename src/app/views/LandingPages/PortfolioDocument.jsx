@@ -24,26 +24,33 @@ export default function PortfolioDocument({ client, asesor, asesorWA, asesorCal,
 
   return <main className="portfolio-document">
     <div className="pd-cover">
-    <header className="pd-masthead pd-wrap"><span className="pd-brand">{agencyName || 'Stratos'}</span><span>Portafolio personal</span></header>
-    <section className="pd-hero pd-wrap" aria-labelledby={`${id}-title`}>
-      <div className="pd-introduction">
-        <h1 id={`${id}-title`}>Una selección<br />a tu altura.<em>{client ? `Para ${client}.` : 'Pensada para ti.'}</em></h1>
-        <p className="pd-message">{mensaje || 'Propiedades reunidas en un solo lugar para comparar su propuesta, identificar lo que encaja contigo y preparar una conversación con claridad.'}</p>
-        {asesor && <p className="pd-byline">Preparado por <strong>{asesor}</strong></p>}
-        <button className="pd-button pd-primary" onClick={() => jump('selection')}>Explorar la selección <ArrowDown size={18} /></button>
+      <header className="pd-masthead pd-wrap"><span className="pd-brand">{agencyName || 'Stratos'}</span><span>Portafolio personalizado</span></header>
+      <section className="pd-hero pd-wrap" aria-labelledby={`${id}-title`}>
+        <div className="pd-introduction">
+          <h1 id={`${id}-title`}><span>Exclusivo para</span>{client?.trim() || 'ti'}</h1>
+          <p className="pd-cover-description">Una selección de propiedades. Una perspectiva más clara para tu próxima decisión.</p>
+          <button className="pd-button pd-primary" onClick={() => jump('welcome')}>Descubrir mi portafolio <ArrowDown size={18} /></button>
+        </div>
+      </section>
+      <div className="pd-cover-foot pd-wrap"><span>{asesor ? `Preparado por ${asesor}` : 'Una selección personalizada'}<strong>{agencyName || 'Stratos'}</strong></span><button className="pd-cover-scroll" onClick={() => jump('selection')}>{properties.length} {properties.length === 1 ? 'propiedad seleccionada' : 'propiedades seleccionadas'}<ArrowDown size={16} /></button></div>
+    </div>
+
+    <section className="pd-welcome pd-wrap" id={`${id}-welcome`} tabIndex={-1} aria-labelledby={`${id}-welcome-title`}>
+      <div className="pd-letter">
+        <h2 id={`${id}-welcome-title`}>Tu próxima decisión merece una selección personal.</h2>
+        <p className="pd-message">{mensaje?.trim() || `${client?.trim() ? `${client.trim()}, este` : 'Este'} portafolio reúne las propiedades seleccionadas para ti. Aquí puedes explorar sus características, comparar lo que ofrece cada opción y compartir conmigo tus prioridades. Revisaremos juntos los detalles que necesitas para dar el siguiente paso con claridad.`}</p>
+        {asesor && <p className="pd-byline"><strong>{asesor}</strong><span>Tu asesor inmobiliario{agencyName ? ` · ${agencyName}` : ''}</span></p>}
       </div>
       <aside className="pd-index" aria-label="Propiedades de tu portafolio">
-        <div className="pd-index-heading"><h2>Tu selección</h2><span>{properties.length} {properties.length === 1 ? 'propiedad' : 'propiedades'}</span></div>
+        <div className="pd-index-heading"><h2>Dentro de tu portafolio</h2><span>{properties.length} {properties.length === 1 ? 'propiedad' : 'propiedades'}</span></div>
         {properties.map((property, index) => <button className="pd-index-item" key={index} onClick={() => { setOnlyFavorites(false); requestAnimationFrame(() => jump(`property-${index}`)); }}>
           <span className="pd-index-number">{String(index + 1).padStart(2, '0')}</span><span><strong>{property.name}</strong><small>{property.location || 'Ubicación por confirmar'}</small><small className="pd-index-price">{portfolioPrice(property)}</small></span><ArrowUpRight size={18} />
         </button>)}
       </aside>
     </section>
-    <div className="pd-cover-foot pd-wrap"><span>Selección personal · {properties.length} {properties.length === 1 ? 'propiedad' : 'propiedades'}</span><span>Explora. Compara. Decide con información.</span></div>
-    </div>
 
     <section className="pd-selection pd-wrap" id={`${id}-selection`} tabIndex={-1} aria-labelledby={`${id}-selection-title`}>
-      <div className="pd-section-heading"><div><h2 id={`${id}-selection-title`}>Lo que hace diferente a cada opción.</h2><p>Precio, espacio y entrega en una misma lectura. Guarda tus favoritas y prepara tus preguntas para el asesor.</p></div>
+      <div className="pd-section-heading"><div><h2 id={`${id}-selection-title`}>Propiedades seleccionadas para ti.</h2><p>Precio, espacio y entrega en una misma lectura. Guarda tus favoritas y prepara tus preguntas para el asesor.</p></div>
         {properties.length > 1 && <button className="pd-button" aria-pressed={onlyFavorites} onClick={() => setOnlyFavorites(value => !value)}><Heart size={17} fill={onlyFavorites ? 'currentColor' : 'none'} />{onlyFavorites ? 'Ver todas' : `Favoritas (${selected.length})`}</button>}
       </div>
       <p className="pd-sr" role="status">{selected.length} {selected.length === 1 ? 'propiedad favorita' : 'propiedades favoritas'}. {onlyFavorites ? 'Mostrando favoritas.' : 'Mostrando todas.'}</p>

@@ -2,33 +2,27 @@
 name: Stratos AI · Create · dossier de propiedades
 description: Dossier personal de lectura tranquila, comparación y consulta contextual.
 colors:
-  paper: "#f6f4ee"
-  ink: "#213d34"
-  muted: "#5b665e"
-  line: "#d6dbd1"
-  accent: "#235c46"
-  summary: "#e9ece3"
-  cover: "#193b32"
-  cover-muted: "#c0cfc4"
-  cover-line: "#496257"
-  gold: "#e1d2aa"
-  ivory: "#eee5ce"
-  ivory-hover: "#fff6df"
-  note-paper: "#fffdf8"
-  next: "#e5ebdf"
-  white: "#fff"
-  primary-hover: "#305747"
-  secondary-hover: "#e6eade"
-  favorite-selected: "#d6e3cf"
+  paper: "#06070a"
+  ink: "#f6f8fb"
+  muted: "#b6bcc7"
+  line: "#2b3039"
+  accent: "#dce4f1"
+  summary: "#11141b"
+  cover: "#06070a"
+  note-paper: "#090c12"
+  next: "#0e1117"
+  primary-hover: "#dce4f1"
+  secondary-hover: "#21252e"
+  favorite-selected: "#303949"
 typography:
   display:
-    fontFamily: 'Georgia, "Times New Roman", serif'
-    fontSize: "clamp(44px, 5.2vw, 76px)"
-    fontWeight: 400
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    fontSize: "clamp(48px, 7.6vw, 96px)"
+    fontWeight: 600
     lineHeight: 1.04
     letterSpacing: "-.035em"
   property-title:
-    fontFamily: 'Georgia, "Times New Roman", serif'
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
     fontSize: "clamp(32px, 3.5vw, 48px)"
     fontWeight: 400
     lineHeight: 1.12
@@ -38,9 +32,9 @@ typography:
     fontSize: "15px"
     lineHeight: 1.6
   section:
-    fontFamily: 'Georgia, "Times New Roman", serif'
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
     fontSize: "clamp(29px, 3.4vw, 44px)"
-    fontWeight: 400
+    fontWeight: 500
     lineHeight: 1.15
     letterSpacing: "-.03em"
 rounded:
@@ -53,7 +47,7 @@ spacing:
   property-gap-mobile: "24px"
 components:
   button-cover:
-    backgroundColor: "{colors.ivory}"
+    backgroundColor: "{colors.ink}"
     textColor: "{colors.cover}"
     rounded: "{rounded.button}"
     padding: "11px 17px"
@@ -64,7 +58,7 @@ components:
     padding: "14px 16px"
   button-primary:
     backgroundColor: "{colors.ink}"
-    textColor: "{colors.white}"
+    textColor: "{colors.paper}"
     rounded: "{rounded.button}"
     padding: "11px 17px"
   button-primary-hover:
@@ -90,43 +84,47 @@ components:
 
 **Creative North Star: "Dossier personal de propiedades"**
 
-Una portada verde profunda con marfil y acentos dorados presenta la selección con una jerarquía editorial más elegante. El título serif y el nombre secundario del cliente abren un dossier de papel claro. Los precios, los detalles comparables, las preguntas orientativas y las notas ayudan a preparar una consulta informada con el asesor.
+Una portada negra, amplia y tipográfica presenta el nombre completo del cliente como elemento principal, precedido por «Exclusivo para». «Portafolio personalizado» identifica el documento. Después aparecen el mensaje personal del asesor, el índice y las propiedades con información útil para comparar y consultar.
+
+**Preferencia persistente explícita del usuario:** conservar el negro original y la tipografía Inter en todo el dossier. El usuario rechazó la dirección verde con serif; no reintroducirla sin una nueva petición explícita.
 
 El alcance es exclusivamente el dossier implementado en PortfolioDocument. Los documentos de diseño y producto de la raíz corresponden a Rails y no son la autoridad visual de esta superficie. La barra y el panel de compartir del asesor conservan su sistema existente en LandingPagePreview; no se redefinen aquí.
 
 **Key Characteristics:**
-- Portada verde profunda, marfil y dorado sobre un interior de papel claro.
-- Índice numerado con precios y comparación enriquecida con un detalle de ficha.
+- Portada negra con el nombre completo del cliente en gran formato.
+- Mensaje personal después de la portada, índice con precios y comparación útil.
 - Fichas con resumen tonal y detalle legible.
 - Preguntas expandibles, notas locales y consulta contextual accesible.
 
 ## Colors
 
-La paleta local combina un fondo de papel cálido con verdes de baja saturación.
+La paleta local utiliza negro, superficies oscuras y texto claro; el dossier declara `color-scheme: dark`.
 
 ### Primary
 
-`ink` identifica texto principal, encabezados y botones de acción. `accent` distingue corazones, enlaces contextuales e iconos de detalles. El botón principal adopta `primary-hover` al pasar el puntero. La portada utiliza `cover` como fondo, `paper` como texto, `cover-muted` como secundario y `cover-line` como separador; el nombre del cliente y los precios del índice usan `gold`. Su botón invierte la relación con fondo `ivory`, texto `cover` y hover `ivory-hover`.
+`ink` identifica texto principal y fondos de botones de acción; `accent` distingue enlaces, corazones e iconos. Los botones principales usan texto `paper` y hover `primary-hover`.
 
 ### Neutral
 
-`paper` cubre el dossier; `summary` distingue el resumen de cada ficha y `next` el cierre. `muted` acompaña datos secundarios y descripciones; `line` separa bloques sin introducir sombras. `white` da contraste al botón principal.
+`paper` y `cover` mantienen el negro original. `summary` separa el resumen de ficha y `next` el cierre. `muted` organiza texto secundario; `line` separa bloques. `note-paper` distingue el campo de notas. No se utiliza verde ni dorado.
 
 ## Typography
 
-Inter y su pila de sistema resuelven lectura, controles y datos. Georgia con respaldo Times New Roman aporta carácter al título principal, los encabezados de sección, los nombres de propiedades y el cierre. El cliente aparece debajo del título en sans serif, sin cursiva, con tamaño `clamp(18px, 2vw, 25px)` y altura 1.3.
+Inter y sus respaldos de sistema se aplican a todo el dossier: portada, encabezados, propiedades, datos y controles. El nombre completo del cliente es el h1, sin truncado. «Exclusivo para» aparece en un span secundario de `clamp(18px, 2vw, 24px)`, peso 400 y altura 1.4; no sustituye el nombre.
 
-La introducción limita el mensaje a 52ch y las descripciones a 68ch. Los precios y números de índice usan cifras tabulares. El encabezado principal se adapta en móvil a `clamp(42px, 11vw, 58px)`; el mensaje se mantiene en 16px.
+En móvil, el nombre usa `clamp(42px, 10.5vw, 72px)`. La descripción de portada se limita a 48ch. El mensaje personal posterior usa 17px, altura 1.85 y hasta 62ch; las descripciones de propiedades llegan a 68ch. Los precios y números de índice usan cifras tabulares.
 
 ## Layout
 
-El contenedor alcanza 1280px y usa margen interior horizontal `clamp(22px, 5vw, 72px)`. La portada distribuye introducción e índice en proporción 1.2:1; las fichas, resumen y detalle en .9:1.2. El cierre utiliza dos columnas 1.2:1.
+El contenedor alcanza 1280px y usa margen interior horizontal `clamp(22px, 5vw, 72px)`. La portada ocupa una altura mínima de `min(900px, 100svh)` y distribuye cabecera, nombre y cierre verticalmente; el área central tiene margen vertical `clamp(72px, 10vw, 144px)`.
 
-A 760px o menos estas tres composiciones pasan a una columna. El encabezado de selección apila su filtro, y las fichas reducen su separación. La tabla mantiene un ancho mínimo de 820px dentro de una región desplazable horizontalmente y enfocable mediante teclado. No se comprimen artificialmente sus columnas.
+Después, la bienvenida combina carta personal e índice en proporción 1.2:1. Las fichas distribuyen resumen y detalle en .9:1.2; el cierre utiliza 1.2:1. A 760px o menos estas composiciones pasan a una columna, el pie de portada permite envolver y se reducen separaciones. `overflow-wrap: anywhere` permite acomodar nombres extensos.
+
+La tabla mantiene un ancho mínimo de 820px dentro de una región desplazable horizontalmente y enfocable mediante teclado. El desplazamiento pertenece a la comparación, no a toda la página.
 
 ## Elevation & Depth
 
-El dossier no utiliza sombras. La profundidad proviene del papel, los fondos tonales y los bordes finos. Las sombras y desenfoques del panel de compartir pertenecen a la interfaz del asesor, fuera de este sistema local.
+El dossier no utiliza sombras. La profundidad proviene de las superficies negras, los fondos tonales y los bordes finos. Las sombras y desenfoques del panel de compartir pertenecen a la interfaz del asesor, fuera de este sistema local.
 
 ## Shapes
 
@@ -138,9 +136,13 @@ Los botones usan esquinas suaves, las fichas una curva algo mayor y el favorito 
 
 Acciones de altura mínima 46px, con icono y texto. La variante secundaria es transparente con borde; el enlace contextual conserva subrayado y altura mínima 44px. Los cambios de fondo y color duran .18s; el foco visible usa contorno de 3px con separación de 4px. La preferencia de movimiento reducido elimina transiciones y desplazamiento suave.
 
+### Cover and personal letter
+
+La portada muestra agencia, «Portafolio personalizado», «Exclusivo para» y el nombre completo. «Descubrir mi portafolio» lleva al mensaje personal; el contador del pie lleva a la selección. La carta utiliza el mensaje recibido o una introducción personalizada de respaldo y muestra la firma del asesor cuando existe.
+
 ### Navigation
 
-El índice enumera todas las propiedades con ubicación y precio de referencia, y permite ir a la ficha. Al usarlo, se desactiva el filtro de favoritas. Los saltos trasladan el foco al destino y lo desplazan a la vista. La tabla también enlaza a cada ficha.
+Después del mensaje personal, el índice enumera todas las propiedades con ubicación y precio de referencia, y permite ir a la ficha. Al usarlo, se desactiva el filtro de favoritas. Los saltos trasladan el foco al destino y lo desplazan a la vista. La tabla también enlaza a cada ficha.
 
 ### Comparison
 
@@ -158,7 +160,7 @@ El botón circular expone su estado mediante `aria-pressed` y nombre accesible. 
 
 Cada ficha incluye un bloque nativo expandible de preguntas sobre presupuesto, espacio y entrega. Las alternativas de redacción dependen de la presencia de tipología, superficies y entrega; son orientación para conversar, nunca afirmaciones de idoneidad o rendimiento. El indicador de expansión gira al abrirse y respeta movimiento reducido.
 
-El área de notas tiene etiqueta visible, ayuda asociada, fuente de 16px, altura mínima de 96px, redimensionamiento vertical y máximo de 600 caracteres por propiedad. Su fondo claro distingue la entrada del contenido de catálogo. Las notas se mantienen en estado local mientras el componente está montado, incluso al alternar el filtro; se pierden al cerrar o recargar.
+El área de notas tiene etiqueta visible, ayuda asociada, fuente de 16px, altura mínima de 96px, redimensionamiento vertical y máximo de 600 caracteres por propiedad. Su fondo oscuro distingue la entrada del contenido de catálogo. Las notas se mantienen en estado local mientras el componente está montado, incluso al alternar el filtro; se pierden al cerrar o recargar.
 
 El enlace de consulta individual incluye las notas de esa propiedad. La consulta general reúne las notas de las favoritas si hay alguna, o de todas las propiedades en otro caso. Se incorporan al texto preparado al abrir WhatsApp; escribirlas no envía mensajes automáticamente.
 
@@ -169,13 +171,15 @@ El cierre reúne consulta por WhatsApp y agenda cuando hay datos válidos. Si no
 ## Do's and Don'ts
 
 ### Do:
+- **Do** conservar el negro original, Inter y el nombre completo del cliente como protagonista.
 - **Do** conservar los datos del catálogo y los contactos recibidos.
 - **Do** mantener foco visible, controles táctiles y desplazamiento contenido en la comparación.
 - **Do** usar este documento como autoridad local del dossier Create.
 
 ### Don't:
+- **Don't** reintroducir verde, dorado o serif sin petición explícita del usuario.
 - **Don't** inventar fotografías, disponibilidad, precios o predicciones de mercado.
 - **Don't** prometer persistencia de favoritas o notas fuera del componente montado.
 - **Don't** aplicar los tokens de Rails por una comparación automática con DESIGN.md de la raíz.
 
-Los avisos del detector que comparen estos tokens locales con Rails necesitan clasificación por alcance; no prueban una inconsistencia del dossier. Las capturas de revisión pertenecen a `.impeccable/review/create/` en la raíz. Este documento no declara revisión integral ni publicación.
+Los avisos del detector que comparen estos tokens locales con Rails necesitan clasificación por alcance; no prueban una inconsistencia del dossier. La revisión reciente de esta variante (`black_cover_reviewer`) tuvo disposición `ship` sobre código y cinco capturas en `.impeccable/review/create-black/`. Se comprobaron anchos 320, 390, 768 y 1440px, incluidos nombres largos sin desbordamiento de página, en preview demo. Esta evidencia local no acredita prueba autenticada, revisión integral ni despliegue. El detector se ejecutó una vez sin comparación de sistema de diseño: únicamente señaló cuatro avisos de fuente habitual por Inter, aceptados por la preferencia explícita del usuario; no reportó otros hallazgos dentro de ese alcance.
