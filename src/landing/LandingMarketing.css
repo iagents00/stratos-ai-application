@@ -122,8 +122,8 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
 .stratos-marketing .smk-price > span:last-child { color: var(--smk-muted); font-size: 13px; white-space: nowrap; }
 .stratos-marketing .smk-price-label { margin-top: 24px; font-size: 12px; color: var(--smk-muted); }
 .stratos-marketing .smk-price-card .smk-price { margin-top: 10px; }
-.stratos-marketing .smk-plan-billing { min-height: 82px; margin-top: 22px; font-size: 13px; line-height: 1.6; color: var(--smk-muted); }
-.stratos-marketing .smk-plan-billing strong { font-size: 18px; font-weight: 500; color: var(--smk-ink); }
+.stratos-marketing .smk-plan-billing { min-height: 100px; margin-top: 18px; font-size: 13px; line-height: 1.6; color: var(--smk-muted); }
+.stratos-marketing .smk-plan-billing strong { font-size: 13px; font-weight: 500; color: var(--smk-muted); }
 .stratos-marketing .smk-plan-billing p + p { margin-top: 6px; }
 .stratos-marketing .smk-plan-benefit { min-height: 76px; padding: 14px 0; border-block: 1px solid var(--smk-line); font-size: 12px; line-height: 1.6; color: #17684e; }
 .stratos-marketing .smk-plan-benefit strong { display: block; font-weight: 550; }
@@ -282,3 +282,6 @@ body.stratos-public-site #root { height: auto; min-height: 100dvh; }
 
 .stratos-marketing .smk-all-features{display:flex;align-items:center;justify-content:center;gap:8px;width:max-content;margin:24px auto 0;font-size:14px;color:#526477;text-decoration:none;padding:10px}
 .stratos-marketing .smk-all-features:hover{color:#006a91}
+
+.stratos-marketing .smk-custom-price { display: flex; align-items: center; min-height: 56px; margin-top: 10px; font: 400 32px/1.1 var(--marketing-display); letter-spacing: -.03em; }
+.stratos-marketing .smk-plan-billing .smk-installation-price { margin-top: 14px; font-size: 13px; line-height: 1.6; }
