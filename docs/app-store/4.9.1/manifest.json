@@ -1,0 +1,38 @@
+{
+  "version": "4.9.1",
+  "appId": "6804826565",
+  "bundleId": "com.stratoscapitalgroup.crm",
+  "date": "2026-10-27",
+  "screenshots": {
+    "large": {
+      "width": 1290,
+      "height": 2796,
+      "directory": "screenshots"
+    },
+    "medium": {
+      "width": 1206,
+      "height": 2622,
+      "directory": "screenshots-medium"
+    },
+    "order": [
+      "01-crm.jpg",
+      "02-copilot.jpg",
+      "03-intelligence.jpg",
+      "04-space.jpg",
+      "05-expediente.jpg"
+    ],
+    "source": "Capturas reales del CRM web móvil en modo demo local; marco editorial de iPhone, sin datos de clientes reales. Dynamic Island de hardware es decorativo; el Centro de Inteligencia mostrado pertenece a Stratos, no a Live Activities de iOS."
+  },
+  "icon": {
+    "source": "Edición con IA del icono existente, revisada según petición del usuario para bajar ligeramente el símbolo.",
+    "width": 1024,
+    "height": 1024,
+    "alpha": false
+  },
+  "validation": [
+    "npm run check:project",
+    "npm run build:app",
+    "npm run verificar:appstore-ios"
+  ],
+  "publication": "Pendiente de compilación iOS y envío a revisión de Apple"
+}
