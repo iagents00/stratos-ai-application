@@ -3,7 +3,7 @@
 .stratos-marketing .sf-header{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.97);border-bottom:1px solid #e6edf2}
 .stratos-marketing .sf-header-inner{display:flex;align-items:center;justify-content:space-between;min-height:76px;gap:24px}
 .stratos-marketing .sf-header nav{display:flex;align-items:center;gap:28px;font-size:14px}
-.stratos-marketing .sf-header a{text-decoration:none;color:#294154}
+.stratos-marketing .sf-header a:not(.smk-brand){text-decoration:none;color:#294154}
 .stratos-marketing .sf-demo-link,.stratos-marketing .sf-text-link,.stratos-marketing .sf-back{display:inline-flex;align-items:center;gap:10px}
 .stratos-marketing .sf-demo-link{font-weight:600}
 .stratos-marketing .sf-hero{padding-top:30px;text-align:center}

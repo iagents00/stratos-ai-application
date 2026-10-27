@@ -1,3 +1,4 @@
+import Brand from "./MarketingBrand.jsx";
 import { createElement, useEffect, useRef, useState } from "react";
 import { ArrowRight, ArrowUpRight, Check, ChevronDown, Menu, X, Mic, MessageSquareText, BarChart3, PhoneCall, Users, Building2, Stethoscope, Cpu, ShieldCheck } from "lucide-react";
 import ModuleShowcase from "./ModuleShowcase.jsx";
@@ -13,9 +14,6 @@ const contact = (message = "Hola, quiero solicitar acceso a Stratos AI") => `htt
 const navLinks = [["Solución", "#solución"], ["Características", "#modulos"], ["Precios", "#precios"], ["Enterprise", "#enterprise"], ["App", "#descargar"]];
 
 
-function Brand({ showIcon = true }) {
-  return <a className="smk-brand" href="#" aria-label="Stratos AI, inicio">{showIcon && <img src="/branding/stratos-logo-web-20261016.webp" width="40" height="40" alt="" />}<span>Stratos <span>AI</span></span></a>;
-}
 
 function AccessButton({ message, children = "Solicitar acceso", secondary = false }) {
   return <a className={`smk-button${secondary ? " smk-secondary" : ""}`} href={contact(message)} target="_blank" rel="noopener noreferrer">{children}<ArrowUpRight size={17} aria-hidden="true" /></a>;
