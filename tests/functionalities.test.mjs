@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { createServer } from 'vite';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { CRM_COMPARISON, COMPARISON_SOURCES } from '../src/landing/crm-comparison.mjs';
 import { FEATURES, FEATURE_CATEGORIES, filterFeatures } from '../src/landing/features-content.mjs';
 
 test('feature discovery handles accents, multiple words, category combinations and empty results', () => {
@@ -27,7 +28,13 @@ test('public feature page provides complete content, working destinations and lo
     const { default: Page } = await vite.ssrLoadModule('/src/landing/Functionalities.jsx');
     const html = renderToStaticMarkup(createElement(Page));
     assert.equal((html.match(/<h1>/g) || []).length, 1);
-    assert.equal((html.match(/<details>/g) || []).length, FEATURES.length);
+    assert.equal((html.match(/scope="row"/g) || []).length, FEATURES.length + CRM_COMPARISON.length);
+    assert.match(html, /Listado comparativo/);
+    for (const feature of FEATURES) {
+      assert.ok(html.includes(feature.title), feature.title);
+      assert.ok(html.includes(feature.benefit), feature.benefit);
+      assert.ok(html.includes(feature.condition), feature.condition);
+    }
     assert.match(html, /Ejemplo ilustrativo con datos ficticios/);
     assert.match(html, /https:\/\/cal.com\/ivanrr.oficial\/nsg/);
     const ids = new Set([...html.matchAll(/id="([^"]+)"/g)].map(match => match[1]));
@@ -39,4 +46,16 @@ test('public feature page provides complete content, working destinations and lo
     assert.match(main, /!isFunctionalities/);
     assert.match(main, /isFunctionalities\s*\? <Functionalities/);
   } finally { await vite.close(); }
+});
+
+test('CRM comparison covers every catalog use once and cites official sources for every competitor cell', () => {
+  const covered = CRM_COMPARISON.flatMap(row => row.featureIds);
+  assert.deepEqual([...covered].sort(), FEATURES.map(feature => feature.id).sort());
+  const allowed = ['www.hubspot.com', 'knowledge.hubspot.com', 'legal.hubspot.com', 'www.salesforce.com', 'trailhead.salesforce.com', 'www.gohighlevel.com', 'help.gohighlevel.com', 'ideas.gohighlevel.com'];
+  for (const row of CRM_COMPARISON) for (const vendor of ['hubspot', 'salesforce', 'highlevel']) {
+    assert.ok(row[vendor].text && row[vendor].status);
+    assert.ok(row[vendor].sources.length);
+    for (const source of row[vendor].sources) assert.ok(allowed.includes(new URL(COMPARISON_SOURCES[source].url).hostname));
+  }
+  assert.match(CRM_COMPARISON.find(row => row.id === 'seats').highlevel.text, /usuarios ilimitados/);
 });
