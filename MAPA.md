@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**293 archivos · 84.566 líneas**
+**294 archivos · 84.546 líneas**
 
 ---
 
@@ -82,7 +82,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `App.jsx` | 3257 | _sin describir_ |
+| `App.jsx` | 3262 | _sin describir_ |
 | `SharedComponents.jsx` | 343 | Shared primitive components used by all views. |
 | `App.css` | 321 | _sin describir_ |
 
@@ -436,9 +436,9 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `Diagnostico.jsx` | 974 | _sin describir_ |
 | `DeliveryHubCRM.jsx` | 881 | _sin describir_ |
 | `ManualCRM.jsx` | 790 | _sin describir_ |
-| `LoginScreen.jsx` | 727 | Pantalla de autenticación completa para la app |
 | `manual-telegram-content.js` | 714 | Manual del COPILOT / Asistente IA (Duke del Caribe) |
 | `OnboardingCallCenter.jsx` | 687 | _sin describir_ |
+| `LoginScreen.jsx` | 657 | Pantalla de autenticación completa para la app |
 | `DataDeletion.jsx` | 554 | _sin describir_ |
 | `PricingScreen.jsx` | 552 | _sin describir_ |
 | `DukeLeadRouter.jsx` | 343 | _sin describir_ |
@@ -459,6 +459,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `Functionalities.jsx` | 65 | _sin describir_ |
 | `RecoveryForm.jsx` | 60 | _sin describir_ |
 | `FeatureMotion.css` | 55 | _sin describir_ |
+| `LoginScreen.css` | 45 | _sin describir_ |
 | `AppDownloads.jsx` | 29 | _sin describir_ |
 | `ServicesTicker.jsx` | 29 | _sin describir_ |
 | `HeroFlowBackdrop.css` | 26 | _sin describir_ |
@@ -557,7 +558,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Abriendo comprobante… | `src/app/views/Caja.jsx:555` |
 | Abriendo documento… | `src/app/views/CRM/components.jsx:4322` |
 | Abriendo tu espacio clínico… | `src/dental-demo/ClinicalProfile.jsx:14` |
-| Abriendo tu espacio… | `src/app/App.jsx:2002` |
+| Abriendo tu espacio… | `src/app/App.jsx:2007` |
 | Abriendo… | `src/app/views/ChatEquipo.jsx:555` |
 | Abrir | `src/app/features/Admin/CatalogConfiguratorAdmin.jsx:150` |
 | Abrir carpeta de Drive | `src/app/views/LandingPages/index.jsx:1425` |
@@ -616,7 +617,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Administrador de demostración | `src/dental-demo/DentalIdentity.jsx:3` |
 | Administrar Marketing | `src/app/features/Admin/PlatformUsersAdmin.jsx:142` |
 | Agenda dental | `src/dental-demo/DentalDemo.jsx:47` |
-| Agenda, lista de acción, documentos y plan | `src/app/App.jsx:3108` |
+| Agenda, lista de acción, documentos y plan | `src/app/App.jsx:3113` |
 | Agendar conversación | `src/app/views/LandingPages/PortfolioDocument.jsx:23` |
 | Agendar en Huli | `src/dental-demo/HuliWorkspace.jsx:38` |
 | Agendar fecha | `src/app/views/CRM/index.jsx:4659` |
@@ -646,8 +647,8 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Añadir criterio | `src/app/views/ISpaceBoard.jsx:122` |
 | Añadir tarea | `src/app/views/ISpaceBoard.jsx:138` |
 | Aparecerán al inicio de su pipeline en | `src/app/views/CRM/index.jsx:6183` |
-| Aplicaciones | `src/app/App.jsx:3171` |
-| Apps | `src/app/App.jsx:2342` |
+| Aplicaciones | `src/app/App.jsx:3176` |
+| Apps | `src/app/App.jsx:2347` |
 | Área | `src/app/features/Admin/PlatformUsersAdmin.jsx:134` |
 | Áreas de atención | `src/app/views/RRHHModule.jsx:793` |
 | Arrastra el CV aquí o haz clic para subir | `src/app/views/RRHHModule.jsx:716` |
@@ -671,7 +672,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Bajar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:288` |
 | Bajo · Medio · Alto | `src/app/views/CRM/components.jsx:3431` |
 | Borradores de esta demo | `src/dental-demo/ClinicalDemoApp.jsx:303` |
-| Buscar (⌘K) | `src/app/App.jsx:2432` |
+| Buscar (⌘K) | `src/app/App.jsx:2437` |
 | Buscar asesor… | `src/app/views/CRM/components.jsx:3188` |
 | Buscar candidato... | `src/app/views/RRHHModule.jsx:416` |
 | Buscar cliente | `src/app/features/Admin/PlatformCompanyCRM.jsx:249` |
@@ -728,7 +729,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cargando el plan… | `src/app/views/PlanSemanal.jsx:369` |
 | Cargando el tablero… | `src/app/views/ComandoOps.jsx:127` |
 | Cargando empresas… | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:242` |
-| Cargando equipo… | `src/app/App.jsx:2460` |
+| Cargando equipo… | `src/app/App.jsx:2465` |
 | Cargando ficha del cliente… | `src/app/features/Admin/PlatformCompanyCRM.jsx:225` |
 | Cargando movimientos… | `src/app/views/Caja.jsx:467` |
 | Cargando perfil dental… | `src/dental-demo/DentalProfile.jsx:11` |
@@ -746,7 +747,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Centro de Inteligencia | `src/app/components/DynamicIsland.jsx:81` |
 | Centro de Inteligencia — Activo | `src/app/components/DynamicIsland.jsx:102` |
 | Centro de soporte | `src/app/features/Admin/PlatformAdminConsole.jsx:232` |
-| Cerrar | `src/app/App.jsx:3024` |
+| Cerrar | `src/app/App.jsx:3029` |
 | Cerrar (Esc) | `src/app/views/ZoomControl/index.jsx:811` |
 | Cerrar detalle | `src/app/views/ZoomControl/Resumen.jsx:309` |
 | Cerrar editor | `src/app/features/Admin/PlatformUsersAdmin.jsx:146` |
@@ -756,7 +757,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cerrar guía de funciones | `src/app/components/CopilotCapabilities.jsx:120` |
 | Cerrar menú | `src/app/components/MobileHeaderMenu.jsx:52` |
 | Cerrar navegación | `src/app/features/Admin/PlatformAdminConsole.jsx:253` |
-| Cerrar sesión | `src/app/App.jsx:2010` |
+| Cerrar sesión | `src/app/App.jsx:2015` |
 | Cerrar Space | `src/app/features/MetaPanel/index.jsx:739` |
 | Cerrar vista previa | `src/app/views/LandingPages/LandingPagePreview.jsx:152` |
 | Certificación de tu cuenta Huli | `src/dental-demo/ClinicalReadiness.jsx:199` |
@@ -803,7 +804,7 @@ Estos no tienen comentario de cabecera, así que el mapa no puede explicar qué
 hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 
 - `src/app/views/CRM/index.jsx` (6669 líneas)
-- `src/app/App.jsx` (3257 líneas)
+- `src/app/App.jsx` (3262 líneas)
 - `src/app/views/Marketing.jsx` (3084 líneas)
 - `src/landing/PrivacyPolicy.jsx` (1222 líneas)
 - `src/landing/ManualMarketing.jsx` (1026 líneas)

@@ -264,8 +264,8 @@ try {
         scope: "/",
         display: "standalone",
         orientation: "any",
-        background_color: "#000000",
-        theme_color: "#000000",
+        background_color: "#FFFFFF",
+        theme_color: "#FFFFFF",
         categories: ["business", "productivity"],
         icons: [
           { src: "/icon-192.png",     sizes: "192x192", type: "image/png", purpose: "any" },

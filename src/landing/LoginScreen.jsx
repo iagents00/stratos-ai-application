@@ -5,10 +5,14 @@
  * Modos: login | register | forgot | forgot-sent
  */
 import { useState, useEffect, useRef } from "react";
-import { X, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { pingSupabase } from "../lib/offline-mode";
-import { P } from "../design-system/tokens";
+import { LP } from "../design-system/tokens";
+import "./LoginScreen.css";
+
+// El acceso público siempre es claro; no modifica el tema guardado del CRM.
+const P = { ...LP, bg: "#FFFFFF", bg3: "#EDF3F9", actionG: "#10234B", actionBorder: "#10234B" };
 import { useClient } from "../hooks/useClient";
 import { requestRecoveryCode, verifyRecoveryCode } from "../lib/recovery";
 import { isNativeApp } from "../lib/native";
@@ -17,19 +21,6 @@ import { isCommonEntryLocation } from "../lib/common-entry";
 const font  = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
 const fontD = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
 
-
-// Logo Stratos (SVG inline)
-function StratosAtom({ size = 20, color = "#FFFFFF" }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      <circle cx="16" cy="16" r="10" stroke={color} strokeWidth="1.2" opacity="0.3" />
-      <circle cx="16" cy="16" r="4"  stroke={color} strokeWidth="1.2" opacity="0.6" />
-      <circle cx="16" cy="16" r="1.5" fill={color} />
-      <ellipse cx="16" cy="16" rx="10" ry="4" stroke={color} strokeWidth="1"
-        opacity="0.25" transform="rotate(-35 16 16)" />
-    </svg>
-  );
-}
 
 // Sembrar cuenta demo
 function seedDemo() {
@@ -63,11 +54,7 @@ export default function LoginScreen({ onLogin }) {
   const initialMode = !nativo && new URLSearchParams(window.location.search).get("register") === "true"
     ? "register" : "login";
 
-  // ── Marca por cliente (white-label) ───────────────────────────────
-  // El wordmark sale del config del cliente activo. Default EXACTO a Stratos
-  // para que Duke quede pixel-idéntico: name "Stratos AI" + logoText "Stratos"
-  // → "Stratos" en bold + "AI" en ligero. Para clientes cuyo name == logoText
-  // (TGenius, Grupo 28) no hay sufijo → se muestra solo el nombre.
+  // La entrada común usa Stratos; las rutas de empresa conservan su marca.
   const { config: clientConfig, clientId } = useClient();
   // El acceso común mantiene la marca Stratos incluso tras cerrar una sesión
   // cuya empresa se había aplicado en memoria. Las portadas específicas siguen.
@@ -79,19 +66,10 @@ export default function LoginScreen({ onLogin }) {
     ? brandName.slice(brandWord.length).trim()
     : "";
   const isDuke   = commonEntry || clientId === "duke";
-  // ── Portada del acceso, por cliente ──────────────────────────────
-  // Era texto fijo de Stratos: "IA comercial", "diseñado para cerrar más" y
-  // "$40M+ en transacciones gestionadas". A una inmobiliaria le habla; a una
-  // clínica dental le habla del negocio de otro — y es la PRIMERA pantalla que
-  // ve cualquiera. Ahora sale del config, con el texto de siempre como default
-  // para que Duke, NSG y Vega queden idénticos al pixel.
   const heroTop   = config?.login?.heroTop   || "El sistema operativo";
-  const heroBot   = config?.login?.heroBot   || "que escala tu empresa";
-  const heroSub   = config?.login?.sub       || ["CRM inteligente · Pipeline automático · IA comercial", "Todo en un solo lugar, diseñado para cerrar más."];
-  const heroStats = config?.login?.stats     || [["$40M+","En transacciones gestionadas"],["8–13%","ROI anual documentado"],["47","Agentes IA activos"]];
-  // El acento de la marca en los dos puntos donde más se nota. El resto de la
-  // pantalla sigue en el menta de Stratos: cambiarlo entero es otra tarea.
-  const brandAccent = config?.brand?.accent || P.accent;
+  const heroBot   = config?.login?.heroBot   || "con IA para tu negocio.";
+  const heroSub   = config?.login?.sub       || ["Tu equipo, tus clientes y tu Copilot.", "Conectados en un mismo espacio."];
+  const heroStats = config?.login?.stats     || [["CRM","Organiza"],["Copilot","Simplifica"],["Equipo","Conecta"]];
   // El WhatsApp de "solicitar acceso" cae al de Stratos (operador del white-label)
   // salvo que el cliente declare el suyo; el texto siempre nombra a la marca activa.
   const waNumber = config?.support?.whatsapp || "17479779711";
@@ -164,14 +142,14 @@ export default function LoginScreen({ onLogin }) {
 
   const inputStyle = (field, hasErr) => ({
     width: "100%", padding: "12px 14px", borderRadius: 10, outline: "none",
-    background: "rgba(255,255,255,0.04)",
-    border: `1px solid ${hasErr ? "rgba(232,129,140,0.5)" : focused === field ? P.accentB : P.border}`,
-    color: P.txt, fontSize: 16, fontFamily: font, transition: "border-color 0.2s",
+    background: "#F7FAFD",
+    border: `1px solid ${hasErr ? "#B42338" : focused === field ? P.accent : "#D5DFE9"}`,
+    color: P.txt, fontSize: 16, fontFamily: font, boxShadow: focused === field ? "0 0 0 3px rgba(0,111,145,.10)" : "none", transition: "border-color 0.2s",
   });
 
   const Label = ({ text, right, htmlFor }) => (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-      <label htmlFor={htmlFor} style={{ fontSize: 10, color: P.txt2, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase" }}>{text}</label>
+      <label htmlFor={htmlFor} style={{ fontSize: 13, color: P.txt2, fontWeight: 600 }}>{text}</label>
       {right}
     </div>
   );
@@ -251,66 +229,25 @@ export default function LoginScreen({ onLogin }) {
   };
 
   return (
-    <div style={{
-      minHeight: "100vh", background: P.bg, display: "flex", fontFamily: font,
-      backgroundImage: "none",
-    }}>
-      <style>{`
-        @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
-        * { box-sizing: border-box; margin: 0; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: ${P.border}; border-radius: 2px; }
-      `}</style>
-
-      {/* Panel izquierdo — branding (desktop) */}
-      <div style={{
-        flex: 1, display: "flex", flexDirection: "column", justifyContent: "center",
-        padding: "60px 80px", borderRight: `1px solid ${P.border}`,
-        background: `linear-gradient(145deg, ${P.accent}05 0%, transparent 60%)`,
-      }} className="brand-panel">
-        <div style={{ maxWidth: 420 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 56 }}>
-            <StratosAtom size={28} color={brandAccent} />
-            <span style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", fontFamily: fontD, letterSpacing: "-0.02em" }}>
-              {brandWord}{brandSuffix ? <>{" "}<span style={{ fontWeight: 300, color: "rgba(255,255,255,0.5)" }}>{brandSuffix}</span></> : null}
-            </span>
-          </div>
-
-          <h1 style={{ fontSize: 38, fontWeight: 300, color: "#FFFFFF", fontFamily: fontD, letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 20 }}>
-            {heroTop}<br />
-            <span style={{
-              background: `linear-gradient(135deg, #FFFFFF 0%, ${brandAccent}B3 100%)`,
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
-            }}>
-              {heroBot}
-            </span>
-          </h1>
-          <p style={{ fontSize: 14, color: P.txt2, lineHeight: 1.75, marginBottom: 48 }}>
-            {heroSub.map((linea, i) => (
-              <span key={i}>{linea}{i < heroSub.length - 1 ? <br /> : null}</span>
-            ))}
-          </p>
-
-          {/* Métricas */}
-          <div style={{ display: "flex", gap: 32 }}>
-            {heroStats.map(([v, l]) => (
-              <div key={v}>
-                <p style={{ fontSize: 22, fontWeight: 300, color: "#FFFFFF", fontFamily: fontD, letterSpacing: "-0.03em", lineHeight: 1 }}>{v}</p>
-                <p style={{ fontSize: 10, color: P.txt3, marginTop: 4, lineHeight: 1.4 }}>{l}</p>
-              </div>
-            ))}
+    <main className="stratos-login">
+      <section className="login-brand-panel" aria-label={brandName}>
+        <div className="login-wordmark">
+          {isDuke && <img src="/branding/stratos-logo-web-20261016.webp" alt="" width="48" height="48" />}
+          <span>{brandWord}{brandSuffix && <> <span>{brandSuffix}</span></>}</span>
+        </div>
+        <div className="login-intro">
+          <p className="login-eyebrow">Tu espacio de trabajo inteligente</p>
+          <h1>{heroTop}<br /><span>{heroBot}</span></h1>
+          <p className="login-description">{heroSub.map((linea, i) => <span key={i}>{linea}{i < heroSub.length - 1 && <br />}</span>)}</p>
+          <div className="login-capabilities">
+            {heroStats.map(([v, l]) => <div key={v}><strong>{v}</strong><span>{l}</span></div>)}
           </div>
         </div>
-      </div>
-
-      {/* Panel derecho — formulario */}
-      <div style={{
-        width: "100%", maxWidth: 480, display: "flex", alignItems: "center", justifyContent: "center",
-        padding: "40px 40px",
-        flexShrink: 0,
-      }}>
-        <div style={{ width: "100%", maxWidth: 380, animation: "fadeUp 0.35s ease both" }}>
-
+        <div className="login-orbit" aria-hidden="true"><i /><i /><i /></div>
+        <p className="login-brand-caption">{brandName} · Todo empieza aquí.</p>
+      </section>
+      <section className="login-form-panel" aria-label="Acceso a tu cuenta">
+        <div className="login-form-content">
           {/* ─ CONTRASEÑA ACTUALIZADA ─ */}
           {mode === "forgot-done" ? (
             <div style={{ textAlign: "center" }}>
@@ -322,11 +259,11 @@ export default function LoginScreen({ onLogin }) {
               }}>
                 <CheckCircle2 size={28} color={P.success} />
               </div>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: fontD, marginBottom: 8 }}>¡Listo!</h2>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: P.txt, fontFamily: fontD, marginBottom: 8 }}>¡Listo!</h2>
               <p style={{ fontSize: 13, color: P.txt2, lineHeight: 1.7, marginBottom: 6 }}>
                 Tu contraseña fue actualizada.
               </p>
-              <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 600, marginBottom: 24 }}>
+              <p style={{ fontSize: 13, color: P.txt, fontWeight: 600, marginBottom: 24 }}>
                 Ya puedes iniciar sesión con tu nueva contraseña.
               </p>
               <button onClick={() => go("login")} style={{
@@ -341,7 +278,7 @@ export default function LoginScreen({ onLogin }) {
                 <p style={{ fontSize: 11, color: P.accent, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
                   Recuperar acceso
                 </p>
-                <h2 style={{ fontSize: 24, fontWeight: 700, color: "#FFFFFF", fontFamily: fontD, letterSpacing: "-0.02em" }}>
+                <h2 style={{ fontSize: 28, fontWeight: 600, color: P.txt, fontFamily: fontD, letterSpacing: "-0.02em" }}>
                   Ingresa el código
                 </h2>
               </div>
@@ -373,7 +310,7 @@ export default function LoginScreen({ onLogin }) {
                       placeholder="Mínimo 8 caracteres"
                       style={{ ...inputStyle("pass", false), paddingRight: 52 }}
                       autoComplete="new-password" />
-                    <button type="button" onClick={() => setShowP(s => !s)} style={{
+                    <button type="button" aria-label={showP ? "Ocultar contraseña" : "Mostrar contraseña"} aria-pressed={showP} onClick={() => setShowP(s => !s)} style={{
                       position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
                       background: "none", border: "none", cursor: "pointer",
                       color: P.txt3, fontSize: 11, fontFamily: font, padding: 0,
@@ -394,7 +331,7 @@ export default function LoginScreen({ onLogin }) {
 
               {error && (
                 <div style={{ padding: "10px 13px", borderRadius: 8, background: "rgba(232,129,140,0.07)", border: "1px solid rgba(232,129,140,0.2)", marginBottom: 14 }}>
-                  <p role="alert" style={{ fontSize: 12, color: "#E8A0A0", fontFamily: font }}>{error}</p>
+                  <p role="alert" style={{ fontSize: 12, color: "#A1263A", fontFamily: font }}>{error}</p>
                 </div>
               )}
 
@@ -428,19 +365,19 @@ export default function LoginScreen({ onLogin }) {
                 <p style={{ fontSize: 11, color: P.accent, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
                   {mode === "login" ? "Acceso a la plataforma" : mode === "register" ? "Acceso por invitación" : "Recuperar acceso"}
                 </p>
-                <h2 style={{ fontSize: 24, fontWeight: 700, color: "#FFFFFF", fontFamily: fontD, letterSpacing: "-0.02em" }}>
+                <h2 style={{ fontSize: 28, fontWeight: 600, color: P.txt, fontFamily: fontD, letterSpacing: "-0.02em" }}>
                   {mode === "login" ? "Bienvenido de vuelta" : mode === "register" ? "Solicitar acceso" : "Olvidé mi contraseña"}
                 </h2>
               </div>
 
               {/* ─ Tabs ─ (en la app nativa no hay alta: queda solo iniciar sesión) */}
               {!nativo && (mode === "login" || mode === "register") && (
-                <div style={{ display: "flex", gap: 3, background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 3, marginBottom: 24 }}>
+                <div style={{ display: "flex", gap: 3, background: "#F7FAFD", borderRadius: 10, padding: 3, marginBottom: 24 }}>
                   {[["login","Iniciar sesión"],["register","Solicitar acceso"]].map(([m, lbl]) => (
                     <button key={m} type="button" onClick={() => go(m)} style={{
                       flex: 1, padding: "8px 0", borderRadius: 8, border: "none", cursor: "pointer",
-                      background: mode === m ? "rgba(255,255,255,0.09)" : "transparent",
-                      color: mode === m ? "#FFFFFF" : "rgba(255,255,255,0.38)",
+                      background: mode === m ? "#E4EFF8" : "transparent",
+                      color: mode === m ? P.txt : P.txt2,
                       fontSize: 12, fontWeight: 600, fontFamily: font, transition: "all 0.18s",
                     }}>{lbl}</button>
                   ))}
@@ -463,7 +400,7 @@ export default function LoginScreen({ onLogin }) {
                     {/* Email */}
                     <div>
                       <Label htmlFor="auth-email" text="Correo electrónico" />
-                      <input id="auth-email" type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={onKey}
+                      <input id="auth-email" type="email" autoCapitalize="none" spellCheck={false} value={email} onChange={e => setEmail(e.target.value)} onKeyDown={onKey}
                         onFocus={() => setFocused("email")} onBlur={() => setFocused(null)}
                         placeholder="correo@empresa.com" style={inputStyle("email", false)} autoComplete="email" />
                     </div>
@@ -478,10 +415,10 @@ export default function LoginScreen({ onLogin }) {
                       <div style={{ position: "relative" }}>
                         <input id="auth-password" type={showP ? "text" : "password"} value={password} onChange={e => setPass(e.target.value)} onKeyDown={onKey}
                           onFocus={() => setFocused("pass")} onBlur={() => setFocused(null)}
-                          placeholder="Mínimo 6 caracteres"
+                          placeholder="Mínimo 8 caracteres"
                           style={{ ...inputStyle("pass", false), paddingRight: 52 }}
                           autoComplete="new-password" />
-                        <button type="button" onClick={() => setShowP(s => !s)} style={{
+                        <button type="button" aria-label={showP ? "Ocultar contraseña" : "Mostrar contraseña"} aria-pressed={showP} onClick={() => setShowP(s => !s)} style={{
                           position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
                           background: "none", border: "none", cursor: "pointer",
                           color: P.txt3, fontSize: 11, fontFamily: font, padding: 0,
@@ -493,7 +430,7 @@ export default function LoginScreen({ onLogin }) {
                           {[1, 2, 3, 4].map(n => (
                             <div key={n} style={{
                               flex: 1, height: 3, borderRadius: 2,
-                              background: n <= pw ? strengthColor : "rgba(255,255,255,0.06)",
+                              background: n <= pw ? strengthColor : "#EAF2F8",
                               transition: "background 0.2s",
                             }} />
                           ))}
@@ -510,7 +447,7 @@ export default function LoginScreen({ onLogin }) {
                           placeholder="Repite la contraseña"
                           style={{ ...inputStyle("confirm", confirm && password !== confirm), paddingRight: 52 }}
                           autoComplete="new-password" />
-                        <button type="button" onClick={() => setShowC(s => !s)} style={{
+                        <button type="button" aria-label={showC ? "Ocultar confirmación" : "Mostrar confirmación"} aria-pressed={showC} onClick={() => setShowC(s => !s)} style={{
                           position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
                           background: "none", border: "none", cursor: "pointer",
                           color: P.txt3, fontSize: 11, fontFamily: font, padding: 0,
@@ -530,7 +467,7 @@ export default function LoginScreen({ onLogin }) {
                   {/* ─ Error ─ */}
                   {error && (
                     <div style={{ padding: "10px 13px", borderRadius: 8, background: "rgba(232,129,140,0.07)", border: "1px solid rgba(232,129,140,0.2)", marginBottom: 14 }}>
-                      <p role="alert" style={{ fontSize: 12, color: "#E8A0A0", fontFamily: font }}>{error}</p>
+                      <p role="alert" style={{ fontSize: 12, color: "#A1263A", fontFamily: font }}>{error}</p>
                     </div>
                   )}
 
@@ -557,9 +494,9 @@ export default function LoginScreen({ onLogin }) {
 
                   {/* ─ Alternativa: contacto directo por WhatsApp ─ */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                    <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
+                    <div style={{ flex: 1, height: 1, background: P.border }} />
                     <span style={{ fontSize: 10, color: P.txt3, letterSpacing: "0.04em" }}>o contáctanos directo</span>
-                    <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
+                    <div style={{ flex: 1, height: 1, background: P.border }} />
                   </div>
                   <a
                     href={waHref}
@@ -568,17 +505,17 @@ export default function LoginScreen({ onLogin }) {
                     style={{
                       display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                       width: "100%", padding: "11px 0", borderRadius: 10,
-                      border: `1px solid ${P.border}`, background: "rgba(255,255,255,0.03)",
-                      color: "rgba(255,255,255,0.55)", fontSize: 12, fontFamily: font,
+                      border: `1px solid ${P.border}`, background: "#F7FAFD",
+                      color: P.txt2, fontSize: 12, fontFamily: font,
                       textDecoration: "none", transition: "all 0.18s",
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "#EAF2F8"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "#F7FAFD"; }}
                   >Solicitar acceso por WhatsApp</a>
 
                   <p style={{ fontSize: 11, color: P.txt3, textAlign: "center", marginTop: 14 }}>
                     ¿Ya tienes cuenta?{" "}
-                    <span onClick={() => go("login")} style={{ color: P.accent, cursor: "pointer", fontWeight: 600 }}>Iniciar sesión →</span>
+                    <button type="button" className="login-text-button" onClick={() => go("login")}>Iniciar sesión →</button>
                   </p>
                 </>
               ) : (
@@ -589,7 +526,7 @@ export default function LoginScreen({ onLogin }) {
                     {/* Email */}
                     <div>
                       <Label htmlFor="auth-email" text={mode === "login" ? "Correo o usuario" : "Correo electrónico"} />
-                      <input id="auth-email" type={mode === "login" ? "text" : "email"} value={email} onChange={e => setEmail(e.target.value)} onKeyDown={onKey}
+                      <input id="auth-email" type={mode === "login" ? "text" : "email"} autoCapitalize="none" spellCheck={false} value={email} onChange={e => setEmail(e.target.value)} onKeyDown={onKey}
                         onFocus={() => setFocused("email")} onBlur={() => setFocused(null)}
                         placeholder={mode === "login" ? "correo@empresa.com o usuario" : "correo@empresa.com"} style={inputStyle("email", false)} autoComplete={mode === "login" ? "username" : "email"} />
                     </div>
@@ -609,7 +546,7 @@ export default function LoginScreen({ onLogin }) {
                             placeholder="••••••••"
                             style={{ ...inputStyle("pass", false), paddingRight: 52 }}
                             autoComplete="current-password" />
-                          <button type="button" onClick={() => setShowP(s => !s)} style={{
+                          <button type="button" aria-label={showP ? "Ocultar contraseña" : "Mostrar contraseña"} aria-pressed={showP} onClick={() => setShowP(s => !s)} style={{
                             position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
                             background: "none", border: "none", cursor: "pointer",
                             color: P.txt3, fontSize: 11, fontFamily: font, padding: 0,
@@ -622,7 +559,7 @@ export default function LoginScreen({ onLogin }) {
                   {/* ─ Error ─ */}
                   {error && (
                     <div style={{ padding: "10px 13px", borderRadius: 8, background: "rgba(232,129,140,0.07)", border: "1px solid rgba(232,129,140,0.2)", marginBottom: 14 }}>
-                      <p role="alert" style={{ fontSize: 12, color: "#E8A0A0", fontFamily: font }}>{error}</p>
+                      <p role="alert" style={{ fontSize: 12, color: "#A1263A", fontFamily: font }}>{error}</p>
                     </div>
                   )}
 
@@ -672,55 +609,48 @@ export default function LoginScreen({ onLogin }) {
                   {mode === "login" && isDuke && (
                     <>
                       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                        <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
+                        <div style={{ flex: 1, height: 1, background: P.border }} />
                         <span style={{ fontSize: 10, color: P.txt3, letterSpacing: "0.04em" }}>o prueba la demo</span>
-                        <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
+                        <div style={{ flex: 1, height: 1, background: P.border }} />
                       </div>
                       <button type="button" onClick={doDemo} disabled={loading} style={{
                         width: "100%", padding: "11px", borderRadius: 10, cursor: loading ? "not-allowed" : "pointer",
-                        background: "rgba(255,255,255,0.03)", border: `1px solid ${P.border}`,
-                        color: "rgba(255,255,255,0.55)", fontSize: 12, fontFamily: font, transition: "all 0.18s",
+                        background: "#F7FAFD", border: `1px solid ${P.border}`,
+                        color: P.txt2, fontSize: 12, fontFamily: font, transition: "all 0.18s",
                       }}
-                        onMouseEnter={e => !loading && (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
-                        onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
+                        onMouseEnter={e => !loading && (e.currentTarget.style.background = "#EAF2F8")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "#F7FAFD")}
                       >Entrar como Demo — acceso completo sin registro</button>
                     </>
                   )}
 
                   {/* ─ Solicitar acceso link ─ */}
-                  {mode === "login" && (
+                  {mode === "login" && !nativo && (
                     <p style={{ fontSize: 11, color: P.txt3, textAlign: "center", marginTop: 14 }}>
                       ¿No tienes cuenta?{" "}
-                      <span onClick={() => go("register")} style={{ color: P.accent, cursor: "pointer", fontWeight: 600 }}>Solicitar acceso →</span>
+                      <button type="button" className="login-text-button" onClick={() => go("register")}>Solicitar acceso →</button>
                     </p>
                   )}
                 </>
               )}
 
               {/* ─ Legal ─ */}
-              <p style={{ fontSize: 10, color: P.txt3, textAlign: "center", marginTop: 14, lineHeight: 1.65 }}>
+              <p style={{ fontSize: 12, color: P.txt3, textAlign: "center", marginTop: 20, lineHeight: 1.65 }}>
                 {/* Eran <span> decorativos: no abrían nada, y App Review comprueba que
                       los enlaces legales funcionen. target="_blank" los manda al
                       navegador del sistema, que es lo correcto dentro de la app:
                       esas páginas viven en el sitio y no se empaquetan en el binario. */}
                   Al continuar aceptas los{" "}
                   <a href="https://stratoscapitalgroup.com/terminos" target="_blank" rel="noopener noreferrer"
-                     style={{ color: `${P.accent}99`, textDecoration: "none" }}>Términos de Servicio</a>{" "}
+                     style={{ color: P.accent, textDecoration: "none" }}>Términos de Servicio</a>{" "}
                   y la{" "}
                   <a href="https://stratoscapitalgroup.com/politica-de-privacidad" target="_blank" rel="noopener noreferrer"
-                     style={{ color: `${P.accent}99`, textDecoration: "none" }}>Política de Privacidad</a>.
+                     style={{ color: P.accent, textDecoration: "none" }}>Política de Privacidad</a>.
               </p>
             </>
           )}
         </div>
-      </div>
-
-      {/* CSS responsive */}
-      <style>{`
-        @media (max-width: 768px) {
-          .brand-panel { display: none !important; }
-        }
-      `}</style>
-    </div>
+      </section>
+    </main>
   );
 }

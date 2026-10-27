@@ -921,8 +921,13 @@ export default function App() {
 
   /* ── Theme ── */
   const [theme, setThemeState] = useState(() => {
-    try { return localStorage.getItem("stratos_crm_theme") || "dark"; } catch { return "dark"; }
+    try { return localStorage.getItem("stratos_crm_theme") || "light"; } catch { return "light"; }
   });
+  useEffect(() => {
+    // Mantener el acceso y sus safe areas claros; restaurar el tema del CRM al entrar.
+    if (user) document.documentElement.removeAttribute("data-entry");
+    else document.documentElement.setAttribute("data-entry", "light");
+  }, [user]);
   const themeSwitchingRef = useRef(false);
   // data-theme en <html>: mobile-perf.css lo usa para que el fondo forzado
   // del MODO SEGURO (data-lowfx) respete el tema claro. index.html lo setea
@@ -1972,20 +1977,20 @@ export default function App() {
     if (bootHydrating) {
       return (
         <div style={{
-          position: "fixed", inset: 0, background: T.bg,
+          position: "fixed", inset: 0, background: "#FFFFFF",
           display: "flex", alignItems: "center", justifyContent: "center",
           flexDirection: "column", gap: 16,
-          fontFamily: font, color: T.txt,
+          fontFamily: font, color: LP.txt,
         }}>
           <div style={{
             width: 56, height: 56, borderRadius: "50%",
-            border: `2px solid ${T.border}`,
-            borderTopColor: T.accent,
+            border: `2px solid ${LP.border}`,
+            borderTopColor: LP.accent,
             animation: "stratosSpin 0.9s linear infinite",
           }} />
           <div style={{
             fontSize: 12.5, letterSpacing: "0.08em", textTransform: "uppercase",
-            color: T.txt2, fontWeight: 500,
+            color: LP.txt2, fontWeight: 500,
           }}>
             {clientConfig?.brand?.appWordmark || "Stratos AI"}
           </div>
