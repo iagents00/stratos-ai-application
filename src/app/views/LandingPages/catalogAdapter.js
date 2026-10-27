@@ -159,7 +159,7 @@ export const encodeLanding = ({ client, mensaje, asesor, asesorWA, asesorCal, ag
       h: (pr.highlights || []).slice(0, 6).map(x => clip(x, 90)),
       am: (pr.amenities || []).slice(0, 10).map(x => clip(x, 40)),
       de: clip(pr.description, 320),
-      d: clip(driveLinks[pr.id] || pr.driveLink, 400),
+      d: clip(driveLinks[pr.id] ?? pr.driveLink, 400),
       mp: clip(pr.mapsUrl, 400),
       ac: clip(pr.accent, 9),
       pf: pr.priceFrom || 0,

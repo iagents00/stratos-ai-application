@@ -26,6 +26,8 @@ test('external companies require separate opt-ins and allowed roles for Create a
     assert.equal(decoded.agencyName, 'Adoquín Inmobiliaria');
     assert.equal(decoded.asesorWA, '+529842779519');
     assert.equal(decoded.properties[0].name, 'Adoquin QA');
+    const cleared = decodeLanding(encodeLanding({ properties: [{ ...props[0], driveLink: 'https://example.com/material' }], driveLinks: { [props[0].id]: '' } }));
+    assert.equal(cleared.properties[0].driveLink, '', 'explicitly clearing a material link must survive publishing');
   } finally { await server.close(); }
 });
 

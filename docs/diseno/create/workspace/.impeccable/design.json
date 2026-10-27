@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-27T09:18:38.656876+00:00",
+  "title": "Design System: Create · espacio del asesor",
+  "extensions": {
+    "shadows": [],
+    "motion": [
+      {
+        "name": "state",
+        "value": ".15s ease",
+        "purpose": "Cambio de fondo; se anula con movimiento reducido."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact",
+        "value": "900px"
+      },
+      {
+        "name": "mobile",
+        "value": "650px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Acción principal",
+      "kind": "button",
+      "refersTo": "primary",
+      "description": "Extracto visual del creador; el comportamiento de aplicación no se simula.",
+      "html": "<button class=\"ds-primary\">Elegir propiedades</button>",
+      "css": ".ds-primary{font:14px/1.4 Inter,sans-serif;color:var(--cw-text,#213d34);display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 15px;border:1px solid var(--cw-line,#d6dbd1);border-radius:8px;background:transparent;cursor:pointer;transition:background .15s ease;background:var(--cw-accent,#235c46);border-color:var(--cw-accent,#235c46);color:var(--cw-on,#fff);font-weight:600}.ds-primary:hover{background:color-mix(in srgb,var(--cw-accent,#235c46) 85%,var(--cw-bg,#f6f4ee))} .ds-primary:focus-visible{outline:2px solid var(--cw-accent,#235c46);outline-offset:3px} @media(prefers-reduced-motion:reduce){.ds-primary{transition:none}}"
+    },
+    {
+      "name": "Acción secundaria",
+      "kind": "button",
+      "refersTo": "secondary",
+      "description": "Extracto visual del creador; el comportamiento de aplicación no se simula.",
+      "html": "<button class=\"ds-secondary\">Atrás</button>",
+      "css": ".ds-secondary{font:14px/1.4 Inter,sans-serif;color:var(--cw-text,#213d34);display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 15px;border:1px solid var(--cw-line,#d6dbd1);border-radius:8px;background:transparent;cursor:pointer;transition:background .15s ease;}.ds-secondary:hover{background:color-mix(in srgb,var(--cw-text,#213d34) 7%,transparent)} .ds-secondary:focus-visible{outline:2px solid var(--cw-accent,#235c46);outline-offset:3px} @media(prefers-reduced-motion:reduce){.ds-secondary{transition:none}}"
+    },
+    {
+      "name": "Nombre del cliente",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Extracto visual del creador; el comportamiento de aplicación no se simula.",
+      "html": "<label class=\"ds-label\" for=\"ds-client\">Nombre del cliente</label><input class=\"ds-field\" id=\"ds-client\" maxlength=\"80\" placeholder=\"Nombre o familia\">",
+      "css": ".ds-label{display:block;font:550 14px Inter,sans-serif;margin-bottom:8px;color:var(--cw-text,#213d34)}.ds-field{font:16px/1.5 Inter,sans-serif;width:100%;min-height:46px;padding:12px 14px;border:1px solid var(--cw-line,#d6dbd1);border-radius:8px;background:var(--cw-bg,#f6f4ee);color:var(--cw-text,#213d34);caret-color:var(--cw-accent,#235c46)} .ds-field:focus-visible{outline:2px solid var(--cw-accent,#235c46);outline-offset:3px} @media(prefers-reduced-motion:reduce){.ds-field{transition:none}}"
+    },
+    {
+      "name": "Paso activo",
+      "kind": "nav",
+      "refersTo": "secondary",
+      "description": "Extracto visual del creador; el comportamiento de aplicación no se simula.",
+      "html": "<nav aria-label=\"Pasos de creación\"><button class=\"ds-step\" aria-current=\"step\"><span>1</span>Cliente</button></nav>",
+      "css": ".ds-step{font:14px/1.4 Inter,sans-serif;color:var(--cw-text,#213d34);display:flex;align-items:center;gap:10px;min-height:44px;padding:8px 16px;border:0;border-radius:8px;background:color-mix(in srgb,var(--cw-text,#213d34) 6%,transparent);font-weight:600;cursor:pointer}.ds-step span{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--cw-accent,#235c46);color:var(--cw-on,#fff);font-size:12px} .ds-step:focus-visible{outline:2px solid var(--cw-accent,#235c46);outline-offset:3px} @media(prefers-reduced-motion:reduce){.ds-step{transition:none}}"
+    },
+    {
+      "name": "Resumen de selección",
+      "kind": "card",
+      "refersTo": "selection",
+      "description": "Extracto visual del creador; el comportamiento de aplicación no se simula.",
+      "html": "<aside class=\"ds-selection\"><h2>Tu selección</h2><p>Las propiedades aparecerán aquí. El orden será el mismo en el entregable.</p></aside>",
+      "css": ".ds-selection{font:14px/1.4 Inter,sans-serif;color:var(--cw-text,#213d34);background:var(--cw-panel,#fff);border:1px solid var(--cw-line,#d6dbd1);border-radius:12px;padding:22px;overflow-wrap:anywhere}.ds-selection h2{font-size:16px;font-weight:600;margin:0}.ds-selection p{font-size:13px;color:var(--cw-muted,#5b665e);line-height:1.7;margin:10px 0 0} .ds-selection:focus-visible{outline:2px solid var(--cw-accent,#235c46);outline-offset:3px} @media(prefers-reduced-motion:reduce){.ds-selection{transition:none}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Una selección lista para compartir",
+    "overview": "Una superficie de trabajo legible organiza cliente, propiedades y revisión en tres pasos. El resumen de selección permanece a mano y muestra el orden real del entregable. La jerarquía se apoya en tipografía, espacio, bordes y estados discretos.\n\nEl alcance es el creador dentro de Operate. Hereda los temas claros y oscuros de la aplicación mediante `T`; no adopta la portada editorial del dossier ni redefine Rails. La vista previa muestra el dossier con su sistema local propio.",
+    "keyCharacteristics": [
+      "Tres pasos con progreso visible y acciones claras.",
+      "Catálogo en filas y selección ordenable al lado.",
+      "Tema de la aplicación y estados accesibles.",
+      "Revisión antes de generar el enlace."
+    ],
+    "rules": [],
+    "dos": [
+      "Do heredar el tema de Operate y conservar el alcance de empresa.",
+      "Do mantener orden, selección y datos al revisar o buscar.",
+      "Do distinguir vista previa y generación final."
+    ],
+    "donts": [
+      "Don't prometer persistencia nueva de borradores.",
+      "Don't presentar publicación simulada como prueba autenticada.",
+      "Don't imponer los tokens del dossier o de Rails a este creador."
+    ]
+  }
+}
