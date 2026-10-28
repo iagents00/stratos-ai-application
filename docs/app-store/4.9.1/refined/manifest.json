@@ -1,0 +1,66 @@
+{
+  "app": "Stratos AI",
+  "version": "4.9.1",
+  "locale": "es-MX",
+  "theme": "light",
+  "method": "Real demo UI captures composed with the built-in image_gen tool.",
+  "palette": "Blue, white and mint-green backgrounds; original app UI colors preserved.",
+  "typography": "AI-rendered geometric marketing typography inspired by Montserrat.",
+  "notifications": "Illustrative examples based on implemented task reminder features; not captures of delivered pushes.",
+  "exports": [
+    {
+      "name": "01-crm",
+      "label": "CRM",
+      "file": "screenshots/01-crm.jpg",
+      "width": 1206,
+      "height": 2622,
+      "format": "jpeg",
+      "source": "exec-a4376745-f63f-47a4-86fc-2a7e3ccaaaef.png"
+    },
+    {
+      "name": "02-copilot",
+      "label": "Copilot",
+      "file": "screenshots/02-copilot.jpg",
+      "width": 1206,
+      "height": 2622,
+      "format": "jpeg",
+      "source": "exec-87e31902-d138-47d5-86a3-909abff4fb3b.png"
+    },
+    {
+      "name": "03-notificaciones",
+      "label": "Notificaciones",
+      "file": "screenshots/03-notificaciones.jpg",
+      "width": 1206,
+      "height": 2622,
+      "format": "jpeg",
+      "source": "exec-3e76c027-bc94-42a1-96b6-0c18fcba5520.png"
+    },
+    {
+      "name": "04-space",
+      "label": "Agenda",
+      "file": "screenshots/04-space.jpg",
+      "width": 1206,
+      "height": 2622,
+      "format": "jpeg",
+      "source": "exec-b79b2dcb-c7db-490c-9cdc-d22963906e6c.png"
+    },
+    {
+      "name": "05-intelligence",
+      "label": "Intelligence",
+      "file": "screenshots/05-intelligence.jpg",
+      "width": 1206,
+      "height": 2622,
+      "format": "jpeg",
+      "source": "exec-854c2214-f963-41da-aa78-6fe6d56e9ecc.png"
+    },
+    {
+      "name": "06-expediente",
+      "label": "Expediente",
+      "file": "screenshots/06-expediente.jpg",
+      "width": 1206,
+      "height": 2622,
+      "format": "jpeg",
+      "source": "exec-9d141207-74b2-49b2-b6b1-93f25194d5a9.png"
+    }
+  ]
+}
