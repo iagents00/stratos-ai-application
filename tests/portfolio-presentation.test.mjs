@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { safePortfolioUrl, portfolioPrice, portfolioWhatsApp } from '../src/app/views/LandingPages/portfolio-presentation.js';
+import { safePortfolioUrl, portfolioPrice, portfolioWhatsApp, portfolioAccent } from '../src/app/views/LandingPages/portfolio-presentation.js';
 
 test('material and appointment links accept web URLs and reject executable or malformed links', () => {
   for (const url of ['javascript:alert(1)', 'data:text/html,bad', '//external.com', '', undefined]) assert.equal(safePortfolioUrl(url), null);
@@ -27,4 +27,14 @@ test('personal priorities are encoded as text in the advisor consultation', () =
   assert.match(url.searchParams.get('text'), /Mis prioridades y dudas:\nPlano & pagos\n¿Terraza\?/);
   assert.equal(url.searchParams.size, 1);
   assert.doesNotMatch(new URL(portfolioWhatsApp('9841234567', 'Ana', [], '  ')).searchParams.get('text'), /Mis prioridades/);
+});
+
+test('property accents retain catalog color and reject unsafe CSS with a readable fallback', () => {
+  assert.equal(portfolioAccent('#6EE7C2')['--pd-property-color'], '#6EE7C2');
+  assert.equal(portfolioAccent(' #abc ')['--pd-property-color'], '#aabbcc');
+  for (const invalid of [null, '#12', 'red;display:none', 'url(https://example.com)', {}]) {
+    assert.deepEqual(portfolioAccent(invalid), portfolioAccent('#7BA8E0'));
+  }
+  assert.equal(portfolioAccent('#000')['--pd-property-ink'], 'rgb(153, 153, 153)');
+  assert.equal(portfolioAccent('#fff')['--pd-property-ink'], 'rgb(255, 255, 255)');
 });
