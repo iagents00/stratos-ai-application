@@ -8,8 +8,10 @@ import { font, fontDisp } from "../../../design-system/tokens";
 import { useIsMobile } from "../../../hooks/useViewport";
 import {
   loadOrganizationPipeline,
+  loadOwnPipeline,
   loadWhatsAppAdmin,
   saveOrganizationPipeline,
+  saveOwnPipeline,
 } from "../../../lib/whatsapp-admin";
 
 const PALETTE = ["#94A3B8", "#38BDF8", "#22D3EE", "#FBBF24", "#A78BFA", "#FB923C", "#34D399", "#F87171", "#EC4899", "#14B8A6"];
@@ -47,10 +49,14 @@ const templateStages = (template) => template.stages.map(([name, color]) => ({ n
 const cloneStages = (stages) => (stages || []).map(stage => ({ name: stage.name, color: stage.color }));
 const stageKey = (name) => String(name || "").trim().toLocaleLowerCase("es");
 
-export default function PipelineConfiguratorAdmin({ T, onBack }) {
+export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, backLabel = "Usuarios" }) {
+  const ownOrganization = Boolean(organizationId);
   const isMobile = useIsMobile();
   const [organizations, setOrganizations] = useState([]);
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedId, setSelectedId] = useState(organizationId || "");
+  const [loadedId, setLoadedId] = useState(null);
+  const [updatedAt, setUpdatedAt] = useState(null);
+  const [reloadVersion, setReloadVersion] = useState(0);
   const [search, setSearch] = useState("");
   const [stages, setStages] = useState([]);
   const [baseline, setBaseline] = useState([]);
@@ -62,6 +68,11 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
   const [dragIndex, setDragIndex] = useState(null);
 
   const loadOrganizations = useCallback(async () => {
+    if (organizationId) {
+      setSelectedId(organizationId);
+      setLoading(false);
+      return;
+    }
     setLoading(true); setMessage(null);
     try {
       const data = await loadWhatsAppAdmin();
@@ -73,15 +84,17 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [organizationId]);
 
   useEffect(() => { loadOrganizations(); }, [loadOrganizations]);
 
   useEffect(() => {
     if (!selectedId) return;
     let active = true;
-    setLoadingPipeline(true); setMessage(null);
-    loadOrganizationPipeline(selectedId)
+    setLoadingPipeline(true); setMessage(null); setLoadedId(null);
+    setStages([]); setBaseline([]); setUsage({});
+    const load = ownOrganization ? loadOwnPipeline : loadOrganizationPipeline;
+    load(selectedId)
       .then(data => {
         if (!active) return;
         const saved = Array.isArray(data.pipeline) && data.pipeline.length
@@ -90,11 +103,14 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
         setStages(cloneStages(saved));
         setBaseline(cloneStages(saved));
         setUsage(data.usage || {});
+        setUpdatedAt(data.updated_at || null);
+        setLoadedId(selectedId);
+        if (ownOrganization) setOrganizations([data.organization]);
       })
-      .catch(error => active && setMessage({ type: "error", text: error.message || "No se pudo cargar el pipeline." }))
+      .catch(error => active && setMessage({ type: "error", text: error.message || "No se pudo cargar el pipeline.", retry: true }))
       .finally(() => active && setLoadingPipeline(false));
     return () => { active = false; };
-  }, [selectedId]);
+  }, [selectedId, ownOrganization, reloadVersion]);
 
   const selectedOrg = organizations.find(org => org.id === selectedId);
   const filteredOrganizations = useMemo(() => {
@@ -168,11 +184,16 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
   };
 
   const save = async () => {
+    if (!loadedId || loadedId !== selectedId || saving || loadingPipeline) return;
     setSaving(true); setMessage(null);
     try {
-      const result = await saveOrganizationPipeline(selectedId, stages);
+      const result = ownOrganization
+        ? await saveOwnPipeline(selectedId, stages, updatedAt)
+        : await saveOrganizationPipeline(selectedId, stages);
       const saved = cloneStages(result.pipeline);
       setStages(saved); setBaseline(saved);
+      setUpdatedAt(result.updated_at || null);
+      if (result.usage) setUsage(result.usage);
       const preserved = Object.entries(result.preserved_stages || {});
       const preservedText = preserved.length
         ? ` Stratos conservó automáticamente ${preserved.map(([name, count]) => `“${name}” (${count})`).join(", ")} porque todavía tiene clientes.`
@@ -185,7 +206,7 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
         detail: { organizationId: selectedId, pipeline: saved },
       }));
     } catch (error) {
-      setMessage({ type: "error", text: error.message || "No se pudo guardar el pipeline." });
+      setMessage({ type: "error", text: error.message || "No se pudo guardar el pipeline.", retry: error.status === 409 });
     } finally {
       setSaving(false);
     }
@@ -193,32 +214,32 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
 
   return (
     <div style={{ padding: isMobile ? "12px 10px 48px" : "22px 24px 60px", color: T.txt, fontFamily: font, overflowY: "auto", height: "100%", boxSizing: "border-box" }}>
-      <button onClick={onBack} style={{ ...button, marginBottom: 16, background: "transparent" }}><ArrowLeft size={14} /> Usuarios</button>
+      <button onClick={() => { if (!dirty || window.confirm("Hay cambios sin guardar. ¿Salir y descartarlos?")) onBack(); }} disabled={saving} style={{ ...button, marginBottom: 16, background: "transparent" }}><ArrowLeft size={14} /> {backLabel}</button>
 
       <div style={{ position: "sticky", top: 0, zIndex: 20, display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap", marginBottom: 18, padding: "10px 0 12px", background: T.bg, borderBottom: dirty ? `1px solid ${T.accentB}` : "1px solid transparent" }}>
         <div>
-          <h2 style={{ margin: 0, fontFamily: fontDisp, fontSize: 22, fontWeight: 650 }}>Pipelines por empresa</h2>
+          <h2 style={{ margin: 0, fontFamily: fontDisp, fontSize: 22, fontWeight: 650 }}>{ownOrganization ? "Pipeline de mi empresa" : "Pipelines por empresa"}</h2>
           <p style={{ color: T.txt3, fontSize: 12.5, margin: "6px 0 0", maxWidth: 760, lineHeight: 1.55 }}>
-            Personaliza el recorrido comercial de cada cliente sin tocar código. Cada cambio se guarda solo en la empresa seleccionada.
+            {ownOrganization ? "Personaliza las etapas, los colores y el orden del recorrido comercial de tu empresa." : "Personaliza el recorrido comercial de cada cliente sin tocar código. Cada cambio se guarda solo en la empresa seleccionada."}
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button onClick={() => setStages(cloneStages(baseline))} disabled={!dirty || saving} style={{ ...button, opacity: dirty ? 1 : .45 }}><RotateCcw size={14} /> Descartar</button>
-          <button onClick={save} disabled={!dirty || saving || !selectedId} style={{ ...button, color: T.accent, borderColor: T.accentB, background: T.accentS, opacity: dirty ? 1 : .55 }}>
+          <button onClick={save} disabled={!dirty || saving || loadingPipeline || loadedId !== selectedId} style={{ ...button, color: T.accent, borderColor: T.accentB, background: T.accentS, opacity: dirty ? 1 : .55 }}>
             {saving ? <Loader2 size={14} className="spin" /> : <Save size={14} />} {dirty ? `Guardar y publicar en ${selectedOrg?.name || "empresa"}` : "Sin cambios por publicar"}
           </button>
         </div>
       </div>
 
       <div style={{ ...card, padding: "11px 14px", marginBottom: 14, color: T.txt2, fontSize: 11.5, lineHeight: 1.55 }}>
-        <strong style={{ color: T.txt }}>Cómo funciona:</strong> 1. Selecciona la empresa · 2. Edita nombres, colores y orden · 3. Pulsa <strong>Guardar y publicar</strong> · 4. Los usuarios de esa empresa recargan su CRM. El cambio no afecta a ningún otro white label.
+        <strong style={{ color: T.txt }}>Cómo funciona:</strong> {ownOrganization ? "Edita nombres, colores y orden y pulsa " : "Selecciona la empresa, edita nombres, colores y orden y pulsa "}<strong>Guardar y publicar</strong>. Tu equipo verá las etapas al recargar su CRM.
       </div>
 
       {message && (
         <div style={{ ...card, padding: "11px 14px", marginBottom: 14, display: "flex", gap: 9, alignItems: "flex-start", color: message.type === "success" ? T.success : message.type === "warning" ? "#FBBF24" : "#FCA5A5", borderColor: message.type === "success" ? T.successB : message.type === "warning" ? "rgba(251,191,36,.35)" : "rgba(248,113,113,.35)" }}>
           {message.type === "success" ? <CheckCircle2 size={17} /> : <AlertTriangle size={17} />}
           <span style={{ fontSize: 12.5, lineHeight: 1.5 }}>{message.text}</span>
-          {message.retry && <button onClick={loadOrganizations} style={{ ...button, minHeight: 30, marginLeft: "auto", padding: "0 11px" }}>Reintentar</button>}
+          {message.retry && <button onClick={() => { if (!dirty || window.confirm("¿Recargar el pipeline y descartar el borrador?")) { setReloadVersion(v => v + 1); loadOrganizations(); } }} style={{ ...button, minHeight: 30, marginLeft: "auto", padding: "0 11px" }}>Recargar pipeline</button>}
         </div>
       )}
 
@@ -231,8 +252,8 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(230px,290px) minmax(0,1fr)", gap: 14, alignItems: "start" }}>
-        <aside style={{ ...card, padding: 14, position: isMobile ? "static" : "sticky", top: 0 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile || ownOrganization ? "1fr" : "minmax(230px,290px) minmax(0,1fr)", gap: 14, alignItems: "start" }}>
+        {!ownOrganization && <aside style={{ ...card, padding: 14, position: isMobile ? "static" : "sticky", top: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 11 }}><Building2 size={16} color={T.accent} /><strong style={{ fontSize: 13.5 }}>Empresa</strong><span style={{ marginLeft: "auto", color: T.txt3, fontSize: 11.5 }}>{organizations.length}</span></div>
           <div style={{ position: "relative", marginBottom: 10 }}>
             <Search size={13} color={T.txt3} style={{ position: "absolute", left: 11, top: 13 }} />
@@ -248,9 +269,9 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
               </button>;
             })}
           </div>
-        </aside>
+        </aside>}
 
-        <main style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 14 }}>
+        <fieldset disabled={saving || loadingPipeline || loadedId !== selectedId} aria-label="Configuración de etapas" style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 14, border: 0, padding: 0, margin: 0 }}>
           <section style={{ ...card, padding: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
               <div>
@@ -278,11 +299,11 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
               <div style={{ display: "flex", flexDirection: "column", gap: 8, overflowX: "auto" }}>
                 {stages.map((stage, index) => {
                   const count = Number(usage[stage.name] || 0);
-                  return <div key={`${index}-${stage.name}`} draggable onDragStart={() => setDragIndex(index)} onDragOver={event => event.preventDefault()} onDrop={() => { if (dragIndex != null) moveStage(dragIndex, index); setDragIndex(null); }} style={{ display: "grid", gridTemplateColumns: "28px 42px minmax(150px,1fr) 86px 112px", minWidth: isMobile ? 530 : 0, gap: 9, alignItems: "center", border: `1px solid ${T.border}`, borderRadius: 12, padding: "9px 10px", background: dragIndex === index ? T.accentS : "transparent" }}>
+                  return <div key={index} draggable={!saving} onDragStart={() => setDragIndex(index)} onDragOver={event => event.preventDefault()} onDrop={() => { if (!saving && dragIndex != null) moveStage(dragIndex, index); setDragIndex(null); }} style={{ display: "grid", gridTemplateColumns: isMobile ? "20px 38px minmax(0,1fr)" : "28px 42px minmax(150px,1fr) 86px 112px", gap: 9, alignItems: "center", border: `1px solid ${T.border}`, borderRadius: 12, padding: "9px 10px", background: dragIndex === index ? T.accentS : "transparent" }}>
                     <GripVertical size={16} color={T.txt3} style={{ cursor: "grab" }} />
                     <input aria-label={`Color de ${stage.name}`} type="color" value={stage.color} onChange={event => patchStage(index, { color: event.target.value.toUpperCase() })} style={{ width: 38, height: 34, padding: 2, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer" }} />
-                    <input value={stage.name} disabled={count > 0} title={count > 0 ? "Mueve primero los clientes de esta etapa desde el CRM" : "Escribe el nombre de la etapa"} onChange={event => patchStage(index, { name: event.target.value })} style={{ ...input, width: "100%", padding: "0 11px", opacity: count > 0 ? .62 : 1, cursor: count > 0 ? "not-allowed" : "text" }} />
-                    <span title={count > 0 ? "Etapa protegida mientras tenga clientes" : "Etapa disponible para editar o borrar"} style={{ color: count ? T.txt2 : T.txt3, fontSize: 11.5, textAlign: "right", display: "inline-flex", justifyContent: "flex-end", alignItems: "center", gap: 4 }}>{count > 0 && <LockKeyhole size={11} />}{count} cliente{count === 1 ? "" : "s"}</span>
+                    <input aria-label={`Nombre de etapa ${index + 1}`} value={stage.name} disabled={count > 0} title={count > 0 ? "Mueve primero los clientes de esta etapa desde el CRM" : "Escribe el nombre de la etapa"} onChange={event => patchStage(index, { name: event.target.value })} style={{ ...input, width: "100%", padding: "0 11px", opacity: count > 0 ? .62 : 1, cursor: count > 0 ? "not-allowed" : "text" }} />
+                    <span title={count > 0 ? "Etapa protegida mientras tenga clientes" : "Etapa disponible para editar o borrar"} style={{ gridColumn: isMobile ? "1 / 3" : undefined, color: count ? T.txt2 : T.txt3, fontSize: 11.5, textAlign: "right", display: "inline-flex", justifyContent: "flex-end", alignItems: "center", gap: 4 }}>{count > 0 && <LockKeyhole size={11} />}{count} cliente{count === 1 ? "" : "s"}</span>
                     <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
                       <IconButton title="Subir" disabled={index === 0} onClick={() => moveStage(index, index - 1)} T={T}><ChevronUp size={13} /></IconButton>
                       <IconButton title="Bajar" disabled={index === stages.length - 1} onClick={() => moveStage(index, index + 1)} T={T}><ChevronDown size={13} /></IconButton>
@@ -300,7 +321,7 @@ export default function PipelineConfiguratorAdmin({ T, onBack }) {
             <div style={{ overflowX: "auto", paddingBottom: 4 }}><div style={{ display: "flex", gap: 8, minWidth: "max-content" }}>{stages.map((stage, index) => <div key={`${stage.name}-${index}`} style={{ width: 145, border: `1px solid ${stage.color}55`, background: `${stage.color}12`, borderRadius: 12, padding: 11 }}><div style={{ display: "flex", gap: 7, alignItems: "center" }}><span style={{ width: 8, height: 8, borderRadius: 99, background: stage.color }} /><strong style={{ color: T.txt, fontSize: 11.5, maxWidth: 110, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{stage.name || "Sin nombre"}</strong></div><div style={{ color: T.txt3, fontSize: 10.5, marginTop: 10 }}>{Number(usage[stage.name] || 0)} tarjetas</div></div>)}</div></div>
             <p style={{ color: T.txt3, fontSize: 11.5, lineHeight: 1.55, margin: "11px 0 0" }}>La primera etapa recibe los clientes nuevos. El orden de izquierda a derecha será el mismo en el CRM. Esta vista es un borrador hasta pulsar “Guardar y publicar”.</p>
           </section>
-        </main>
+        </fieldset>
       </div>
     </div>
   );

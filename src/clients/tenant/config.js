@@ -43,7 +43,9 @@ const tenantConfig = {
     comandoDirectivo: false,
     caja: false,
     cajaAsesores: false,
-    copilotModule: false,
+    // Las cuentas nuevas tienen asistente desde el primer acceso. La identidad
+    // sintética del perfil y el servidor conservan el alcance de su empresa.
+    copilotModule: true,
     mktModule: false,
     procesoGuiado: false,
   },

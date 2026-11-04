@@ -209,7 +209,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
     return <WhatsAppOnboardingAdmin T={T} onBack={() => setSection("users")} />;
   }
   if (section === "pipelines") {
-    return <PipelineConfiguratorAdmin T={T} onBack={() => setSection("users")} />;
+    return <PipelineConfiguratorAdmin T={T} organizationId={me?.organizationId} onBack={() => setSection("users")} />;
   }
   if (section === "catalogs") {
     return <CatalogConfiguratorAdmin T={T} onBack={() => setSection("users")} />;
@@ -234,7 +234,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
           /* En móvil los botones ocupan el ancho completo (antes "Nuevo Usuario"
              quedaba cortado contra el borde derecho a 360px). */
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, flexWrap: "wrap", width: isMobile ? "100%" : "auto" }}>
-            {isSuper && (
+            {canManage && (
               <button
                 onClick={() => setSection("pipelines")}
                 style={{

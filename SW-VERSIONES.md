@@ -1,5 +1,9 @@
 # Historial de versiones del Service Worker (CACHE_VERSION)
 
+## v452 — Pipeline de la propia empresa y Copilot inicial
+
+Los administradores pueden configurar sus etapas desde Pipelines, con validación de organización en el servidor y protección de etapas ocupadas. Los nombres se escriben de forma continua sin perder el foco. Copilot viene habilitado en la configuración neutral de las empresas nuevas y respeta una desactivación explícita.
+
 ## v444 — Capturas con marco de cristal
 
 Las seis capturas reales se presentan como imágenes sobre blanco con un borde translúcido redondeado y sombra suave. La composición conserva la interfaz original a escala 1:1; los originales permanecen disponibles. Mantiene el carrusel de 2.8 segundos, el slider y los controles existentes. No requiere cambios en Supabase.

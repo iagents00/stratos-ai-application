@@ -6,31 +6,33 @@ import vm from 'node:vm';
 import { webcrypto } from 'node:crypto';
 const provisioningSource=stripTypeScriptTypes(readFileSync('supabase/functions/_shared/provision-user.ts','utf8').replace('export async function','async function'));
 const crmSource=stripTypeScriptTypes(readFileSync('supabase/functions/whatsapp-admin/platform-crm.ts','utf8').replace(/^export /gm,''));
-const source=stripTypeScriptTypes(readFileSync('supabase/functions/whatsapp-admin/index.ts','utf8').replace(/^import .*;\n/gm,''));
+const tenantPipelineSource=stripTypeScriptTypes(readFileSync('supabase/functions/whatsapp-admin/tenant-pipeline.ts','utf8').replace(/^export /gm,''));
+const source=stripTypeScriptTypes(readFileSync('supabase/functions/whatsapp-admin/index.ts','utf8').replace(/^import .*;\r?\n/gm,''));
 
-function harness({operator=true,disabled=false,root=false,rpcError=null,directory=null}={}) {
+function harness({operator=true,disabled=false,root=false,rpcError=null,directory=null,tenantRole=null,tenantActive=true,authenticated=true}={}) {
  const rows={
   platform_admins:operator?[{user_id:'operator',active:true,scope_organization_id:root?null:'partner',company_limit:10,support_only:true}]:[],
-  organizations:[{id:'partner',name:'Partner',active:true},{id:'own',name:'Own',active:true,seats:3,parent_organization_id:'partner',meta_config:{onboarding:{createdFrom:'whatsapp_admin'}}},{id:'duke',name:'Duke',active:true,seats:50},{id:'nsg',name:'NSG',active:true,seats:50},{id:'other',name:'Other',parent_organization_id:'other-partner',active:true}],
-  profiles:[{id:'operator',organization_id:'partner',active:!disabled},{id:'own-user',name:'Owner',organization_id:'own',role:'admin',active:true},{id:'duke-user',organization_id:'duke',active:true}],
+  organizations:[{id:'partner',name:'Partner',active:true},{id:'own',name:'Own',active:true,updated_at:'2026-11-04T00:00:00Z',seats:3,parent_organization_id:'partner',meta_config:{onboarding:{createdFrom:'whatsapp_admin'}}},{id:'duke',name:'Duke',active:true,seats:50},{id:'nsg',name:'NSG',active:true,seats:50},{id:'other',name:'Other',parent_organization_id:'other-partner',active:true}],
+  profiles:[{id:'operator',organization_id:tenantRole?'own':'partner',role:tenantRole,active:tenantRole?tenantActive:!disabled},{id:'own-user',name:'Owner',organization_id:'own',role:'admin',active:true},{id:'duke-user',organization_id:'duke',active:true}],
   whatsapp_numero_asesor:[],whatsapp_onboarding_runs:[],
  };
  const creates=[],rpcs=[],authPages=[];
  const authUsers=rows.profiles.map(profile=>({id:profile.id,email:`${profile.id}@example.com`,email_confirmed_at:'2026-10-15T00:00:00Z',last_sign_in_at:'2026-10-16T00:00:00Z',user_metadata:{name:profile.name,secret:'never-export'},app_metadata:{secret:'never-export'},encrypted_password:'never-export'}));
  const from=table=>{
   let list=[...(rows[table]||[])];let count=false;let one=false;let update=null;let start=0,end=Infinity;
-  const query={insert(value){(rows[table]??=[]).push(value);return this;},delete(){return this;},select(_fields,options){count=options?.count==='exact';return this;},eq(key,value){list=list.filter(row=>row[key]===value);return this;},not(key,_operator,value){list=list.filter(row=>row[key]!==value);return this;},in(key,values){list=list.filter(row=>values.includes(row[key]));return this;},or(expression){const clauses=expression.split(",").map(part=>part.split(".eq."));list=list.filter(row=>clauses.some(([key,value])=>row[key]===value));return this;},order(){return this;},range(a,b){start=a;end=b;return this;},limit(n){end=n-1;return this;},maybeSingle(){one=true;return this;},single(){one=true;return this;},update(value){update=value;return this;},then(resolve){if(update)list.forEach(row=>Object.assign(row,update));return Promise.resolve({data:one?list[0]||null:list.slice(start,end+1),error:null,count:count?list.length:null}).then(resolve);}};
+  const query={insert(value){(rows[table]??=[]).push(value);return this;},delete(){return this;},select(_fields,options){count=options?.count==='exact';return this;},eq(key,value){list=list.filter(row=>JSON.stringify(row[key])===JSON.stringify(value));return this;},is(key,value){list=list.filter(row=>(row[key]??null)===value);return this;},not(key,_operator,value){list=list.filter(row=>row[key]!==value);return this;},in(key,values){list=list.filter(row=>values.includes(row[key]));return this;},or(expression){const clauses=expression.split(",").map(part=>part.split(".eq."));list=list.filter(row=>clauses.some(([key,value])=>row[key]===value));return this;},order(){return this;},range(a,b){start=a;end=b;return this;},limit(n){end=n-1;return this;},maybeSingle(){one=true;return this;},single(){one=true;return this;},update(value){update=value;return this;},then(resolve){if(update)list.forEach(row=>Object.assign(row,update));return Promise.resolve({data:one?list[0]||null:list.slice(start,end+1),error:null,count:count?list.length:null}).then(resolve);}};
   return query;
  };
- const admin={from,rpc:async(name,args)=>{rpcs.push({name,args});return {data:name==='fn_platform_list_users'?(directory||{ok:true,users:[],organizations:rows.organizations}):{ok:true,audit_saved:true,user:{id:args.p_user_id},organization:{id:args.p_organization_id}},error:rpcError};},auth:{admin:{listUsers:async({page})=>{authPages.push(page);return {data:null,error:{message:'Database error finding users'}};},createUser:async value=>{creates.push(value);const id='created';rows.profiles.push({id,organization_id:value.app_metadata.stratos_organization_id,active:true});return {data:{user:{id}},error:null};},updateUserById:async()=>({})}}};
+ const admin={from,rpc:async(name,args)=>{rpcs.push({name,args});return {data:name==='fn_platform_crm_pipeline'?[{name:'Prospecto',color:'#94A3B8'},{name:'Ganado',color:'#34D399'}]:name==='fn_platform_list_users'?(directory||{ok:true,users:[],organizations:rows.organizations}):{ok:true,audit_saved:true,user:{id:args.p_user_id},organization:{id:args.p_organization_id}},error:rpcError};},auth:{admin:{listUsers:async({page})=>{authPages.push(page);return {data:null,error:{message:'Database error finding users'}};},createUser:async value=>{creates.push(value);const id='created';rows.profiles.push({id,organization_id:value.app_metadata.stratos_organization_id,active:true});return {data:{user:{id}},error:null};},updateUserById:async()=>({})}}};
  let handler;
  const context=vm.createContext({Request,Response,URL,console,crypto:webcrypto,fetch:()=>{throw new Error('Unexpected external request');},setTimeout,clearTimeout,
-  createClient:(_url,key)=>key==='service'?admin:{auth:{getUser:async()=>({data:{user:{id:'operator'}},error:null})}},
+  createClient:(_url,key)=>key==='service'?admin:{auth:{getUser:async()=>({data:{user:authenticated?{id:'operator'}:null},error:authenticated?null:{message:'invalid'}})}},
   saveTemporaryCredential:async()=>{},decryptCredentialRows:async()=>[],XLSX:{},
   Deno:{env:{get:key=>({SB_URL:'https://stratos.example',SB_SERVICE_ROLE_KEY:'service',SB_ANON_KEY:'anon'}[key])},serve:fn=>{handler=fn;}},
  });
  vm.runInContext(provisioningSource,context);
  vm.runInContext(crmSource,context);
+ vm.runInContext(tenantPipelineSource,context);
  vm.runInContext(source,context);
  const call=async payload=>{const response=await handler(new Request('https://stratos.example/functions/v1/whatsapp-admin',{method:'POST',headers:{authorization:'Bearer qa'},body:JSON.stringify(payload)}));return {status:response.status,body:await response.json()};};
  return {call,creates,rows,rpcs,authUsers,authPages};
@@ -188,4 +190,75 @@ test('CRM maps scope rejection, stale saves and undeployed gateway without falli
  const h=harness({operator:false});
  assert.equal((await h.call({action:'list_company_leads',organization_id})).status,403);
  assert.equal(h.rpcs.length,0);
+});
+
+const tenantDraft = [{name:'Primer contacto',color:'#38BDF8'},{name:'Ganado',color:'#34D399'}];
+const tenantSave = {action:'save_own_pipeline',organization_id:'own',pipeline:tenantDraft,expected_updated_at:'2026-11-04T00:00:00Z'};
+
+test('own pipeline is available to active company admins without platform privileges',async()=>{
+ for(const tenantRole of ['admin','super_admin']) {
+  const h=harness({operator:false,tenantRole});
+  const loaded=await h.call({action:'get_own_pipeline',organization_id:'own'});
+  assert.equal(loaded.status,200);
+  assert.deepEqual(loaded.body.organization,{id:'own',name:'Own'});
+  assert.deepEqual(loaded.body.pipeline.map(stage=>stage.name),['Prospecto','Ganado']);
+  assert.equal((await h.call({action:'bootstrap'})).status,403);
+  assert.equal((await h.call({action:'get_pipeline',organization_id:'duke'})).status,403);
+  const saved=await h.call({...tenantSave,p_actor_id:'duke-user'});
+  assert.equal(saved.status,200);
+  assert.deepEqual(saved.body.pipeline,tenantDraft);
+  assert.equal(h.rows.organizations.find(row=>row.id==='own').meta_config.crm.pipelineUpdatedBy,'operator');
+  assert.deepEqual(h.rows.organizations.find(row=>row.id==='duke').meta_config,undefined);
+ }
+});
+
+test('own pipeline rejects other roles, disabled profiles, forged organizations and expired authentication',async()=>{
+ for(const tenantRole of ['asesor','director','ceo','marketing','colaborador']) {
+  const h=harness({operator:false,tenantRole});
+  assert.equal((await h.call(tenantSave)).status,403);
+  assert.equal(h.rpcs.length,0);
+ }
+ for(const options of [{tenantActive:false},{authenticated:false}]) {
+  const h=harness({operator:false,tenantRole:'admin',...options});
+  assert.equal((await h.call(tenantSave)).status,options.authenticated===false?401:403);
+ }
+ const h=harness({operator:false,tenantRole:'admin'});
+ for(const organization_id of ['duke','nsg','other','partner','']) {
+  assert.equal((await h.call({...tenantSave,organization_id})).status,403);
+  assert.equal((await h.call({action:'get_own_pipeline',organization_id})).status,403);
+ }
+ assert.equal(h.rpcs.length,0);
+ assert.equal(h.rows.organizations.find(row=>row.id==='own').meta_config.crm,undefined);
+});
+
+test('own pipeline protects occupied stages past the first API page and preserves other configuration',async()=>{
+ const h=harness({operator:false,tenantRole:'admin'});
+ const organization=h.rows.organizations.find(row=>row.id==='own');
+ organization.meta_config.documents=[{title:'Keep me'}];
+ organization.meta_config.crm={labels:{entity:'paciente'}};
+ h.rows.leads=Array.from({length:1201},(_,i)=>({id:i,organization_id:'own',stage:i===1200?'Prospecto':'Ganado',deleted_at:null}));
+ h.rows.leads.push({id:2000,organization_id:'duke',stage:'Duke secret',deleted_at:null});
+ h.rows.leads.push({id:2001,organization_id:'own',stage:'Deleted stage',deleted_at:'2026-11-01'});
+ const loaded=await h.call({action:'get_own_pipeline',organization_id:'own'});
+ assert.deepEqual(loaded.body.usage,{Ganado:1200,Prospecto:1});
+ const result=await h.call(tenantSave);
+ assert.equal(result.status,200);
+ assert.equal(result.body.pipeline.at(-1).name,'Prospecto');
+ assert.deepEqual(result.body.preserved_stages,{Prospecto:1});
+ assert.deepEqual(organization.meta_config.documents,[{title:'Keep me'}]);
+ assert.deepEqual(organization.meta_config.crm.labels,{entity:'paciente'});
+ assert.equal(result.body.pipeline.some(stage=>stage.name==='Duke secret'),false);
+});
+
+test('own pipeline rejects stale drafts, invalid stages and disabled organizations',async()=>{
+ const h=harness({operator:false,tenantRole:'admin'});
+ for(const expected_updated_at of [undefined,'2026-11-03T00:00:00Z']) {
+  assert.equal((await h.call({...tenantSave,expected_updated_at})).status,409);
+ }
+ for(const pipeline of [[],tenantDraft.slice(0,1),[{name:'Duplicate',color:'#123456'},{name:'duplicate',color:'#123456'}],[{name:'Valid',color:'red'},tenantDraft[1]]]) {
+  assert.equal((await h.call({...tenantSave,pipeline})).status,400);
+ }
+ assert.equal(h.rows.organizations.find(row=>row.id==='own').meta_config.crm,undefined);
+ h.rows.organizations.find(row=>row.id==='own').active=false;
+ assert.equal((await h.call(tenantSave)).status,403);
 });
