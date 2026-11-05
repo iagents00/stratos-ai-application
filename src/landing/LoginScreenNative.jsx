@@ -58,7 +58,7 @@ export default function LoginScreenNative({ onLogin }) {
             <div className="native-login-heading">
               <p className="native-login-eyebrow">Acceso a la plataforma</p>
               <h1 id="native-login-title">Bienvenido de vuelta</h1>
-              <p>Entra con la cuenta de tu empresa.</p>
+              <p>Usa la cuenta que te proporcionó tu empresa.</p>
             </div>
             <form onSubmit={submit} className="native-login-form" aria-busy={loading}>
               <div className="native-login-field">
