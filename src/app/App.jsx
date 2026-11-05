@@ -76,7 +76,7 @@ const PlatformAdminConsole = lazy(() => import("./features/Admin/PlatformAdminCo
 const RailsSettings = lazy(() => import("./features/Admin/RailsSettings"));
 
 /* ── Navigation & roles ── */
-import { nav, MODULE_ROLES, MOBILE_PRIMARY_NAV, canAccessModule, isMarketingUser } from "./constants/navigation";
+import { nav, MODULE_ROLES, MOBILE_PRIMARY_NAV, getAccessibleNavigation, canAccessModule, isMarketingUser } from "./constants/navigation";
 
 // Vistas que NO se persisten entre F5: son flujos efímeros (entrar a Planes
 // desde una promo, abrir admin desde un settings click). El F5 te regresa
@@ -443,10 +443,7 @@ export default function App() {
   ].slice(0, 3);
   // Cuadro "+" (todas las opciones): TODOS los módulos accesibles — también
   // los 4 de la barra, así el cuadro es el mapa completo de la app.
-  const mobileAllNav = nav.filter(n =>
-    (!n.adminOnly || ["super_admin", "admin"].includes(user?.role)) &&
-    canAccessModule(n.id, user, clientConfig)
-  );
+  const mobileAllNav = getAccessibleNavigation(user, clientConfig);
   const [msgs, setMsgs]  = useState([]);
   const [inp, setInp]    = useState("");
   const [notifs, setNotifs] = useState([]);
@@ -2041,10 +2038,7 @@ export default function App() {
 
   // Sidebar: TODOS los módulos accesibles (rol + org). Se muestran los 5
   // primeros en la barra; el resto vive en un modal centrado "Aplicaciones".
-  const accessibleAll = nav.filter(n =>
-    (!n.adminOnly || ["super_admin","admin"].includes(user?.role))
-    && canAccessModule(n.id, user, clientConfig)
-  );
+  const accessibleAll = mobileAllNav;
   const sidebarTop  = accessibleAll.slice(0, 5);
   const hasMoreApps = accessibleAll.length > 5;
   const appsActive  = !metaOpen && (sidebarMore || !sidebarTop.some(n => n.id === v));
@@ -3159,11 +3153,8 @@ export default function App() {
               </button>
             </div>
 
-            {/* Sello de la versión web que corre ESTE dispositivo. El shell
-                nativo carga la web remota: un APK nuevo NO garantiza web nueva
-                (SW/deploy). Con esto cualquiera puede reportar "web vNNN" y se
-                acaba el adivinar. Mantener en sync con CACHE_VERSION (sw.js). */}
-            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:10.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · web v435</p>
+            {/* The label is compiled from the same version as the service worker. */}
+            <p style={{ margin:"12px 0 0", textAlign:"center", fontSize:10.5, fontFamily:font, letterSpacing:"0.02em", color: isLight ? "rgba(15,23,42,0.35)" : "rgba(255,255,255,0.28)" }}>Stratos CRM AI · {import.meta.env.STRATOS_BUILD_LABEL}</p>
           </div>
         </>,
         document.body

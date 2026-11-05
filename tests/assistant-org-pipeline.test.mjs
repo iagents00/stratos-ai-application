@@ -1,0 +1,40 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const {PGlite}=await import(process.env.STRATOS_PGLITE_MODULE || '@electric-sql/pglite');
+test('assistant resolves the saved company pipeline, groups, defaults and access without legacy stages',async()=>{
+const db=new PGlite();
+const own='10000000-0000-4000-a000-000000000001',other='10000000-0000-4000-a000-000000000002',uid='20000000-0000-4000-a000-000000000001';
+try{
+await db.exec(`create role anon; create role authenticated; create role service_role; create schema auth;
+create function auth.role() returns text language sql as $$select nullif(current_setting('request.jwt.claim.role',true),'')$$;
+create function auth.uid() returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+create function unaccent(text) returns text language sql immutable as $$select translate($1,'áéíóúñÁÉÍÓÚÑ','aeiounAEIOUN')$$;
+create table organizations(id uuid primary key,meta_config jsonb);
+create table profiles(id uuid,organization_id uuid,active boolean);
+create table org_stages(organization_id uuid,orden int,nombre text,color text,activo boolean,deleted_at timestamptz,grupo text);
+create function fn_platform_crm_pipeline(uuid) returns jsonb language sql as $$ select '[{"name":"Primer contacto"},{"name":"Ganado"},{"name":"Contáctame Ya"}]'::jsonb $$;`);
+const pipeline=[{name:'Consulta',color:'#123456'},{name:'Diagnóstico',color:'#654321'},{name:'Tratamiento',color:'#ABCDEF'}];
+await db.query('insert into organizations values($1,$2),($3,$4)',[own,{crm:{pipeline}},other,{crm:{pipeline:[{name:'Other private'}]}}]);
+await db.query('insert into profiles values($1,$2,true)',[uid,own]);
+await db.query("insert into org_stages values($1,1,'Obsolete','#000000',true,null,null)",[own]);
+const migration=readFileSync('supabase/migrations/276_assistant_organization_pipeline.sql','utf8');
+// Install the real resolver functions; the remaining bot functions need the full CRM schema.
+await db.exec(migration.slice(0,migration.indexOf('CREATE OR REPLACE FUNCTION public.fn_org_copilot_responder_core')));
+const resolve=async(input,org=own)=>(await db.query('select fn_org_stage($1,$2) as stage',[org,input])).rows[0].stage;
+assert.equal(await resolve('primera etapa'),'Consulta');assert.equal(await resolve('tercera'),'Tratamiento');
+assert.equal(await resolve('diagnostico'),'Diagnóstico');assert.equal(await resolve('última etapa'),'Tratamiento');
+assert.equal(await resolve('Contáctame Ya'),'Consulta');assert.equal(await resolve('Nuevo Registro'),'Consulta');
+assert.equal(await resolve('Obsolete'),null);assert.equal(await resolve('Zoom Agendado'),null);
+assert.deepEqual((await db.query('select fn_org_stages_list($1) stages',[own])).rows[0].stages,pipeline.map(s=>s.name));
+await db.query('update organizations set meta_config=$2 where id=$1',[own,{crm:{pipeline:[{name:'Wrong flat'}],pipelines:[{id:'ventas',label:'Ventas',stages:[{name:'Entrada'},{name:'Venta'}]},{id:'taller',label:'Taller',stages:[{name:'Pendiente'},{name:'Entregado'}]}]}}]);
+assert.equal(await resolve('segunda etapa de taller'),'Entregado');assert.equal(await resolve('última de ventas'),'Venta');assert.equal(await resolve('Wrong flat'),null);
+await db.query("select set_config('request.jwt.claim.role','authenticated',false),set_config('request.jwt.claim.sub',$1,false)",[uid]);
+assert.equal(await resolve('primera'),'Entrada');await assert.rejects(resolve('primera',other),{code:'42501'});
+await db.query("select set_config('request.jwt.claim.role','anon',false)");await assert.rejects(resolve('primera'),{code:'42501'});
+await db.query("select set_config('request.jwt.claim.role','service_role',false)");
+assert.equal(await resolve('primera',other),'Other private');
+await db.query('update organizations set meta_config=$2 where id=$1',[own,{sin_pipeline:true}]);assert.equal(await resolve('primera'),null);
+await db.query('update organizations set meta_config=$2 where id=$1',[own,{}]);assert.equal(await resolve('primera'),'Obsolete');
+await db.query('update org_stages set activo=false where organization_id=$1',[own]);assert.equal(await resolve('primera'),'Primer contacto');
+}finally{await db.close();}});
