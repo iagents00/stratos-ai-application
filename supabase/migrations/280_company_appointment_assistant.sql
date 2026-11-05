@@ -50,8 +50,8 @@ BEGIN
        Telegram queda una flecha limpia — ahí no hay Markdown, por eso NO se
        usan asteriscos) y el dato que importa entre comillas angulares, que se
        resalta sin mostrarse. La línea «▸» se pinta entera: no lleva comillas. */
-    INSERT INTO public.tg_bot_activity (telegram_chat_id, role, content, meta)
-    SELECT c.advisor_tg, 'ai',
+    INSERT INTO public.tg_bot_activity (organization_id, telegram_chat_id, role, content, meta)
+    SELECT v_org, c.advisor_tg, 'ai',
       COALESCE(
         CASE WHEN c.tipo='team_action' AND NULLIF(c.payload->>'text','') IS NOT NULL THEN
           CASE c.payload->>'fase'

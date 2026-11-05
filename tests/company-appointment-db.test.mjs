@@ -54,7 +54,7 @@ test('renamed appointments send the three-hour briefing, open Copilot plans, ded
   assert.equal(reminder.status,'sent');assert.equal(new Date(reminder.scheduled_at)<=new Date(),true);
   assert.match(reminder.payload.text,/Evaluación/);assert.doesNotMatch(reminder.payload.text,/Zoom/);
   assert.equal((await db.query('select count(*)::int n from proactive_pending_reports where organization_id=$1 and advisor_telegram_id=-771 and status=$2',[own,'open'])).rows[0].n,1);
-  assert.equal((await db.query('select count(*)::int n from tg_bot_activity where telegram_chat_id=-771')).rows[0].n,1);
+  assert.equal((await db.query('select count(*)::int n from tg_bot_activity where organization_id=$1 and telegram_chat_id=-771',[own])).rows[0].n,1);
   await tick();assert.equal((await db.query('select count(*)::int n from proactive_reminders where organization_id=$1',[own])).rows[0].n,1);
   assert.equal((await db.query('select count(*)::int n from proactive_reminders where organization_id=$1',[other])).rows[0].n,0);
   await db.query("update leads set next_action_at=now()+interval '4 hours' where organization_id=$1 and id=$2",[own,lead]);await tick();
