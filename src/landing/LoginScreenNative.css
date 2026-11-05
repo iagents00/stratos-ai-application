@@ -31,7 +31,7 @@
 .native-login-help{font-size:12px;line-height:1.65;text-align:center;color:var(--native-login-muted);margin:32px 12px 4px}
 .native-login-page button:focus-visible,.native-login-page a:focus-visible{outline:3px solid #38bdf8;outline-offset:3px}
 .native-login-primary:active,.native-login-guest:active,.native-login-eye:active{transform:scale(.98)}
-.native-login-spinner{animation:native-login-spin 1s linear infinite}
+
 @keyframes native-login-spin{to{transform:rotate(360deg)}}
 @media(max-width:360px){.native-login-page{padding-left:20px;padding-right:20px}.native-login-heading h1{font-size:27px}.native-login-recovery{font-size:11px}}
 @media(max-height:740px){.native-login-brand{margin-bottom:28px}.native-login-heading>p:not(.native-login-eyebrow){margin-bottom:24px}}

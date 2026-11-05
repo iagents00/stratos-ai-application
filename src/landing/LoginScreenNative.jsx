@@ -83,7 +83,7 @@ export default function LoginScreenNative({ onLogin }) {
               </div>
               <p id="native-login-error" className="native-login-error" role={error ? "alert" : undefined}>{error}</p>
               <button type="submit" className="native-login-primary" disabled={loading}>
-                {loading ? <><Loader2 size={19} className="native-login-spinner" /> Entrando…</> : <>Iniciar sesión <ArrowRight size={19} /></>}
+                {loading ? <><Loader2 size={19} className="native-login-spinner" style={{ animation: "native-login-spin 1s linear infinite" }} /> Entrando…</> : <>Iniciar sesión <ArrowRight size={19} /></>}
               </button>
             </form>
             <div className="native-login-divider"><span>o prueba la demo</span></div>
