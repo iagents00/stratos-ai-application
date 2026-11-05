@@ -17,6 +17,8 @@ const notes = (locale, version) => version === '4.9.4'
   ? 'Copilot y los módulos de tu empresa disponibles también en el menú móvil. Personaliza las etapas de tu pipeline como administrador; el asistente usa las etapas de tu empresa. Mejoras al editar y guardar etapas.'
   : 'Copilot and your company modules are available in the mobile menu. Company administrators can customize pipeline stages, and the assistant uses each company’s stages. Improved stage editing and saving.';
 const relationship = (type,id) => ({data:{type,id}});
+const reviewItemsPath = id => '/v1/reviewSubmissions/'+id+'/items?include=appStoreVersion&fields[reviewSubmissionItems]=state,appStoreVersion&fields[appStoreVersions]=versionString&limit=50';
+const itemVersionId = item => item.relationships?.appStoreVersion?.data?.id;
 
 export async function releaseIOS({ mode='inspect', version, buildNumber, previousVersion, previousBuild, request }) {
   if (!['inspect','prepare','submit','replace-review'].includes(mode) || !/^\d+\.\d+\.\d+$/.test(version || '')
@@ -45,8 +47,8 @@ export async function releaseIOS({ mode='inspect', version, buildNumber, previou
       const submissions=(await request('GET','/v1/reviewSubmissions?filter[app]='+APP_ID+'&limit=50')).data;
       let oldSubmission;
       for(const candidate of submissions.filter(s=>['WAITING_FOR_REVIEW','IN_REVIEW'].includes(s.attributes.state))) {
-        const items=(await request('GET','/v1/reviewSubmissions/'+candidate.id+'/items?limit=50')).data;
-        if(items.some(i=>i.relationships.appStoreVersion?.data?.id===previous.id)) {
+        const items=(await request('GET',reviewItemsPath(candidate.id))).data;
+        if(items.some(i=>itemVersionId(i)===previous.id)) {
           if(items.length!==1) throw new Error('The prior submission contains other content; it was left unchanged.');
           oldSubmission=candidate;break;
         }
@@ -106,13 +108,13 @@ export async function releaseIOS({ mode='inspect', version, buildNumber, previou
   const submissions=(await request('GET','/v1/reviewSubmissions?filter[app]='+APP_ID+'&limit=50')).data;
   for(const candidate of submissions.filter(s=>s.attributes.state==='READY_FOR_REVIEW')) {
     const items=(await request('GET','/v1/reviewSubmissions/'+candidate.id+'/items?limit=50')).data;
-    if(items.some(i=>i.relationships.appStoreVersion?.data?.id===target.id)) {submission=candidate;break;}
+    if(items.some(i=>itemVersionId(i)===target.id)) {submission=candidate;break;}
     if(!items.length && (!candidate.attributes.platform || candidate.attributes.platform==='IOS')) {submission=candidate;break;}
   }
   if(!submission) submission=(await request('POST','/v1/reviewSubmissions',{data:{type:'reviewSubmissions',attributes:{platform:'IOS'},relationships:{app:relationship('apps',APP_ID)}}})).data;
-  const items=(await request('GET','/v1/reviewSubmissions/'+submission.id+'/items?limit=50')).data;
-  if(items.some(i=>i.relationships.appStoreVersion?.data?.id && i.relationships.appStoreVersion.data.id!==target.id)) throw new Error('The draft contains another app version. It was not submitted.');
-  if(!items.some(i=>i.relationships.appStoreVersion?.data?.id===target.id)) await request('POST','/v1/reviewSubmissionItems',{data:{type:'reviewSubmissionItems',relationships:{reviewSubmission:relationship('reviewSubmissions',submission.id),appStoreVersion:relationship('appStoreVersions',target.id)}}});
+  const items=(await request('GET',reviewItemsPath(submission.id))).data;
+  if(items.some(i=>itemVersionId(i)!==target.id)) throw new Error('The draft contains other or unidentified content. It was not submitted.');
+  if(!items.some(i=>itemVersionId(i)===target.id)) await request('POST','/v1/reviewSubmissionItems',{data:{type:'reviewSubmissionItems',relationships:{reviewSubmission:relationship('reviewSubmissions',submission.id),appStoreVersion:relationship('appStoreVersions',target.id)}}});
   await request('PATCH','/v1/reviewSubmissions/'+submission.id,{data:{type:'reviewSubmissions',id:submission.id,attributes:{submitted:true}}});
   const result=(await request('GET','/v1/reviewSubmissions/'+submission.id)).data;
   return {...prepared,submissionId:result.id,submissionState:result.attributes.state};
