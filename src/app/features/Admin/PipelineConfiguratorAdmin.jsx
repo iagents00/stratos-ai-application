@@ -223,7 +223,7 @@ export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, b
         ? { ...org, meta_config: result.organization?.meta_config || org.meta_config }
         : org));
       window.dispatchEvent(new CustomEvent("stratos:pipeline-saved", {
-        detail: { organizationId: selectedId, pipeline: cleanStages(saved), appointmentStage: appointmentStage ?? null },
+        detail: { organizationId: selectedId, pipeline: cleanStages(saved), appointmentStage: appointment },
       }));
     } catch (error) {
       setMessage({ type: "error", text: error.message || "No se pudo guardar el pipeline.", retry: error.status === 409 });

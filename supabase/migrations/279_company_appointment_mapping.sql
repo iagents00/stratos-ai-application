@@ -16,8 +16,11 @@ declare v_managed boolean;
 begin
  if auth.role() is distinct from 'service_role' then raise exception 'Solo el servidor.' using errcode='42501'; end if;
  select meta_config#>>'{onboarding,createdFrom}'='whatsapp_admin' into v_managed from public.organizations where id=p_org;
- if p_stage is not null and not exists(select 1 from public.fn_effective_org_stages(p_org) where nombre=p_stage) then
-  raise exception 'Elige una etapa del pipeline para la cita.' using errcode='22023'; end if;
+ if p_stage is not null then
+  select nombre into p_stage from public.fn_effective_org_stages(p_org)
+   where lower(nombre)=lower(regexp_replace(btrim(p_stage),'\s+',' ','g')) limit 1;
+  if not found then raise exception 'Elige una etapa del pipeline para la cita.' using errcode='22023'; end if;
+ end if;
  update public.organizations set meta_config=jsonb_set(coalesce(meta_config,'{}'),'{crm}',
    coalesce(meta_config->'crm','{}')||jsonb_build_object('appointmentStage',p_stage,'copilotReminders',coalesce(v_managed,false))),updated_at=clock_timestamp() where id=p_org;
  if coalesce(v_managed,false) then

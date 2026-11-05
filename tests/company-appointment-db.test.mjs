@@ -15,7 +15,7 @@ test('appointment publishing is atomic, company-scoped, keeps advanced settings 
   await assert.rejects(save(admin,other,'Reunión'),{code:'42501'});
   await assert.rejects(save(admin,own,'Foreign stage'),{code:'22023'});
   assert.equal((await db.query('select count(*) n from proactive_config')).rows[0].n,0);
-  let saved=await save(admin,own,'Reunión');
+  let saved=await save(admin,own,'  reunión  ');
   assert.equal(saved.copilot.appointment_stage,'Reunión');assert.equal(saved.organization.meta_config.documents[0].title,'Keep');
   let cfg=(await db.query('select * from proactive_config where organization_id=$1',[own])).rows[0];
   assert.equal(cfg.enabled,true);assert.equal(cfg.shadow_mode,false);assert.equal(Number(cfg.zoom_reminder_hours),3);
