@@ -151,3 +151,12 @@ El asistente tiene **dos mitades**, y solo una es inmobiliaria:
 12. **Ante «no llegó», mirá primero el sello de envío en la base.** Si `proactive_reminders.sent_at` está y está a tiempo, el problema es la pantalla o el canal — no el motor. Tocar el motor ahí es arriesgar lo que funciona.
 13. **El formato se arregla en el render, no en cada función.** Los `**` visibles se limpian en un solo lugar por donde pasa todo; editar decenas de funciones deja decenas de oportunidades de que la próxima nazca mal.
 14. **Probá el registro pobre, no el bonito.** El cliente sin teléfono, sin etapa, sin apellido. El camino feliz ya funciona; los bugs viven en los registros incompletos, que en un equipo real son mayoría.
+
+
+## Negocios dentro de una misma empresa (opcional)
+
+Si una organización necesita distinguir dos actividades, configurar únicamente en su `meta_config.crm.businessLines` una lista de `{id,label,aliases,entryStage,stages}`. Cada `entryStage` y cada nombre de `stages` debe existir en su pipeline; las listas deben ser disjuntas. No copiar las actividades ni datos de otro cliente como plantilla.
+
+El CRM deriva la etiqueta del negocio desde la etapa y conserva `leads.source` como canal de origen. El formulario permite elegir negocio; Copilot y Telegram proponen su entrada con los aliases propios y piden aclaración si el pedido corresponde a varias actividades. La elección continúa en el registro pendiente y no se confirma hasta resolverla. El publicador remapea estos vínculos al renombrar etapas; para quitar una entrada, cambiar antes la configuración del negocio.
+
+Los pipelines personalizados guardados en `crm.pipeline` suman un punto por seguimiento en todas sus etapas, con el límite global de 100. Las empresas sin ese pipeline conservan sus reglas históricas. Para una instalación nueva probar registro por negocio, confirmación, cambio de nombre, seguimiento y recarga; no basta ver el nombre en el menú. Migración288.

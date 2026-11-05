@@ -74,7 +74,7 @@ BEGIN
     WHEN 'apartó' THEN 11 WHEN 'visita agendada' THEN 12 WHEN 'cierre' THEN 13
     WHEN 'postventa' THEN 14 ELSE 1 END;
 
-  SELECT coalesce(jsonb_typeof(meta_config#>'{crm,pipeline}')='array' AND jsonb_array_length(meta_config#>'{crm,pipeline}')>=2,false)
+  SELECT CASE WHEN jsonb_typeof(meta_config#>'{crm,pipeline}')='array' THEN jsonb_array_length(meta_config#>'{crm,pipeline}')>=2 ELSE false END
     INTO v_custom FROM public.organizations WHERE id=l.organization_id;
   v_postzoom := v_stage IN ('zoom concretado','seguimiento','largo plazo','apartó','visita agendada','cierre');
 
