@@ -17,6 +17,7 @@ import { useClient } from "../hooks/useClient";
 import { requestRecoveryCode, verifyRecoveryCode } from "../lib/recovery";
 import { isNativeApp } from "../lib/native";
 import { isCommonEntryLocation } from "../lib/common-entry";
+import { normalizeLoginIdentity } from "../lib/login-identity";
 
 const font  = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
 const fontD = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
@@ -159,13 +160,7 @@ export default function LoginScreen({ onLogin }) {
     setError("");
     if (!email.trim() || !password) { setError("Completa todos los campos."); return; }
     setLoad(true);
-    const identity = email.trim().toLowerCase();
-    // Alias de acceso para el operador. La clave nunca vive en el bundle:
-    // sigue validándose exclusivamente en Supabase Auth.
-    const loginEmail = identity === "admin2026"
-      ? "admin2026@stratoscapitalgroup.com"
-      : identity;
-    const result = await onLogin(loginEmail, password);
+    const result = await onLogin(normalizeLoginIdentity(email), password);
     if (result?.error) { setError(result.error); setLoad(false); }
     // Si no hay error, App.jsx desmonta LoginScreen automáticamente
   };

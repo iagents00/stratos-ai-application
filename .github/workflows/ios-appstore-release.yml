@@ -6,15 +6,22 @@ on:
       mode:
         description: Inspeccionar, preparar ficha o enviar a revisión pública
         type: choice
-        options: [inspect, prepare, submit]
+        options: [inspect, prepare, submit, replace-review]
         default: inspect
       version:
         description: Versión comercial exacta
         required: true
-        default: '4.9.3'
+        default: '4.9.4'
       build:
         description: Número de build de iOS ya procesada por Apple
         required: true
+
+      previous_version:
+        description: Versión pendiente exacta que se reemplazará (solo replace-review)
+        required: false
+      previous_build:
+        description: Build pendiente exacta que se reemplazará (solo replace-review)
+        required: false
 
 permissions:
   contents: read
@@ -40,4 +47,6 @@ jobs:
           RELEASE_MODE: ${{ inputs.mode }}
           RELEASE_VERSION: ${{ inputs.version }}
           RELEASE_BUILD: ${{ inputs.build }}
+          RELEASE_PREVIOUS_VERSION: ${{ inputs.previous_version }}
+          RELEASE_PREVIOUS_BUILD: ${{ inputs.previous_build }}
         run: node scripts/ops/appstore-release.mjs

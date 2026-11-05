@@ -5,7 +5,11 @@ import { pathToFileURL } from 'node:url';
 export const APP_ID = '6804826565';
 const editable = new Set(['PREPARE_FOR_SUBMISSION','REJECTED','METADATA_REJECTED','DEVELOPER_REJECTED']);
 const inReview = new Set(['WAITING_FOR_REVIEW','IN_REVIEW','PENDING_APPLE_RELEASE','PENDING_DEVELOPER_RELEASE','READY_FOR_DISTRIBUTION','READY_FOR_SALE','PROCESSING_FOR_DISTRIBUTION','PROCESSING_FOR_APP_STORE']);
-const notes = (locale, version) => version === '4.9.3'
+const notes = (locale, version) => version === '4.9.4'
+  ? (locale.startsWith('es')
+    ? 'Nuevo acceso con fondo blanco y los colores de Stratos AI. Inicia sesión con tu correo o usuario y recupera tu acceso desde la misma pantalla. Incluye Copilot y los módulos de tu empresa en móvil, con recordatorios de 3 horas adaptados a la etapa de citas de cada pipeline.'
+    : 'A new white sign-in screen in Stratos AI colors. Sign in with your email or username and recover access from the same screen. Includes your company’s Copilot and mobile modules, with three-hour reminders following each pipeline’s appointment stage.')
+  : version === '4.9.3'
   ? (locale.startsWith('es')
     ? 'Copilot se sincroniza con la etapa de citas de cada empresa. Selecciona esa etapa desde el pipeline, registra fecha y hora y conserva los recordatorios de 3 horas. Mejoras al reprogramar citas y mantener su fecha sincronizada.'
     : 'Copilot follows each company’s appointment stage. Choose it in the pipeline, set the date and time, and keep the default three-hour reminders. Improved appointment rescheduling and date synchronization.')
@@ -14,9 +18,9 @@ const notes = (locale, version) => version === '4.9.3'
   : 'Copilot and your company modules are available in the mobile menu. Company administrators can customize pipeline stages, and the assistant uses each company’s stages. Improved stage editing and saving.';
 const relationship = (type,id) => ({data:{type,id}});
 
-export async function releaseIOS({ mode='inspect', version, buildNumber, request }) {
-  if (!['inspect','prepare','submit'].includes(mode) || !/^\d+\.\d+\.\d+$/.test(version || '')
-      || !/^\d+$/.test(buildNumber || '')) throw new Error('Choose inspect/prepare/submit, a semantic version and an exact build number.');
+export async function releaseIOS({ mode='inspect', version, buildNumber, previousVersion, previousBuild, request }) {
+  if (!['inspect','prepare','submit','replace-review'].includes(mode) || !/^\d+\.\d+\.\d+$/.test(version || '')
+      || !/^\d+$/.test(buildNumber || '')) throw new Error('Choose inspect/prepare/submit/replace-review, a semantic version and an exact build number.');
   const versions=(await request('GET', '/v1/apps/'+APP_ID+'/appStoreVersions?filter[platform]=IOS&limit=50')).data;
   const buildsResponse=await request('GET','/v1/builds?filter[app]='+APP_ID+'&filter[version]='+buildNumber+'&include=preReleaseVersion&limit=50');
   const build=buildsResponse.data.find(b=>b.attributes.version===buildNumber
@@ -26,6 +30,46 @@ export async function releaseIOS({ mode='inspect', version, buildNumber, request
   const summary={appId:APP_ID,version,build:buildNumber,mode,buildState:build?.attributes.processingState || 'NOT_FOUND',versions:versions.map(v=>({version:v.attributes.versionString,state:state(v)}))};
   if(mode==='inspect') return summary;
   if(!build || build.attributes.processingState!=='VALID' || build.attributes.expired) throw new Error('The exact iOS build is not processed and valid.');
+  // Explicit replacement is used only after the new signed build has passed QA.
+  // The normal submit mode always leaves an existing review unchanged.
+  let replacedReview;
+  if(mode==='replace-review') {
+    if(!/^\d+\.\d+\.\d+$/.test(previousVersion || '') || !/^\d+$/.test(previousBuild || '')
+      || version.localeCompare(previousVersion, undefined, {numeric:true})<=0) throw new Error('An exact earlier version and build are required to replace a review.');
+    const previous=versions.find(v=>v.attributes.versionString===previousVersion);
+    if(previous && ['WAITING_FOR_REVIEW','IN_REVIEW'].includes(state(previous))) {
+      if(target) throw new Error('The new version already exists; the previous review was left unchanged.');
+      const oldLinked=(await request('GET','/v1/appStoreVersions/'+previous.id+'/relationships/build')).data;
+      const oldBuild=oldLinked?.id && (await request('GET','/v1/builds/'+oldLinked.id)).data;
+      if(oldBuild?.attributes.version!==previousBuild) throw new Error('The previous review build changed; it was left unchanged.');
+      const submissions=(await request('GET','/v1/reviewSubmissions?filter[app]='+APP_ID+'&limit=50')).data;
+      let oldSubmission;
+      for(const candidate of submissions.filter(s=>['WAITING_FOR_REVIEW','IN_REVIEW'].includes(s.attributes.state))) {
+        const items=(await request('GET','/v1/reviewSubmissions/'+candidate.id+'/items?limit=50')).data;
+        if(items.some(i=>i.relationships.appStoreVersion?.data?.id===previous.id)) {
+          if(items.length!==1) throw new Error('The prior submission contains other content; it was left unchanged.');
+          oldSubmission=candidate;break;
+        }
+      }
+      if(!oldSubmission) throw new Error('The exact prior review submission was not found.');
+      await request('PATCH','/v1/reviewSubmissions/'+oldSubmission.id,{data:{type:'reviewSubmissions',id:oldSubmission.id,attributes:{canceled:true}}});
+      let current;
+      for(let attempt=0;attempt<10;attempt++) {
+        current=(await request('GET','/v1/appStoreVersions/'+previous.id)).data;
+        if(editable.has(state(current))) break;
+        await new Promise(resolve=>setTimeout(resolve,3000));
+      }
+      if(!editable.has(state(current))) throw new Error('Prior review cancellation is processing; inspect before retrying.');
+      await request('PATCH','/v1/appStoreVersions/'+previous.id,{data:{type:'appStoreVersions',id:previous.id,attributes:{versionString:version}}});
+      target=(await request('GET','/v1/appStoreVersions/'+previous.id)).data;
+      if(target.attributes.versionString!==version) throw new Error('Replacement version readback failed.');
+      replacedReview={version:previousVersion,build:previousBuild,submissionId:oldSubmission.id};
+    } else if(previous && editable.has(state(previous)) && !target) {
+      throw new Error('The previous version is editable. Inspect its state before renaming it.');
+    } else if(!previous && !target) {
+      throw new Error('The exact previous version was not found.');
+    }
+  }
   if(target && inReview.has(state(target))) {
     const linked=await request('GET','/v1/appStoreVersions/'+target.id+'/relationships/build');
     if(linked.data?.id!==build.id) throw new Error('This version is already in review or released with another build. It was left unchanged.');
@@ -56,7 +100,7 @@ export async function releaseIOS({ mode='inspect', version, buildNumber, request
   if(linked?.id!==build.id) throw new Error('Build association readback failed.');
   const current=(await request('GET','/v1/appStoreVersions/'+target.id)).data;
   if(current.attributes.releaseType!=='AFTER_APPROVAL') throw new Error('Automatic release readback failed.');
-  const prepared={...summary,versionId:target.id,state:state(current),releaseType:current.attributes.releaseType,locales:locales.map(l=>l.attributes.locale),screenshotSets,reviewAccessPresent:true};
+  const prepared={...summary,...(replacedReview?{replacedReview}:{}),versionId:target.id,state:state(current),releaseType:current.attributes.releaseType,locales:locales.map(l=>l.attributes.locale),screenshotSets,reviewAccessPresent:true};
   if(mode==='prepare') return prepared;
   let submission;
   const submissions=(await request('GET','/v1/reviewSubmissions?filter[app]='+APP_ID+'&limit=50')).data;
@@ -91,6 +135,6 @@ export function appleRequest(env=process.env) {
   };
 }
 if(process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href){
-  releaseIOS({mode:process.env.RELEASE_MODE || 'inspect',version:process.env.RELEASE_VERSION,buildNumber:process.env.RELEASE_BUILD,request:appleRequest()})
+  releaseIOS({mode:process.env.RELEASE_MODE || 'inspect',version:process.env.RELEASE_VERSION,buildNumber:process.env.RELEASE_BUILD,previousVersion:process.env.RELEASE_PREVIOUS_VERSION,previousBuild:process.env.RELEASE_PREVIOUS_BUILD,request:appleRequest()})
     .then(result=>console.log(JSON.stringify(result,null,2))).catch(error=>{console.error(error.message);process.exitCode=1;});
 }

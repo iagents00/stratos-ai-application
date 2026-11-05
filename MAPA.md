@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**294 archivos · 84.636 líneas**
+**296 archivos · 84.588 líneas**
 
 ---
 
@@ -439,7 +439,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ManualCRM.jsx` | 790 | _sin describir_ |
 | `manual-telegram-content.js` | 714 | Manual del COPILOT / Asistente IA (Duke del Caribe) |
 | `OnboardingCallCenter.jsx` | 687 | _sin describir_ |
-| `LoginScreen.jsx` | 657 | Pantalla de autenticación completa para la app |
+| `LoginScreen.jsx` | 652 | Pantalla de autenticación completa para la app |
 | `DataDeletion.jsx` | 554 | _sin describir_ |
 | `PricingScreen.jsx` | 552 | _sin describir_ |
 | `DukeLeadRouter.jsx` | 343 | _sin describir_ |
@@ -450,10 +450,10 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ManualBrasa.jsx` | 235 | _sin describir_ |
 | `ManualMuebleria.jsx` | 224 | _sin describir_ |
 | `Functionalities.css` | 203 | _sin describir_ |
-| `LoginScreenNative.jsx` | 189 | _sin describir_ |
 | `HeroFlowBackdrop.jsx` | 119 | _sin describir_ |
 | `LandingMarketing.jsx` | 115 | _sin describir_ |
 | `marketing-content.js` | 108 | _sin describir_ |
+| `LoginScreenNative.jsx` | 99 | _sin describir_ |
 | `ModuleShowcase.jsx` | 91 | _sin describir_ |
 | `FeatureMotion.jsx` | 90 | _sin describir_ |
 | `ModuleShowcase.css` | 66 | _sin describir_ |
@@ -461,6 +461,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `RecoveryForm.jsx` | 60 | _sin describir_ |
 | `FeatureMotion.css` | 55 | _sin describir_ |
 | `LoginScreen.css` | 45 | _sin describir_ |
+| `LoginScreenNative.css` | 39 | _sin describir_ |
 | `AppDownloads.jsx` | 29 | _sin describir_ |
 | `ServicesTicker.jsx` | 29 | _sin describir_ |
 | `HeroFlowBackdrop.css` | 26 | _sin describir_ |
@@ -531,6 +532,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `app-review-access.js` | 12 | Implementación web: App Review no existe fuera del binario móvil. |
 | `huli.js` | 10 | _sin describir_ |
 | `email-confirmation.js` | 9 | Consume only email-change callbacks, without installing a URL-supplied session. |
+| `login-identity.js` | 8 | Short Stratos usernames use the same registered domain as full email logins. |
 | `portfolio-route.js` | 8 | _sin describir_ |
 | `rails-preview.js` | 8 | La vista previa conserva la ruta y el cliente; nunca arrastra el hash de autenticación. |
 
@@ -880,7 +882,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/clients/vega/config.js` (196 líneas)
 - `src/lib/whatsapp-signup.js` (196 líneas)
 - `src/lib/lead-backup.js` (192 líneas)
-- `src/landing/LoginScreenNative.jsx` (189 líneas)
 - `src/lib/speech-native.js` (189 líneas)
 - `src/app/components/Chat.jsx` (182 líneas)
 - `src/app/views/CRM/CallActionButton.jsx` (182 líneas)
@@ -922,6 +923,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/CRM/command-metrics.js` (101 líneas)
 - `src/clients/grupo28/config.js` (100 líneas)
 - `src/app/features/Admin/CompanySetupAdmin.jsx` (99 líneas)
+- `src/landing/LoginScreenNative.jsx` (99 líneas)
 - `src/app/constants/areas.js` (97 líneas)
 - `src/app/views/CRM/date-range.js` (97 líneas)
 - `src/app/views/LandingPages/PublicLanding.jsx` (93 líneas)

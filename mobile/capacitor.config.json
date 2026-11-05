@@ -2,15 +2,15 @@
   "appId": "com.stratoscapitalgroup.crm",
   "appName": "Stratos AI",
   "webDir": "../dist-app",
-  "backgroundColor": "#030810",
+  "backgroundColor": "#FFFFFF",
   "android": {
     "allowMixedContent": false,
-    "backgroundColor": "#030810",
+    "backgroundColor": "#FFFFFF",
     "webContentsDebuggingEnabled": false,
     "adjustMarginsForEdgeToEdge": "auto"
   },
   "ios": {
-    "backgroundColor": "#030810",
+    "backgroundColor": "#FFFFFF",
     "contentInset": "never",
     "limitsNavigationsToAppBoundDomains": false
   }

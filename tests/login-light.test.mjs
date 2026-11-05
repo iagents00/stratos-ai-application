@@ -31,6 +31,13 @@ test('login preserves common and tenant branding, recovery controls and native r
     const register = render('/login?register=true');
     assert.match(register, /Mínimo 8 caracteres/);
     assert.match(register, /Crear cuenta/);
+    const { default: LoginScreenNative } = await vite.ssrLoadModule('/src/landing/LoginScreenNative.jsx');
+    const nativeDirect = renderToStaticMarkup(createElement(ClientContext.Provider, {value:{clientId:'tenant',config:{name:'Stratos'}}}, createElement(LoginScreenNative,{onLogin:()=>{}})));
+    assert.match(nativeDirect,/stratos-logo-web-20261016.webp/);
+    assert.match(nativeDirect,/Bienvenido de vuelta|Correo o usuario|Entrar como invitado/);
+    assert.doesNotMatch(nativeDirect,/Todo tu equipo|Solicitar acceso|Crear cuenta/);
+    const nativeTenant = renderToStaticMarkup(createElement(ClientContext.Provider, {value:{clientId:'company',config:{name:'Empresa QA',brand:{accent:'#112233'}}}}, createElement(LoginScreenNative,{onLogin:()=>{}})));
+    assert.match(nativeTenant,/Empresa QA/);assert.match(nativeTenant,/#112233/);
     const native = render('/login?register=true', true);
     assert.match(native, /Bienvenido de vuelta/);
     assert.doesNotMatch(native, /Crear cuenta|Solicitar acceso/);

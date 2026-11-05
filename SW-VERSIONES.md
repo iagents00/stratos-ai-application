@@ -1,5 +1,9 @@
 # Historial de versiones del Service Worker (CACHE_VERSION)
 
+## v455 — Login móvil blanco
+
+El acceso nativo usa fondo blanco, identidad Stratos, recuperación y modo invitado. Correo y usuario corto se resuelven igual en web y app; conserva la configuración de sesiones y el tema del CRM. iOS 4.9.4.
+
 ## v453 — Conservar tableros especiales
 
 La entrada de Pipelines y el acceso desde Usuarios respetan la misma comprobación de permisos y conservan fuera del editor simple a las empresas con varios tableros definidos en su configuración.

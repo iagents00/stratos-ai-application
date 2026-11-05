@@ -188,7 +188,7 @@ casa; por eso mismo son los que más cuidado piden.
 | `hooks/useViewport.js` | **30** |
 | `hooks/useClient.js` | **20** |
 | `app/SharedComponents.jsx` | **20** |
-| `guest/native.js` | **18** |
+| `guest/native.js` | **19** |
 | `app/views/CRM/date-range.js` | **13** |
 | `lib/whatsapp-admin.js` | **9** |
 | `app/views/CRM/zoom-metrics.js` | **9** |
