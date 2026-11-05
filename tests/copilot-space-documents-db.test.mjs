@@ -1,0 +1,73 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const {PGlite}=await import(process.env.STRATOS_PGLITE_MODULE || '@electric-sql/pglite');
+const own='10000000-0000-4000-a000-000000000001',other='10000000-0000-4000-a000-000000000002';
+const advisor='20000000-0000-4000-a000-000000000001',stranger='20000000-0000-4000-a000-000000000002';
+const doc='30000000-0000-4000-a000-000000000001',removed='30000000-0000-4000-a000-000000000002';
+test('Space lookup overrides a mistaken catalog tool, delivers saved links and generated documents, and isolates companies',async()=>{
+ const db=new PGlite();try{
+  await db.exec(`
+   create role anon; create role authenticated; create role service_role;
+   create schema auth; create function auth.uid() returns uuid language sql as $$select nullif(current_setting('test.uid',true),'')::uuid$$;
+   create function unaccent(text) returns text language sql immutable as $$select translate($1,'áéíóúüñÁÉÍÓÚÜÑ','aeiouunAEIOUUN')$$;
+   create table organizations(id uuid primary key,active boolean,meta_config jsonb);
+   create table front_rpc_registry(nombre text primary key,nota text);
+   create table profiles(id uuid primary key,organization_id uuid,active boolean,telegram_chat_id bigint,updated_at timestamptz);
+   create table team_documents(id uuid primary key,organization_id uuid,titulo text,tipo text,contenido text,created_at timestamptz default now(),deleted_at timestamptz);
+   create table proactive_pending_reports(id uuid,lead_id uuid,organization_id uuid,advisor_telegram_id bigint,status text,kind text,expires_at timestamptz,created_at timestamptz);
+   create table bot_pending_confirm(telegram_chat_id bigint);
+   create function _bot_nota_expediente_ref(bigint,text) returns jsonb language sql as $$select '{"ok":false}'::jsonb$$;
+   create function bot_nlu_dispatch_gvintell_required_fields_orig(bigint,text,jsonb) returns jsonb language sql as $$select '{"reply":{"text":"catalog-sentinel"}}'::jsonb$$;
+   create function bot_reasignar_desde_texto(bigint,text) returns jsonb language sql as $$select null::jsonb$$;
+   create function fn_ventas_split_dictado(uuid,text) returns jsonb language sql as $$select '[]'::jsonb$$;
+   create function _bot_responsable_del_texto(text) returns text language sql as $$select null::text$$;
+   create function _ventas_find_profile(uuid,text) returns setof uuid language sql as $$select null::uuid where false$$;
+   create function _bot_has_datetime_hint(text) returns boolean language sql as $$select false$$;
+  `);
+  const links=[{title:'WOHA',url:'https://drive.google.com/drive/folders/woha'},{title:'Google Drive',url:'https://drive.google.com/drive/folders/woha'},{title:'Contrato A',url:'https://example.org/a'},{title:'Contrato B',url:'https://example.org/b'},{title:'Unsafe',url:'javascript:alert(1)'}];
+  await db.query('insert into organizations values($1,true,$2),($3,true,$4)',[own,{documents:links},other,{documents:[{title:'WOHA',url:'https://example.org/private-other'}]}]);
+  await db.query('insert into profiles values($1,$2,true,-1,now()),($3,$4,true,-2,now())',[advisor,own,stranger,other]);
+  await db.query("insert into team_documents(id,organization_id,titulo,tipo,contenido,deleted_at) values($1,$2,'Informe comercial octubre','informe','Private original text',null),($3,$2,'Documento retirado','informe','Do not return',now())",[doc,own,removed]);
+  await db.exec(readFileSync('supabase/migrations/285_copilot_space_documents.sql','utf8'));
+  await db.exec(readFileSync('supabase/migrations/286_space_documents_read_intent.sql','utf8'));
+  for (const text of ['necesito que cada uno de los asesores reporte sus cierres el viernes','encargale a QA Asesor Uno revisar los zooms manana y que me pase el reporte']) {
+    assert.equal((await db.query('select _bot_is_space_document_request($1) result',[text])).rows[0].result,false);
+  }
+  const ask=async(text,tool='buscar_drive',args={})=>(await db.query('select bot_nlu_dispatch_gvintell($1,$2,$3) result',[-1,tool,{...args,input_text:text}])).rows[0].result;
+  const r=await ask('Pásame el documento de WOHA');
+  assert.equal(r.found,true);assert.equal(r.documents.length,1);assert.equal(r.documents[0].title,'WOHA');
+  assert.match(r.reply.text,/https:\/\/drive.google.com\/drive\/folders\/woha/);
+  assert.doesNotMatch(r.reply.text,/private-other|catálogo|catalog-sentinel/);
+  assert.equal((await ask('Dame el link de WOHA')).documents[0].title,'WOHA');
+  const generated=await ask('Envíame el informe comercial octubre de mi espacio');
+  assert.match(generated.reply.text,new RegExp('space_document='+doc));assert.equal(generated.documents[0].source,'generated');
+  assert.doesNotMatch(generated.reply.text,/Private original text/);
+  assert.equal((await ask('Pásame el documento inexistente')).found,false);
+  assert.equal((await ask('Dame el link de Blanca')).reply.text,'catalog-sentinel');
+  assert.equal((await ask('El drive de Blanca')).reply.text,'catalog-sentinel');
+  assert.equal((await ask('Pásame los documentos del cliente Carlos')).reply.text,'catalog-sentinel');
+  assert.equal((await ask('Recuérdame enviar un documento mañana','create_personal_reminder')).reply.text,'catalog-sentinel');
+  const listed=await ask('Mis documentos','menu');
+  assert.equal(listed.documents.filter(x=>x.url.includes('/woha')).length,1);
+  assert.ok(!listed.documents.some(x=>x.url.includes('javascript:')||x.id===removed));
+  const choices=await ask('Pásame el contrato');assert.equal(choices.documents.length,2);assert.match(choices.reply.text,/varios/);
+  const forged=await ask('Pásame el documento WOHA','get_document',{organization_id:other});
+  assert.ok(!forged.reply.text.includes('private-other'));
+  await db.query("insert into proactive_pending_reports values(gen_random_uuid(),gen_random_uuid(),$1,-1,'open','awaiting_plan',now()+interval '1 day',now())",[own]);
+  assert.equal((await ask('Pásame el documento WOHA')).found,true);
+  assert.equal((await db.query('select count(*)::int n from proactive_pending_reports')).rows[0].n,1);
+  await db.exec("set role authenticated; select set_config('test.uid','"+advisor+"',false)");
+  await assert.rejects(db.query("select bot_documentos_espacio(-2,'{}')"),{code:'42501'});
+  assert.equal((await db.query('select fn_space_document_read($1) result',[doc])).rows[0].result.id,doc);
+  assert.equal((await db.query('select fn_space_document_read($1) result',[removed])).rows[0].result,null);
+  await db.exec("select set_config('test.uid','"+stranger+"',false)");
+  assert.equal((await db.query('select fn_space_document_read($1) result',[doc])).rows[0].result,null);
+  await db.exec("reset role; update profiles set active=false where telegram_chat_id=-1");
+  assert.equal((await ask('Pásame el documento WOHA')).ok,false);
+  await db.exec("update profiles set active=true where telegram_chat_id=-1; update organizations set meta_config='{}' where id='"+own+"'");
+  const fresh=await ask('Muéstrame mis documentos');
+  assert.ok(fresh.documents.some(x=>x.source==='generated'));
+  assert.ok(fresh.documents.some(x=>x.source==='manual'));
+ }finally{await db.close();}
+});

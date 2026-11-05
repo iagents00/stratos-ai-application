@@ -132,6 +132,7 @@ error no está en el frontend.
 | `fn_org_team_members` | `app/features/MetaPanel/index.jsx` |
 | `fn_set_my_recovery_email` | `app/views/Profile.jsx` |
 | `fn_set_my_timezone` | `app/views/Profile.jsx` |
+| `fn_space_document_read` | `app/features/MetaPanel/DocsStratos.jsx` |
 | `fn_start_team_call` | `app/App.jsx` |
 | `fn_team_users` | `lib/auth.js` |
 | `fn_wa_conversations` | `hooks/useWhatsAppInbox.js` |

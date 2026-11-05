@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**296 archivos · 84.596 líneas**
+**296 archivos · 84.643 líneas**
 
 ---
 
@@ -83,7 +83,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `App.jsx` | 3259 | _sin describir_ |
+| `App.jsx` | 3275 | _sin describir_ |
 | `SharedComponents.jsx` | 343 | Shared primitive components used by all views. |
 | `App.css` | 321 | _sin describir_ |
 
@@ -140,14 +140,14 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `index.jsx` | 2350 | Space: Agenda · Documentos · Estrategia (Plan y Protocolo) |
+| `index.jsx` | 2351 | Space: Agenda · Documentos · Estrategia (Plan y Protocolo) |
 | `Rails.css` | 832 | _sin describir_ |
 | `AdminPanel.jsx` | 646 | Panel de gestión de usuarios (Super Admin y Admin). |
 | `index.jsx` | 487 | Panel de chat con Agente Stratos AI. |
 | `index.jsx` | 454 | Portal de Candidatos — Stratos People |
 | `PipelineConfiguratorAdmin.jsx` | 372 | _sin describir_ |
+| `DocsStratos.jsx` | 293 | _sin describir_ |
 | `PlatformAdminConsole.jsx` | 285 | _sin describir_ |
-| `DocsStratos.jsx` | 263 | _sin describir_ |
 | `PlatformCompanyCRM.jsx` | 258 | _sin describir_ |
 | `WhatsAppOnboardingAdmin.jsx` | 234 | _sin describir_ |
 | `PlatformAdminConsole.css` | 224 | _sin describir_ |
@@ -560,7 +560,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Abriendo comprobante… | `src/app/views/Caja.jsx:555` |
 | Abriendo documento… | `src/app/views/CRM/components.jsx:4322` |
 | Abriendo tu espacio clínico… | `src/dental-demo/ClinicalProfile.jsx:14` |
-| Abriendo tu espacio… | `src/app/App.jsx:2009` |
+| Abriendo tu espacio… | `src/app/App.jsx:2024` |
 | Abriendo… | `src/app/views/ChatEquipo.jsx:555` |
 | Abrir | `src/app/features/Admin/CatalogConfiguratorAdmin.jsx:150` |
 | Abrir carpeta de Drive | `src/app/views/LandingPages/index.jsx:1425` |
@@ -578,7 +578,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Abrir portafolio | `src/app/views/LandingPages/CreateWorkspace.jsx:59` |
 | Abrir presentación | `src/app/views/LandingPages/index.jsx:1287` |
 | Abrir sección | `src/app/features/Admin/PlatformAdminConsole.jsx:241` |
-| Abrirlo en Drive | `src/app/features/MetaPanel/DocsStratos.jsx:175` |
+| Abrirlo en Drive | `src/app/features/MetaPanel/DocsStratos.jsx:205` |
 | Acceso | `src/app/features/Admin/PlatformUsersAdmin.jsx:152` |
 | Acceso de demostración | `src/dental-demo/ClinicalDemoApp.jsx:90` |
 | Acceso de empresas: | `src/app/features/Admin/CompanyOnboarding.jsx:137` |
@@ -619,14 +619,14 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Administrador de demostración | `src/dental-demo/DentalIdentity.jsx:3` |
 | Administrar Marketing | `src/app/features/Admin/PlatformUsersAdmin.jsx:142` |
 | Agenda dental | `src/dental-demo/DentalDemo.jsx:47` |
-| Agenda, lista de acción, documentos y plan | `src/app/App.jsx:3113` |
+| Agenda, lista de acción, documentos y plan | `src/app/App.jsx:3128` |
 | Agendar en Huli | `src/dental-demo/HuliWorkspace.jsx:38` |
 | Agendar fecha | `src/app/views/CRM/index.jsx:4659` |
 | Agendar llamada | `src/app/views/LandingPages/LandingPagePreview.jsx:114` |
 | Agente Ejecutivo | `src/app/components/Chat.jsx:74` |
 | Agente Stratos | `src/app/components/Chat.jsx:60` |
 | Agrega un teléfono…  +1 555 … | `src/app/views/CRM/components.jsx:1305` |
-| Agregar | `src/app/features/MetaPanel/index.jsx:1372` |
+| Agregar | `src/app/features/MetaPanel/index.jsx:1373` |
 | Agregar etapa | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:319` |
 | Agregar otro | `src/app/views/Marketing.jsx:2521` |
 | Agregar propiedad | `src/app/views/LandingPages/CreateWorkspace.jsx:44` |
@@ -649,8 +649,8 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Añadir criterio | `src/app/views/ISpaceBoard.jsx:122` |
 | Añadir tarea | `src/app/views/ISpaceBoard.jsx:138` |
 | Aparecerán al inicio de su pipeline en | `src/app/views/CRM/index.jsx:6183` |
-| Aplicaciones | `src/app/App.jsx:3173` |
-| Apps | `src/app/App.jsx:2346` |
+| Aplicaciones | `src/app/App.jsx:3188` |
+| Apps | `src/app/App.jsx:2361` |
 | Área | `src/app/features/Admin/PlatformUsersAdmin.jsx:134` |
 | Áreas de atención | `src/app/views/RRHHModule.jsx:793` |
 | Arrastra el CV aquí o haz clic para subir | `src/app/views/RRHHModule.jsx:716` |
@@ -659,22 +659,22 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Asesor: | `src/app/features/Admin/PlatformCompanyCRM.jsx:253` |
 | Así te ayuda a operar | `src/app/components/CopilotCapabilities.jsx:117` |
 | Asignar a | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:204` |
-| Asignar a un asesor | `src/app/features/MetaPanel/index.jsx:1008` |
+| Asignar a un asesor | `src/app/features/MetaPanel/index.jsx:1009` |
 | Asignar a… | `src/app/views/Marketing.jsx:870` |
-| Asignar responsable | `src/app/features/MetaPanel/index.jsx:997` |
+| Asignar responsable | `src/app/features/MetaPanel/index.jsx:998` |
 | Asistió (sem.) | `src/app/views/ZoomControl/Resumen.jsx:421` |
 | Atención Inmediata | `src/app/views/Dash.jsx:235` |
 | Atrás | `src/app/views/LandingPages/CreateWorkspace.jsx:64` |
 | Auditoría de preparación | `src/dental-demo/ClinicalDemoApp.jsx:756` |
 | Aún no configuras un correo de recuperación. | `src/app/views/Profile.jsx:404` |
-| Aún no hay documentos | `src/app/features/MetaPanel/index.jsx:1871` |
+| Aún no hay documentos | `src/app/features/MetaPanel/index.jsx:1872` |
 | Aún no hay usuarios activos. | `src/app/features/Admin/CajaPermissionsAdmin.jsx:127` |
 | Autor del hito | `src/app/views/CRM/ZoomBoard.jsx:244` |
 | Badge | `src/app/views/LandingPages/index.jsx:665` |
 | Bajar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:333` |
 | Bajo · Medio · Alto | `src/app/views/CRM/components.jsx:3431` |
 | Borradores de esta demo | `src/dental-demo/ClinicalDemoApp.jsx:303` |
-| Buscar (⌘K) | `src/app/App.jsx:2436` |
+| Buscar (⌘K) | `src/app/App.jsx:2451` |
 | Buscar asesor… | `src/app/views/CRM/components.jsx:3188` |
 | Buscar candidato... | `src/app/views/RRHHModule.jsx:416` |
 | Buscar cliente | `src/app/features/Admin/PlatformCompanyCRM.jsx:249` |
@@ -707,11 +707,11 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cambiar cuánto gana | `src/app/views/Nomina.jsx:180` |
 | Cambiar el estatus | `src/app/views/Marketing.jsx:1582` |
 | Cambiar etapa | `src/app/views/CRM/components.jsx:277` |
-| Cambiar fecha | `src/app/features/MetaPanel/index.jsx:1251` |
+| Cambiar fecha | `src/app/features/MetaPanel/index.jsx:1252` |
 | Cambiar la etapa del lead | `src/app/views/WhatsApp.jsx:503` |
 | Cambiar orden de las tarjetas de prioridad | `src/app/views/CRM/index.jsx:2643` |
 | Cambiar posición de prioridad | `src/app/views/CRM/index.jsx:2804` |
-| Cambiar prioridad | `src/app/features/MetaPanel/index.jsx:1544` |
+| Cambiar prioridad | `src/app/features/MetaPanel/index.jsx:1545` |
 | Cambios sin guardar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:305` |
 | Campañas Recientes | `src/app/views/LandingPages/index.jsx:1258` |
 | Campo requerido | `src/app/views/LandingPages/index.jsx:644` |
@@ -731,7 +731,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cargando el plan… | `src/app/views/PlanSemanal.jsx:369` |
 | Cargando el tablero… | `src/app/views/ComandoOps.jsx:127` |
 | Cargando empresas… | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:287` |
-| Cargando equipo… | `src/app/App.jsx:2464` |
+| Cargando equipo… | `src/app/App.jsx:2479` |
 | Cargando ficha del cliente… | `src/app/features/Admin/PlatformCompanyCRM.jsx:225` |
 | Cargando movimientos… | `src/app/views/Caja.jsx:467` |
 | Cargando perfil dental… | `src/dental-demo/DentalProfile.jsx:11` |
@@ -749,7 +749,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Centro de Inteligencia | `src/app/components/DynamicIsland.jsx:81` |
 | Centro de Inteligencia — Activo | `src/app/components/DynamicIsland.jsx:102` |
 | Centro de soporte | `src/app/features/Admin/PlatformAdminConsole.jsx:232` |
-| Cerrar | `src/app/App.jsx:3029` |
+| Cerrar | `src/app/App.jsx:3044` |
 | Cerrar (Esc) | `src/app/views/ZoomControl/index.jsx:811` |
 | Cerrar detalle | `src/app/views/ZoomControl/Resumen.jsx:309` |
 | Cerrar editor | `src/app/features/Admin/PlatformUsersAdmin.jsx:146` |
@@ -759,8 +759,8 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cerrar guía de funciones | `src/app/components/CopilotCapabilities.jsx:120` |
 | Cerrar menú | `src/app/components/MobileHeaderMenu.jsx:52` |
 | Cerrar navegación | `src/app/features/Admin/PlatformAdminConsole.jsx:253` |
-| Cerrar sesión | `src/app/App.jsx:2017` |
-| Cerrar Space | `src/app/features/MetaPanel/index.jsx:746` |
+| Cerrar sesión | `src/app/App.jsx:2032` |
+| Cerrar Space | `src/app/features/MetaPanel/index.jsx:747` |
 | Cerrar vista previa | `src/app/views/LandingPages/LandingPagePreview.jsx:152` |
 | Certificación de tu cuenta Huli | `src/dental-demo/ClinicalReadiness.jsx:199` |
 | Chats | `src/app/views/WhatsApp.jsx:633` |
@@ -771,7 +771,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Citas demo | `src/dental-demo/DentalDemo.jsx:48` |
 | Clave privada del perfil | `src/dental-demo/ClinicalProfile.jsx:13` |
 | Click para agendar fecha/hora de la cita | `src/app/views/CRM/index.jsx:4636` |
-| Click para editar | `src/app/features/MetaPanel/index.jsx:400` |
+| Click para editar | `src/app/features/MetaPanel/index.jsx:401` |
 | Click para escribir el número directamente | `src/app/views/CRM/components.jsx:695` |
 | Cliente | `src/app/features/Admin/PlatformCompanyCRM.jsx:251` |
 | Clínica Dental · Demo | `src/dental-demo/DentalProfile.jsx:11` |
@@ -807,7 +807,7 @@ Estos no tienen comentario de cabecera, así que el mapa no puede explicar qué
 hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 
 - `src/app/views/CRM/index.jsx` (6669 líneas)
-- `src/app/App.jsx` (3259 líneas)
+- `src/app/App.jsx` (3275 líneas)
 - `src/app/views/Marketing.jsx` (3084 líneas)
 - `src/landing/PrivacyPolicy.jsx` (1222 líneas)
 - `src/landing/ManualMarketing.jsx` (1026 líneas)
@@ -851,6 +851,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/App.css` (321 líneas)
 - `src/clients/clinica-dental/config.js` (311 líneas)
 - `src/dental-demo/clinical-readiness.css` (301 líneas)
+- `src/app/features/MetaPanel/DocsStratos.jsx` (293 líneas)
 - `src/dental-demo/ClinicalReadiness.jsx` (290 líneas)
 - `src/landing/LandingMarketing.css` (288 líneas)
 - `src/lib/lead-save.js` (288 líneas)
@@ -862,7 +863,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/index.css` (278 líneas)
 - `src/clients/nsg/config.js` (270 líneas)
 - `src/lib/push-native.js` (265 líneas)
-- `src/app/features/MetaPanel/DocsStratos.jsx` (263 líneas)
 - `src/app/features/Admin/PlatformCompanyCRM.jsx` (258 líneas)
 - `src/app/data/chat.js` (249 líneas)
 - `src/landing/ManualLegacy.jsx` (246 líneas)

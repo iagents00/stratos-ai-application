@@ -131,6 +131,7 @@ export default function MetaPanel({
   user,              // usuario actual (org id) — para persistir acciones manuales en team_actions.
   agendaOnly = false,
   marketingMode = false,
+  requestedDocumentId = null,
 }) {
   const isMobile = typeof window !== "undefined" && (window.matchMedia?.("(pointer: coarse)")?.matches || window.innerWidth <= 768);
   const panelRef = useRef(null);
@@ -1804,7 +1805,7 @@ export default function MetaPanel({
               {/* Los documentos que genera el propio sistema — el manual y todo lo
                   que se guarde desde el Informe. Van ARRIBA de los enlaces porque
                   son los que se usan todos los días. */}
-              <DocsStratos T={T} isLight={isLight} userId={user?.id} empresa={brandLabel} isGuest={user?.isGuest === true} />
+              <DocsStratos T={T} isLight={isLight} userId={user?.id} empresa={brandLabel} isGuest={user?.isGuest === true} requestedDocumentId={requestedDocumentId} />
 
               {/* Add bar — solo admins (RLS solo les permite escribir a ellos) */}
               {canEditFinal && (

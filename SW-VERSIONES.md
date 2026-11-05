@@ -1,5 +1,9 @@
 # Historial de versiones del Service Worker (CACHE_VERSION)
 
+## v457 — Documentos de Space desde Copilot
+
+Las solicitudes de documentos, archivos y enlaces consultan Space de la propia empresa aunque el intérprete las haya confundido con el catálogo. Entrega enlaces guardados y acceso autenticado a documentos generados, sin duplicar un mismo enlace ni mostrar documentos retirados o de otra empresa. Funciona en instalaciones nuevas sin una configuración especial por cliente.
+
 ## v456 — Renombrar etapas con clientes
 
 Los administradores pueden editar etapas ocupadas. Al publicar, el nombre se actualiza en todos los clientes de esa etapa, incluida la papelera, conservando sus fechas, seguimientos y recordatorios. Copilot y las referencias de la empresa siguen el nuevo nombre; la eliminación continúa protegida.

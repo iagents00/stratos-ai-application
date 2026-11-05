@@ -11,7 +11,7 @@
 // esta misma máquina cada vez que alguien lo pide — el archivo nunca viaja, que es
 // lo que corrompía los .docx cuando los mandábamos por otro lado.
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { FileText, Download, RefreshCw, BookOpen, Eye, Cloud, Check } from "lucide-react";
 import { P, LP, font, fontDisp } from "../../../design-system/tokens";
 import { supabase } from "../../../lib/supabase";
@@ -55,7 +55,7 @@ export function textoABloques(texto, encabezado = "NSG", fechaISO) {
   return b;
 }
 
-export default function DocsStratos({ T, isLight, userId, empresa = "NSG", isGuest = false }) {
+export default function DocsStratos({ T, isLight, userId, empresa = "NSG", isGuest = false, requestedDocumentId = null }) {
   const txt    = T?.txt    || (isLight ? "#0B1220" : "#E2E8F0");
   const txt2   = T?.txt2   || (isLight ? "#3B4A61" : "#8B99AE");
   const txt3   = T?.txt3   || (isLight ? "#7A8699" : "#4A5568");
@@ -69,16 +69,46 @@ export default function DocsStratos({ T, isLight, userId, empresa = "NSG", isGue
   const [subiendo, setSubiendo] = useState(null); // id del que se está subiendo
   const [subido, setSubido] = useState({});       // id -> link de Drive
   const [aviso, setAviso] = useState("");
+  const requestedHandled = useRef(null);
+  const loadRequest = useRef(0);
 
   const load = useCallback(async () => {
     if (!userId) return;
+    const request = ++loadRequest.current;
     setCargando(true);
-    const { data } = await supabase.rpc("fn_docs_listar", { p_profile_id: userId });
-    setDocs(Array.isArray(data) ? data : []);
+    setAbierto(null);
+    setDocs([]);
+    requestedHandled.current = null;
+    const { data, error } = await supabase.rpc("fn_docs_listar", { p_profile_id: userId });
+    if (request !== loadRequest.current) return;
+    if (error) {
+      setAviso("No pudimos cargar los documentos. Intenta de nuevo.");
+      setDocs([]);
+    } else {
+      const rows = Array.isArray(data) ? data : [];
+      // A shared link can point to a document older than the paginated list.
+      if (requestedDocumentId && !rows.some(d => d.id === requestedDocumentId)) {
+        const result = await supabase.rpc("fn_space_document_read", { p_document_id: requestedDocumentId });
+        if (request !== loadRequest.current) return;
+        if (result.data?.id === requestedDocumentId) rows.push(result.data);
+      }
+      setDocs(rows);
+    }
     setCargando(false);
-  }, [userId]);
+  }, [userId, requestedDocumentId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    return () => { loadRequest.current++; };
+  }, [load]);
+
+  useEffect(() => {
+    if (cargando || !requestedDocumentId || requestedHandled.current === userId + ":" + requestedDocumentId) return;
+    requestedHandled.current = userId + ":" + requestedDocumentId;
+    const found = docs.find(d => d.id === requestedDocumentId);
+    if (found) setAbierto(found);
+    else setAviso("Este documento no está disponible para tu cuenta o ya fue retirado.");
+  }, [cargando, docs, requestedDocumentId, userId]);
 
   const bajarManual = () => {
     descargarDocx(`Manual de ${MANUAL.titulo}`, manualEnBloques(new Date().toISOString()));

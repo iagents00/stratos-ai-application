@@ -1707,6 +1707,21 @@ export default function App() {
   // cambia `v`, así que no se auto-cierra al abrirlo.
   useEffect(() => { setMetaOpen(false); }, [v]);
   const [metaTab, setMetaTab]       = useState("acciones");
+  const [spaceDocumentId] = useState(() => {
+    const value = new URLSearchParams(window.location.search).get("space_document");
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value || "") ? value : null;
+  });
+  const spaceDocumentOpenedFor = useRef(null);
+  useEffect(() => {
+    if (!user?.id || user.isGuest || user.isDemo || user.crmOnly || !spaceDocumentId || spaceDocumentOpenedFor.current === user.id) return;
+    if (v === "mi_espacio") { setV("crm"); return; }
+    const timer = setTimeout(() => {
+      setMetaTab("docs");
+      setMetaOpen(true);
+      spaceDocumentOpenedFor.current = user.id;
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [user?.id, user?.isGuest, user?.isDemo, user?.crmOnly, spaceDocumentId, v]);
   const [metaActions, setMetaActions] = useState([]);
   const metaActionsSeeded = useRef(false);
   // Siembra la Lista de Acción con el MISMO universo que muestra el panel "Acciones del
@@ -3229,6 +3244,7 @@ export default function App() {
 
       {/* ══ META PANEL ══ */}
       <MetaPanel
+        requestedDocumentId={spaceDocumentId}
         open={metaOpen && v !== "mi_espacio"}
         onClose={() => setMetaOpen(false)}
         user={user}
