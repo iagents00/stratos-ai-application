@@ -27,6 +27,27 @@ assert.equal(await resolve('diagnostico'),'Diagnóstico');assert.equal(await res
 assert.equal(await resolve('Contáctame Ya'),'Consulta');assert.equal(await resolve('Nuevo Registro'),'Consulta');
 assert.equal(await resolve('Obsolete'),null);assert.equal(await resolve('Zoom Agendado'),null);
 assert.deepEqual((await db.query('select fn_org_stages_list($1) stages',[own])).rows[0].stages,pipeline.map(s=>s.name));
+await db.exec(`create table bot_pending_actions(token text,asesor_id uuid,organization_id uuid,telegram_chat_id bigint,action_type text,payload jsonb,summary text,expires_at timestamptz,consumed_at timestamptz,created_at timestamptz default now());
+create function identify_asesor_by_telegram(bigint) returns jsonb language sql as $$select jsonb_build_object('paired',true,'organization_id',organization_id,'profile_id',id,'role','admin') from profiles where active limit 1$$;
+create function fn_user_tz(uuid,bigint) returns text language sql as $$select 'UTC'::text$$;
+create function parse_relative_or_abs_es(text,text) returns timestamptz language sql as $$select null::timestamptz$$;
+create function _bot_fmt_phone(text) returns text language sql as $$select $1$$;
+create function _bot_fmt_money(bigint) returns text language sql as $$select $1::text$$;
+create function _bot_fmt_when(timestamptz) returns text language sql as $$select $1::text$$;
+create function _bot_kb_confirm(text) returns jsonb language sql as $$select '[]'::jsonb$$;
+create function _bot_err_envelope(jsonb) returns jsonb language sql as $$select $1$$;
+create function _bsc_upsert_pending(bigint,uuid,uuid,text,jsonb) returns text language plpgsql as $$begin
+ insert into bot_pending_actions(token,asesor_id,organization_id,telegram_chat_id,action_type,payload) values('qa-token',$2,$3,$1,'create_lead',$5); return 'qa-token';end$$;`);
+await db.exec(readFileSync('supabase/migrations/278_assistant_confirmation_company_stage.sql','utf8'));
+const stageCard=(args)=>db.query('select bot_stage_create_lead_pre_tarjeta(1,$1) result',[args]);
+const card=(await stageCard({name:'Test customer',phone:'99900045403'})).rows[0].result;
+assert.equal(card.staged,true);
+assert.ok(card.reply.text.includes('Estatus: Consulta'));
+assert.ok(!card.reply.text.includes('Contáctame Ya'));
+assert.equal((await db.query('select payload->>\'stage\' stage from bot_pending_actions')).rows[0].stage,'Consulta');
+const invalid=(await stageCard({name:'Test customer',phone:'99900045403',stage:'Zoom Agendado'})).rows[0].result;
+assert.equal(invalid.ok,false);
+assert.ok(invalid.reply.text.includes('Diagnóstico'));
 await db.query('update organizations set meta_config=$2 where id=$1',[own,{crm:{pipeline:[{name:'Wrong flat'}],pipelines:[{id:'ventas',label:'Ventas',stages:[{name:'Entrada'},{name:'Venta'}]},{id:'taller',label:'Taller',stages:[{name:'Pendiente'},{name:'Entregado'}]}]}}]);
 assert.equal(await resolve('segunda etapa de taller'),'Entregado');assert.equal(await resolve('última de ventas'),'Venta');assert.equal(await resolve('Wrong flat'),null);
 await db.query("select set_config('request.jwt.claim.role','authenticated',false),set_config('request.jwt.claim.sub',$1,false)",[uid]);
