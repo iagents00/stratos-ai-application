@@ -29,7 +29,7 @@ begin
     where rep.organization_id=o.id and r.organization_id=o.id and rep.reminder_id=r.id and rep.status='open'
       and r.tipo in ('zoom_brief','next_action_3h','next_action_10min')
       and not exists(select 1 from public.leads l where l.organization_id=o.id and l.id=r.lead_id and l.deleted_at is null
-        and l.next_action_at>now() and case when r.tipo='zoom_brief' then l.stage=o.appointment_stage
+        and case when r.tipo='zoom_brief' then l.stage=o.appointment_stage
           and l.next_action_at=nullif(r.payload->>'zoom_at','')::timestamptz
          else l.next_action_at=nullif(r.payload->>'next_action_at','')::timestamptz end);
    perform public.fn_proactive_scan_zooms(v_payload);
