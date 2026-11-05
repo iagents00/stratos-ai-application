@@ -1,5 +1,9 @@
 # Historial de versiones del Service Worker (CACHE_VERSION)
 
+## v456 — Renombrar etapas con clientes
+
+Los administradores pueden editar etapas ocupadas. Al publicar, el nombre se actualiza en todos los clientes de esa etapa, incluida la papelera, conservando sus fechas, seguimientos y recordatorios. Copilot y las referencias de la empresa siguen el nuevo nombre; la eliminación continúa protegida.
+
 ## v455 — Login móvil blanco
 
 El acceso nativo usa fondo blanco, identidad Stratos, recuperación y modo invitado. Correo y usuario corto se resuelven igual en web y app; conserva la configuración de sesiones y el tema del CRM. iOS 4.9.4.

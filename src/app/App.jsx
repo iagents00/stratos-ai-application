@@ -1792,8 +1792,12 @@ export default function App() {
   // lo reciben al recargar, igual que cualquier cambio de configuración del tenant.
   useEffect(() => {
     const handlePipelineSaved = (event) => {
-      const { organizationId, pipeline, appointmentStage } = event.detail || {};
+      const { organizationId, pipeline, appointmentStage, stageRenames } = event.detail || {};
       if (!organizationId || organizationId !== user?.organizationId || !Array.isArray(pipeline)) return;
+      if (stageRenames && typeof stageRenames === "object") {
+        setLeadsData(current => current.map(lead => (!lead.organization_id || lead.organization_id === organizationId) && Object.prototype.hasOwnProperty.call(stageRenames, lead.stage)
+          ? { ...lead, stage: stageRenames[lead.stage] } : lead));
+      }
       setOrgMetaConfig(prev => ({
         ...(prev || {}),
         crm: { ...(prev?.crm || {}), pipeline, ...(appointmentStage !== undefined ? {appointmentStage} : {}) },
