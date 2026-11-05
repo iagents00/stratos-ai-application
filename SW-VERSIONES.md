@@ -1,5 +1,9 @@
 # Historial de versiones del Service Worker (CACHE_VERSION)
 
+## v453 — Conservar tableros especiales
+
+La entrada de Pipelines y el acceso desde Usuarios respetan la misma comprobación de permisos y conservan fuera del editor simple a las empresas con varios tableros definidos en su configuración.
+
 ## v452 — Pipeline de la propia empresa y Copilot inicial
 
 Los administradores pueden configurar sus etapas desde Pipelines, con validación de organización en el servidor y protección de etapas ocupadas. Los nombres se escriben de forma continua sin perder el foco. Copilot viene habilitado en la configuración neutral de las empresas nuevas y respeta una desactivación explícita.

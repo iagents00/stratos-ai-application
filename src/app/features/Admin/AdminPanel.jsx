@@ -14,6 +14,7 @@ import {
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { useAuth } from "../../../hooks/useAuth";
 import { useClient } from "../../../hooks/useClient";
+import { canAccessModule } from "../../constants/navigation";
 import { adminGetAllUsers, adminCreateUser, adminUpdateUser, adminDeleteUser, adminResetPassword, adminGetTemporaryCredentials } from "../../../lib/auth";
 import { downloadBackup } from "../../../lib/backup";
 import { G } from "../../SharedComponents";
@@ -25,7 +26,7 @@ import CatalogConfiguratorAdmin from "./CatalogConfiguratorAdmin";
 
 export default function AdminPanel({ T = P, isLight: isLightProp }) {
   const { user: me } = useAuth();
-  const { organizationManaged } = useClient();
+  const { config: clientConfig, organizationManaged } = useClient();
   const isMobile = useIsMobile();
   // Tema activo: recibe la paleta `T` (P oscuro / LP claro) del shell, igual que
   // el resto de las vistas. En claro los nombres/textos usan T.txt (antes eran
@@ -58,6 +59,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
 
   const isSuper = me?.role === "super_admin";
   const canManage = ["super_admin", "admin"].includes(me?.role);
+  const canManagePipeline = canAccessModule("pipelines", me, clientConfig);
 
   const handleDownloadBackup = async () => {
     setBackupState({ loading: true, msg: "", isError: false });
@@ -208,7 +210,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
   if (section === "whatsapp") {
     return <WhatsAppOnboardingAdmin T={T} onBack={() => setSection("users")} />;
   }
-  if (section === "pipelines") {
+  if (section === "pipelines" && canManagePipeline) {
     return <PipelineConfiguratorAdmin T={T} organizationId={me?.organizationId} onBack={() => setSection("users")} />;
   }
   if (section === "catalogs") {
@@ -234,7 +236,7 @@ export default function AdminPanel({ T = P, isLight: isLightProp }) {
           /* En móvil los botones ocupan el ancho completo (antes "Nuevo Usuario"
              quedaba cortado contra el borde derecho a 360px). */
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, flexWrap: "wrap", width: isMobile ? "100%" : "auto" }}>
-            {canManage && (
+            {canManagePipeline && (
               <button
                 onClick={() => setSection("pipelines")}
                 style={{

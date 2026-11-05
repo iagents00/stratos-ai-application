@@ -39,6 +39,7 @@ test('I Space resolves by authenticated organization and keeps its Copilot isola
     assert.equal(nav.canAccessModule('copilot', { ...user, role: 'asesor' }, newCompany), true);
     assert.equal(nav.canAccessModule('pipelines', user, newCompany), true);
     assert.equal(nav.canAccessModule('pipelines', { ...user, role: 'asesor' }, newCompany), false);
+    assert.equal(nav.canAccessModule('pipelines', user, { ...newCompany, crm: { pipelines: [{ id: 'patients', stages: [] }] } }), false);
     assert.equal(cfg.features.procesoGuiado, false);
     assert.ok(cfg.copilot.capabilities.every(x => x.kind === 'pedis'));
     supabase.auth.getSession = async () => ({ data: { session: { user: { id: user.id } } } });
