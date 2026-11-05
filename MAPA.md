@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**294 archivos · 84.589 líneas**
+**294 archivos · 84.586 líneas**
 
 ---
 
@@ -83,7 +83,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `App.jsx` | 3264 | _sin describir_ |
+| `App.jsx` | 3255 | _sin describir_ |
 | `SharedComponents.jsx` | 343 | Shared primitive components used by all views. |
 | `App.css` | 321 | _sin describir_ |
 
@@ -113,7 +113,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `navigation.js` | 414 | Configuración de navegación y permisos por módulo. |
+| `navigation.js` | 420 | Configuración de navegación y permisos por módulo. |
 | `intelFeatures.js` | 211 | _sin describir_ |
 | `pipeline.js` | 129 | _sin describir_ |
 | `areas.js` | 97 | _sin describir_ |
@@ -558,7 +558,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Abriendo comprobante… | `src/app/views/Caja.jsx:555` |
 | Abriendo documento… | `src/app/views/CRM/components.jsx:4322` |
 | Abriendo tu espacio clínico… | `src/dental-demo/ClinicalProfile.jsx:14` |
-| Abriendo tu espacio… | `src/app/App.jsx:2008` |
+| Abriendo tu espacio… | `src/app/App.jsx:2005` |
 | Abriendo… | `src/app/views/ChatEquipo.jsx:555` |
 | Abrir | `src/app/features/Admin/CatalogConfiguratorAdmin.jsx:150` |
 | Abrir carpeta de Drive | `src/app/views/LandingPages/index.jsx:1425` |
@@ -617,7 +617,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Administrador de demostración | `src/dental-demo/DentalIdentity.jsx:3` |
 | Administrar Marketing | `src/app/features/Admin/PlatformUsersAdmin.jsx:142` |
 | Agenda dental | `src/dental-demo/DentalDemo.jsx:47` |
-| Agenda, lista de acción, documentos y plan | `src/app/App.jsx:3115` |
+| Agenda, lista de acción, documentos y plan | `src/app/App.jsx:3109` |
 | Agendar en Huli | `src/dental-demo/HuliWorkspace.jsx:38` |
 | Agendar fecha | `src/app/views/CRM/index.jsx:4659` |
 | Agendar llamada | `src/app/views/LandingPages/LandingPagePreview.jsx:114` |
@@ -646,8 +646,8 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Añadir criterio | `src/app/views/ISpaceBoard.jsx:122` |
 | Añadir tarea | `src/app/views/ISpaceBoard.jsx:138` |
 | Aparecerán al inicio de su pipeline en | `src/app/views/CRM/index.jsx:6183` |
-| Aplicaciones | `src/app/App.jsx:3178` |
-| Apps | `src/app/App.jsx:2348` |
+| Aplicaciones | `src/app/App.jsx:3169` |
+| Apps | `src/app/App.jsx:2342` |
 | Área | `src/app/features/Admin/PlatformUsersAdmin.jsx:134` |
 | Áreas de atención | `src/app/views/RRHHModule.jsx:793` |
 | Arrastra el CV aquí o haz clic para subir | `src/app/views/RRHHModule.jsx:716` |
@@ -671,7 +671,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Bajar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:309` |
 | Bajo · Medio · Alto | `src/app/views/CRM/components.jsx:3431` |
 | Borradores de esta demo | `src/dental-demo/ClinicalDemoApp.jsx:303` |
-| Buscar (⌘K) | `src/app/App.jsx:2438` |
+| Buscar (⌘K) | `src/app/App.jsx:2432` |
 | Buscar asesor… | `src/app/views/CRM/components.jsx:3188` |
 | Buscar candidato... | `src/app/views/RRHHModule.jsx:416` |
 | Buscar cliente | `src/app/features/Admin/PlatformCompanyCRM.jsx:249` |
@@ -728,7 +728,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cargando el plan… | `src/app/views/PlanSemanal.jsx:369` |
 | Cargando el tablero… | `src/app/views/ComandoOps.jsx:127` |
 | Cargando empresas… | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:263` |
-| Cargando equipo… | `src/app/App.jsx:2466` |
+| Cargando equipo… | `src/app/App.jsx:2460` |
 | Cargando ficha del cliente… | `src/app/features/Admin/PlatformCompanyCRM.jsx:225` |
 | Cargando movimientos… | `src/app/views/Caja.jsx:467` |
 | Cargando perfil dental… | `src/dental-demo/DentalProfile.jsx:11` |
@@ -746,7 +746,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Centro de Inteligencia | `src/app/components/DynamicIsland.jsx:81` |
 | Centro de Inteligencia — Activo | `src/app/components/DynamicIsland.jsx:102` |
 | Centro de soporte | `src/app/features/Admin/PlatformAdminConsole.jsx:232` |
-| Cerrar | `src/app/App.jsx:3031` |
+| Cerrar | `src/app/App.jsx:3025` |
 | Cerrar (Esc) | `src/app/views/ZoomControl/index.jsx:811` |
 | Cerrar detalle | `src/app/views/ZoomControl/Resumen.jsx:309` |
 | Cerrar editor | `src/app/features/Admin/PlatformUsersAdmin.jsx:146` |
@@ -756,7 +756,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cerrar guía de funciones | `src/app/components/CopilotCapabilities.jsx:120` |
 | Cerrar menú | `src/app/components/MobileHeaderMenu.jsx:52` |
 | Cerrar navegación | `src/app/features/Admin/PlatformAdminConsole.jsx:253` |
-| Cerrar sesión | `src/app/App.jsx:2016` |
+| Cerrar sesión | `src/app/App.jsx:2013` |
 | Cerrar Space | `src/app/features/MetaPanel/index.jsx:746` |
 | Cerrar vista previa | `src/app/views/LandingPages/LandingPagePreview.jsx:152` |
 | Certificación de tu cuenta Huli | `src/dental-demo/ClinicalReadiness.jsx:199` |
@@ -795,7 +795,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Conexión real · Sólo consulta | `src/dental-demo/HuliWorkspace.jsx:28` |
 
 
-_(844 textos más — usá `npm run buscar "texto"`)_
+_(843 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -805,7 +805,7 @@ Estos no tienen comentario de cabecera, así que el mapa no puede explicar qué
 hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 
 - `src/app/views/CRM/index.jsx` (6669 líneas)
-- `src/app/App.jsx` (3264 líneas)
+- `src/app/App.jsx` (3255 líneas)
 - `src/app/views/Marketing.jsx` (3084 líneas)
 - `src/landing/PrivacyPolicy.jsx` (1222 líneas)
 - `src/landing/ManualMarketing.jsx` (1026 líneas)
