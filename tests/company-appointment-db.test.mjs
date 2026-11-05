@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const {PGlite}=await import(process.env.STRATOS_PGLITE_MODULE || '@electric-sql/pglite');
-const files=['tests/sql/company-appointment-fixture.sql','supabase/migrations/279_company_appointment_mapping.sql','supabase/migrations/280_company_appointment_assistant.sql','supabase/migrations/281_company_copilot_delivery.sql','supabase/migrations/282_company_appointment_legacy_alias.sql'];
+const files=['tests/sql/company-appointment-fixture.sql','supabase/migrations/279_company_appointment_mapping.sql','supabase/migrations/280_company_appointment_assistant.sql','supabase/migrations/281_company_copilot_delivery.sql','supabase/migrations/282_company_appointment_legacy_alias.sql','supabase/migrations/283_company_appointment_legacy_publish_guard.sql'];
 const own='10000000-0000-4000-a000-000000000001',other='10000000-0000-4000-a000-000000000002',admin='20000000-0000-4000-a000-000000000001',root='20000000-0000-4000-a000-000000000002';
 const pipeline=[{name:'Prospecto',color:'#94A3B8'},{name:'Reunión',color:'#A78BFA'},{name:'Ganado',color:'#34D399'}];
 test('appointment publishing is atomic, company-scoped, keeps advanced settings and provisions defaults',async()=>{
@@ -21,6 +21,11 @@ test('appointment publishing is atomic, company-scoped, keeps advanced settings 
   assert.equal(cfg.enabled,true);assert.equal(cfg.shadow_mode,false);assert.equal(Number(cfg.zoom_reminder_hours),3);
   assert.deepEqual(cfg.terminal_stages,['Ganado','Perdido']);
   await assert.rejects(save(admin,own,'Reunión',pipeline,'2000-01-01'),{code:'40001'});
+  const unsafeOldDraft=pipeline.map(s=>s.name==='Reunión'?{...s,name:'Evaluación'}:s);
+  await assert.rejects(db.query('select fn_company_pipeline_publish($1,$2,$3,$4,null)',[admin,own,saved.updated_at,unsafeOldDraft]),{code:'40001'});
+  assert.equal((await db.query('select fn_org_appointment_stage($1) stage',[own])).rows[0].stage,'Reunión');
+  const compatible=(await db.query('select fn_company_pipeline_publish($1,$2,$3,$4,null) result',[admin,own,saved.updated_at,pipeline])).rows[0].result;
+  assert.equal(compatible.ok,true);assert.equal(compatible.copilot.appointment_stage,'Reunión');
   await db.query('update proactive_config set zoom_reminder_hours=4,quiet_start_hour=22 where organization_id=$1',[own]);
   const renamed=pipeline.map(s=>s.name==='Reunión'?{...s,name:'Evaluación'}:s);
   await save(admin,own,'Evaluación',renamed);
