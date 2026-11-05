@@ -9,6 +9,7 @@ function mock({processing='VALID',state='PREPARE_FOR_SUBMISSION',linked,version=
   if(path.startsWith('/v1/apps/'+APP_ID+'/appStoreVersions'))return {data:[target]};
   if(path.startsWith('/v1/builds?'))return {data:[{id:buildId,attributes:{version:buildNumber,processingState:processing,usesNonExemptEncryption:false},relationships:{preReleaseVersion:{data:{id:'pre492'}}}}],included:[{id:'pre492',type:'preReleaseVersions',attributes:{version,platform:'IOS'}}]};
   if(path.endsWith('/relationships/build'))return {data:{id:linked,type:'builds'}};
+  if(path==='/v1/builds/'+buildId)return {data:{attributes:{version:buildNumber}}};
   if(path.endsWith('/appStoreVersionLocalizations?limit=50'))return {data:[{id:'localeES',attributes:{locale:'es-MX',description:'Existing listing',supportUrl:'https://stratoscapitalgroup.com'}}]};
   if(path.startsWith('/v1/appStoreVersionLocalizations/localeES/appScreenshotSets'))return {data:[{id:'screens',relationships:{appScreenshots:{data:[{id:'shot'}]}}}]};
   if(path.endsWith('/appStoreReviewDetail'))return {data:{attributes:{demoAccountRequired:true,demoAccountName:'synthetic-review',demoAccountPassword:'must-not-log'}}};
@@ -46,15 +47,15 @@ test('the next public release carries the company appointment UI and three-hour 
  assert.match(m.calls.find(c=>c.body?.data?.attributes?.whatsNew).body.data.attributes.whatsNew,/etapa de citas.*3 horas/);
 });
 
-function replacementMock({processing='VALID',oldBuild='142',extraItem=false,oldState='WAITING_FOR_REVIEW',sparse=false}={}) {
+function replacementMock({processing='VALID',oldBuild='142',extraItem=false,oldState='WAITING_FOR_REVIEW',sparse=false,canceledState='CANCELED'}={}) {
  const m=mock({version:'4.9.4',buildNumber:'143',processing});
  let state=oldState, renamed=false;
  const previous=()=>({id:'version492',type:'appStoreVersions',attributes:{versionString:renamed?'4.9.4':'4.9.3',platform:'IOS',appVersionState:state,releaseType:'AFTER_APPROVAL'}});
  const request=async(method,path,body)=>{
   if(path.startsWith('/v1/apps/'+APP_ID+'/appStoreVersions')) {m.calls.push({method,path,body});return {data:[previous()]};}
   if(path==='/v1/builds/oldBuild'){m.calls.push({method,path,body});return {data:{id:'oldBuild',attributes:{version:oldBuild}}};}
-  if(path.endsWith('/relationships/build') && state==='WAITING_FOR_REVIEW'){m.calls.push({method,path,body});return {data:{id:'oldBuild'}};}
-  if(path.startsWith('/v1/reviewSubmissions?') && !renamed){m.calls.push({method,path,body});return {data:[{id:'oldSubmission',attributes:{state:oldState}}]};}
+  if(path.endsWith('/relationships/build') && !renamed){m.calls.push({method,path,body});return {data:{id:'oldBuild'}};}
+  if(path.startsWith('/v1/reviewSubmissions?') && !renamed){m.calls.push({method,path,body});return {data:[{id:'oldSubmission',attributes:{state:oldState==='DEVELOPER_REJECTED'?canceledState:oldState}}]};}
   if(path.startsWith('/v1/reviewSubmissions/oldSubmission/items?')){m.calls.push({method,path,body});return {data:[...(sparse?[{id:'sparse-item'}]:[{relationships:{appStoreVersion:{data:{id:'version492'}}}}]),...(extraItem?[{relationships:{appStoreVersion:{data:{id:'other-version'}}}}]:[])]};}
   if(method==='PATCH' && body?.data?.attributes?.canceled){m.calls.push({method,path,body});state='DEVELOPER_REJECTED';return {};}
   if(method==='PATCH' && body?.data?.attributes?.versionString){m.calls.push({method,path,body});renamed=true;return {};}
@@ -78,4 +79,20 @@ test('review replacement refuses an invalid new build, changed previous build or
   const m=replacementMock(input);await assert.rejects(releaseIOS({...replacement,request:m.request}));assert.ok(m.calls.every(c=>c.method==='GET'));
  }
  const m=replacementMock();await assert.rejects(releaseIOS({...replacement,previousVersion:undefined,request:m.request}),/exact earlier/);assert.ok(m.calls.every(c=>c.method==='GET'));
+});
+
+
+test('a timed-out cancellation resumes only the same rejected build and canceled single-item review',async()=>{
+ const m=replacementMock({oldState:'DEVELOPER_REJECTED'});const result=await releaseIOS({...replacement,request:m.request});
+ assert.equal(result.submissionState,'WAITING_FOR_REVIEW');assert.equal(result.replacedReview.submissionId,'oldSubmission');
+ assert.ok(!m.calls.some(c=>c.body?.data?.attributes?.canceled));
+ for(const input of [{oldBuild:'unexpected'},{extraItem:true},{sparse:true},{canceledState:'COMPLETE'},{canceledState:'WAITING_FOR_REVIEW'}]) {
+  const bad=replacementMock({oldState:'DEVELOPER_REJECTED',...input});
+  await assert.rejects(releaseIOS({...replacement,request:bad.request}));assert.ok(bad.calls.every(c=>c.method==='GET'));
+ }
+});
+test('inspect reads back the public submission build and automatic release without writing',async()=>{
+ const m=mock({version:'4.9.5',buildNumber:'148',state:'WAITING_FOR_REVIEW'});
+ const result=await releaseIOS({version:'4.9.5',buildNumber:'148',mode:'inspect',request:m.request});
+ assert.equal(result.target.build,'148');assert.equal(result.target.releaseType,'AFTER_APPROVAL');assert.ok(m.calls.every(c=>c.method==='GET'));
 });

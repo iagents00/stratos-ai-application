@@ -34,7 +34,14 @@ export async function releaseIOS({ mode='inspect', version, buildNumber, previou
   let target=versions.find(v=>v.attributes.versionString===version);
   const state=v=>v.attributes.appVersionState || v.attributes.appStoreState;
   const summary={appId:APP_ID,version,build:buildNumber,mode,buildState:build?.attributes.processingState || 'NOT_FOUND',versions:versions.map(v=>({version:v.attributes.versionString,state:state(v)}))};
-  if(mode==='inspect') return summary;
+  if(mode==='inspect') {
+    if(target) {
+      const linked=(await request('GET','/v1/appStoreVersions/'+target.id+'/relationships/build')).data;
+      summary.target={versionId:target.id,state:state(target),releaseType:target.attributes.releaseType,buildId:linked?.id};
+      if(linked?.id) summary.target.build=(await request('GET','/v1/builds/'+linked.id)).data.attributes.version;
+    }
+    return summary;
+  }
   if(!build || build.attributes.processingState!=='VALID' || build.attributes.expired) throw new Error('The exact iOS build is not processed and valid.');
   // Explicit replacement is used only after the new signed build has passed QA.
   // The normal submit mode always leaves an existing review unchanged.
@@ -43,14 +50,15 @@ export async function releaseIOS({ mode='inspect', version, buildNumber, previou
     if(!/^\d+\.\d+\.\d+$/.test(previousVersion || '') || !/^\d+$/.test(previousBuild || '')
       || version.localeCompare(previousVersion, undefined, {numeric:true})<=0) throw new Error('An exact earlier version and build are required to replace a review.');
     const previous=versions.find(v=>v.attributes.versionString===previousVersion);
-    if(previous && ['WAITING_FOR_REVIEW','IN_REVIEW'].includes(state(previous))) {
+    if(previous && ['WAITING_FOR_REVIEW','IN_REVIEW','DEVELOPER_REJECTED'].includes(state(previous))) {
       if(target) throw new Error('The new version already exists; the previous review was left unchanged.');
       const oldLinked=(await request('GET','/v1/appStoreVersions/'+previous.id+'/relationships/build')).data;
       const oldBuild=oldLinked?.id && (await request('GET','/v1/builds/'+oldLinked.id)).data;
       if(oldBuild?.attributes.version!==previousBuild) throw new Error('The previous review build changed; it was left unchanged.');
       const submissions=(await request('GET','/v1/reviewSubmissions?filter[app]='+APP_ID+'&limit=50')).data;
       let oldSubmission;
-      for(const candidate of submissions.filter(s=>['WAITING_FOR_REVIEW','IN_REVIEW'].includes(s.attributes.state))) {
+      for(const candidate of submissions.filter(s=>state(previous)==='DEVELOPER_REJECTED'
+          ? s.attributes.state==='CANCELED' : ['WAITING_FOR_REVIEW','IN_REVIEW'].includes(s.attributes.state))) {
         const items=(await request('GET',reviewItemsPath(candidate.id))).data;
         if(items.some(i=>itemVersionId(i)===previous.id)) {
           if(items.length!==1) throw new Error('The prior submission contains other content; it was left unchanged.');
@@ -58,7 +66,10 @@ export async function releaseIOS({ mode='inspect', version, buildNumber, previou
         }
       }
       if(!oldSubmission) throw new Error('The exact prior review submission was not found.');
-      await request('PATCH','/v1/reviewSubmissions/'+oldSubmission.id,{data:{type:'reviewSubmissions',id:oldSubmission.id,attributes:{canceled:true}}});
+      // Apple can finish cancellation after a previous invocation timed out.
+      // Resume only the same rejected version/build with a canceled single-item review.
+      if(state(previous)!=='DEVELOPER_REJECTED')
+        await request('PATCH','/v1/reviewSubmissions/'+oldSubmission.id,{data:{type:'reviewSubmissions',id:oldSubmission.id,attributes:{canceled:true}}});
       let current;
       for(let attempt=0;attempt<10;attempt++) {
         current=(await request('GET','/v1/appStoreVersions/'+previous.id)).data;
