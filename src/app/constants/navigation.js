@@ -279,7 +279,8 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   if (moduleId === "c" && clientConfig?.features?.crm === false) return false;
   if (moduleId === "pipelines") {
     return Boolean(user.organizationId) && !user.isDemo && user.isActive !== false
-      && MODULE_ROLES.pipelines.includes(user.role) && clientConfig?.features?.crm !== false;
+      && MODULE_ROLES.pipelines.includes(user.role) && clientConfig?.features?.crm !== false
+      && !(clientConfig?.crm?.pipelines?.length > 0);
   }
   // La papelera guarda CLIENTES borrados del CRM — sin CRM no tiene contenido.
   if (moduleId === "trash" && clientConfig?.features?.crm === false) return false;

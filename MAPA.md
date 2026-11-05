@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**294 archivos · 84.586 líneas**
+**294 archivos · 84.589 líneas**
 
 ---
 
@@ -41,7 +41,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | **Papelera** | `src/app/views/Trash.jsx` | 285 |
 | **Planes** | _sin vista propia (redirige a otra)_ | — |
 | **Perfil** | `src/dental-demo/TenantHuliWorkspace.jsx`<br>`src/app/views/Profile.jsx` | 11<br>1123 |
-| **Usuarios** | `src/app/features/Admin/AdminPanel.jsx` | 644 |
+| **Usuarios** | `src/app/features/Admin/AdminPanel.jsx` | 646 |
 | **Pipelines** | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx` | 333 |
 | **Proceso** | `src/app/features/Admin/RailsSettings.jsx` | 141 |
 
@@ -113,7 +113,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `navigation.js` | 413 | Configuración de navegación y permisos por módulo. |
+| `navigation.js` | 414 | Configuración de navegación y permisos por módulo. |
 | `intelFeatures.js` | 211 | _sin describir_ |
 | `pipeline.js` | 129 | _sin describir_ |
 | `areas.js` | 97 | _sin describir_ |
@@ -142,7 +142,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 |---|---|---|
 | `index.jsx` | 2350 | Space: Agenda · Documentos · Estrategia (Plan y Protocolo) |
 | `Rails.css` | 832 | _sin describir_ |
-| `AdminPanel.jsx` | 644 | Panel de gestión de usuarios (Super Admin y Admin). |
+| `AdminPanel.jsx` | 646 | Panel de gestión de usuarios (Super Admin y Admin). |
 | `index.jsx` | 487 | Panel de chat con Agente Stratos AI. |
 | `index.jsx` | 454 | Portal de Candidatos — Stratos People |
 | `PipelineConfiguratorAdmin.jsx` | 333 | _sin describir_ |
@@ -551,7 +551,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | ¿De qué empresa? | `src/app/views/Marketing.jsx:1742` |
 | ¿De qué es? (opcional) | `src/app/views/Copilot.jsx:1296` |
 | ¿De qué se habla acá? (opcional) | `src/app/views/ChatEquipo.jsx:529` |
-| ¿Eliminar usuario? | `src/app/features/Admin/AdminPanel.jsx:511` |
+| ¿Eliminar usuario? | `src/app/features/Admin/AdminPanel.jsx:513` |
 | ¿En qué empresa? (opcional) | `src/app/views/Marketing.jsx:2460` |
 | ¿Qué necesitas? (ej. Flyer promo…) * | `src/app/views/Marketing.jsx:2190` |
 | Abre el enlace y revisa un borrador de nota. | `src/dental-demo/ClinicalDemoApp.jsx:79` |
@@ -582,7 +582,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Acceso de empresas: | `src/app/features/Admin/CompanyOnboarding.jsx:137` |
 | Acceso limitado al CRM | `src/app/features/Admin/PlatformUsersAdmin.jsx:142` |
 | Acceso listo | `src/app/features/Admin/CompanyOnboarding.jsx:131` |
-| Acceso temporal | `src/app/features/Admin/AdminPanel.jsx:491` |
+| Acceso temporal | `src/app/features/Admin/AdminPanel.jsx:493` |
 | Acceso temporal — cópialo ahora | `src/app/features/Admin/PlatformAdminConsole.jsx:82` |
 | Accesos temporales | `src/app/features/Admin/PlatformAdminConsole.jsx:136` |
 | Acciones | `src/app/views/CRM/index.jsx:4339` |
@@ -682,7 +682,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Buscar empresa… | `src/app/features/Admin/CatalogConfiguratorAdmin.jsx:125` |
 | Buscar en las actividades… | `src/app/views/Marketing.jsx:1789` |
 | Buscar en papelera… | `src/app/views/Trash.jsx:99` |
-| Buscar nombre o email… | `src/app/features/Admin/AdminPanel.jsx:350` |
+| Buscar nombre o email… | `src/app/features/Admin/AdminPanel.jsx:352` |
 | Buscar paciente en Huli | `src/dental-demo/HuliWorkspace.jsx:31` |
 | Buscar paciente o profesional… | `src/dental-demo/ClinicalDemoWorkspace.jsx:87` |
 | Buscar por categoría, obra, persona… | `src/app/views/Caja.jsx:460` |
@@ -714,7 +714,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Campo requerido | `src/app/views/LandingPages/index.jsx:644` |
 | Canal de la gestión | `src/app/views/MiDia.jsx:44` |
 | Canales | `src/app/views/ChatEquipo.jsx:303` |
-| Cancelar | `src/app/features/Admin/AdminPanel.jsx:516` |
+| Cancelar | `src/app/features/Admin/AdminPanel.jsx:518` |
 | Cancelar comentario | `src/app/views/Copilot.jsx:1264` |
 | CANDIDATO IDENTIFICADO | `src/app/views/RRHHModule.jsx:747` |
 | Características | `src/app/views/LandingPages/index.jsx:707` |
