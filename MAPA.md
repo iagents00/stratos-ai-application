@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**294 archivos · 84.585 líneas**
+**294 archivos · 84.586 líneas**
 
 ---
 
@@ -168,7 +168,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `StratosIcon.jsx` | 97 | Shared outline icons for Stratos navigation (Phosphor, MIT). |
+| `StratosIcon.jsx` | 98 | Shared outline icons for Stratos navigation (Phosphor, MIT). |
 
 ### `src/app/views/`
 

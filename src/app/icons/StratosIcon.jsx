@@ -50,6 +50,7 @@ const icons = {
   planes: CreditCardIcon,
   perfil: UserCircleIcon,
   admin: ShieldCheckIcon,
+  pipelines: StackIcon,
   menu: SquaresFourIcon,
   add: PlusIcon,
   intel: LightbulbIcon,
