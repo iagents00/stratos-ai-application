@@ -7,7 +7,7 @@ export function sanitizePipeline(value: unknown) {
   if (value.length < 2 || value.length > 30) {
     return { error: "El pipeline debe tener entre 2 y 30 etapas.", pipeline: [] };
   }
-  const pipeline: Array<{ name: string; color: string }> = [];
+  const pipeline: Array<{ name: string; color: string; previous_name?: string }> = [];
   const seen = new Set<string>();
   for (const raw of value) {
     if (!raw || typeof raw !== "object") return { error: "Hay una etapa inválida.", pipeline: [] };
@@ -18,7 +18,10 @@ export function sanitizePipeline(value: unknown) {
     const key = name.toLocaleLowerCase("es");
     if (seen.has(key)) return { error: `La etapa “${name}” está repetida.`, pipeline: [] };
     seen.add(key);
-    pipeline.push({ name, color });
+    if (raw.previous_name !== undefined && (typeof raw.previous_name !== "string" || raw.previous_name.length < 1 || raw.previous_name.length > 200)) {
+      return { error: "La etapa original no es válida. Recarga el pipeline.", pipeline: [] };
+    }
+    pipeline.push({ name, color, ...(raw.previous_name !== undefined ? {previous_name: raw.previous_name} : {}) });
   }
   return { error: null, pipeline };
 }

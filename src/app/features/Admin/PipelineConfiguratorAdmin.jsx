@@ -131,9 +131,13 @@ export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, b
   const appointmentValid = appointmentKey === "none" || Boolean(appointmentStage?.trim());
   const dirty = JSON.stringify(cleanStages(stages)) !== JSON.stringify(cleanStages(baseline))
     || (appointmentValid && (appointmentStage !== baselineAppointment || !copilotConfigured));
+  const originalName = stage => baseline.find(saved => saved._key === stage._key)?.name;
+  const stageUsage = stage => Number(usage[originalName(stage) || stage.name] || 0);
+  const saveStages = stages.map(stage => ({ name: stage.name, color: stage.color,
+    ...(originalName(stage) && originalName(stage) !== stage.name ? { previous_name: originalName(stage) } : {}) }));
   const totalClients = Object.values(usage).reduce((sum, count) => sum + Number(count || 0), 0);
   const occupiedMissing = Object.entries(usage).filter(([name, count]) =>
-    Number(count || 0) > 0 && !stages.some(stage => stageKey(stage.name) === stageKey(name))
+    Number(count || 0) > 0 && !stages.some(stage => stageKey(stage.name) === stageKey(name) || originalName(stage) === name)
   );
 
   const input = {
@@ -175,7 +179,7 @@ export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, b
       return;
     }
     const stage = stages[index];
-    const count = Number(usage[stage.name] || 0);
+    const count = stageUsage(stage);
     if (count > 0) {
       setMessage({ type: "error", text: `“${stage.name}” tiene ${count} cliente${count === 1 ? "" : "s"}. Muévelos primero desde el CRM antes de borrar esa etapa.` });
       return;
@@ -193,7 +197,7 @@ export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, b
     } else {
       setMessage({ type: "warning", text: "Plantilla aplicada como borrador. Para verla en el CRM debes pulsar “Guardar y publicar”." });
     }
-    const rows = cloneStages([...draft, ...protectedStages]);
+    const rows = cloneStages([...draft.map(stage => ({ ...baseline.find(saved => stageKey(saved.name) === stageKey(stage.name)), ...stage })), ...protectedStages]);
     setStages(rows);
     const appointmentName = template.id === "general" ? "Reunión" : template.id === "inmobiliaria" ? "Cita agendada" : null;
     setAppointmentKey(appointmentName ? rows.find(stage => stage.name === appointmentName)?._key || "" : "none");
@@ -205,8 +209,8 @@ export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, b
     setSaving(true); setMessage(null);
     try {
       const result = ownOrganization
-        ? await saveOwnPipeline(selectedId, cleanStages(stages), updatedAt, appointmentStage)
-        : await saveOrganizationPipeline(selectedId, cleanStages(stages), updatedAt, appointmentStage);
+        ? await saveOwnPipeline(selectedId, saveStages, updatedAt, appointmentStage)
+        : await saveOrganizationPipeline(selectedId, saveStages, updatedAt, appointmentStage);
       const saved = cloneStages(result.pipeline);
       setStages(saved); setBaseline(saved);
       const appointment = result.copilot?.appointment_stage ?? appointmentStage ?? null;
@@ -223,7 +227,7 @@ export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, b
         ? { ...org, meta_config: result.organization?.meta_config || org.meta_config }
         : org));
       window.dispatchEvent(new CustomEvent("stratos:pipeline-saved", {
-        detail: { organizationId: selectedId, pipeline: cleanStages(saved), appointmentStage: appointment },
+        detail: { organizationId: selectedId, pipeline: cleanStages(saved), appointmentStage: appointment, stageRenames: result.renamed_stages || {} },
       }));
     } catch (error) {
       setMessage({ type: "error", text: error.message || "No se pudo guardar el pipeline.", retry: error.status === 409 });
@@ -252,7 +256,7 @@ export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, b
       </div>
 
       <div style={{ ...card, padding: "11px 14px", marginBottom: 14, color: T.txt2, fontSize: 11.5, lineHeight: 1.55 }}>
-        <strong style={{ color: T.txt }}>Cómo funciona:</strong> {ownOrganization ? "Edita nombres, colores y orden y pulsa " : "Selecciona la empresa, edita nombres, colores y orden y pulsa "}<strong>Guardar y publicar</strong>. Tu equipo verá las etapas al recargar su CRM.
+        <strong style={{ color: T.txt }}>Cómo funciona:</strong> {ownOrganization ? "Edita nombres, colores y orden y pulsa " : "Selecciona la empresa, edita nombres, colores y orden y pulsa "}<strong>Guardar y publicar</strong>. Al cambiar un nombre se actualizará en todos los clientes de esa etapa. Tu equipo verá los cambios al recargar su CRM.
       </div>
 
       {message && (
@@ -318,12 +322,12 @@ export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, b
             {loadingPipeline ? <div style={{ padding: 24, color: T.txt3, fontSize: 12.5 }}>Cargando pipeline…</div> : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8, overflowX: "auto" }}>
                 {stages.map((stage, index) => {
-                  const count = Number(usage[stage.name] || 0);
+                  const count = stageUsage(stage);
                   return <div key={stage._key} draggable={!saving} onDragStart={() => setDragIndex(index)} onDragOver={event => event.preventDefault()} onDrop={() => { if (!saving && dragIndex != null) moveStage(dragIndex, index); setDragIndex(null); }} style={{ display: "grid", gridTemplateColumns: isMobile ? "20px 38px minmax(0,1fr)" : "28px 42px minmax(150px,1fr) 86px 112px", gap: 9, alignItems: "center", border: `1px solid ${T.border}`, borderRadius: 12, padding: "9px 10px", background: dragIndex === index ? T.accentS : "transparent" }}>
                     <GripVertical size={16} color={T.txt3} style={{ cursor: "grab" }} />
                     <input aria-label={`Color de ${stage.name}`} type="color" value={stage.color} onChange={event => patchStage(index, { color: event.target.value.toUpperCase() })} style={{ width: 38, height: 34, padding: 2, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer" }} />
-                    <input aria-label={`Nombre de etapa ${index + 1}`} value={stage.name} disabled={count > 0} title={count > 0 ? "Mueve primero los clientes de esta etapa desde el CRM" : "Escribe el nombre de la etapa"} onChange={event => patchStage(index, { name: event.target.value })} style={{ ...input, width: "100%", padding: "0 11px", opacity: count > 0 ? .62 : 1, cursor: count > 0 ? "not-allowed" : "text" }} />
-                    <span title={count > 0 ? "Etapa protegida mientras tenga clientes" : "Etapa disponible para editar o borrar"} style={{ gridColumn: isMobile ? "1 / 3" : undefined, color: count ? T.txt2 : T.txt3, fontSize: 11.5, textAlign: "right", display: "inline-flex", justifyContent: "flex-end", alignItems: "center", gap: 4 }}>{count > 0 && <LockKeyhole size={11} />}{count} cliente{count === 1 ? "" : "s"}</span>
+                    <input aria-label={`Nombre de etapa ${index + 1}`} value={stage.name} title="Al publicar el nuevo nombre se actualizará en todos los clientes de esta etapa" onChange={event => patchStage(index, { name: event.target.value })} style={{ ...input, width: "100%", padding: "0 11px", cursor: "text" }} />
+                    <span title={count > 0 ? "Puedes renombrarla; para eliminarla, mueve primero sus clientes" : "Etapa disponible para editar o borrar"} style={{ gridColumn: isMobile ? "1 / 3" : undefined, color: count ? T.txt2 : T.txt3, fontSize: 11.5, textAlign: "right", display: "inline-flex", justifyContent: "flex-end", alignItems: "center", gap: 4 }}>{count} cliente{count === 1 ? "" : "s"}</span>
                     <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
                       <IconButton title="Subir" disabled={index === 0} onClick={() => moveStage(index, index - 1)} T={T}><ChevronUp size={13} /></IconButton>
                       <IconButton title="Bajar" disabled={index === stages.length - 1} onClick={() => moveStage(index, index + 1)} T={T}><ChevronDown size={13} /></IconButton>

@@ -277,3 +277,14 @@ test('appointment selection is published atomically with stages and read back pe
  org.meta_config.crm.appointmentStage=null;
  assert.deepEqual((await h.call({action:'get_own_pipeline',organization_id:'own'})).body.copilot,{configured:true,appointment_stage:null});
 });
+
+ test('occupied-stage rename metadata reaches the server for company and platform admins, and malformed originals are rejected',async()=>{
+  for(const operator of [false,true]) {
+   const h=harness({operator,tenantRole:operator?null:'admin'});
+   const pipeline=[{name:'Nuevo contacto',color:'#94A3B8',previous_name:'Prospecto'},...tenantDraft.slice(1)];
+   const body={...tenantSave,action:operator?'save_pipeline':'save_own_pipeline',pipeline};
+   assert.equal((await h.call(body)).status,200);
+   assert.equal(h.rpcs.at(-1).args.p_pipeline[0].previous_name,'Prospecto');
+   assert.equal((await h.call({...body,pipeline:[{...pipeline[0],previous_name:123},...pipeline.slice(1)]})).status,400);
+  }
+ });
