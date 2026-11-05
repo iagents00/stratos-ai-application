@@ -1,188 +1,98 @@
+import { useEffect, useRef, useState } from "react";
+import { ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react";
 import RecoveryForm from "./RecoveryForm";
-import { P } from "../design-system/tokens";
-import { useState } from "react";
-import { Eye, EyeOff, LogIn } from "lucide-react";
+import { LP, font, fontDisp } from "../design-system/tokens";
 import { useClient } from "../hooks/useClient";
+import { nativePlugin } from "../lib/native";
+import { normalizeLoginIdentity } from "../lib/login-identity";
+import "./LoginScreenNative.css";
 
-const font = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
-
-/**
- * Acceso exclusivo del binario iOS/Android.
- *
- * Las cuentas las crea el administrador de la empresa contratante. Por eso el
- * binario solo permite iniciar sesión: no incluye alta, precios ni contratación.
- * La web conserva su flujo comercial independiente.
- */
+// A clear sign-in surface shares the web identity while preserving the native
+// enterprise flow: login, recovery and a local guest; no signup or purchasing.
+const theme = { ...LP, actionG: "#10234B", actionBorder: "#10234B" };
 export default function LoginScreenNative({ onLogin }) {
-  const { config } = useClient();
+  const { config, clientId } = useClient();
   const [recovering, setRecovering] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const submitting = useRef(false);
+  const isStratos = !clientId || ["duke", "stratos", "tenant"].includes(clientId);
+  const brandName = isStratos ? "Stratos AI" : config?.name || "Stratos AI";
+  const accent = isStratos ? theme.actionG : config?.brand?.accent || theme.actionG;
+  const vars = { "--native-login-action": accent, fontFamily: font, "--native-login-title-font": fontDisp };
 
-  const brandName = config?.name || "Stratos AI";
-  const accent = config?.brand?.accent || P.accent;
+  useEffect(() => {
+    const bars = nativePlugin("SystemBars");
+    const apply = style => { try { Promise.resolve(bars?.setStyle({ style })).catch(() => {}); } catch { /* old shell */ } };
+    apply("LIGHT");
+    return () => apply("DEFAULT");
+  }, []);
 
-  const submit = async (event) => {
-    event?.preventDefault();
+  const submit = async event => {
+    event.preventDefault();
+    if (submitting.current) return;
     setError("");
-    if (!email.trim() || !password) {
-      setError("Completa correo y contraseña.");
-      return;
-    }
-    setLoading(true);
-    const result = await onLogin(email.trim().toLowerCase(), password);
-    if (result?.error) {
-      setError(result.error);
-      setLoading(false);
-    }
+    if (!email.trim() || !password) { setError("Completa tu correo o usuario y contraseña."); return; }
+    submitting.current = true; setLoading(true);
+    try {
+      const result = await onLogin(normalizeLoginIdentity(email), password);
+      if (result?.error) setError(result.error);
+    } catch {
+      setError("No se pudo iniciar sesión. Intenta de nuevo.");
+    } finally { submitting.current = false; setLoading(false); }
   };
 
-  if (recovering) return <main style={styles.page}><div style={{ width: "min(100%, 440px)" }}><RecoveryForm T={P} initialEmail={email} onBack={() => setRecovering(false)} /></div></main>;
-
   return (
-    <main style={styles.page}>
-      <section style={styles.card} aria-labelledby="login-title">
-        <div style={{ ...styles.mark, borderColor: `${accent}66`, color: accent }}>S</div>
-        <p style={styles.brand}>{brandName}</p>
-        <h1 id="login-title" style={styles.title}>Inicia sesión</h1>
-        <p style={styles.subtitle}>Usa la cuenta que te proporcionó tu empresa.</p>
-
-        <form onSubmit={submit} style={styles.form}>
-          <label style={styles.label} htmlFor="native-email">Correo</label>
-          <input
-            id="native-email"
-            type="email"
-            autoCapitalize="none"
-            autoCorrect="off"
-            autoComplete="username"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            style={styles.input}
-            disabled={loading}
-          />
-
-          <label style={styles.label} htmlFor="native-password">Contraseña</label>
-          <div style={styles.passwordWrap}>
-            <input
-              id="native-password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="current-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              style={{ ...styles.input, paddingRight: 48, width: "100%" }}
-              disabled={loading}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((value) => !value)}
-              style={styles.eye}
-              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-            >
-              {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
-            </button>
-          </div>
-
-          {error && <p role="alert" style={styles.error}>{error}</p>}
-
-          <button type="submit" disabled={loading} style={{ ...styles.button, background: config?.brand?.accent ? accent : P.actionG, color: config?.brand?.accent ? P.onAccent : P.actionInk, border: `1px solid ${config?.brand?.accent ? accent : P.actionBorder}` }}>
-            <LogIn size={18} />
-            {loading ? "Entrando…" : "Entrar"}
-          </button>
-        </form>
-
-        <button type="button" disabled={loading} onClick={() => setRecovering(true)} style={{ ...styles.guest, width: "100%", background: "transparent" }}>¿Olvidaste tu contraseña?</button>
-
-        <a href="/guest.html" style={styles.guest}>
-          Entrar como invitado
-        </a>
-        <p style={styles.guestHelp}>Explora una demo con datos ficticios, sin cuenta.</p>
-
-        <p style={styles.help}>Si no tienes acceso, solicítalo al administrador de tu empresa.</p>
-      </section>
+    <main className="native-login-page" style={vars}>
+      <div className="native-login-content">
+        <header className="native-login-brand" aria-label={brandName}>
+          {isStratos ? <img src="/branding/stratos-logo-web-20261016.webp" alt="" width="52" height="52" />
+            : <span className="native-login-monogram" aria-hidden="true">{brandName.charAt(0)}</span>}
+          <span>{brandName}</span>
+        </header>
+        <section className="native-login-card" aria-labelledby={recovering ? undefined : "native-login-title"} aria-label={recovering ? "Recuperar acceso" : undefined}>
+          {recovering ? <RecoveryForm T={theme} initialEmail={normalizeLoginIdentity(email)} onBack={() => setRecovering(false)} /> : <>
+            <div className="native-login-heading">
+              <p className="native-login-eyebrow">Acceso a la plataforma</p>
+              <h1 id="native-login-title">Bienvenido de vuelta</h1>
+              <p>Entra con la cuenta de tu empresa.</p>
+            </div>
+            <form onSubmit={submit} className="native-login-form" aria-busy={loading}>
+              <div className="native-login-field">
+                <label htmlFor="native-email">Correo o usuario</label>
+                <input id="native-email" type="text" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false}
+                  autoComplete="username" placeholder="correo@empresa.com o usuario" value={email}
+                  onChange={event => setEmail(event.target.value)} disabled={loading} aria-describedby="native-login-error" />
+              </div>
+              <div className="native-login-field">
+                <div className="native-login-label-row"><label htmlFor="native-password">Contraseña</label>
+                  <button type="button" className="native-login-recovery" onClick={() => setRecovering(true)} disabled={loading}>¿Olvidaste tu contraseña?</button>
+                </div>
+                <div className="native-login-password">
+                  <input id="native-password" type={showPassword ? "text" : "password"} autoComplete="current-password"
+                    placeholder="Tu contraseña" value={password} onChange={event => setPassword(event.target.value)} disabled={loading}
+                    aria-describedby="native-login-error" />
+                  <button type="button" className="native-login-eye" onClick={() => setShowPassword(value => !value)}
+                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"} aria-pressed={showPassword}>
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
+              <p id="native-login-error" className="native-login-error" role={error ? "alert" : undefined}>{error}</p>
+              <button type="submit" className="native-login-primary" disabled={loading}>
+                {loading ? <><Loader2 size={19} className="native-login-spinner" /> Entrando…</> : <>Iniciar sesión <ArrowRight size={19} /></>}
+              </button>
+            </form>
+            <div className="native-login-divider"><span>o prueba la demo</span></div>
+            <a href="/guest.html" className="native-login-guest">Entrar como invitado <ArrowRight size={17} /></a>
+            <p className="native-login-guest-help">Prueba el CRM con datos de ejemplo, sin cuenta.</p>
+          </>}
+        </section>
+        <p className="native-login-help">¿Aún no tienes acceso?<br />Solicítalo al administrador de tu empresa.</p>
+      </div>
     </main>
   );
 }
-
-const styles = {
-  page: {
-    minHeight: "100dvh",
-    boxSizing: "border-box",
-    display: "grid",
-    placeItems: "center",
-    padding: "max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom))",
-    background: P.bg,
-    color: "#E8EEF7",
-    fontFamily: font,
-  },
-  card: {
-    width: "min(100%, 420px)",
-    boxSizing: "border-box",
-    padding: "36px 26px 28px",
-    border: "1px solid rgba(255,255,255,.09)",
-    borderRadius: 24,
-    background: P.surface,
-    boxShadow: "0 24px 70px rgba(0,0,0,.35)",
-  },
-  mark: {
-    width: 54,
-    height: 54,
-    margin: "0 auto 14px",
-    border: "1px solid",
-    borderRadius: 17,
-    display: "grid",
-    placeItems: "center",
-    fontSize: 29,
-    fontWeight: 700,
-  },
-  brand: { margin: 0, textAlign: "center", color: "#AAB7C8", fontSize: 14, fontWeight: 650 },
-  title: { margin: "20px 0 8px", textAlign: "center", fontSize: 28, letterSpacing: "-.5px" },
-  subtitle: { margin: "0 auto 28px", textAlign: "center", color: "#8C9BAE", lineHeight: 1.45, fontSize: 15 },
-  form: { display: "grid", gap: 10 },
-  label: { marginTop: 6, color: "#B8C4D3", fontSize: 13, fontWeight: 600 },
-  input: {
-    boxSizing: "border-box",
-    height: 50,
-    border: "1px solid rgba(255,255,255,.12)",
-    borderRadius: 13,
-    padding: "0 14px",
-    outline: "none",
-    background: P.bg3,
-    color: "#F2F6FB",
-    fontSize: 16,
-    fontFamily: font,
-  },
-  passwordWrap: { position: "relative", width: "100%" },
-  eye: {
-    position: "absolute",
-    right: 5,
-    top: 4,
-    width: 42,
-    height: 42,
-    display: "grid",
-    placeItems: "center",
-    border: 0,
-    background: "transparent",
-    color: "#8C9BAE",
-  },
-  error: { margin: "6px 0 0", color: "#F7A2AC", fontSize: 14, lineHeight: 1.4 },
-  button: {
-    height: 50,
-    marginTop: 12,
-    border: 0,
-    borderRadius: 13,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 9,
-    color: P.onAccent,
-    fontSize: 16,
-    fontWeight: 750,
-    fontFamily: font,
-  },
-  help: { margin: "24px 0 0", textAlign: "center", color: "#657489", fontSize: 13, lineHeight: 1.45 },
-  guest: { display: "flex", minHeight: 48, alignItems: "center", justifyContent: "center", marginTop: 16, border: `1px solid ${P.borderH}`, borderRadius: 13, color: P.accent, textDecoration: "none", fontSize: 16, fontWeight: 650 },
-  guestHelp: { margin: "8px 0 0", textAlign: "center", color: P.txt2, fontSize: 13, lineHeight: 1.45 },
-};
