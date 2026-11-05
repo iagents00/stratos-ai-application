@@ -15,7 +15,7 @@ function mock({processing='VALID',state='PREPARE_FOR_SUBMISSION',linked,version=
   if(path==='/v1/appStoreVersions/version492')return {data:target};
   if(path.startsWith('/v1/reviewSubmissions?'))return {data:[]};
   if(path==='/v1/reviewSubmissions'&&method==='POST')return {data:{id:'submission'}};
-  if(path==='/v1/reviewSubmissions/submission/items?limit=50')return {data:[]};
+  if(path.startsWith('/v1/reviewSubmissions/submission/items?'))return {data:[]};
   if(path==='/v1/reviewSubmissions/submission'&&method==='GET')return {data:{id:'submission',attributes:{state:'WAITING_FOR_REVIEW'}}};
   if(['PATCH','POST'].includes(method))return {};
   throw new Error('Unexpected request '+method+' '+path);
@@ -46,7 +46,7 @@ test('the next public release carries the company appointment UI and three-hour 
  assert.match(m.calls.find(c=>c.body?.data?.attributes?.whatsNew).body.data.attributes.whatsNew,/etapa de citas.*3 horas/);
 });
 
-function replacementMock({processing='VALID',oldBuild='142',extraItem=false,oldState='WAITING_FOR_REVIEW'}={}) {
+function replacementMock({processing='VALID',oldBuild='142',extraItem=false,oldState='WAITING_FOR_REVIEW',sparse=false}={}) {
  const m=mock({version:'4.9.4',buildNumber:'143',processing});
  let state=oldState, renamed=false;
  const previous=()=>({id:'version492',type:'appStoreVersions',attributes:{versionString:renamed?'4.9.4':'4.9.3',platform:'IOS',appVersionState:state,releaseType:'AFTER_APPROVAL'}});
@@ -55,7 +55,7 @@ function replacementMock({processing='VALID',oldBuild='142',extraItem=false,oldS
   if(path==='/v1/builds/oldBuild'){m.calls.push({method,path,body});return {data:{id:'oldBuild',attributes:{version:oldBuild}}};}
   if(path.endsWith('/relationships/build') && state==='WAITING_FOR_REVIEW'){m.calls.push({method,path,body});return {data:{id:'oldBuild'}};}
   if(path.startsWith('/v1/reviewSubmissions?') && !renamed){m.calls.push({method,path,body});return {data:[{id:'oldSubmission',attributes:{state:oldState}}]};}
-  if(path==='/v1/reviewSubmissions/oldSubmission/items?limit=50'){m.calls.push({method,path,body});return {data:[{relationships:{appStoreVersion:{data:{id:'version492'}}}},...(extraItem?[{relationships:{appStoreVersion:{data:{id:'other-version'}}}}]:[])]};}
+  if(path.startsWith('/v1/reviewSubmissions/oldSubmission/items?')){m.calls.push({method,path,body});return {data:[...(sparse?[{id:'sparse-item'}]:[{relationships:{appStoreVersion:{data:{id:'version492'}}}}]),...(extraItem?[{relationships:{appStoreVersion:{data:{id:'other-version'}}}}]:[])]};}
   if(method==='PATCH' && body?.data?.attributes?.canceled){m.calls.push({method,path,body});state='DEVELOPER_REJECTED';return {};}
   if(method==='PATCH' && body?.data?.attributes?.versionString){m.calls.push({method,path,body});renamed=true;return {};}
   if(path==='/v1/appStoreVersions/version492' && method==='GET'){m.calls.push({method,path,body});return {data:previous()};}
@@ -68,12 +68,13 @@ test('explicit review replacement validates both builds and cancels only the exa
  const m=replacementMock();const result=await releaseIOS({...replacement,request:m.request});
  assert.deepEqual(result.replacedReview,{version:'4.9.3',build:'142',submissionId:'oldSubmission'});
  assert.equal(result.submissionState,'WAITING_FOR_REVIEW');
+ assert.ok(m.calls.some(c=>c.path.includes('include=appStoreVersion')&&c.path.includes('fields[reviewSubmissionItems]=state,appStoreVersion')));
  const cancel=m.calls.filter(c=>c.body?.data?.attributes?.canceled);assert.equal(cancel.length,1);assert.equal(cancel[0].path,'/v1/reviewSubmissions/oldSubmission');
  assert.equal(m.calls.find(c=>c.method==='PATCH'&&c.path.endsWith('/relationships/build')).body.data.id,'build143');
  assert.match(m.calls.find(c=>c.body?.data?.attributes?.whatsNew).body.data.attributes.whatsNew,/fondo blanco/);
 });
 test('review replacement refuses an invalid new build, changed previous build or mixed submission before writing',async()=>{
- for(const input of [{processing:'PROCESSING'},{oldBuild:'unexpected'},{extraItem:true}]) {
+ for(const input of [{processing:'PROCESSING'},{oldBuild:'unexpected'},{extraItem:true},{sparse:true}]) {
   const m=replacementMock(input);await assert.rejects(releaseIOS({...replacement,request:m.request}));assert.ok(m.calls.every(c=>c.method==='GET'));
  }
  const m=replacementMock();await assert.rejects(releaseIOS({...replacement,previousVersion:undefined,request:m.request}),/exact earlier/);assert.ok(m.calls.every(c=>c.method==='GET'));
