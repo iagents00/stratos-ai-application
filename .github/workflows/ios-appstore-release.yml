@@ -1,0 +1,43 @@
+name: Publicar actualización iOS en App Store
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Inspeccionar, preparar ficha o enviar a revisión pública
+        type: choice
+        options: [inspect, prepare, submit]
+        default: inspect
+      version:
+        description: Versión comercial exacta
+        required: true
+        default: '4.9.2'
+      build:
+        description: Número de build de iOS ya procesada por Apple
+        required: true
+
+permissions:
+  contents: read
+concurrency:
+  group: stratos-ios-appstore-release
+  cancel-in-progress: false
+jobs:
+  appstore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verificar identidad y controles del envío
+        run: node scripts/check-project-boundary.mjs && node --test tests/appstore-release.test.mjs
+      - name: Operar la versión exacta de Stratos AI
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          RELEASE_MODE: ${{ inputs.mode }}
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_BUILD: ${{ inputs.build }}
+        run: node scripts/ops/appstore-release.mjs
