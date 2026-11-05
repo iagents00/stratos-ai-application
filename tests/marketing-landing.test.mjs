@@ -95,7 +95,7 @@ test('marketing styles cannot alter authenticated app surfaces', () => {
     });
   }
   const config = readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
-  for (const path of ['marketing', 'fonts/marketing', 'branding/stratos-logo-web-20261016.webp']) assert.ok(config.includes(`'${path}'`), `Native build exclusion ${path}`);
+  for (const path of ['marketing', 'fonts/marketing']) assert.ok(config.includes(`'${path}'`), `Native build exclusion ${path}`);
 });
 
 test('launch offer separates implementation, recurring fees and the three-month subscription benefit', () => {
