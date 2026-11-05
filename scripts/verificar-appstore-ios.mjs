@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs'
+import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 
 const outputDir = join(process.cwd(), 'dist-app')
@@ -32,6 +32,11 @@ const required = [
 ]
 
 const errors = []
+// The white native login references the same logo as the web. It must travel
+// inside the app so it renders offline, rather than being pruned as marketing.
+if (!existsSync(join(outputDir, 'branding/stratos-logo-web-20261016.webp'))) {
+  errors.push('El logo del login nativo no está incluido en el binario')
+}
 for (const text of forbidden) {
   if (bundle.includes(text)) errors.push(`El binario todavía contiene la interfaz prohibida: ${text}`)
 }

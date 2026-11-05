@@ -37,3 +37,5 @@ jobs:
       - run: npm run ops:check
       - run: npm run verificar-migraciones
       - run: npm run build
+      - name: Verificar paquete móvil y acceso de App Review
+        run: npm run build:app && npm run verificar:appstore-ios
