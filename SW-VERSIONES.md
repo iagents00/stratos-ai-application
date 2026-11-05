@@ -1,5 +1,9 @@
 # Historial de versiones del Service Worker (CACHE_VERSION)
 
+## v458 — Varias etapas de cita
+
+El administrador puede elegir una o varias etapas de citas. El formulario, las fechas, los avisos, las reagendas y los cambios de nombre siguen la etapa elegida. Las aplicaciones anteriores conservan la selección múltiple al guardar sin cambiarla. iPhone y Android 4.9.5 incluyen también el login blanco y los documentos de Space.
+
 ## v457 — Documentos de Space desde Copilot
 
 Las solicitudes de documentos, archivos y enlaces consultan Space de la propia empresa aunque el intérprete las haya confundido con el catálogo. Entrega enlaces guardados y acceso autenticado a documentos generados, sin duplicar un mismo enlace ni mostrar documentos retirados o de otra empresa. Funciona en instalaciones nuevas sin una configuración especial por cliente.

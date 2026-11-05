@@ -5,7 +5,11 @@ import { pathToFileURL } from 'node:url';
 export const APP_ID = '6804826565';
 const editable = new Set(['PREPARE_FOR_SUBMISSION','REJECTED','METADATA_REJECTED','DEVELOPER_REJECTED']);
 const inReview = new Set(['WAITING_FOR_REVIEW','IN_REVIEW','PENDING_APPLE_RELEASE','PENDING_DEVELOPER_RELEASE','READY_FOR_DISTRIBUTION','READY_FOR_SALE','PROCESSING_FOR_DISTRIBUTION','PROCESSING_FOR_APP_STORE']);
-const notes = (locale, version) => version === '4.9.4'
+const notes = (locale, version) => version === '4.9.5'
+  ? (locale.startsWith('es')
+    ? 'Login con fondo blanco e identidad Stratos AI. Renombra las etapas de tu pipeline y actualiza sus clientes. Selecciona una o varias etapas de citas para Copilot, con recordatorios de 3 horas y reagendas que conservan la etapa elegida. Pide a Copilot los documentos y enlaces guardados en Space. Mejoras de navegación y edición en móvil.'
+    : 'White sign-in screen in Stratos AI colors. Rename pipeline stages and update their clients. Choose one or more appointment stages for Copilot, with three-hour reminders and rescheduling that preserves the selected stage. Ask Copilot for documents and links saved in Space. Improved mobile navigation and editing.')
+  : version === '4.9.4'
   ? (locale.startsWith('es')
     ? 'Nuevo acceso con fondo blanco y los colores de Stratos AI. Inicia sesión con tu correo o usuario y recupera tu acceso desde la misma pantalla. Incluye Copilot y los módulos de tu empresa en móvil, con recordatorios de 3 horas adaptados a la etapa de citas de cada pipeline.'
     : 'A new white sign-in screen in Stratos AI colors. Sign in with your email or username and recover access from the same screen. Includes your company’s Copilot and mobile modules, with three-hour reminders following each pipeline’s appointment stage.')

@@ -1807,7 +1807,7 @@ export default function App() {
   // lo reciben al recargar, igual que cualquier cambio de configuración del tenant.
   useEffect(() => {
     const handlePipelineSaved = (event) => {
-      const { organizationId, pipeline, appointmentStage, stageRenames } = event.detail || {};
+      const { organizationId, pipeline, appointmentStage, appointmentStages, stageRenames } = event.detail || {};
       if (!organizationId || organizationId !== user?.organizationId || !Array.isArray(pipeline)) return;
       if (stageRenames && typeof stageRenames === "object") {
         setLeadsData(current => current.map(lead => (!lead.organization_id || lead.organization_id === organizationId) && Object.prototype.hasOwnProperty.call(stageRenames, lead.stage)
@@ -1815,7 +1815,7 @@ export default function App() {
       }
       setOrgMetaConfig(prev => ({
         ...(prev || {}),
-        crm: { ...(prev?.crm || {}), pipeline, ...(appointmentStage !== undefined ? {appointmentStage} : {}) },
+        crm: { ...(prev?.crm || {}), pipeline, ...(appointmentStage !== undefined ? {appointmentStage} : {}), ...(Array.isArray(appointmentStages) ? {appointmentStages} : {}) },
       }));
     };
     window.addEventListener("stratos:pipeline-saved", handlePipelineSaved);

@@ -270,12 +270,16 @@ test('appointment selection is published atomically with stages and read back pe
  const org=h.rows.organizations.find(row=>row.id==='own');
  org.meta_config.crm={appointmentStage:'Primer contacto'};
  const loaded=await h.call({action:'get_own_pipeline',organization_id:'own'});
- assert.deepEqual(loaded.body.copilot,{configured:true,appointment_stage:'Primer contacto'});
+ assert.deepEqual(loaded.body.copilot,{configured:true,appointment_stage:'Primer contacto',appointment_stages:['Primer contacto']});
  await h.call({...tenantSave,copilot:{appointment_stage:'Primer contacto'}});
  assert.deepEqual(JSON.parse(JSON.stringify(h.rpcs.at(-1).args.p_copilot)),{appointment_stage:'Primer contacto'});
  assert.equal(h.rpcs.at(-1).args.p_actor_id,'operator');
  org.meta_config.crm.appointmentStage=null;
- assert.deepEqual((await h.call({action:'get_own_pipeline',organization_id:'own'})).body.copilot,{configured:true,appointment_stage:null});
+ assert.deepEqual((await h.call({action:'get_own_pipeline',organization_id:'own'})).body.copilot,{configured:true,appointment_stage:null,appointment_stages:[]});
+ org.meta_config.crm.appointmentStages=['Primer contacto','Reunión'];
+ assert.deepEqual((await h.call({action:'get_own_pipeline',organization_id:'own'})).body.copilot.appointment_stages,['Primer contacto','Reunión']);
+ await h.call({...tenantSave,copilot:{appointment_stages:['Primer contacto','Reunión']}});
+ assert.deepEqual(JSON.parse(JSON.stringify(h.rpcs.at(-1).args.p_copilot)),{appointment_stages:['Primer contacto','Reunión']});
 });
 
  test('occupied-stage rename metadata reaches the server for company and platform admins, and malformed originals are rejected',async()=>{

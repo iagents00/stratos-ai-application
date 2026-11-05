@@ -2,6 +2,15 @@
 // not confer platform/partner access; identity and organization come from Auth.
 export const TENANT_PIPELINE_ACTIONS = new Set(["get_own_pipeline", "save_own_pipeline"]);
 
+export function pipelineCopilotConfig(meta: any) {
+  const crm = meta?.crm || {};
+  const stages = Array.isArray(crm.appointmentStages)
+    ? crm.appointmentStages.filter((name: unknown) => typeof name === "string")
+    : crm.appointmentStage ? [crm.appointmentStage] : [];
+  return { configured: Object.prototype.hasOwnProperty.call(crm, "appointmentStage") || Object.prototype.hasOwnProperty.call(crm, "appointmentStages"),
+    appointment_stage: stages[0] || null, appointment_stages: stages };
+}
+
 export function sanitizePipeline(value: unknown) {
   if (!Array.isArray(value)) return { error: "El pipeline debe ser una lista de etapas.", pipeline: [] };
   if (value.length < 2 || value.length > 30) {
@@ -67,7 +76,7 @@ export async function handleTenantPipeline(admin: any, callerId: string, action:
   if (action === "get_own_pipeline") {
     return { status: 200, body: { ok: true, organization: { id: organization.id, name: organization.name },
       pipeline: currentPipeline, usage, updated_at: organization.updated_at,
-      copilot: {configured: Object.prototype.hasOwnProperty.call(meta.crm || {},"appointmentStage"), appointment_stage: meta.crm?.appointmentStage ?? null} } };
+      copilot: pipelineCopilotConfig(meta) } };
   }
   if (!body.expected_updated_at || body.expected_updated_at !== organization.updated_at) {
     return reply(409, "La configuración cambió en otra sesión. Recarga el pipeline antes de guardar.");

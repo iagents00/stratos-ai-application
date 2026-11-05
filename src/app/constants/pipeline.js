@@ -66,6 +66,11 @@ function resolverPipeline(cfg) {
       }))
     : [{ id: "todo", label: "Pipeline", hint: null, stages }];
 
+  const appointmentStages = Array.isArray(cfg?.crm?.appointmentStages)
+    ? cfg.crm.appointmentStages.filter(name => stages.includes(name))
+    : Object.prototype.hasOwnProperty.call(cfg?.crm || {}, "appointmentStage")
+      ? (stages.includes(cfg.crm.appointmentStage) ? [cfg.crm.appointmentStage] : [])
+      : stages.includes("Zoom Agendado") ? ["Zoom Agendado"] : stages.includes("Reunión") ? ["Reunión"] : [];
   return {
     stages,
     pipelineGroups,
@@ -73,16 +78,15 @@ function resolverPipeline(cfg) {
     colors: custom
       ? Object.fromEntries(custom.map(s => [s.name, s.color]))
       : { ...DUKE_STGC },
-    appointmentStage: Object.prototype.hasOwnProperty.call(cfg?.crm || {}, "appointmentStage")
-      ? (stages.includes(cfg.crm.appointmentStage) ? cfg.crm.appointmentStage : null)
-      : (stages.includes("Zoom Agendado") ? "Zoom Agendado" : stages.includes("Reunión") ? "Reunión" : null),
+    appointmentStages,
+    appointmentStage: appointmentStages[0] || null,
     defaultStage: stages[0],
     isCustom: !!custom,
   };
 }
 
 const inicial = resolverPipeline(_cfg);
-setAppointmentStageForDates(inicial.appointmentStage);
+setAppointmentStageForDates(inicial.appointmentStages);
 
 /** Etapas del pipeline activo, en orden (izq → der en el kanban). */
 export const STAGES = [...inicial.stages];
@@ -103,7 +107,8 @@ export const stgC = { ...inicial.colors };
 /** Etapa donde caen los registros nuevos (primera del pipeline). */
 export let DEFAULT_STAGE = inicial.defaultStage;
 export let APPOINTMENT_STAGE = inicial.appointmentStage;
-export const isAppointmentStage = stage => !!APPOINTMENT_STAGE && stage === APPOINTMENT_STAGE;
+export const APPOINTMENT_STAGES = [...inicial.appointmentStages];
+export const isAppointmentStage = stage => APPOINTMENT_STAGES.includes(stage);
 
 /** true si el cliente activo usa un pipeline custom (útil para apagar lógica Duke-específica). */
 export let IS_CUSTOM_PIPELINE = inicial.isCustom;
@@ -131,7 +136,8 @@ export function applyPipelineConfig(cfg) {
   HAS_PIPELINE_GROUPS = next.hasGroups;
   DEFAULT_STAGE = next.defaultStage;
   APPOINTMENT_STAGE = next.appointmentStage;
-  setAppointmentStageForDates(next.appointmentStage);
+  APPOINTMENT_STAGES.splice(0, APPOINTMENT_STAGES.length, ...next.appointmentStages);
+  setAppointmentStageForDates(next.appointmentStages);
   IS_CUSTOM_PIPELINE = next.isCustom;
   return next;
 }

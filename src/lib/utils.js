@@ -104,11 +104,13 @@ export const genId = () =>
 export const STAGES_CON_CITA = new Set([
   "Zoom Agendado", "Reactivar Zoom", "Visita Agendada", "Zoom Concretado",
 ]);
-let configuredAppointmentStage = null;
-export function setAppointmentStageForDates(stage) {
-  if (configuredAppointmentStage && !["Zoom Agendado","Reactivar Zoom","Visita Agendada","Zoom Concretado"].includes(configuredAppointmentStage)) STAGES_CON_CITA.delete(configuredAppointmentStage);
-  configuredAppointmentStage = stage || null;
-  if (stage) STAGES_CON_CITA.add(stage);
+let configuredAppointmentStages = [];
+export function setAppointmentStageForDates(value) {
+  for (const stage of configuredAppointmentStages) {
+    if (!["Zoom Agendado","Reactivar Zoom","Visita Agendada","Zoom Concretado"].includes(stage)) STAGES_CON_CITA.delete(stage);
+  }
+  configuredAppointmentStages = (Array.isArray(value) ? value : value ? [value] : []).filter(Boolean);
+  for (const stage of configuredAppointmentStages) STAGES_CON_CITA.add(stage);
 }
 
 /**
