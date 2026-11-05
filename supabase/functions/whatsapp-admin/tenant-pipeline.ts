@@ -70,30 +70,13 @@ export async function handleTenantPipeline(admin: any, callerId: string, action:
   }
   const sanitized = sanitizePipeline(body.pipeline);
   if (sanitized.error) return reply(400, sanitized.error);
-  const pipeline = [...sanitized.pipeline];
-  const preserved: Record<string, number> = {};
-  for (const [name, count] of Object.entries(usage)) {
-    // Exact names are the CRM keys. Changing only case must not hide clients.
-    if (pipeline.some(stage => stage.name === name)) continue;
-    const sameName = pipeline.find(stage => stage.name.toLocaleLowerCase("es") === name.toLocaleLowerCase("es"));
-    if (sameName) {
-      sameName.name = name;
-      preserved[name] = count;
-      continue;
-    }
-    const previous = currentPipeline.find(stage => stage.name === name);
-    pipeline.push({ name, color: previous?.color || "#64748B" });
-    preserved[name] = count;
+  const { data: saved, error: saveError } = await admin.rpc("fn_tenant_pipeline_save", {
+    p_actor_id: callerId, p_organization_id: organizationId,
+    p_expected_updated_at: body.expected_updated_at, p_pipeline: sanitized.pipeline,
+  });
+  if (saveError) {
+    const status = saveError.code === "42501" ? 403 : saveError.code === "40001" ? 409 : saveError.code === "22023" ? 400 : 503;
+    return reply(status, status === 503 ? "No se pudo guardar el pipeline. Intenta nuevamente." : saveError.message);
   }
-  if (pipeline.length > 30) return reply(409, "Hay más de 30 etapas al conservar las que tienen clientes. Muévelos antes de publicar.");
-  const nextMeta = { ...meta, crm: { ...(meta.crm || {}), pipeline,
-    pipelineUpdatedAt: new Date().toISOString(), pipelineUpdatedBy: callerId } };
-  let update = admin.from("organizations").update({ meta_config: nextMeta }).eq("id", organizationId)
-    .eq("updated_at", organization.updated_at);
-  update = organization.meta_config == null ? update.is("meta_config", null) : update.eq("meta_config", organization.meta_config);
-  const { data: saved, error: saveError } = await update.select("id,name,meta_config,updated_at").maybeSingle();
-  if (saveError) return reply(503, "No se pudo guardar el pipeline. Intenta nuevamente.");
-  if (!saved) return reply(409, "La configuración cambió en otra sesión. Recarga el pipeline antes de guardar.");
-  return { status: 200, body: { ok: true, organization: saved, pipeline, usage,
-    updated_at: saved.updated_at, preserved_stages: preserved } };
+  return { status: 200, body: saved };
 }

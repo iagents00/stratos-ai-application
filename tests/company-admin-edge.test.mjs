@@ -23,7 +23,7 @@ function harness({operator=true,disabled=false,root=false,rpcError=null,director
   const query={insert(value){(rows[table]??=[]).push(value);return this;},delete(){return this;},select(_fields,options){count=options?.count==='exact';return this;},eq(key,value){list=list.filter(row=>JSON.stringify(row[key])===JSON.stringify(value));return this;},is(key,value){list=list.filter(row=>(row[key]??null)===value);return this;},not(key,_operator,value){list=list.filter(row=>row[key]!==value);return this;},in(key,values){list=list.filter(row=>values.includes(row[key]));return this;},or(expression){const clauses=expression.split(",").map(part=>part.split(".eq."));list=list.filter(row=>clauses.some(([key,value])=>row[key]===value));return this;},order(){return this;},range(a,b){start=a;end=b;return this;},limit(n){end=n-1;return this;},maybeSingle(){one=true;return this;},single(){one=true;return this;},update(value){update=value;return this;},then(resolve){if(update)list.forEach(row=>Object.assign(row,update));return Promise.resolve({data:one?list[0]||null:list.slice(start,end+1),error:null,count:count?list.length:null}).then(resolve);}};
   return query;
  };
- const admin={from,rpc:async(name,args)=>{rpcs.push({name,args});return {data:name==='fn_platform_crm_pipeline'?[{name:'Prospecto',color:'#94A3B8'},{name:'Ganado',color:'#34D399'}]:name==='fn_platform_list_users'?(directory||{ok:true,users:[],organizations:rows.organizations}):{ok:true,audit_saved:true,user:{id:args.p_user_id},organization:{id:args.p_organization_id}},error:rpcError};},auth:{admin:{listUsers:async({page})=>{authPages.push(page);return {data:null,error:{message:'Database error finding users'}};},createUser:async value=>{creates.push(value);const id='created';rows.profiles.push({id,organization_id:value.app_metadata.stratos_organization_id,active:true});return {data:{user:{id}},error:null};},updateUserById:async()=>({})}}};
+ const admin={from,rpc:async(name,args)=>{rpcs.push({name,args});return {data:name==='fn_tenant_pipeline_save'?{ok:true,pipeline:args.p_pipeline,organization:{id:args.p_organization_id},updated_at:'2026-11-04T00:00:01Z',preserved_stages:{}}:name==='fn_platform_crm_pipeline'?[{name:'Prospecto',color:'#94A3B8'},{name:'Ganado',color:'#34D399'}]:name==='fn_platform_list_users'?(directory||{ok:true,users:[],organizations:rows.organizations}):{ok:true,audit_saved:true,user:{id:args.p_user_id},organization:{id:args.p_organization_id}},error:rpcError};},auth:{admin:{listUsers:async({page})=>{authPages.push(page);return {data:null,error:{message:'Database error finding users'}};},createUser:async value=>{creates.push(value);const id='created';rows.profiles.push({id,organization_id:value.app_metadata.stratos_organization_id,active:true});return {data:{user:{id}},error:null};},updateUserById:async()=>({})}}};
  let handler;
  const context=vm.createContext({Request,Response,URL,console,crypto:webcrypto,fetch:()=>{throw new Error('Unexpected external request');},setTimeout,clearTimeout,
   createClient:(_url,key)=>key==='service'?admin:{auth:{getUser:async()=>({data:{user:authenticated?{id:'operator'}:null},error:authenticated?null:{message:'invalid'}})}},
@@ -207,7 +207,9 @@ test('own pipeline is available to active company admins without platform privil
   const saved=await h.call({...tenantSave,p_actor_id:'duke-user'});
   assert.equal(saved.status,200);
   assert.deepEqual(saved.body.pipeline,tenantDraft);
-  assert.equal(h.rows.organizations.find(row=>row.id==='own').meta_config.crm.pipelineUpdatedBy,'operator');
+  assert.equal(h.rpcs.at(-1).name,'fn_tenant_pipeline_save');
+  assert.equal(h.rpcs.at(-1).args.p_actor_id,'operator');
+  assert.equal(h.rpcs.at(-1).args.p_organization_id,'own');
   assert.deepEqual(h.rows.organizations.find(row=>row.id==='duke').meta_config,undefined);
  }
 });
@@ -243,8 +245,8 @@ test('own pipeline protects occupied stages past the first API page and preserve
  assert.deepEqual(loaded.body.usage,{Ganado:1200,Prospecto:1});
  const result=await h.call(tenantSave);
  assert.equal(result.status,200);
- assert.equal(result.body.pipeline.at(-1).name,'Prospecto');
- assert.deepEqual(result.body.preserved_stages,{Prospecto:1});
+ assert.equal(h.rpcs.at(-1).name,'fn_tenant_pipeline_save');
+ assert.deepEqual(JSON.parse(JSON.stringify(h.rpcs.at(-1).args.p_pipeline)),tenantDraft);
  assert.deepEqual(organization.meta_config.documents,[{title:'Keep me'}]);
  assert.deepEqual(organization.meta_config.crm.labels,{entity:'paciente'});
  assert.equal(result.body.pipeline.some(stage=>stage.name==='Duke secret'),false);
