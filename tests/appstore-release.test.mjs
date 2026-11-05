@@ -47,7 +47,7 @@ test('the next public release carries the company appointment UI and three-hour 
  assert.match(m.calls.find(c=>c.body?.data?.attributes?.whatsNew).body.data.attributes.whatsNew,/etapa de citas.*3 horas/);
 });
 
-function replacementMock({processing='VALID',oldBuild='142',extraItem=false,oldState='WAITING_FOR_REVIEW',sparse=false,canceledState='CANCELED'}={}) {
+function replacementMock({processing='VALID',oldBuild='142',extraItem=false,oldState='WAITING_FOR_REVIEW',sparse=false,canceledState='COMPLETE',itemState='REMOVED'}={}) {
  const m=mock({version:'4.9.4',buildNumber:'143',processing});
  let state=oldState, renamed=false;
  const previous=()=>({id:'version492',type:'appStoreVersions',attributes:{versionString:renamed?'4.9.4':'4.9.3',platform:'IOS',appVersionState:state,releaseType:'AFTER_APPROVAL'}});
@@ -56,7 +56,7 @@ function replacementMock({processing='VALID',oldBuild='142',extraItem=false,oldS
   if(path==='/v1/builds/oldBuild'){m.calls.push({method,path,body});return {data:{id:'oldBuild',attributes:{version:oldBuild}}};}
   if(path.endsWith('/relationships/build') && !renamed){m.calls.push({method,path,body});return {data:{id:'oldBuild'}};}
   if(path.startsWith('/v1/reviewSubmissions?') && !renamed){m.calls.push({method,path,body});return {data:[{id:'oldSubmission',attributes:{state:oldState==='DEVELOPER_REJECTED'?canceledState:oldState}}]};}
-  if(path.startsWith('/v1/reviewSubmissions/oldSubmission/items?')){m.calls.push({method,path,body});return {data:[...(sparse?[{id:'sparse-item'}]:[{relationships:{appStoreVersion:{data:{id:'version492'}}}}]),...(extraItem?[{relationships:{appStoreVersion:{data:{id:'other-version'}}}}]:[])]};}
+  if(path.startsWith('/v1/reviewSubmissions/oldSubmission/items?')){m.calls.push({method,path,body});return {data:[...(sparse?[{id:'sparse-item'}]:[{attributes:{state:itemState},relationships:{appStoreVersion:{data:{id:'version492'}}}}]),...(extraItem?[{relationships:{appStoreVersion:{data:{id:'other-version'}}}}]:[])]};}
   if(method==='PATCH' && body?.data?.attributes?.canceled){m.calls.push({method,path,body});state='DEVELOPER_REJECTED';return {};}
   if(method==='PATCH' && body?.data?.attributes?.versionString){m.calls.push({method,path,body});renamed=true;return {};}
   if(path==='/v1/appStoreVersions/version492' && method==='GET'){m.calls.push({method,path,body});return {data:previous()};}
@@ -82,11 +82,11 @@ test('review replacement refuses an invalid new build, changed previous build or
 });
 
 
-test('a timed-out cancellation resumes only the same rejected build and canceled single-item review',async()=>{
+test('a timed-out cancellation resumes only the same rejected build and completed review with its single item removed',async()=>{
  const m=replacementMock({oldState:'DEVELOPER_REJECTED'});const result=await releaseIOS({...replacement,request:m.request});
  assert.equal(result.submissionState,'WAITING_FOR_REVIEW');assert.equal(result.replacedReview.submissionId,'oldSubmission');
  assert.ok(!m.calls.some(c=>c.body?.data?.attributes?.canceled));
- for(const input of [{oldBuild:'unexpected'},{extraItem:true},{sparse:true},{canceledState:'COMPLETE'},{canceledState:'WAITING_FOR_REVIEW'}]) {
+ for(const input of [{oldBuild:'unexpected'},{extraItem:true},{sparse:true},{canceledState:'CANCELING'},{canceledState:'WAITING_FOR_REVIEW'},{itemState:'APPROVED'},{itemState:null}]) {
   const bad=replacementMock({oldState:'DEVELOPER_REJECTED',...input});
   await assert.rejects(releaseIOS({...replacement,request:bad.request}));assert.ok(bad.calls.every(c=>c.method==='GET'));
  }

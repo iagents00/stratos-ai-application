@@ -64,16 +64,18 @@ export async function releaseIOS({ mode='inspect', version, buildNumber, previou
       const submissions=(await request('GET','/v1/reviewSubmissions?filter[app]='+APP_ID+'&limit=50')).data;
       let oldSubmission;
       for(const candidate of submissions.filter(s=>state(previous)==='DEVELOPER_REJECTED'
-          ? s.attributes.state==='CANCELED' : ['WAITING_FOR_REVIEW','IN_REVIEW'].includes(s.attributes.state))) {
+          ? s.attributes.state==='COMPLETE' : ['WAITING_FOR_REVIEW','IN_REVIEW'].includes(s.attributes.state))) {
         const items=(await request('GET',reviewItemsPath(candidate.id))).data;
         if(items.some(i=>itemVersionId(i)===previous.id)) {
           if(items.length!==1) throw new Error('The prior submission contains other content; it was left unchanged.');
+          if(state(previous)==='DEVELOPER_REJECTED' && items[0].attributes?.state!=='REMOVED')
+            throw new Error('The previous version was not removed from its completed review.');
           oldSubmission=candidate;break;
         }
       }
       if(!oldSubmission) throw new Error('The exact prior review submission was not found.');
       // Apple can finish cancellation after a previous invocation timed out.
-      // Resume only the same rejected version/build with a canceled single-item review.
+      // Resume only the same rejected version/build with a completed review and its single item removed.
       if(state(previous)!=='DEVELOPER_REJECTED')
         await request('PATCH','/v1/reviewSubmissions/'+oldSubmission.id,{data:{type:'reviewSubmissions',id:oldSubmission.id,attributes:{canceled:true}}});
       let current;
