@@ -5,7 +5,11 @@ import { pathToFileURL } from 'node:url';
 export const APP_ID = '6804826565';
 const editable = new Set(['PREPARE_FOR_SUBMISSION','REJECTED','METADATA_REJECTED','DEVELOPER_REJECTED']);
 const inReview = new Set(['WAITING_FOR_REVIEW','IN_REVIEW','PENDING_APPLE_RELEASE','PENDING_DEVELOPER_RELEASE','READY_FOR_DISTRIBUTION','READY_FOR_SALE','PROCESSING_FOR_DISTRIBUTION','PROCESSING_FOR_APP_STORE']);
-const notes = locale => locale.startsWith('es')
+const notes = (locale, version) => version === '4.9.3'
+  ? (locale.startsWith('es')
+    ? 'Copilot se sincroniza con la etapa de citas de cada empresa. Selecciona esa etapa desde el pipeline, registra fecha y hora y conserva los recordatorios de 3 horas. Mejoras al reprogramar citas y mantener su fecha sincronizada.'
+    : 'Copilot follows each company’s appointment stage. Choose it in the pipeline, set the date and time, and keep the default three-hour reminders. Improved appointment rescheduling and date synchronization.')
+  : locale.startsWith('es')
   ? 'Copilot y los módulos de tu empresa disponibles también en el menú móvil. Personaliza las etapas de tu pipeline como administrador; el asistente usa las etapas de tu empresa. Mejoras al editar y guardar etapas.'
   : 'Copilot and your company modules are available in the mobile menu. Company administrators can customize pipeline stages, and the assistant uses each company’s stages. Improved stage editing and saving.';
 const relationship = (type,id) => ({data:{type,id}});
@@ -43,7 +47,7 @@ export async function releaseIOS({ mode='inspect', version, buildNumber, request
     if(!locale.attributes.description || !locale.attributes.supportUrl) throw new Error('Incomplete inherited listing for '+locale.attributes.locale);
     const sets=(await request('GET','/v1/appStoreVersionLocalizations/'+locale.id+'/appScreenshotSets?include=appScreenshots&limit=50')).data;
     screenshotSets+=sets.filter(s=>s.relationships.appScreenshots?.data?.length).length;
-    await request('PATCH','/v1/appStoreVersionLocalizations/'+locale.id,{data:{type:'appStoreVersionLocalizations',id:locale.id,attributes:{whatsNew:notes(locale.attributes.locale)}}});
+    await request('PATCH','/v1/appStoreVersionLocalizations/'+locale.id,{data:{type:'appStoreVersionLocalizations',id:locale.id,attributes:{whatsNew:notes(locale.attributes.locale, version)}}});
   }
   if(!screenshotSets) throw new Error('No inherited screenshots are associated with this version.');
   const detail=(await request('GET','/v1/appStoreVersions/'+target.id+'/appStoreReviewDetail')).data;
