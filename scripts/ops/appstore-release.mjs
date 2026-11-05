@@ -36,7 +36,11 @@ export async function releaseIOS({ mode='inspect', version, buildNumber, previou
   const summary={appId:APP_ID,version,build:buildNumber,mode,buildState:build?.attributes.processingState || 'NOT_FOUND',versions:versions.map(v=>({version:v.attributes.versionString,state:state(v)}))};
   if(mode==='inspect') {
     const reviews=(await request('GET','/v1/reviewSubmissions?filter[app]='+APP_ID+'&limit=50')).data;
-    summary.reviewSubmissions=reviews.map(s=>({id:s.id,state:s.attributes.state}));
+    summary.reviewSubmissions=[];
+    for(const s of reviews.slice(0,5)) {
+      const items=(await request('GET',reviewItemsPath(s.id))).data;
+      summary.reviewSubmissions.push({id:s.id,state:s.attributes.state,items:items.map(i=>({versionId:itemVersionId(i),state:i.attributes?.state}))});
+    }
     if(target) {
       const linked=(await request('GET','/v1/appStoreVersions/'+target.id+'/relationships/build')).data;
       summary.target={versionId:target.id,state:state(target),releaseType:target.attributes.releaseType,buildId:linked?.id};
