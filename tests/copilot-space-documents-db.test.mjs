@@ -42,6 +42,7 @@ test('Space lookup overrides a mistaken catalog tool, delivers saved links and g
   assert.equal((await ask('Pásame el documento inexistente')).found,false);
   assert.equal((await ask('Dame el link de Blanca')).reply.text,'catalog-sentinel');
   assert.equal((await ask('El drive de Blanca')).reply.text,'catalog-sentinel');
+  assert.equal((await ask('Pásame los documentos del cliente Carlos')).reply.text,'catalog-sentinel');
   assert.equal((await ask('Recuérdame enviar un documento mañana','create_personal_reminder')).reply.text,'catalog-sentinel');
   const listed=await ask('Mis documentos','menu');
   assert.equal(listed.documents.filter(x=>x.url.includes('/woha')).length,1);

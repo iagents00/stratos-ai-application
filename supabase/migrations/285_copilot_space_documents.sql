@@ -123,7 +123,9 @@ begin
   v_txt:=public._bot_space_request_text(p_args);
   v_norm:=public.unaccent(lower(v_txt));
   if v_tool in ('space_documents','get_document','buscar_documentos','documents')
-     or (public._bot_is_space_document_request(v_norm) and v_tool not in
+     or (public._bot_is_space_document_request(v_norm)
+       and (v_norm ~ '(mi[[:space:]]*espa|mi[[:space:]]+space)' or v_norm !~ '\y(clientes?|pacientes?|prospectos?|expediente)\y')
+       and v_tool not in
        ('create_lead','upsert_lead','change_stage','update_fields','add_expediente_note','add_expediente_voice','add_seguimiento','add_comunicacion','multi','multi_task','create_team_actions','create_team_action','create_personal_reminder','create_task','add_task','assign_task','delete_task','soft_delete')) then
     v_res:=public.bot_documentos_espacio(p_telegram_chat_id,coalesce(p_args,'{}'::jsonb)||jsonb_build_object('input_text',v_txt));
     if coalesce((v_res->>'found')::boolean,false)
