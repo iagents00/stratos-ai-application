@@ -35,6 +35,7 @@ test('login preserves common and tenant branding, recovery controls and native r
     const nativeDirect = renderToStaticMarkup(createElement(ClientContext.Provider, {value:{clientId:'tenant',config:{name:'Stratos'}}}, createElement(LoginScreenNative,{onLogin:()=>{}})));
     assert.match(nativeDirect,/stratos-logo-web-20261016.webp/);
     assert.match(nativeDirect,/Bienvenido de vuelta|Correo o usuario|Entrar como invitado/);
+    assert.ok(nativeDirect.includes("Usa la cuenta que te proporcionó tu empresa."));
     assert.doesNotMatch(nativeDirect,/Todo tu equipo|Solicitar acceso|Crear cuenta/);
     const nativeTenant = renderToStaticMarkup(createElement(ClientContext.Provider, {value:{clientId:'company',config:{name:'Empresa QA',brand:{accent:'#112233'}}}}, createElement(LoginScreenNative,{onLogin:()=>{}})));
     assert.match(nativeTenant,/Empresa QA/);assert.match(nativeTenant,/#112233/);
