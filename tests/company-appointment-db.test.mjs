@@ -58,6 +58,7 @@ test('renamed appointments send the three-hour briefing, open Copilot plans, ded
   await tick();assert.equal((await db.query('select count(*)::int n from proactive_reminders where organization_id=$1',[own])).rows[0].n,1);
   assert.equal((await db.query('select count(*)::int n from proactive_reminders where organization_id=$1',[other])).rows[0].n,0);
   await db.query("update leads set next_action_at=now()+interval '4 hours' where organization_id=$1 and id=$2",[own,lead]);await tick();
+  assert.equal((await db.query("select status from proactive_pending_reports where organization_id=$1 and lead_id=$2",[own,lead])).rows[0].status,'closed');
   reminder=(await db.query("select * from proactive_reminders where organization_id=$1 and status='pending'",[own])).rows[0];assert.ok(reminder);
   await db.query("update leads set next_action_at=now()+interval '5 hours' where organization_id=$1 and id=$2",[own,lead]);await tick();
   assert.equal((await db.query('select status from proactive_reminders where organization_id=$1 and id=$2',[own,reminder.id])).rows[0].status,'cancelled');
