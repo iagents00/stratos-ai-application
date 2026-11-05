@@ -24,6 +24,7 @@ test('appointment publishing is atomic, company-scoped, keeps advanced settings 
   await db.query('update proactive_config set zoom_reminder_hours=4,quiet_start_hour=22 where organization_id=$1',[own]);
   const renamed=pipeline.map(s=>s.name==='Reunión'?{...s,name:'Evaluación'}:s);
   await save(admin,own,'Evaluación',renamed);
+  await save(admin,own,'Evaluación',[...renamed,{name:'Zoom Agendado',color:'#123456'}]);
   await db.query("insert into leads(organization_id,name,stage) values($1,'Historical client','Zoom Agendado')",[own]);
   await save(admin,own,'Evaluación',renamed);
   assert.equal((await db.query("select fn_org_stage($1,'Zoom Agendado') stage",[own])).rows[0].stage,'Evaluación');
