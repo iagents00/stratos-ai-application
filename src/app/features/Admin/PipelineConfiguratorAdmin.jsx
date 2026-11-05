@@ -46,7 +46,8 @@ const TEMPLATES = [
 ];
 
 const templateStages = (template) => template.stages.map(([name, color]) => ({ name, color }));
-const cloneStages = (stages) => (stages || []).map(stage => ({ name: stage.name, color: stage.color }));
+const cloneStages = (stages) => (stages || []).map(stage => ({ ...stage, _key: stage._key || crypto.randomUUID() }));
+const cleanStages = (stages) => stages.map(({ name, color }) => ({ name, color }));
 const stageKey = (name) => String(name || "").trim().toLocaleLowerCase("es");
 
 export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, backLabel = "Usuarios" }) {
@@ -61,6 +62,9 @@ export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, b
   const [stages, setStages] = useState([]);
   const [baseline, setBaseline] = useState([]);
   const [usage, setUsage] = useState({});
+  const [appointmentKey, setAppointmentKey] = useState("");
+  const [baselineAppointment, setBaselineAppointment] = useState(null);
+  const [copilotConfigured, setCopilotConfigured] = useState(true);
   const [loading, setLoading] = useState(true);
   const [loadingPipeline, setLoadingPipeline] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -100,8 +104,14 @@ export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, b
         const saved = Array.isArray(data.pipeline) && data.pipeline.length
           ? data.pipeline
           : templateStages(TEMPLATES[0]);
-        setStages(cloneStages(saved));
-        setBaseline(cloneStages(saved));
+        const draft = cloneStages(saved);
+        setStages(draft); setBaseline(draft);
+        const appointment = data.copilot?.appointment_stage ?? null;
+        setBaselineAppointment(appointment);
+        setAppointmentKey(data.copilot?.configured
+          ? (appointment ? draft.find(stage => stage.name === appointment)?._key || "" : "none")
+          : draft.find(stage => stage.name === "Reunión")?._key || "");
+        setCopilotConfigured(data.copilot?.configured === true);
         setUsage(data.usage || {});
         setUpdatedAt(data.updated_at || null);
         setLoadedId(selectedId);
@@ -117,7 +127,10 @@ export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, b
     const q = search.trim().toLocaleLowerCase("es");
     return organizations.filter(org => !q || org.name?.toLocaleLowerCase("es").includes(q) || org.slug?.toLocaleLowerCase("es").includes(q));
   }, [organizations, search]);
-  const dirty = JSON.stringify(stages) !== JSON.stringify(baseline);
+  const appointmentStage = appointmentKey === "none" ? null : stages.find(stage => stage._key === appointmentKey)?.name;
+  const appointmentValid = appointmentKey === "none" || Boolean(appointmentStage?.trim());
+  const dirty = JSON.stringify(cleanStages(stages)) !== JSON.stringify(cleanStages(baseline))
+    || (appointmentValid && (appointmentStage !== baselineAppointment || !copilotConfigured));
   const totalClients = Object.values(usage).reduce((sum, count) => sum + Number(count || 0), 0);
   const occupiedMissing = Object.entries(usage).filter(([name, count]) =>
     Number(count || 0) > 0 && !stages.some(stage => stageKey(stage.name) === stageKey(name))
@@ -148,12 +161,12 @@ export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, b
   };
   const addStage = () => setStages(current => [
     ...current,
-    { name: `Nueva etapa ${current.length + 1}`, color: PALETTE[current.length % PALETTE.length] },
+    { _key: crypto.randomUUID(), name: `Nueva etapa ${current.length + 1}`, color: PALETTE[current.length % PALETTE.length] },
   ]);
   const duplicateStage = (index) => setStages(current => {
     const copy = [...current];
     const source = current[index];
-    copy.splice(index + 1, 0, { ...source, name: `${source.name} copia` });
+    copy.splice(index + 1, 0, { ...source, _key: crypto.randomUUID(), name: `${source.name} copia` });
     return copy;
   });
   const removeStage = (index) => {
@@ -180,18 +193,25 @@ export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, b
     } else {
       setMessage({ type: "warning", text: "Plantilla aplicada como borrador. Para verla en el CRM debes pulsar “Guardar y publicar”." });
     }
-    setStages([...draft, ...protectedStages]);
+    const rows = cloneStages([...draft, ...protectedStages]);
+    setStages(rows);
+    const appointmentName = template.id === "general" ? "Reunión" : template.id === "inmobiliaria" ? "Cita agendada" : null;
+    setAppointmentKey(appointmentName ? rows.find(stage => stage.name === appointmentName)?._key || "" : "none");
   };
 
   const save = async () => {
     if (!loadedId || loadedId !== selectedId || saving || loadingPipeline) return;
+    if (!appointmentValid) { setMessage({ type: "error", text: "Selecciona la etapa de tus citas o indica que no utilizas citas." }); return; }
     setSaving(true); setMessage(null);
     try {
       const result = ownOrganization
-        ? await saveOwnPipeline(selectedId, stages, updatedAt)
-        : await saveOrganizationPipeline(selectedId, stages);
+        ? await saveOwnPipeline(selectedId, cleanStages(stages), updatedAt, appointmentStage)
+        : await saveOrganizationPipeline(selectedId, cleanStages(stages), updatedAt, appointmentStage);
       const saved = cloneStages(result.pipeline);
       setStages(saved); setBaseline(saved);
+      const appointment = result.copilot?.appointment_stage ?? appointmentStage ?? null;
+      setBaselineAppointment(appointment); setCopilotConfigured(true);
+      setAppointmentKey(appointment ? saved.find(stage => stage.name === appointment)?._key || "" : "none");
       setUpdatedAt(result.updated_at || null);
       if (result.usage) setUsage(result.usage);
       const preserved = Object.entries(result.preserved_stages || {});
@@ -203,7 +223,7 @@ export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, b
         ? { ...org, meta_config: result.organization?.meta_config || org.meta_config }
         : org));
       window.dispatchEvent(new CustomEvent("stratos:pipeline-saved", {
-        detail: { organizationId: selectedId, pipeline: saved },
+        detail: { organizationId: selectedId, pipeline: cleanStages(saved), appointmentStage: appointment },
       }));
     } catch (error) {
       setMessage({ type: "error", text: error.message || "No se pudo guardar el pipeline.", retry: error.status === 409 });
@@ -224,7 +244,7 @@ export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, b
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button onClick={() => setStages(cloneStages(baseline))} disabled={!dirty || saving} style={{ ...button, opacity: dirty ? 1 : .45 }}><RotateCcw size={14} /> Descartar</button>
+          <button onClick={() => { setStages(cloneStages(baseline)); setAppointmentKey(baselineAppointment ? baseline.find(stage => stage.name === baselineAppointment)?._key || "" : "none"); }} disabled={!dirty || saving} style={{ ...button, opacity: dirty ? 1 : .45 }}><RotateCcw size={14} /> Descartar</button>
           <button onClick={save} disabled={!dirty || saving || loadingPipeline || loadedId !== selectedId} style={{ ...button, color: T.accent, borderColor: T.accentB, background: T.accentS, opacity: dirty ? 1 : .55 }}>
             {saving ? <Loader2 size={14} className="spin" /> : <Save size={14} />} {dirty ? `Guardar y publicar en ${selectedOrg?.name || "empresa"}` : "Sin cambios por publicar"}
           </button>
@@ -299,7 +319,7 @@ export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, b
               <div style={{ display: "flex", flexDirection: "column", gap: 8, overflowX: "auto" }}>
                 {stages.map((stage, index) => {
                   const count = Number(usage[stage.name] || 0);
-                  return <div key={index} draggable={!saving} onDragStart={() => setDragIndex(index)} onDragOver={event => event.preventDefault()} onDrop={() => { if (!saving && dragIndex != null) moveStage(dragIndex, index); setDragIndex(null); }} style={{ display: "grid", gridTemplateColumns: isMobile ? "20px 38px minmax(0,1fr)" : "28px 42px minmax(150px,1fr) 86px 112px", gap: 9, alignItems: "center", border: `1px solid ${T.border}`, borderRadius: 12, padding: "9px 10px", background: dragIndex === index ? T.accentS : "transparent" }}>
+                  return <div key={stage._key} draggable={!saving} onDragStart={() => setDragIndex(index)} onDragOver={event => event.preventDefault()} onDrop={() => { if (!saving && dragIndex != null) moveStage(dragIndex, index); setDragIndex(null); }} style={{ display: "grid", gridTemplateColumns: isMobile ? "20px 38px minmax(0,1fr)" : "28px 42px minmax(150px,1fr) 86px 112px", gap: 9, alignItems: "center", border: `1px solid ${T.border}`, borderRadius: 12, padding: "9px 10px", background: dragIndex === index ? T.accentS : "transparent" }}>
                     <GripVertical size={16} color={T.txt3} style={{ cursor: "grab" }} />
                     <input aria-label={`Color de ${stage.name}`} type="color" value={stage.color} onChange={event => patchStage(index, { color: event.target.value.toUpperCase() })} style={{ width: 38, height: 34, padding: 2, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer" }} />
                     <input aria-label={`Nombre de etapa ${index + 1}`} value={stage.name} disabled={count > 0} title={count > 0 ? "Mueve primero los clientes de esta etapa desde el CRM" : "Escribe el nombre de la etapa"} onChange={event => patchStage(index, { name: event.target.value })} style={{ ...input, width: "100%", padding: "0 11px", opacity: count > 0 ? .62 : 1, cursor: count > 0 ? "not-allowed" : "text" }} />
@@ -314,6 +334,21 @@ export default function PipelineConfiguratorAdmin({ T, onBack, organizationId, b
                 })}
               </div>
             )}
+          </section>
+
+          <section style={{ ...card, padding: 16 }}>
+            <label htmlFor="copilot-appointment-stage" style={{ display: "block", fontSize: 13.5, fontWeight: 650, marginBottom: 9 }}>¿En qué etapa tienes una cita con el cliente?</label>
+            <select id="copilot-appointment-stage" value={appointmentKey} onChange={event => setAppointmentKey(event.target.value)} style={{ ...input, width: "100%", padding: "0 11px" }}>
+              <option value="">Selecciona la etapa de tus citas</option>
+              {stages.map(stage => <option key={stage._key} value={stage._key}>{stage.name || "Etapa sin nombre"}</option>)}
+              <option value="none">No utilizamos citas en este pipeline</option>
+            </select>
+            <p style={{ color: T.txt2, fontSize: 12, lineHeight: 1.55, margin: "10px 0 0" }}>
+              {appointmentKey === "none"
+                ? "El Copilot conserva los recordatorios de próximas acciones y tareas. Este pipeline no tendrá avisos de citas."
+                : <>Al mover un cliente a <strong>{appointmentStage || "esta etapa"}</strong>, registra la fecha y hora. El Copilot recordará la cita <strong>3 horas antes</strong> y conservará sus avisos de preparación y seguimiento.</>}
+            </p>
+            <p style={{ color: T.txt3, fontSize: 11.5, lineHeight: 1.55, margin: "7px 0 0" }}>Si cambias el nombre de esta etapa, el Copilot usará el nombre nuevo al publicar. Los ajustes específicos se pueden personalizar desde soporte.</p>
           </section>
 
           <section style={{ ...card, padding: 16 }}>

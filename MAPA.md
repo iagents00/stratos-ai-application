@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**294 archivos · 84.586 líneas**
+**294 archivos · 84.636 líneas**
 
 ---
 
@@ -42,7 +42,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | **Planes** | _sin vista propia (redirige a otra)_ | — |
 | **Perfil** | `src/dental-demo/TenantHuliWorkspace.jsx`<br>`src/app/views/Profile.jsx` | 11<br>1123 |
 | **Usuarios** | `src/app/features/Admin/AdminPanel.jsx` | 646 |
-| **Pipelines** | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx` | 333 |
+| **Pipelines** | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx` | 368 |
 | **Proceso** | `src/app/features/Admin/RailsSettings.jsx` | 141 |
 
 ---
@@ -115,7 +115,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 |---|---|---|
 | `navigation.js` | 420 | Configuración de navegación y permisos por módulo. |
 | `intelFeatures.js` | 211 | _sin describir_ |
-| `pipeline.js` | 129 | _sin describir_ |
+| `pipeline.js` | 138 | _sin describir_ |
 | `areas.js` | 97 | _sin describir_ |
 | `intelNotifs.js` | 86 | Construye las notificaciones REALES del Centro de Inteligencia a partir de los |
 | `labels.js` | 62 | Diccionario de ETIQUETAS del CRM, resuelto por cliente. |
@@ -145,7 +145,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `AdminPanel.jsx` | 646 | Panel de gestión de usuarios (Super Admin y Admin). |
 | `index.jsx` | 487 | Panel de chat con Agente Stratos AI. |
 | `index.jsx` | 454 | Portal de Candidatos — Stratos People |
-| `PipelineConfiguratorAdmin.jsx` | 333 | _sin describir_ |
+| `PipelineConfiguratorAdmin.jsx` | 368 | _sin describir_ |
 | `PlatformAdminConsole.jsx` | 285 | _sin describir_ |
 | `DocsStratos.jsx` | 263 | _sin describir_ |
 | `PlatformCompanyCRM.jsx` | 258 | _sin describir_ |
@@ -481,7 +481,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `offline-mode.js` | 351 | _sin describir_ |
 | `lead-storage.js` | 343 | _sin describir_ |
 | `whatsapp-chat.js` | 326 | _sin describir_ |
-| `utils.js` | 308 | Utilidades compartidas entre todas las vistas. |
+| `utils.js` | 314 | Utilidades compartidas entre todas las vistas. |
 | `lead-save.js` | 288 | _sin describir_ |
 | `native.js` | 282 | _sin describir_ |
 | `push-native.js` | 265 | _sin describir_ |
@@ -625,12 +625,13 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Agente Stratos | `src/app/components/Chat.jsx:60` |
 | Agrega un teléfono…  +1 555 … | `src/app/views/CRM/components.jsx:1305` |
 | Agregar | `src/app/features/MetaPanel/index.jsx:1372` |
-| Agregar etapa | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:295` |
+| Agregar etapa | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:315` |
 | Agregar otro | `src/app/views/Marketing.jsx:2521` |
 | Agregar propiedad | `src/app/views/LandingPages/CreateWorkspace.jsx:44` |
 | Agregar tarea de prioridad… | `src/app/views/PlanSemanal.jsx:486` |
 | Agregar una columna propia a la hoja | `src/app/views/Marketing.jsx:1466` |
 | Ahora no | `src/app/views/Copilot.jsx:1922` |
+| Al mover un cliente a | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:349` |
 | ALDEA ZAMA · TULUM | `src/app/views/LandingPages/index.jsx:308` |
 | Alergias registradas | `src/dental-demo/ClinicalDemoApp.jsx:272` |
 | Alta intención | `src/app/views/ZoomControl/index.jsx:597` |
@@ -668,7 +669,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Aún no hay usuarios activos. | `src/app/features/Admin/CajaPermissionsAdmin.jsx:127` |
 | Autor del hito | `src/app/views/CRM/ZoomBoard.jsx:244` |
 | Badge | `src/app/views/LandingPages/index.jsx:665` |
-| Bajar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:309` |
+| Bajar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:329` |
 | Bajo · Medio · Alto | `src/app/views/CRM/components.jsx:3431` |
 | Borradores de esta demo | `src/dental-demo/ClinicalDemoApp.jsx:303` |
 | Buscar (⌘K) | `src/app/App.jsx:2432` |
@@ -709,7 +710,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cambiar orden de las tarjetas de prioridad | `src/app/views/CRM/index.jsx:2643` |
 | Cambiar posición de prioridad | `src/app/views/CRM/index.jsx:2804` |
 | Cambiar prioridad | `src/app/features/MetaPanel/index.jsx:1544` |
-| Cambios sin guardar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:281` |
+| Cambios sin guardar | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:301` |
 | Campañas Recientes | `src/app/views/LandingPages/index.jsx:1258` |
 | Campo requerido | `src/app/views/LandingPages/index.jsx:644` |
 | Canal de la gestión | `src/app/views/MiDia.jsx:44` |
@@ -727,13 +728,13 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cargando el catálogo de tu empresa… | `src/app/views/LandingPages/CreateWorkspace.jsx:46` |
 | Cargando el plan… | `src/app/views/PlanSemanal.jsx:369` |
 | Cargando el tablero… | `src/app/views/ComandoOps.jsx:127` |
-| Cargando empresas… | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:263` |
+| Cargando empresas… | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:283` |
 | Cargando equipo… | `src/app/App.jsx:2460` |
 | Cargando ficha del cliente… | `src/app/features/Admin/PlatformCompanyCRM.jsx:225` |
 | Cargando movimientos… | `src/app/views/Caja.jsx:467` |
 | Cargando perfil dental… | `src/dental-demo/DentalProfile.jsx:11` |
 | Cargando permisos… | `src/app/features/Admin/CajaPermissionsAdmin.jsx:102` |
-| Cargando pipeline… | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:298` |
+| Cargando pipeline… | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:318` |
 | Cargando Zooms… | `src/app/views/ZoomControl/index.jsx:529` |
 | Cargando… | `src/app/features/Admin/CatalogConfiguratorAdmin.jsx:127` |
 | Cargo / Departamento | `src/app/views/RRHHModule.jsx:609` |
@@ -779,7 +780,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Columna nueva | `src/app/views/Marketing.jsx:1470` |
 | Columnas del equipo | `src/app/views/Marketing.jsx:3044` |
 | Comando Directivo | `src/app/views/ComandoDirectivo.jsx:427` |
-| Cómo funciona: | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:235` |
+| Cómo funciona: | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:255` |
 | Cómo se usa | `src/app/components/DynIsland.jsx:467` |
 | Cómo trabaja el equipo IA | `src/app/views/IACRM.jsx:576` |
 | Cómo verá el cliente | `src/app/views/LandingPages/index.jsx:134` |
@@ -792,10 +793,9 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Conectando… | `src/app/views/ConectarWhatsApp.jsx:122` |
 | Conectar mi WhatsApp | `src/app/views/ConectarWhatsApp.jsx:123` |
 | Conexión Huli | `src/dental-demo/ClinicalReadiness.jsx:181` |
-| Conexión real · Sólo consulta | `src/dental-demo/HuliWorkspace.jsx:28` |
 
 
-_(843 textos más — usá `npm run buscar "texto"`)_
+_(844 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -839,11 +839,11 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/main.jsx` (443 líneas)
 - `src/clients/gasil/config.js` (422 líneas)
 - `src/lib/next-action-engine.js` (371 líneas)
+- `src/app/features/Admin/PipelineConfiguratorAdmin.jsx` (368 líneas)
 - `src/lib/offline-mode.js` (351 líneas)
 - `src/app/views/Dash.jsx` (344 líneas)
 - `src/landing/DukeLeadRouter.jsx` (343 líneas)
 - `src/lib/lead-storage.js` (343 líneas)
-- `src/app/features/Admin/PipelineConfiguratorAdmin.jsx` (333 líneas)
 - `src/app/views/ComandoOps.jsx` (327 líneas)
 - `src/lib/whatsapp-chat.js` (326 líneas)
 - `src/app/App.css` (321 líneas)
@@ -903,8 +903,8 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/ISpaceBoard.jsx` (148 líneas)
 - `src/app/views/CRM/ScheduledCallBadge.jsx` (144 líneas)
 - `src/clients/brasa-y-piedra/config.js` (140 líneas)
+- `src/app/constants/pipeline.js` (138 líneas)
 - `src/app/components/CopilotCapabilities.jsx` (131 líneas)
-- `src/app/constants/pipeline.js` (129 líneas)
 - `src/lib/iagents-actions.js` (126 líneas)
 - `src/mobile-perf.css` (121 líneas)
 - `src/app/data/rivieraProperties.js` (119 líneas)

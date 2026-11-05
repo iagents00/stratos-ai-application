@@ -44,7 +44,7 @@ import SuggestActionsModal from "../../components/SuggestActionsModal";
 import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
 // Pipeline + vocabulario activos resueltos por cliente. Para Duke devuelven
 // exactamente STAGES/stgC/labels históricos; Vega usa su pipeline y "proyecto".
-import { STAGES, stgC, DEFAULT_STAGE, PIPELINE_GROUPS, HAS_PIPELINE_GROUPS, IS_CUSTOM_PIPELINE } from "../../constants/pipeline";
+import { STAGES, stgC, DEFAULT_STAGE, PIPELINE_GROUPS, HAS_PIPELINE_GROUPS, IS_CUSTOM_PIPELINE, APPOINTMENT_STAGE, isAppointmentStage } from "../../constants/pipeline";
 import { L } from "../../constants/labels";
 import {
   calculateLeadScore,
@@ -462,8 +462,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // (ej. "Sábado, 20 de junio, 2:30 p.m."). El crudo queda en next_action_date.
     const finalizedLead = {
       ...lead,
-      st: "Zoom Agendado",
-      nextAction: actionText || "Zoom",
+      st: APPOINTMENT_STAGE,
+      nextAction: actionText || APPOINTMENT_STAGE,
       nextActionDate: formatFechaLarga(dateTimeString) || formattedDateTime,
       next_action_date: formattedDateTime,
       next_action_at: nextActionAtISO,
@@ -716,13 +716,13 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // Interceptor para Zoom Agendado obligatorio en Stratos (aplica a todos los asesores)
     const prev = leadsDataRef.current.find(l => l.id === updated.id);
     const isTargetClient = true; // Aplica para todo Stratos
-    const isChangingToZoom = updated.st === "Zoom Agendado" && prev?.st !== "Zoom Agendado";
+    const isChangingToZoom = isAppointmentStage(updated.st) && !isAppointmentStage(prev?.st);
 
     if (isTargetClient && isChangingToZoom && !updated._zoomConfirmed) {
       console.log("[ZoomInterceptor] Cambiando a Zoom Agendado. Bloqueando y abriendo modal...");
       setZoomSchedulingLead({
         lead: updated,
-        originalStage: prev?.st || "Contáctame Ya",
+        originalStage: prev?.st || DEFAULT_STAGE,
       });
       return;
     }
@@ -1785,7 +1785,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // Paridad con el interceptor de updateLead (al MOVER un lead existente a
     // "Zoom Agendado"): no creamos el cliente sin una cita definida. Abrimos el
     // MISMO modal de cita; el draft queda intacto en newLead por si se cancela.
-    if ((newLead.st || "") === "Zoom Agendado") {
+    if (isAppointmentStage(newLead.st)) {
       setAddingLead(false);
       setStageMenuOpen(false);
       setBudgetMenuOpen(false);
@@ -1839,7 +1839,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
       let nextActionAtISO = null;
       try { nextActionAtISO = new Date(zoomInfo.dateTimeString).toISOString(); } catch (_) { /* fecha inválida → null */ }
       zoomFields = {
-        nextAction: (zoomInfo.actionText || "").trim() || "Zoom",
+        nextAction: (zoomInfo.actionText || "").trim() || APPOINTMENT_STAGE || "Cita",
         display: formatFechaLarga(zoomInfo.dateTimeString) || rawDateTime,
         rawDateTime,
         nextActionAtISO,
@@ -2016,7 +2016,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   // Lead automáticamente "prioritario" en la cola del asesor.
   // Pipeline Mayo 2026: Zoom Agendado | Reactivar Zoom (antes "No Show") |
   // Apartó (milestone reciente) | Seguimiento activo (antes "Zoom Concretado").
-  const isAutoPriority = (l) => (l.isNew || l.st === "Zoom Agendado" || l.st === "Reactivar Zoom" || l.st === "Apartó" || l.st === "Seguimiento" || l.hot || l.daysInactive <= 3) && !dismissedIds.has(l.id);
+  const isAutoPriority = (l) => (l.isNew || isAppointmentStage(l.st) || l.st === "Reactivar Zoom" || l.st === "Apartó" || l.st === "Seguimiento" || l.hot || l.daysInactive <= 3) && !dismissedIds.has(l.id);
   const rawPriorityLeads = boardLeads.filter(l => pinnedIds.has(l.id) || isAutoPriority(l));
   // Orden final: modo manual respeta drag & dropdown de posición; los demás aplican criterio
   const priorityLeadsFull = (() => {
@@ -2263,7 +2263,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   const newLeadsCount = boardLeads.filter(l => l.isNew).length;
   // Cerca del cierre = Apartó + Visita Agendada + Cierre (milestones finales).
   const nearCloseLeads = boardLeads.filter(l => l.st === "Apartó" || l.st === "Visita Agendada" || l.st === "Cierre").length;
-  const zoomsAgendados   = boardLeads.filter(l => l.st === "Zoom Agendado").length;
+  const zoomsAgendados   = boardLeads.filter(l => isAppointmentStage(l.st)).length;
   // Post-Mayo 2026 "Zoom Concretado" se consolidó en "Seguimiento".
   const zoomsConcretados = boardLeads.filter(l => l.st === "Seguimiento").length;
 
@@ -2525,7 +2525,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             <>
               <KPI T={T} label="Clientes en Pipeline" value={boardLeads.length} sub={`${updatedLeadsToday} actualizados hoy`} icon={Users} color={T.accent} />
               <KPI T={T} label="Score Promedio" value={avgScore} sub={`promedio del pipeline`} icon={Target} color={T.accent} />
-              <KPI T={T} label="Zooms Agendados" value={zoomsAgendados} sub={`${zoomsConcretados} concretados`} icon={CalendarDays} color={T.accent} />
+              <KPI T={T} label={IS_CUSTOM_PIPELINE ? (APPOINTMENT_STAGE || "Citas agendadas") : "Zooms Agendados"} value={zoomsAgendados} sub={`${zoomsConcretados} concretados`} icon={CalendarDays} color={T.accent} />
               <KPI T={T} label="Valor Total Pipeline" value={`$${(totalPipeline/1000000).toFixed(1)}M`} sub={`${nearCloseLeads} en cierre`} icon={DollarSign} color={T.accent} />
             </>
           )}
@@ -2560,7 +2560,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           }
           if (l.hot)                       return { color: T.accent, topBar: tbAccent, label: `CALIENTE · ${l.daysInactive}D`,     sublabel: "Actuar ahora mismo",              pulse: true, glow: true };
           if (l.isNew)                     return { color: T.accent, topBar: tbAccent, label: "NUEVO REGISTRO",                    sublabel: "Primer contacto — no esperes",    pulse: true, glow: true };
-          if (l.st === "Zoom Agendado")    return { color: T.accent, topBar: tbAccent, label: "ZOOM AGENDADO",                     sublabel: "Preparar presentación de cierre", pulse: true, glow: true };
+          if (isAppointmentStage(l.st))    return { color: T.accent, topBar: tbAccent, label: (APPOINTMENT_STAGE || "Cita").toUpperCase(),                     sublabel: "Preparar la cita con el cliente", pulse: true, glow: true };
           if (l.st === "Reactivar Zoom")   return { color: T.accent, topBar: tbAccent, label: "REACTIVAR ZOOM",                    sublabel: "No se conectó — reagendar hoy",   pulse: true, glow: true };
           if (l.st === "Seguimiento")      return { color: T.accent, topBar: tbAccent, label: "EN SEGUIMIENTO",                    sublabel: "Negociación / propuesta activa",  pulse: true, glow: true };
           if (l.st === "Apartó")           return { color: T.accent, topBar: tbAccent, label: "APARTÓ ✓",                          sublabel: "Validar comprobante con admin",   pulse: true, glow: true };
@@ -2969,7 +2969,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                   border: isLight ? `1px solid ${meta.color}28` : "1px solid rgba(255,255,255,0.08)",
                                   letterSpacing: "0.01em",
                                   whiteSpace: "nowrap", flexShrink: 0,
-                                }}>{(l.st === "Zoom Agendado" || l.stage === "Zoom Agendado") ? l.nextActionDate : fmtFechaCortaISO(l)}</span>
+                                }}>{(isAppointmentStage(l.st) || isAppointmentStage(l.stage)) ? l.nextActionDate : fmtFechaCortaISO(l)}</span>
                               )}
                             </div>
                             {!isEditingAction && (
@@ -4524,7 +4524,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           para que el asesor la capture. Seguimiento + Apartó
                           también muestran fecha porque cargan próxima acción. */}
                       {(() => {
-                        const isAgendaCritical = ["Zoom Agendado","Reactivar Zoom","Visita Agendada","Seguimiento","Apartó"].includes(l.st);
+                        const isAgendaCritical = isAppointmentStage(l.st) || ["Zoom Agendado","Reactivar Zoom","Visita Agendada","Seguimiento","Apartó"].includes(l.st);
                         const hasAppt = !!l.nextActionDate;
                         const showMissingCita = isAgendaCritical && !hasAppt;
                         const isEditing = editingApptId === l.id;
@@ -5357,7 +5357,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
         // Cola por agente, derivada del pipeline real
         const reactivarQueue   = visibleLeads.filter(l => (l.daysInactive || 0) >= 5).sort((a, b) => (b.daysInactive || 0) - (a.daysInactive || 0));
         const seguimientoQueue = visibleLeads.filter(l => ["Segundo Intento", "Seguimiento"].includes(l.st) && !l.hot).sort((a, b) => b.sc - a.sc);
-        const callcenterQueue  = visibleLeads.filter(l => l.hot || l.st === "Zoom Agendado").sort((a, b) => (b.hot ? 1 : 0) - (a.hot ? 1 : 0) || b.sc - a.sc);
+        const callcenterQueue  = visibleLeads.filter(l => l.hot || isAppointmentStage(l.st)).sort((a, b) => (b.hot ? 1 : 0) - (a.hot ? 1 : 0) || b.sc - a.sc);
         const calificarQueue   = visibleLeads.filter(l => l.isNew).sort((a, b) => (b.id || 0) - (a.id || 0));
 
         const totalActions = reactivarQueue.length + seguimientoQueue.length + callcenterQueue.length + calificarQueue.length;
@@ -6348,10 +6348,10 @@ const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm
   // Fecha y hora son campos separados; los unimos al formato que ya espera el
   // resto del flujo (igual que un input datetime-local): "YYYY-MM-DDTHH:MM",
   // en hora local del asesor. La "próxima acción" se fija a "Zoom" por defecto.
-  const canConfirm = !!dateVal && !!timeVal;
+  const canConfirm = !!dateVal && !!timeVal && new Date(`${dateVal}T${timeVal}`).getTime() > Date.now();
   const handleConfirm = () => {
     if (!canConfirm) return;
-    onConfirm(`${dateVal}T${timeVal}`, "Zoom");
+    onConfirm(`${dateVal}T${timeVal}`, APPOINTMENT_STAGE || "Cita");
   };
 
   const modalBg = isLight ? "#FFFFFF" : P.surface;
@@ -6398,9 +6398,9 @@ const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm
             <h3 style={{
               margin: 0, fontSize: 16, fontWeight: 500,
               fontFamily: fontDisp, color: T.txt,
-            }}>Programar Zoom Agendado</h3>
+            }}>Programar {APPOINTMENT_STAGE || "cita"}</h3>
             <span style={{ fontSize: 12, color: T.txt3, fontWeight: 500 }}>
-              Cita obligatoria para etapa Zoom Agendado
+              Cita obligatoria para {APPOINTMENT_STAGE || "esta etapa"}
             </span>
           </div>
         </div>
@@ -6408,14 +6408,14 @@ const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm
         {/* Content */}
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
           <p style={{ margin: 0, fontSize: 12.5, color: T.txt2, lineHeight: 1.5 }}>
-            Para {isNewLead ? "registrar a" : "mover a"} <strong style={{ color: T.txt }}>{lead.n || lead.name}</strong> {isNewLead ? "en" : "a"} la etapa de <strong style={{ color: "#3B82F6" }}>Zoom Agendado</strong>, es obligatorio definir la fecha y hora de la sesión.
+            Para {isNewLead ? "registrar a" : "mover a"} <strong style={{ color: T.txt }}>{lead.n || lead.name}</strong> {isNewLead ? "en" : "a"} la etapa de <strong style={{ color: "#3B82F6" }}>{APPOINTMENT_STAGE || "cita"}</strong>, es obligatorio definir la fecha y hora de la sesión.
           </p>
 
           {/* Fecha y Hora — campos separados */}
           <div style={{ display: "flex", gap: 12 }}>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
               <label style={{ fontSize: 12, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: T.txt3 }}>
-                Fecha del Zoom *
+                Fecha de la cita *
               </label>
               <input
                 type="date"
@@ -6432,7 +6432,7 @@ const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm
             </div>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
               <label style={{ fontSize: 12, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: T.txt3 }}>
-                Hora del Zoom *
+                Hora de la cita *
               </label>
               <input
                 type="time"
@@ -6488,7 +6488,7 @@ const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm
             onMouseEnter={e => { if (canConfirm) e.currentTarget.style.opacity = 0.9; }}
             onMouseLeave={e => { if (canConfirm) e.currentTarget.style.opacity = 1; }}
           >
-            Confirmar Zoom
+            Confirmar cita
           </button>
         </div>
       </div>

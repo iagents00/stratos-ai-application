@@ -18,6 +18,7 @@
  *   al cliente que lo declara en su config.
  * ─────────────────────────────────────────────────────────────────────────────
  */
+import { setAppointmentStageForDates } from "../../lib/utils";
 import { resolveClientFromLocation } from "../../clients";
 import { STAGES as DUKE_STAGES } from "../../design-system/tokens";
 import { stgC as DUKE_STGC } from "./crm";
@@ -72,12 +73,16 @@ function resolverPipeline(cfg) {
     colors: custom
       ? Object.fromEntries(custom.map(s => [s.name, s.color]))
       : { ...DUKE_STGC },
+    appointmentStage: Object.prototype.hasOwnProperty.call(cfg?.crm || {}, "appointmentStage")
+      ? (stages.includes(cfg.crm.appointmentStage) ? cfg.crm.appointmentStage : null)
+      : (stages.includes("Zoom Agendado") ? "Zoom Agendado" : stages.includes("Reunión") ? "Reunión" : null),
     defaultStage: stages[0],
     isCustom: !!custom,
   };
 }
 
 const inicial = resolverPipeline(_cfg);
+setAppointmentStageForDates(inicial.appointmentStage);
 
 /** Etapas del pipeline activo, en orden (izq → der en el kanban). */
 export const STAGES = [...inicial.stages];
@@ -97,6 +102,8 @@ export const stgC = { ...inicial.colors };
 
 /** Etapa donde caen los registros nuevos (primera del pipeline). */
 export let DEFAULT_STAGE = inicial.defaultStage;
+export let APPOINTMENT_STAGE = inicial.appointmentStage;
+export const isAppointmentStage = stage => !!APPOINTMENT_STAGE && stage === APPOINTMENT_STAGE;
 
 /** true si el cliente activo usa un pipeline custom (útil para apagar lógica Duke-específica). */
 export let IS_CUSTOM_PIPELINE = inicial.isCustom;
@@ -123,6 +130,8 @@ export function applyPipelineConfig(cfg) {
   Object.assign(stgC, next.colors);
   HAS_PIPELINE_GROUPS = next.hasGroups;
   DEFAULT_STAGE = next.defaultStage;
+  APPOINTMENT_STAGE = next.appointmentStage;
+  setAppointmentStageForDates(next.appointmentStage);
   IS_CUSTOM_PIPELINE = next.isCustom;
   return next;
 }

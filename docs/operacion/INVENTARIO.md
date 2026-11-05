@@ -34,6 +34,7 @@ Generado por scripts/ops/generate-system-index.mjs. No editar a mano. Identifica
 
 | Archivo | Despliegue |
 |---|---|
+| [n8n/workflows/company-copilot-reminders.json](../../n8n/workflows/company-copilot-reminders.json) | Verificar en su proveedor; existencia en Git no acredita publicación |
 | [n8n/workflows/duke-advisor-whatsapp-queue-pump.json](../../n8n/workflows/duke-advisor-whatsapp-queue-pump.json) | Verificar en su proveedor; existencia en Git no acredita publicación |
 | [n8n/workflows/duke-meta-ads-round-robin.json](../../n8n/workflows/duke-meta-ads-round-robin.json) | Verificar en su proveedor; existencia en Git no acredita publicación |
 | [n8n/workflows/duke-meta-lead-ads-trigger.json](../../n8n/workflows/duke-meta-lead-ads-trigger.json) | Verificar en su proveedor; existencia en Git no acredita publicación |

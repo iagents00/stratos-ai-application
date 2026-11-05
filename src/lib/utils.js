@@ -104,6 +104,12 @@ export const genId = () =>
 export const STAGES_CON_CITA = new Set([
   "Zoom Agendado", "Reactivar Zoom", "Visita Agendada", "Zoom Concretado",
 ]);
+let configuredAppointmentStage = null;
+export function setAppointmentStageForDates(stage) {
+  if (configuredAppointmentStage && !["Zoom Agendado","Reactivar Zoom","Visita Agendada","Zoom Concretado"].includes(configuredAppointmentStage)) STAGES_CON_CITA.delete(configuredAppointmentStage);
+  configuredAppointmentStage = stage || null;
+  if (stage) STAGES_CON_CITA.add(stage);
+}
 
 /**
  * parseFechaToTime — Convierte una fecha a timestamp (ms) o null si no parsea.

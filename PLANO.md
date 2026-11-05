@@ -194,8 +194,8 @@ casa; por eso mismo son los que más cuidado piden.
 | `app/views/CRM/zoom-metrics.js` | **9** |
 | `lib/common-entry.js` | **7** |
 | `app/components/Logo.jsx` | **6** |
+| `lib/utils.js` | **5** |
 | `app/views/CRM/command-metrics.js` | **5** |
-| `lib/utils.js` | **4** |
 | `lib/offline-mode.js` | **4** |
 
 ---
