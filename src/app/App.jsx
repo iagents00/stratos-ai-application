@@ -71,6 +71,7 @@ import MetaPanel,
 // AdminPanel y vistas pesadas se cargan bajo demanda con React.lazy
 // para reducir el bundle inicial de ~1.3 MB a ~400 KB.
 const AdminPanel = lazy(() => import("./features/Admin/AdminPanel"));
+const PipelineConfiguratorAdmin = lazy(() => import("./features/Admin/PipelineConfiguratorAdmin"));
 const PlatformAdminConsole = lazy(() => import("./features/Admin/PlatformAdminConsole"));
 const RailsSettings = lazy(() => import("./features/Admin/RailsSettings"));
 
@@ -2866,6 +2867,7 @@ export default function App() {
                   )}
                   {v === "perfil" && (clientConfig.liveHuli ? <HuliWorkspace view="profile" /> : <Profile theme={theme} T={T} />)}
                   {v === "admin"  && canAccessModule("admin", user, clientConfig) && <AdminPanel T={T} isLight={isLight} />}
+                  {v === "pipelines" && canAccessModule("pipelines", user, clientConfig) && <PipelineConfiguratorAdmin key={user.organizationId} T={T} organizationId={user.organizationId} backLabel="CRM" onBack={() => setV("c")} />}
                   {v === "rails"  && canAccessModule("rails", user, clientConfig) && <RailsSettings T={T} isLight={isLight} />}
                 </Suspense>
               </ErrorBoundary>

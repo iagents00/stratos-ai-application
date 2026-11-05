@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v451'; // v451: solicitudes de acceso al WhatsApp +52 984 280 3001.
+const CACHE_VERSION = 'stratos-v452'; // v452: etapas por administrador y Copilot en empresas nuevas.
 // const CACHE_VERSION = 'stratos-v424'; // v424: ficha de Google Play (textos + graficos de tienda)
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;

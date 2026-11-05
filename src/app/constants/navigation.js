@@ -9,7 +9,7 @@ import { Target,
   Users, Hexagon, Activity, Building2, Atom,
   Trophy, Landmark, UserCheck, CreditCard, Shield, User, Trash2, Wallet, MessageCircle, Bot, Sparkles, Megaphone,
   CalendarDays, Layers, Clapperboard, Inbox, MessagesSquare, ClipboardList, NotebookPen, FolderOpen,
-  CalendarRange, ListChecks
+  CalendarRange, ListChecks, Waypoints
 } from "lucide-react";
 
 export const nav = [
@@ -63,6 +63,7 @@ export const nav = [
   { id: "planes",l: "Planes",    i: CreditCard, more: true },
   { id: "perfil",l: "Perfil",    i: User,      more: true },
   { id: "admin", l: "Usuarios",  i: Shield,    more: true, adminOnly: true },
+  { id: "pipelines", l: "Pipelines", i: Waypoints, more: true, adminOnly: true },
   // Ajustes de Stratos Rails. Se llama "Proceso" y no "Rails" porque así lo
   // nombra el equipo en voz alta; el nombre de producto vive adentro.
   { id: "rails", l: "Proceso",   i: ListChecks, more: true, adminOnly: true },
@@ -130,6 +131,7 @@ export const MODULE_ROLES = {
   // cambiar su contraseña (entran con una temporal que les da RRHH).
   perfil: ["super_admin","admin","director","ceo","asesor","marketing","colaborador"],
   admin:  ["super_admin","admin"],
+  pipelines: ["super_admin","admin"],
   mi_espacio: ["super_admin","admin","director","ceo","asesor"],
 };
 
@@ -140,7 +142,7 @@ export const MODULE_NAMES = {
   wa: "WhatsApp", copilot: "Copilot", mkt: "Marketing", chat: "Chat del equipo",
   mkt_dia: "Mi Día", mkt_marcas: "Marcas", mkt_pipe: "Registro de Propiedades", mkt_sol: "Solicitudes",
   mkt_equipo: "Equipo", mkt_reporte: "Actividades", midrive: "Mi Drive", plan: "Plan Semanal",
-  planes: "Planes", perfil: "Perfil", admin: "Usuarios",
+  planes: "Planes", perfil: "Perfil", admin: "Usuarios", pipelines: "Pipelines",
   mi_espacio: "Agenda",
 };
 
@@ -275,6 +277,10 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   // había gate y el admin de Brasa abría «Nuevo cliente» con las etapas de
   // VENTAS de Duke adentro (captura de Ángel, 11-ago).
   if (moduleId === "c" && clientConfig?.features?.crm === false) return false;
+  if (moduleId === "pipelines") {
+    return Boolean(user.organizationId) && !user.isDemo && user.isActive !== false
+      && MODULE_ROLES.pipelines.includes(user.role) && clientConfig?.features?.crm !== false;
+  }
   // La papelera guarda CLIENTES borrados del CRM — sin CRM no tiene contenido.
   if (moduleId === "trash" && clientConfig?.features?.crm === false) return false;
   // Dos entradas con el MISMO nombre confunden (captura de Ángel en Brasa: el

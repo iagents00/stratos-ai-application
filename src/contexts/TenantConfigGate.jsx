@@ -38,6 +38,9 @@ export function TenantConfigGate({ children }) {
           ? data.meta_config.features : {};
         setOrganizationFeatures(organizationId, isManaged ? {
           ...managedTenantFeatures(configuredFeatures),
+          // Copilot acompaña a las cuentas nuevas; una desactivación explícita
+          // de la empresa sigue teniendo prioridad sobre el valor inicial.
+          copilotModule: configuredFeatures.copilotModule !== false,
           landingPages: configuredFeatures.landingPages === true,
           erp: configuredFeatures.erp === true,
           // Integraciones: nunca se prenden por defecto. La consola las activa

@@ -1,5 +1,6 @@
 import { createProvisionedUser } from "../_shared/provision-user.ts";
 import { PLATFORM_CRM_ACTIONS, handlePlatformCRM } from "./platform-crm.ts";
+import { TENANT_PIPELINE_ACTIONS, handleTenantPipeline, sanitizePipeline } from "./tenant-pipeline.ts";
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import * as XLSX from "npm:xlsx@0.18.5";
@@ -232,32 +233,6 @@ const senderPhone = (row: Record<string, unknown>) => normalizePhone(
   row.sender ?? row.phoneNumber ?? row.displayPhoneNumber ?? row.number ?? row.phone,
 );
 
-const sanitizePipeline = (value: unknown) => {
-  if (!Array.isArray(value)) return { error: "El pipeline debe ser una lista de etapas.", pipeline: [] };
-  if (value.length < 2 || value.length > 30) {
-    return { error: "El pipeline debe tener entre 2 y 30 etapas.", pipeline: [] };
-  }
-  const pipeline: Array<{ name: string; color: string }> = [];
-  const seen = new Set<string>();
-  for (const raw of value) {
-    if (!raw || typeof raw !== "object") return { error: "Hay una etapa inválida.", pipeline: [] };
-    const row = raw as Record<string, unknown>;
-    const name = String(row.name ?? "").trim().replace(/\s+/g, " ");
-    const color = String(row.color ?? "").trim().toUpperCase();
-    if (name.length < 2 || name.length > 48) {
-      return { error: "Cada etapa debe tener entre 2 y 48 caracteres.", pipeline: [] };
-    }
-    if (!/^#[0-9A-F]{6}$/.test(color)) {
-      return { error: `El color de “${name}” no es válido.`, pipeline: [] };
-    }
-    const key = name.toLocaleLowerCase("es");
-    if (seen.has(key)) return { error: `La etapa “${name}” está repetida.`, pipeline: [] };
-    seen.add(key);
-    pipeline.push({ name, color });
-  }
-  return { error: null, pipeline };
-};
-
 function tempPassword() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#";
   const bytes = crypto.getRandomValues(new Uint8Array(16));
@@ -283,6 +258,17 @@ Deno.serve(async (req) => {
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { autoRefreshToken: false, persistSession: false } });
   const callerId = authData.user.id;
+  let body: Record<string, unknown> = {};
+  try { body = await req.json(); } catch { return respond({ ok: false, error: "bad_json" }, 400, origin); }
+  const action = String(body.action ?? "bootstrap");
+  if (TENANT_PIPELINE_ACTIONS.has(action)) {
+    try {
+      const result = await handleTenantPipeline(admin, callerId, action, body);
+      return respond(result.body, result.status, origin);
+    } catch {
+      return respond({ ok: false, error: "No se pudo completar la configuración del pipeline." }, 500, origin);
+    }
+  }
   let scopeSchemaReady = true;
   let partnerSchemaReady = true;
   let { data: platformAdmin, error: platformAdminError } = await admin.from("platform_admins")
@@ -377,10 +363,6 @@ Deno.serve(async (req) => {
     }
     return await query;
   };
-
-  let body: Record<string, unknown> = {};
-  try { body = await req.json(); } catch { return respond({ ok: false, error: "bad_json" }, 400, origin); }
-  const action = String(body.action ?? "bootstrap");
 
   try {
     if (PLATFORM_CRM_ACTIONS.has(action)) {

@@ -87,6 +87,10 @@ export const saveCompanyCajaAccess = (organizationId, updatedAt, enabled, permis
 });
 export const loadOrganizationPipeline = (organizationId) => call("get_pipeline", { organization_id: organizationId });
 export const saveOrganizationPipeline = (organizationId, pipeline) => call("save_pipeline", { organization_id: organizationId, pipeline });
+export const loadOwnPipeline = (organizationId) => call("get_own_pipeline", { organization_id: organizationId });
+export const saveOwnPipeline = (organizationId, pipeline, updatedAt) => call("save_own_pipeline", {
+  organization_id: organizationId, pipeline, expected_updated_at: updatedAt,
+});
 export const loadOrganizationCatalog = (organizationId) => call("get_catalog", { organization_id: organizationId });
 export const previewOrganizationCatalog = (organizationId, sourceUrl) => call("preview_catalog", { organization_id: organizationId, source_url: sourceUrl });
 export const importOrganizationCatalog = (organizationId, sourceUrl) => call("import_catalog", { organization_id: organizationId, source_url: sourceUrl });
