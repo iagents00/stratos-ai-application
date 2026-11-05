@@ -1,6 +1,6 @@
 import { createProvisionedUser } from "../_shared/provision-user.ts";
 import { PLATFORM_CRM_ACTIONS, handlePlatformCRM } from "./platform-crm.ts";
-import { TENANT_PIPELINE_ACTIONS, handleTenantPipeline, sanitizePipeline } from "./tenant-pipeline.ts";
+import { TENANT_PIPELINE_ACTIONS, handleTenantPipeline, sanitizePipeline, pipelineCopilotConfig } from "./tenant-pipeline.ts";
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import * as XLSX from "npm:xlsx@0.18.5";
@@ -525,7 +525,7 @@ Deno.serve(async (req) => {
         organization: { id: organization.id, name: organization.name },
         pipeline: Array.isArray(crm.pipeline) ? crm.pipeline : null,
         usage, updated_at: organization.updated_at,
-        copilot: { configured: Object.prototype.hasOwnProperty.call(crm,"appointmentStage"), appointment_stage: crm.appointmentStage ?? null },
+        copilot: pipelineCopilotConfig({crm}),
       }, 200, origin);
     }
 

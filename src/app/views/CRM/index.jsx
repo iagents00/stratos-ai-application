@@ -462,8 +462,8 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // (ej. "Sábado, 20 de junio, 2:30 p.m."). El crudo queda en next_action_date.
     const finalizedLead = {
       ...lead,
-      st: APPOINTMENT_STAGE,
-      nextAction: actionText || APPOINTMENT_STAGE,
+      st: isAppointmentStage(lead.st) ? lead.st : APPOINTMENT_STAGE,
+      nextAction: actionText || lead.st || APPOINTMENT_STAGE,
       nextActionDate: formatFechaLarga(dateTimeString) || formattedDateTime,
       next_action_date: formattedDateTime,
       next_action_at: nextActionAtISO,
@@ -716,7 +716,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // Interceptor para Zoom Agendado obligatorio en Stratos (aplica a todos los asesores)
     const prev = leadsDataRef.current.find(l => l.id === updated.id);
     const isTargetClient = true; // Aplica para todo Stratos
-    const isChangingToZoom = isAppointmentStage(updated.st) && !isAppointmentStage(prev?.st);
+    const isChangingToZoom = isAppointmentStage(updated.st) && updated.st !== prev?.st;
 
     if (isTargetClient && isChangingToZoom && !updated._zoomConfirmed) {
       console.log("[ZoomInterceptor] Cambiando a Zoom Agendado. Bloqueando y abriendo modal...");
@@ -2525,7 +2525,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             <>
               <KPI T={T} label="Clientes en Pipeline" value={boardLeads.length} sub={`${updatedLeadsToday} actualizados hoy`} icon={Users} color={T.accent} />
               <KPI T={T} label="Score Promedio" value={avgScore} sub={`promedio del pipeline`} icon={Target} color={T.accent} />
-              <KPI T={T} label={IS_CUSTOM_PIPELINE ? (APPOINTMENT_STAGE || "Citas agendadas") : "Zooms Agendados"} value={zoomsAgendados} sub={`${zoomsConcretados} concretados`} icon={CalendarDays} color={T.accent} />
+              <KPI T={T} label={IS_CUSTOM_PIPELINE ? "Citas agendadas" : "Zooms Agendados"} value={zoomsAgendados} sub={`${zoomsConcretados} concretados`} icon={CalendarDays} color={T.accent} />
               <KPI T={T} label="Valor Total Pipeline" value={`$${(totalPipeline/1000000).toFixed(1)}M`} sub={`${nearCloseLeads} en cierre`} icon={DollarSign} color={T.accent} />
             </>
           )}
@@ -2560,7 +2560,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
           }
           if (l.hot)                       return { color: T.accent, topBar: tbAccent, label: `CALIENTE · ${l.daysInactive}D`,     sublabel: "Actuar ahora mismo",              pulse: true, glow: true };
           if (l.isNew)                     return { color: T.accent, topBar: tbAccent, label: "NUEVO REGISTRO",                    sublabel: "Primer contacto — no esperes",    pulse: true, glow: true };
-          if (isAppointmentStage(l.st))    return { color: T.accent, topBar: tbAccent, label: (APPOINTMENT_STAGE || "Cita").toUpperCase(),                     sublabel: "Preparar la cita con el cliente", pulse: true, glow: true };
+          if (isAppointmentStage(l.st))    return { color: T.accent, topBar: tbAccent, label: (l.st || "Cita").toUpperCase(),                     sublabel: "Preparar la cita con el cliente", pulse: true, glow: true };
           if (l.st === "Reactivar Zoom")   return { color: T.accent, topBar: tbAccent, label: "REACTIVAR ZOOM",                    sublabel: "No se conectó — reagendar hoy",   pulse: true, glow: true };
           if (l.st === "Seguimiento")      return { color: T.accent, topBar: tbAccent, label: "EN SEGUIMIENTO",                    sublabel: "Negociación / propuesta activa",  pulse: true, glow: true };
           if (l.st === "Apartó")           return { color: T.accent, topBar: tbAccent, label: "APARTÓ ✓",                          sublabel: "Validar comprobante con admin",   pulse: true, glow: true };
@@ -6344,6 +6344,7 @@ const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm
   }, [open]);
 
   if (!open || !lead) return null;
+  const appointmentLabel = isAppointmentStage(lead.st || lead.stage) ? lead.st || lead.stage : APPOINTMENT_STAGE || "Cita";
 
   // Fecha y hora son campos separados; los unimos al formato que ya espera el
   // resto del flujo (igual que un input datetime-local): "YYYY-MM-DDTHH:MM",
@@ -6351,7 +6352,7 @@ const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm
   const canConfirm = !!dateVal && !!timeVal && new Date(`${dateVal}T${timeVal}`).getTime() > Date.now();
   const handleConfirm = () => {
     if (!canConfirm) return;
-    onConfirm(`${dateVal}T${timeVal}`, APPOINTMENT_STAGE || "Cita");
+    onConfirm(`${dateVal}T${timeVal}`, appointmentLabel);
   };
 
   const modalBg = isLight ? "#FFFFFF" : P.surface;
@@ -6398,9 +6399,9 @@ const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm
             <h3 style={{
               margin: 0, fontSize: 16, fontWeight: 500,
               fontFamily: fontDisp, color: T.txt,
-            }}>Programar {APPOINTMENT_STAGE || "cita"}</h3>
+            }}>Programar {appointmentLabel}</h3>
             <span style={{ fontSize: 12, color: T.txt3, fontWeight: 500 }}>
-              Cita obligatoria para {APPOINTMENT_STAGE || "esta etapa"}
+              Cita obligatoria para {appointmentLabel}
             </span>
           </div>
         </div>
@@ -6408,7 +6409,7 @@ const ZoomSchedulingModal = ({ open, lead, isNewLead = false, onClose, onConfirm
         {/* Content */}
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
           <p style={{ margin: 0, fontSize: 12.5, color: T.txt2, lineHeight: 1.5 }}>
-            Para {isNewLead ? "registrar a" : "mover a"} <strong style={{ color: T.txt }}>{lead.n || lead.name}</strong> {isNewLead ? "en" : "a"} la etapa de <strong style={{ color: "#3B82F6" }}>{APPOINTMENT_STAGE || "cita"}</strong>, es obligatorio definir la fecha y hora de la sesión.
+            Para {isNewLead ? "registrar a" : "mover a"} <strong style={{ color: T.txt }}>{lead.n || lead.name}</strong> {isNewLead ? "en" : "a"} la etapa de <strong style={{ color: "#3B82F6" }}>{appointmentLabel}</strong>, es obligatorio definir la fecha y hora de la sesión.
           </p>
 
           {/* Fecha y Hora — campos separados */}
