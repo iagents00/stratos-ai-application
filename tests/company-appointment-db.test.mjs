@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const {PGlite}=await import(process.env.STRATOS_PGLITE_MODULE || '@electric-sql/pglite');
-const files=['tests/sql/company-appointment-fixture.sql','supabase/migrations/279_company_appointment_mapping.sql','supabase/migrations/280_company_appointment_assistant.sql','supabase/migrations/281_company_copilot_delivery.sql'];
+const files=['tests/sql/company-appointment-fixture.sql','supabase/migrations/279_company_appointment_mapping.sql','supabase/migrations/280_company_appointment_assistant.sql','supabase/migrations/281_company_copilot_delivery.sql','supabase/migrations/282_company_appointment_legacy_alias.sql'];
 const own='10000000-0000-4000-a000-000000000001',other='10000000-0000-4000-a000-000000000002',admin='20000000-0000-4000-a000-000000000001',root='20000000-0000-4000-a000-000000000002';
 const pipeline=[{name:'Prospecto',color:'#94A3B8'},{name:'Reunión',color:'#A78BFA'},{name:'Ganado',color:'#34D399'}];
 test('appointment publishing is atomic, company-scoped, keeps advanced settings and provisions defaults',async()=>{
@@ -24,6 +24,10 @@ test('appointment publishing is atomic, company-scoped, keeps advanced settings 
   await db.query('update proactive_config set zoom_reminder_hours=4,quiet_start_hour=22 where organization_id=$1',[own]);
   const renamed=pipeline.map(s=>s.name==='Reunión'?{...s,name:'Evaluación'}:s);
   await save(admin,own,'Evaluación',renamed);
+  await db.query("insert into leads(organization_id,name,stage) values($1,'Historical client','Zoom Agendado')",[own]);
+  await save(admin,own,'Evaluación',renamed);
+  assert.equal((await db.query("select fn_org_stage($1,'Zoom Agendado') stage",[own])).rows[0].stage,'Evaluación');
+  assert.equal((await db.query("select stage from leads where organization_id=$1 and name='Historical client'",[own])).rows[0].stage,'Zoom Agendado');
   cfg=(await db.query('select * from proactive_config where organization_id=$1',[own])).rows[0];assert.equal(cfg.zoom_stage_label,'Evaluación');assert.equal(Number(cfg.zoom_reminder_hours),4);assert.equal(cfg.quiet_start_hour,22);
   await save(root,other,'Reunión');
   await db.exec("select set_config('request.jwt.claim.role','authenticated',false)");
