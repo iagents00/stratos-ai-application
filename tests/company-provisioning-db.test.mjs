@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { PGlite } from '@electric-sql/pglite';
+const { PGlite } = await import(process.env.STRATOS_PGLITE_MODULE || '@electric-sql/pglite');
 
 test('company provisioning, auth assignment and database guards isolate tenants', async () => {
  const db = new PGlite();
@@ -23,6 +23,7 @@ test('company provisioning, auth assignment and database guards isolate tenants'
   await db.exec(readFileSync('supabase/migrations/247_managed_company_limits.sql','utf8'));
   await db.exec(readFileSync('supabase/migrations/266_company_provisioning_isolation.sql','utf8'));
   await db.exec(readFileSync('supabase/migrations/267_auth_provisioning_tickets.sql','utf8'));
+  await db.exec(readFileSync('supabase/migrations/277_new_company_copilot_default.sql','utf8'));
   await db.exec('create trigger on_auth_user_created after insert on auth.users for each row execute function public.handle_new_user()');
   for(const [org,name] of [[parent,'Partner'],[duke,'Duke'],[nsg,'NSG']]) await db.query('insert into organizations(id,name,slug) values($1,$2,$3)',[org,name,name.toLowerCase()]);
   await db.query('insert into platform_admins(user_id,scope_organization_id,company_limit) values($1,null,null),($2,$3,1)',[root,partner,parent]);
@@ -88,5 +89,6 @@ test('company provisioning, auth assignment and database guards isolate tenants'
   await db.exec('reset role');
   const rails=(await db.query("select meta_config #>> '{features,procesoGuiado}' as enabled from organizations where id=$1",[a])).rows[0];
   assert.equal(rails.enabled,'false');
+  for (const org of [a,b]) assert.equal((await db.query("select meta_config #>> '{features,copilotModule}' enabled from organizations where id=$1",[org])).rows[0].enabled,'true', 'root and partner companies persist the same Copilot default');
  } finally { await db.close(); }
 });

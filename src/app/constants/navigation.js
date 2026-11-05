@@ -411,3 +411,9 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   if (!roles) return true;
   return roles.includes(user.role);
 }
+
+// Desktop applications and the mobile menu share the complete permission list.
+export function getAccessibleNavigation(user, clientConfig) {
+  return nav.filter(item => (!item.adminOnly || ["super_admin", "admin"].includes(user?.role))
+    && canAccessModule(item.id, user, clientConfig));
+}

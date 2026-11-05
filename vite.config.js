@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath } from 'node:url'
-import { rmSync, existsSync, statSync, readdirSync } from 'node:fs'
+import { rmSync, existsSync, statSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 /**
@@ -148,6 +148,7 @@ export default defineConfig(({ mode }) => {
   const appReviewAccess = fileURLToPath(new URL('./src/lib/app-review-access.native.js', import.meta.url))
 
   return {
+    define: { 'import.meta.env.STRATOS_BUILD_LABEL': JSON.stringify(readFileSync(new URL('./public/sw.js', import.meta.url), 'utf8').match(/const CACHE_VERSION = 'stratos-(v\d+)'/)?.[1] || 'desarrollo') },
     plugins: [react(), ...(soloApp ? [sacarElSitioWeb(stub, nativeLogin, appReviewAccess)] : [])],
     build: {
       outDir: soloApp ? 'dist-app' : 'dist',
