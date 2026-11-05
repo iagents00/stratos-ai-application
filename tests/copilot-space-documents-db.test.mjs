@@ -30,6 +30,10 @@ test('Space lookup overrides a mistaken catalog tool, delivers saved links and g
   await db.query('insert into profiles values($1,$2,true,-1,now()),($3,$4,true,-2,now())',[advisor,own,stranger,other]);
   await db.query("insert into team_documents(id,organization_id,titulo,tipo,contenido,deleted_at) values($1,$2,'Informe comercial octubre','informe','Private original text',null),($3,$2,'Documento retirado','informe','Do not return',now())",[doc,own,removed]);
   await db.exec(readFileSync('supabase/migrations/285_copilot_space_documents.sql','utf8'));
+  await db.exec(readFileSync('supabase/migrations/286_space_documents_read_intent.sql','utf8'));
+  for (const text of ['necesito que cada uno de los asesores reporte sus cierres el viernes','encargale a QA Asesor Uno revisar los zooms manana y que me pase el reporte']) {
+    assert.equal((await db.query('select _bot_is_space_document_request($1) result',[text])).rows[0].result,false);
+  }
   const ask=async(text,tool='buscar_drive',args={})=>(await db.query('select bot_nlu_dispatch_gvintell($1,$2,$3) result',[-1,tool,{...args,input_text:text}])).rows[0].result;
   const r=await ask('Pásame el documento de WOHA');
   assert.equal(r.found,true);assert.equal(r.documents.length,1);assert.equal(r.documents[0].title,'WOHA');

@@ -1713,7 +1713,7 @@ export default function App() {
   });
   const spaceDocumentOpenedFor = useRef(null);
   useEffect(() => {
-    if (!user?.id || user.isGuest || user.isDemo || !spaceDocumentId || spaceDocumentOpenedFor.current === user.id) return;
+    if (!user?.id || user.isGuest || user.isDemo || user.crmOnly || !spaceDocumentId || spaceDocumentOpenedFor.current === user.id) return;
     if (v === "mi_espacio") { setV("crm"); return; }
     const timer = setTimeout(() => {
       setMetaTab("docs");
@@ -1721,7 +1721,7 @@ export default function App() {
       spaceDocumentOpenedFor.current = user.id;
     }, 0);
     return () => clearTimeout(timer);
-  }, [user?.id, user?.isGuest, user?.isDemo, spaceDocumentId, v]);
+  }, [user?.id, user?.isGuest, user?.isDemo, user?.crmOnly, spaceDocumentId, v]);
   const [metaActions, setMetaActions] = useState([]);
   const metaActionsSeeded = useRef(false);
   // Siembra la Lista de Acción con el MISMO universo que muestra el panel "Acciones del
