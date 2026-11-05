@@ -1,0 +1,141 @@
+{
+  "name": "[Stratos] Copilot · Empresas configurables",
+  "nodes": [
+    {
+      "id": "minute",
+      "name": "Cada minuto",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "tick",
+      "name": "Procesar empresas habilitadas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://glulgyhkrqpykxmujodb.supabase.co/rest/v1/rpc/fn_company_copilot_tick",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
+        "options": {
+          "timeout": 50000
+        }
+      },
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "cLb9fN8NOosFmqpW",
+          "name": "Supabase REST stratos-prod (AIOS)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "prepare",
+      "name": "Preparar entregas Telegram",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const result = $input.first().json;\nreturn (result.reminders || []).map(r => {\n const p=r.payload || {};\n const text=p.text || p.message || (r.tipo==='next_action_3h' || r.tipo==='next_action_10min'\n ? '▸ '+(p.lead_name || 'Cliente')+'\\n· '+(p.next_action || 'Acción programada')+'\\n· '+(p.next_action_at || '')+'\\nRevisa su ficha y prepara tu plan.'\n : '▸ Recordatorio de seguimiento\\nRevisa los clientes pendientes en el CRM.');\n const button=(text,data)=>({text,additionalFields:{callback_data:data}});\n let buttons=[];\n if(r.lead_id) {\n  if(['zoom_brief','next_action_3h'].includes(r.tipo)) buttons.push(button('Enviar mi plan','proact_plan:'+r.lead_id));\n  if(r.tipo==='next_action_10min') buttons.push(button('Listo','proact_next:listo:'+r.lead_id),button('Posponer 30 min','proact_next:posponer30:'+r.lead_id));\n  else if(['zoom_brief','next_action_3h'].includes(r.tipo)) buttons.push(button('Reagendar','proact_reagendar:'+r.lead_id));\n  buttons.push(button('Ver expediente','proact_next:ficha:'+r.lead_id));\n }\n return {json:{...r,text:String(text).slice(0,4000),keyboard:{rows:buttons.map(b=>({row:{buttons:[b]}}))}}};\n});"
+      }
+    },
+    {
+      "id": "telegram",
+      "name": "Entregar recordatorio Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.advisor_telegram_id }}",
+        "text": "={{ $json.text }}",
+        "replyMarkup": "={{ $json.lead_id ? 'inlineKeyboard' : 'none' }}",
+        "inlineKeyboard": "={{ $json.keyboard }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "OTi7c2CC4gqxRapz",
+          "name": "Stratos Asistente CRM"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    }
+  ],
+  "connections": {
+    "Cada minuto": {
+      "main": [
+        [
+          {
+            "node": "Procesar empresas habilitadas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar empresas habilitadas": {
+      "main": [
+        [
+          {
+            "node": "Preparar entregas Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar entregas Telegram": {
+      "main": [
+        [
+          {
+            "node": "Entregar recordatorio Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Cancun",
+    "executionTimeout": 60,
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all"
+  }
+}

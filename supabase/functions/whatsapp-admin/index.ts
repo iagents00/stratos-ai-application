@@ -506,7 +506,7 @@ Deno.serve(async (req) => {
         return respond({ ok: false, error: "No tienes acceso a esa empresa." }, 403, origin);
       }
       const [{ data: organization, error: orgError }, { data: leadStages, error: leadsError }] = await Promise.all([
-        admin.from("organizations").select("id,name,meta_config").eq("id", organizationId).maybeSingle(),
+        admin.from("organizations").select("id,name,meta_config,updated_at").eq("id", organizationId).maybeSingle(),
         admin.from("leads").select("stage").eq("organization_id", organizationId).is("deleted_at", null).limit(5000),
       ]);
       if (orgError || leadsError) throw orgError || leadsError;
@@ -524,7 +524,8 @@ Deno.serve(async (req) => {
         ok: true,
         organization: { id: organization.id, name: organization.name },
         pipeline: Array.isArray(crm.pipeline) ? crm.pipeline : null,
-        usage,
+        usage, updated_at: organization.updated_at,
+        copilot: { configured: Object.prototype.hasOwnProperty.call(crm,"appointmentStage"), appointment_stage: crm.appointmentStage ?? null },
       }, 200, origin);
     }
 
@@ -666,56 +667,16 @@ Deno.serve(async (req) => {
 
     if (action === "save_pipeline") {
       const organizationId = String(body.organization_id ?? "");
-      if (!await organizationIsVisible(organizationId)) {
-        return respond({ ok: false, error: "No tienes acceso a esa empresa." }, 403, origin);
-      }
+      if (!await organizationIsVisible(organizationId)) return respond({ok:false,error:"No tienes acceso a esa empresa."},403,origin);
       const sanitized = sanitizePipeline(body.pipeline);
-      if (sanitized.error) return respond({ ok: false, error: sanitized.error }, 400, origin);
-
-      const [{ data: organization, error: orgError }, { data: leadStages, error: leadsError }] = await Promise.all([
-        admin.from("organizations").select("id,meta_config").eq("id", organizationId).maybeSingle(),
-        admin.from("leads").select("stage").eq("organization_id", organizationId).is("deleted_at", null).limit(5000),
-      ]);
-      if (orgError || leadsError) throw orgError || leadsError;
-      if (!organization) return respond({ ok: false, error: "La empresa no existe." }, 404, origin);
-
-      const currentMeta = organization.meta_config && typeof organization.meta_config === "object"
-        ? organization.meta_config as Record<string, unknown> : {};
-      const currentCrm = currentMeta.crm && typeof currentMeta.crm === "object"
-        ? currentMeta.crm as Record<string, unknown> : {};
-      const currentPipeline = Array.isArray(currentCrm.pipeline)
-        ? currentCrm.pipeline as Array<Record<string, unknown>> : [];
-      const nextPipeline = [...sanitized.pipeline];
-      const nextNames = new Set(nextPipeline.map(stage => stage.name.toLocaleLowerCase("es")));
-      const preserved: Record<string, number> = {};
-      for (const row of leadStages ?? []) {
-        const stage = String(row.stage ?? "").trim();
-        if (stage && !nextNames.has(stage.toLocaleLowerCase("es"))) preserved[stage] = (preserved[stage] ?? 0) + 1;
-      }
-      for (const name of Object.keys(preserved)) {
-        const previous = currentPipeline.find(stage => String(stage.name ?? "").trim().toLocaleLowerCase("es") === name.toLocaleLowerCase("es"));
-        nextPipeline.push({ name, color: /^#[0-9A-F]{6}$/i.test(String(previous?.color ?? "")) ? String(previous?.color).toUpperCase() : "#64748B" });
-      }
-      if (nextPipeline.length > 30) {
-        return respond({ ok: false, error: "El pipeline supera 30 etapas al conservar las columnas que todavía tienen clientes. Mueve esos clientes antes de publicar." }, 409, origin);
-      }
-
-      const nextMeta = {
-        ...currentMeta,
-        crm: {
-          ...currentCrm,
-          pipeline: nextPipeline,
-          pipelineUpdatedAt: new Date().toISOString(),
-          pipelineUpdatedBy: callerId,
-        },
-      };
-      const { data, error } = await admin.from("organizations")
-        .update({ meta_config: nextMeta })
-        .eq("id", organizationId)
-        .select("id,name,meta_config")
-        .single();
-      if (error) throw error;
-      return respond({ ok: true, organization: data, pipeline: nextPipeline, preserved_stages: preserved }, 200, origin);
+      if (sanitized.error) return respond({ok:false,error:sanitized.error},400,origin);
+      const {data,error} = await admin.rpc("fn_company_pipeline_publish",{
+        p_actor_id:callerId,p_organization_id:organizationId,p_expected_updated_at:body.expected_updated_at || null,
+        p_pipeline:sanitized.pipeline,p_copilot:body.copilot ?? null,
+      });
+      if (error) return respond({ok:false,error:error.code === "40001" || error.code === "22023" || error.code === "42501" ? error.message : "No se pudo guardar el pipeline."},
+        error.code === "40001" ? 409 : error.code === "22023" ? 400 : error.code === "42501" ? 403 : 503,origin);
+      return respond(data,200,origin);
     }
 
     if (action === "create_partner") {

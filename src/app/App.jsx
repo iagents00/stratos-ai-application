@@ -1792,11 +1792,11 @@ export default function App() {
   // lo reciben al recargar, igual que cualquier cambio de configuración del tenant.
   useEffect(() => {
     const handlePipelineSaved = (event) => {
-      const { organizationId, pipeline } = event.detail || {};
+      const { organizationId, pipeline, appointmentStage } = event.detail || {};
       if (!organizationId || organizationId !== user?.organizationId || !Array.isArray(pipeline)) return;
       setOrgMetaConfig(prev => ({
         ...(prev || {}),
-        crm: { ...(prev?.crm || {}), pipeline },
+        crm: { ...(prev?.crm || {}), pipeline, ...(appointmentStage !== undefined ? {appointmentStage} : {}) },
       }));
     };
     window.addEventListener("stratos:pipeline-saved", handlePipelineSaved);

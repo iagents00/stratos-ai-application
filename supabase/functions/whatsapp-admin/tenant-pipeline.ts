@@ -63,16 +63,17 @@ export async function handleTenantPipeline(admin: any, callerId: string, action:
   }
   if (action === "get_own_pipeline") {
     return { status: 200, body: { ok: true, organization: { id: organization.id, name: organization.name },
-      pipeline: currentPipeline, usage, updated_at: organization.updated_at } };
+      pipeline: currentPipeline, usage, updated_at: organization.updated_at,
+      copilot: {configured: Object.prototype.hasOwnProperty.call(meta.crm || {},"appointmentStage"), appointment_stage: meta.crm?.appointmentStage ?? null} } };
   }
   if (!body.expected_updated_at || body.expected_updated_at !== organization.updated_at) {
     return reply(409, "La configuración cambió en otra sesión. Recarga el pipeline antes de guardar.");
   }
   const sanitized = sanitizePipeline(body.pipeline);
   if (sanitized.error) return reply(400, sanitized.error);
-  const { data: saved, error: saveError } = await admin.rpc("fn_tenant_pipeline_save", {
+  const { data: saved, error: saveError } = await admin.rpc("fn_company_pipeline_publish", {
     p_actor_id: callerId, p_organization_id: organizationId,
-    p_expected_updated_at: body.expected_updated_at, p_pipeline: sanitized.pipeline,
+    p_expected_updated_at: body.expected_updated_at, p_pipeline: sanitized.pipeline, p_copilot: body.copilot ?? null,
   });
   if (saveError) {
     const status = saveError.code === "42501" ? 403 : saveError.code === "40001" ? 409 : saveError.code === "22023" ? 400 : 503;
