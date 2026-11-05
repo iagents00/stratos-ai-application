@@ -48,6 +48,7 @@ test('renamed appointments send the three-hour briefing, open Copilot plans, ded
   await db.query('insert into proactive_config(organization_id,enabled,shadow_mode,zoom_stage_label) values($1,true,false,$2)',[other,'Reunión']);
   await assert.rejects(db.query("insert into leads(organization_id,name,stage) values($1,'No date','Evaluación')",[own]),{code:'22023'});
   const lead=(await db.query("insert into leads(organization_id,name,stage,asesor_id,asesor_name,next_action_at) values($1,'Client','Evaluación',$2,'Advisor',now()+interval '2 hours 59 minutes') returning id",[own,admin])).rows[0].id;
+  assert.equal((await db.query('select next_action_at=selected_time synced from leads where organization_id=$1 and id=$2',[own,lead])).rows[0].synced,true);
   const tick=async()=>(await db.query('select fn_company_copilot_tick() result')).rows[0].result;
   let result=await tick();assert.deepEqual(result.failures,[]);assert.equal(result.synthetic_logged,1);
   let reminder=(await db.query("select * from proactive_reminders where organization_id=$1 and tipo='zoom_brief'",[own])).rows[0];

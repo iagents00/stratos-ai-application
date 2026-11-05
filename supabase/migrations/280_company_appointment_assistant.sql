@@ -414,6 +414,13 @@ begin
  if lower(coalesce(new.stage,'')) in ('zoom agendado','visita agendada') and not exists(
    select 1 from public.fn_effective_org_stages(new.organization_id) where nombre=new.stage
  ) and v_stage is not null then new.stage:=v_stage; end if;
+ if new.stage=v_stage then
+  if tg_op='INSERT' or old.stage is distinct from new.stage or new.next_action_at is distinct from old.next_action_at then
+   new.next_action_at:=coalesce(new.next_action_at,new.selected_time,new.visita_at);
+   new.selected_time:=new.next_action_at;
+  elsif new.selected_time is distinct from old.selected_time then new.next_action_at:=new.selected_time;
+  end if;
+ end if;
  if new.stage=v_stage and (tg_op='INSERT' or old.stage is distinct from new.stage) then
    new.next_action_at:=coalesce(new.next_action_at,new.selected_time,new.visita_at);
    if new.next_action_at is null or new.next_action_at<=now() then
