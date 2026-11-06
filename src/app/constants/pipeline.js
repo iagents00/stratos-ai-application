@@ -18,6 +18,7 @@
  *   al cliente que lo declara en su config.
  * ─────────────────────────────────────────────────────────────────────────────
  */
+import { businessLinesForPipeline, businessLineForStage } from "../../lib/crm-business-lines.mjs";
 import { setAppointmentStageForDates } from "../../lib/utils";
 import { resolveClientFromLocation } from "../../clients";
 import { STAGES as DUKE_STAGES } from "../../design-system/tokens";
@@ -78,6 +79,7 @@ function resolverPipeline(cfg) {
     colors: custom
       ? Object.fromEntries(custom.map(s => [s.name, s.color]))
       : { ...DUKE_STGC },
+    businessLines: businessLinesForPipeline(cfg?.crm?.businessLines, stages),
     appointmentStages,
     appointmentStage: appointmentStages[0] || null,
     defaultStage: stages[0],
@@ -86,6 +88,8 @@ function resolverPipeline(cfg) {
 }
 
 const inicial = resolverPipeline(_cfg);
+export const BUSINESS_LINES = [...inicial.businessLines];
+export const getBusinessLine = stage => businessLineForStage(stage, BUSINESS_LINES);
 setAppointmentStageForDates(inicial.appointmentStages);
 
 /** Etapas del pipeline activo, en orden (izq → der en el kanban). */
@@ -125,6 +129,7 @@ export let IS_CUSTOM_PIPELINE = inicial.isCustom;
  */
 export function applyPipelineConfig(cfg) {
   const next = resolverPipeline(cfg);
+  BUSINESS_LINES.splice(0, BUSINESS_LINES.length, ...next.businessLines);
   STAGES.splice(0, STAGES.length, ...next.stages);
   PIPELINE_GROUPS.splice(
     0,

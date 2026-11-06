@@ -32,7 +32,7 @@ import { zoomEventsOf } from "./zoom-metrics";
 import { StratosAtom, StratosAtomHex } from "../../components/Logo";
 import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
 // Pipeline + vocabulario activos por cliente (Duke: idéntico; Vega: su pipeline / "proyecto").
-import { STAGES, stgC } from "../../constants/pipeline";
+import { STAGES, stgC, getBusinessLine } from "../../constants/pipeline";
 import { L } from "../../constants/labels";
 import LeadNotesTimeline from "./LeadNotesTimeline";
 import { getEntityHistory, fieldLabel, actionLabel } from "../../../lib/audit";
@@ -118,8 +118,10 @@ const SRC_META = {
   web:       { label: "Web",       color: "#A78BFA" },
   manual:    { label: null,        color: null      },
 };
-const SourceBadge = ({ source, isLight }) => {
-  const meta = SRC_META[source] || null;
+const SourceBadge = ({ source, stage, isLight, showOrigin = false }) => {
+  const business = getBusinessLine(stage);
+  const origin = SRC_META[source] || null;
+  const meta = business ? { label: business.label, color: isLight ? LP.accent : P.accent } : origin;
   if (!meta || !meta.label) return null;
   const c = isLight ? `color-mix(in srgb, ${meta.color} 60%, #0B1220 40%)` : meta.color;
   return (
@@ -129,7 +131,7 @@ const SourceBadge = ({ source, isLight }) => {
       border: `1px solid ${isLight ? `${meta.color}38` : `${meta.color}30`}`,
       padding: "1px 8px", borderRadius: 99,
       fontFamily: "-apple-system, sans-serif", flexShrink: 0,
-    }}>{meta.label}</span>
+    }} title={business ? `Negocio: ${business.label}. Origen registrado: ${origin?.label || source || "Manual"}` : undefined}>{meta.label}{business && showOrigin && <small style={{ marginLeft: 6, fontSize: "inherit", opacity: 0.75 }}>· Origen: {origin?.label || source || "Manual"}</small>}</span>
   );
 };
 
@@ -5438,7 +5440,7 @@ const AnalysisDrawer = ({ lead, onClose, oc, onUpdate, onSwitchTab, T = P }) => 
             )}
             {inactive >= 7 && <span style={{ fontSize: 10.5, fontWeight: 500, color: T.rose, background: `${T.rose}14`, border: `1px solid ${T.rose}33`, padding: "3px 9px", borderRadius: 99 }}>{inactive}d inactivo</span>}
             <span style={{ fontSize: 10.5, fontWeight: 500, color: T.txt3, background: T.glass, border: `1px solid ${T.border}`, padding: "3px 9px", borderRadius: 99 }}>Etapa {stageIdx + 1}/{STAGES.length}</span>
-            <SourceBadge source={lead.source} isLight={isLight} />
+            <SourceBadge source={lead.source} stage={lead.st} showOrigin isLight={isLight} />
             <style>{`@keyframes rhPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.45); } 50% { box-shadow: 0 0 0 5px rgba(239,68,68,0); } }`}</style>
           </div>
         </div>

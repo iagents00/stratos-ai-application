@@ -1,3 +1,4 @@
+import { reconcileSavedLead } from "../../../lib/crm-business-lines.mjs";
 import { useDialogFocus } from "../../../hooks/useDialogFocus";
 /**
  * CRM/index.jsx — Orquestador principal del módulo CRM
@@ -44,7 +45,7 @@ import SuggestActionsModal from "../../components/SuggestActionsModal";
 import { AI_AGENTS, AI_AGENT_LIST } from "../../constants/agents";
 // Pipeline + vocabulario activos resueltos por cliente. Para Duke devuelven
 // exactamente STAGES/stgC/labels históricos; Vega usa su pipeline y "proyecto".
-import { STAGES, stgC, DEFAULT_STAGE, PIPELINE_GROUPS, HAS_PIPELINE_GROUPS, IS_CUSTOM_PIPELINE, APPOINTMENT_STAGE, isAppointmentStage } from "../../constants/pipeline";
+import { BUSINESS_LINES, getBusinessLine, STAGES, stgC, DEFAULT_STAGE, PIPELINE_GROUPS, HAS_PIPELINE_GROUPS, IS_CUSTOM_PIPELINE, APPOINTMENT_STAGE, isAppointmentStage } from "../../constants/pipeline";
 import { L } from "../../constants/labels";
 import {
   calculateLeadScore,
@@ -1006,7 +1007,19 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
     // se encola en localStorage y se sincroniza después sin que se enteren.
     // Para admins: ven mensajes técnicos para diagnóstico.
     const isAdminUser = ["super_admin", "admin", "ceo"].includes(user?.role);
-    supabase.from('leads').update(payload).eq('id', withScore.id).then(({ error }) => {
+    const saveQuery = supabase.from('leads').update(payload).eq('id', withScore.id).eq('organization_id', user.organizationId);
+    // A transferred advisor must not request RETURNING on a row they can no longer read.
+    const saveResult = losesAccess ? saveQuery : saveQuery.select('id,score,score_calc,hot_auto');
+    saveResult.then(({ error, data }) => {
+      if (!error && data?.[0]) {
+        const saved = data[0];
+        const reconcile = current => reconcileSavedLead(current, saved, withScore);
+        leadsDataRef.current = leadsDataRef.current.map(reconcile);
+        setLeadsData(current => current.map(reconcile));
+        setSelectedLead(reconcile);
+        setNotesLead(reconcile);
+        setAnalyzingLead(reconcile);
+      }
       if (error) {
         console.error('Error guardando lead:', error.message);
         if (user?.id) {
@@ -2889,7 +2902,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                                 <ScheduledCallBadge scheduledAt={sc.scheduled_at} variant="card" T={T} isLight={isLight} />
                               ) : null;
                             })()}
-                            <SourceBadge source={l.source} isLight={isLight} />
+                            <SourceBadge source={l.source} stage={l.st} isLight={isLight} />
                           </div>
                           <span style={{ fontSize: 12, fontWeight: 400, color: isLight ? T.txt2 : "rgba(255,255,255,0.55)", fontFamily: fontDisp, letterSpacing: "-0.01em", flexShrink: 0 }}>{l.budget}</span>
                         </div>
@@ -3210,13 +3223,15 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
             boxShadow: isLight
               ? "0 4px 12px rgba(15,23,42,0.08), 0 28px 80px rgba(15,23,42,0.12), 0 48px 120px rgba(15,23,42,0.08)"
               : "0 52px 100px rgba(0,0,0,0.72), 0 0 0 1px rgba(255,255,255,0.04)",
-            animation: "modalIn 0.26s cubic-bezier(0.16,1,0.3,1) both",
+            transform: "translate(-50%, -50%)",
+            animation: "crmNewLeadDesktop 0.26s cubic-bezier(0.16,1,0.3,1) both",
           }}>
             <style>{`
               .stratos-new-lead-dialog input::placeholder,
               .stratos-new-lead-dialog textarea::placeholder { color: ${T.txt2}; opacity: 1; }
               .stratos-new-lead-dialog :focus-visible { outline: 2px solid ${T.accent}; outline-offset: 2px; }
 
+              @keyframes crmNewLeadDesktop{from{opacity:0;transform:translate(-50%,-48%) scale(0.98)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
               @keyframes modalInMobile{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
             `}</style>
 
@@ -3678,6 +3693,15 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                 )}
               </div>
 
+              {BUSINESS_LINES.length > 0 && <div style={{ marginBottom: 12 }}>
+                <label htmlFor="new-lead-business" style={{ display: "block", fontSize: 12, color: T.txt2, marginBottom: 6 }}>Negocio</label>
+                <select id="new-lead-business" value={getBusinessLine(newLead.st)?.id || ""}
+                  onChange={e => { const line = BUSINESS_LINES.find(item => item.id === e.target.value); if (line) setNewLead(previous => ({ ...previous, st: line.entryStage })); }}
+                  style={{ width: "100%", padding: 10, borderRadius: 10, background: T.bg, color: T.txt, border: '1px solid '+T.border, fontFamily: font, fontSize: 13 }}>
+                  <option value="" disabled>Selecciona el negocio</option>
+                  {BUSINESS_LINES.map(line => <option key={line.id} value={line.id}>{line.label}</option>)}
+                </select>
+              </div>}
               {/* Etapa — selector compacto con menú desplegable */}
               <div style={{ gridColumn: "1 / -1", position: "relative" }}>
                 <label style={labelStyle}>
@@ -4513,7 +4537,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                           (l.p || "").split("·")[0].trim() || null,
                           (!co && l.fechaIngreso) ? l.fechaIngreso : null,
                           l.campana || null,
-                          l.source && l.source !== "manual" ? (SRC_META[l.source]?.label || l.source) : null,
+                          getBusinessLine(l.st)?.label || (l.source && l.source !== "manual" ? (SRC_META[l.source]?.label || l.source) : null),
                         ].filter(Boolean).join(" · ")}
                       </div>
 
@@ -5276,6 +5300,7 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
                               </div>
                               <p style={{ fontSize: 12.5, fontWeight: 500, color: isLight ? T.txt : "#FFF", fontFamily: fontDisp, letterSpacing: "-0.02em", flexShrink: 0 }}>{l.budget}</p>
                             </div>
+                            {getBusinessLine(l.st) && <div style={{ marginBottom: 8 }}><SourceBadge source={l.source} stage={l.st} isLight={isLight} /></div>}
                             {/* Barra de score: calificación de LEADS de ventas — fuera en pipelines custom. */}
                             {!IS_CUSTOM_PIPELINE && (
                               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>

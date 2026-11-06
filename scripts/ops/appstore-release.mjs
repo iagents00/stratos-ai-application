@@ -5,7 +5,11 @@ import { pathToFileURL } from 'node:url';
 export const APP_ID = '6804826565';
 const editable = new Set(['PREPARE_FOR_SUBMISSION','REJECTED','METADATA_REJECTED','DEVELOPER_REJECTED']);
 const inReview = new Set(['WAITING_FOR_REVIEW','IN_REVIEW','PENDING_APPLE_RELEASE','PENDING_DEVELOPER_RELEASE','READY_FOR_DISTRIBUTION','READY_FOR_SALE','PROCESSING_FOR_DISTRIBUTION','PROCESSING_FOR_APP_STORE']);
-const notes = (locale, version) => version === '4.9.5'
+const notes = (locale, version) => version === '4.9.6'
+  ? (locale.startsWith('es')
+    ? 'Identifica el negocio de cada contacto y elige su recorrido al registrarlo. Copilot propone la etapa inicial del negocio configurado y pide aclaración si hay más de una opción. Los seguimientos suman puntos en pipelines personalizados. Conserva el login blanco, los documentos de Space y las citas múltiples con recordatorios de 3 horas.'
+    : 'Identify each contact’s business and choose its pipeline when registering. Copilot proposes the configured business entry stage and asks for clarification when needed. Follow-ups add points in custom pipelines. Includes white sign-in, Space documents and multiple appointment stages with three-hour reminders.')
+  : version === '4.9.5'
   ? (locale.startsWith('es')
     ? 'Login con fondo blanco e identidad Stratos AI. Renombra las etapas de tu pipeline y actualiza sus clientes. Selecciona una o varias etapas de citas para Copilot, con recordatorios de 3 horas y reagendas que conservan la etapa elegida. Pide a Copilot los documentos y enlaces guardados en Space. Mejoras de navegación y edición en móvil.'
     : 'White sign-in screen in Stratos AI colors. Rename pipeline stages and update their clients. Choose one or more appointment stages for Copilot, with three-hour reminders and rescheduling that preserves the selected stage. Ask Copilot for documents and links saved in Space. Improved mobile navigation and editing.')
