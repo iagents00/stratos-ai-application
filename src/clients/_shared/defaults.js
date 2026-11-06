@@ -105,6 +105,9 @@ export const DEFAULT_CLIENT_CONFIG = {
     iacrm:         true,
     landingPages:  true,
     finanzas:      true,
+    // Las carpetas generales son propias de la empresa. Duke conserva el visor
+    // histórico por áreas; las instalaciones nuevas habilitan este módulo.
+    miDrive:       false,
     rrhh:          true,
     trash:         true,
     // Comando Directivo: dashboard ejecutivo con indicadores de equipo

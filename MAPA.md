@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**301 archivos · 84.902 líneas**
+**303 archivos · 85.028 líneas**
 
 ---
 
@@ -28,7 +28,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | **Marcas** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 148<br>3084 |
 | **Propiedades** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 148<br>3084 |
 | **Solicitudes** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 148<br>3084 |
-| **Mi Drive** | `src/app/views/MiDrive.jsx` | 171 |
+| **Mi Drive** | `src/app/views/MiDrive.jsx` | 179 |
 | **WhatsApp** | _sin vista propia (redirige a otra)_ | — |
 | **Create** | `src/app/views/LandingPages/index.jsx` | 1562 |
 | **Comando** | `src/app/views/ComandoOps.jsx`<br>`src/app/views/ComandoDirectivo.jsx` | 327<br>962 |
@@ -114,7 +114,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `navigation.js` | 434 | Configuración de navegación y permisos por módulo. |
+| `navigation.js` | 446 | Configuración de navegación y permisos por módulo. |
 | `intelFeatures.js` | 211 | _sin describir_ |
 | `pipeline.js` | 151 | _sin describir_ |
 | `areas.js` | 97 | _sin describir_ |
@@ -213,9 +213,9 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `Team.jsx` | 194 | vista "Asesores" |
 | `CallActionButton.jsx` | 182 | _sin describir_ |
 | `DateRangeControl.jsx` | 179 | Control ÚNICO de período del Comando / CRM. Presets rápidos (Hoy, Semana, Mes, |
+| `MiDrive.jsx` | 179 | _sin describir_ |
 | `RequiresHumanButton.jsx` | 177 | _sin describir_ |
 | `PortfolioDocument.css` | 174 | _sin describir_ |
-| `MiDrive.jsx` | 171 | _sin describir_ |
 | `LeadDiscoveryPanel.jsx` | 158 | Render del perfilamiento extraído por la IA de voz (Retell) en la tabla |
 | `ConectarWhatsApp.jsx` | 156 | Conectar WhatsApp Business en tres clics |
 | `MiDia.jsx` | 155 | _sin describir_ |
@@ -234,6 +234,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `plan-semanal.js` | 91 | la lógica pura del Plan Semanal. |
 | `dates.js` | 76 | Helpers de fecha del Control de Zooms, compartidos entre el panel CRUD |
 | `CreateWorkspace.jsx` | 70 | _sin describir_ |
+| `CompanyDrive.jsx` | 68 | _sin describir_ |
 | `command-report.js` | 63 | _sin describir_ |
 | `portfolio-presentation.js` | 43 | Display helpers shared by the client dossier and its verification. |
 | `MiDia.css` | 30 | _sin describir_ |
@@ -255,7 +256,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `defaults.js` | 296 | Config base que TODOS los clientes heredan. |
+| `defaults.js` | 299 | Config base que TODOS los clientes heredan. |
 | `client-value.js` | 40 | _sin describir_ |
 
 ### `src/clients/brasa-y-piedra/`
@@ -334,8 +335,8 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `config.js` | 95 | Entrada neutral para organizaciones creadas desde la consola de plataforma. |
-| `managed-features.js` | 16 | _sin describir_ |
+| `config.js` | 96 | Entrada neutral para organizaciones creadas desde la consola de plataforma. |
+| `managed-features.js` | 26 | _sin describir_ |
 
 ### `src/clients/tgenius/`
 
@@ -529,6 +530,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `app-review-access.native.js` | 32 | _sin describir_ |
 | `service-errors.js` | 32 | _sin describir_ |
 | `copilot-profile.js` | 29 | A failed profile lookup is not evidence that Copilot is disabled. |
+| `company-drive.js` | 24 | _sin describir_ |
 | `rails-gestion.js` | 24 | Valida el borrador una vez; un envío incierto se reintenta sin alterar su payload. |
 | `auth-events.js` | 22 | _sin describir_ |
 | `account-security.js` | 20 | Bound network waits without treating an uncertain write as success. |
@@ -584,6 +586,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Abrir portafolio | `src/app/views/LandingPages/CreateWorkspace.jsx:59` |
 | Abrir presentación | `src/app/views/LandingPages/index.jsx:1287` |
 | Abrir sección | `src/app/features/Admin/PlatformAdminConsole.jsx:241` |
+| Abrir Space | `src/app/views/CompanyDrive.jsx:50` |
 | Abrirlo en Drive | `src/app/features/MetaPanel/DocsStratos.jsx:205` |
 | Acceso | `src/app/features/Admin/PlatformUsersAdmin.jsx:152` |
 | Acceso de demostración | `src/dental-demo/ClinicalDemoApp.jsx:90` |
@@ -743,6 +746,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cargando perfil dental… | `src/dental-demo/DentalProfile.jsx:11` |
 | Cargando permisos… | `src/app/features/Admin/CajaPermissionsAdmin.jsx:102` |
 | Cargando pipeline… | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:329` |
+| Cargando tus carpetas… | `src/app/views/CompanyDrive.jsx:52` |
 | Cargando Zooms… | `src/app/views/ZoomControl/index.jsx:529` |
 | Cargando… | `src/app/features/Admin/CatalogConfiguratorAdmin.jsx:127` |
 | Cargo / Departamento | `src/app/views/RRHHModule.jsx:609` |
@@ -798,11 +802,9 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Complejidad: | `src/app/views/Marketing.jsx:2197` |
 | Comprobando la agenda de hoy… | `src/app/views/MiDia.jsx:134` |
 | Conectado | `src/app/views/Profile.jsx:727` |
-| Conectando tu clínica con Huli… | `src/dental-demo/TenantHuliWorkspace.jsx:8` |
-| Conectando… | `src/app/views/ConectarWhatsApp.jsx:122` |
 
 
-_(857 textos más — usá `npm run buscar "texto"`)_
+_(860 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -891,12 +893,12 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/components/Chat.jsx` (182 líneas)
 - `src/app/views/CRM/CallActionButton.jsx` (182 líneas)
 - `src/clients/muebleria/config.js` (182 líneas)
+- `src/app/views/MiDrive.jsx` (179 líneas)
 - `src/lib/recordatorios-locales.js` (179 líneas)
 - `src/hooks/useWhatsAppInbox.js` (178 líneas)
 - `src/app/views/CRM/RequiresHumanButton.jsx` (177 líneas)
 - `src/lib/informe-doc.js` (175 líneas)
 - `src/app/views/LandingPages/PortfolioDocument.css` (174 líneas)
-- `src/app/views/MiDrive.jsx` (171 líneas)
 - `src/app/components/EstadoAvisos.jsx` (158 líneas)
 - `src/app/features/Admin/CatalogConfiguratorAdmin.jsx` (158 líneas)
 - `src/app/features/Admin/PlatformUsersAdmin.jsx` (158 líneas)
@@ -952,6 +954,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/contexts/ClientContext.jsx` (70 líneas)
 - `src/lib/supabase.js` (70 líneas)
 - `src/hooks/useChatScroll.js` (69 líneas)
+- `src/app/views/CompanyDrive.jsx` (68 líneas)
 - `src/contexts/TenantConfigGate.jsx` (67 líneas)
 - `src/app/components/MobileHeaderMenu.jsx` (66 líneas)
 - `src/landing/ModuleShowcase.css` (66 líneas)

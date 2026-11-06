@@ -58,7 +58,7 @@ columna, estos son los archivos que hay que revisar.
 | `profiles` | 13 | `app/features/ISpace/useBoard.js` · `app/views/CRM/index.jsx` · `app/views/Caja.jsx` _+10_ |
 | `leads` | 7 | `app/App.jsx` · `app/views/CRM/index.jsx` · `app/views/Caja.jsx` _+4_ |
 | `evidencia` | 6 | `app/views/CRM/LeadDocuments.jsx` · `app/views/Caja.jsx` · `app/views/ChatEquipo.jsx` _+3_ |
-| `organizations` | 5 | `app/App.jsx` · `app/views/LandingPages/index.jsx` · `contexts/TenantConfigGate.jsx` _+2_ |
+| `organizations` | 6 | `app/App.jsx` · `app/views/CompanyDrive.jsx` · `app/views/LandingPages/index.jsx` _+3_ |
 | `team_expenses` | 4 | `app/views/Caja.jsx` · `app/views/Copilot.jsx` · `app/views/FinanzasAdmin.jsx` _+1_ |
 | `mkt_tasks` | 3 | `app/features/ISpace/useBoard.js` · `app/views/Marketing.jsx` · `app/views/PlanSemanal.jsx` |
 | `proactive_reminders` | 3 | `lib/llamadas.js` · `lib/recordatorios-locales.js` · `lib/telegram.js` |
@@ -166,8 +166,8 @@ Servicios de terceros con los que habla el código.
 |---|---|
 | `personal-n8n.suwsiw.easypanel.host` | 15 archivos |
 | `glulgyhkrqpykxmujodb.supabase.co` | 6 archivos |
+| `drive.google.com` | 4 archivos |
 | `cal.com` | 3 archivos |
-| `drive.google.com` | 3 archivos |
 | `docs.google.com` | 2 archivos |
 | `app.getstratosai.com` | 1 archivo |
 | `app.hulipractice.com` | 1 archivo |

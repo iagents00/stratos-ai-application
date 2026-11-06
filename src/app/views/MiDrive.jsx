@@ -28,10 +28,18 @@ import { font, fontDisp } from "../../design-system/tokens";
 import { useAuth } from "../../hooks/useAuth";
 import { useIsMobile } from "../../hooks/useViewport";
 import { AREAS, AREA_ORDER, getArea, driveUrlOf, driveEmbedUrlOf } from "../constants/areas";
+import CompanyDrive from "./CompanyDrive";
 
 const MANDO = ["super_admin", "admin", "director", "ceo"];
 
-export default function MiDrive({ T }) {
+export default function MiDrive(props) {
+  const { user } = useAuth();
+  return user?.organizationId === "00000000-0000-0000-0000-000000000001"
+    ? <AreaDrive {...props} />
+    : <CompanyDrive key={user?.organizationId} {...props} />;
+}
+
+function AreaDrive({ T }) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
 

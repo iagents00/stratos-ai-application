@@ -128,3 +128,11 @@ test('reminder follow-up release describes both modes without claiming task comp
  const whatsNew=m.calls.find(c=>c.body?.data?.attributes?.whatsNew).body.data.attributes.whatsNew;
  assert.match(whatsNew,/tres minutos.*dos avisos adicionales.*sin marcar la actividad como terminada/);
 });
+
+test('standard company modules release selects the exact 4.9.10 build and public notes',async()=>{
+ const m=mock({version:'4.9.10',buildNumber:'154'});
+ const result=await releaseIOS({version:'4.9.10',buildNumber:'154',mode:'submit',request:m.request});
+ assert.equal(result.releaseType,'AFTER_APPROVAL');
+ const writes=m.calls.filter(x=>x.method==='PATCH'&&x.path.includes('appStoreVersionLocalizations'));
+ assert.ok(writes.some(x=>x.body.data.attributes.whatsNew.includes('Mi Drive')));
+});

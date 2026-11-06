@@ -39,6 +39,7 @@ const tenantConfig = {
     erp: false,
     landingPages: false,
     finanzas: false,
+    miDrive: false,
     rrhh: false,
     comandoDirectivo: false,
     caja: false,
@@ -52,7 +53,7 @@ const tenantConfig = {
 
   // El motor compartido de tareas usa palabras neutrales para clientes nuevos.
   // Las pestañas de producción audiovisual de Duke no les corresponden.
-  navLabels: { mkt: "Proyectos" },
+  navLabels: { mkt: "Tareas" },
   mkt: {
     hideTabs: ["pipeline", "solicitudes"],
     tabLabels: { marcas: "Proyectos" },

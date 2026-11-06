@@ -17,10 +17,10 @@ const TEMP_CREDENTIALS_KEY = Deno.env.get("TEMP_CREDENTIALS_KEY") ?? "";
 
 const VALID_ROLES = new Set(["super_admin", "admin", "director", "ceo", "asesor", "marketing", "colaborador"]);
 const VALID_STATUSES = new Set(["draft", "waiting_customer", "meta_finished", "infobip_registering", "ready_to_test", "active", "failed", "disconnected"]);
-// Solo módulos cuyo acceso ya se resuelve para un tenant neutral en navigation.js.
-// WhatsApp, Caja y Copilot requieren alta técnica/controles propios; no se
-// habilitan con un interruptor administrativo genérico.
-const MANAGED_TENANT_FEATURES = ["teamAdmin", "mktModule", "comandoDirectivo"] as const;
+// Módulos con acceso resuelto para el tenant neutral. El alta prepara también
+// los permisos financieros; WhatsApp conserva su proceso independiente.
+const MANAGED_TENANT_FEATURES = ["teamAdmin", "mktModule", "comandoDirectivo", "erp", "finanzas", "miDrive", "landingPages"] as const;
+const CORE_TENANT_FEATURES = ["teamAdmin", "mktModule", "comandoDirectivo"] as const;
 const MAX_CATALOG_FILE_BYTES = 15 * 1024 * 1024;
 const MAX_CATALOG_ROWS = 2500;
 const CATALOG_COLUMNS = [
@@ -812,7 +812,8 @@ Deno.serve(async (req) => {
       }
       const features = inputFeatures as Record<string, unknown>;
       if (Object.keys(features).some(key => !MANAGED_TENANT_FEATURES.includes(key as typeof MANAGED_TENANT_FEATURES[number]))
-          || MANAGED_TENANT_FEATURES.some(key => typeof features[key] !== "boolean")) {
+          || CORE_TENANT_FEATURES.some(key => typeof features[key] !== "boolean")
+          || Object.values(features).some(value => typeof value !== "boolean")) {
         return respond({ ok: false, error: "La selección contiene un módulo no administrable." }, 400, origin);
       }
       const { data: company, error: companyError } = await admin.from("organizations")
@@ -923,7 +924,8 @@ Deno.serve(async (req) => {
       if (name.length > 120) return respond({ ok: false, error: "El nombre de la empresa no puede superar 120 caracteres." }, 400, origin);
       if (name.length < 2) return respond({ ok: false, error: "Escribe el nombre de la empresa." }, 400, origin);
       if (!slug) return respond({ ok: false, error: "El nombre debe incluir al menos una letra o un número." }, 400, origin);
-      const defaultFeatures = { teamAdmin: true, mktModule: false, comandoDirectivo: false };
+      const standardFeatures = { comandoDirectivo: true, erp: true, finanzas: true, miDrive: true, landingPages: true };
+      const defaultFeatures = { teamAdmin: true, mktModule: false, ...standardFeatures };
       let managedFeatures = defaultFeatures;
       if (isRootAdmin && body.features !== undefined) {
         const input = body.features;
@@ -932,10 +934,11 @@ Deno.serve(async (req) => {
         }
         const requested = input as Record<string, unknown>;
         if (Object.keys(requested).some(key => !MANAGED_TENANT_FEATURES.includes(key as typeof MANAGED_TENANT_FEATURES[number]))
-            || MANAGED_TENANT_FEATURES.some(key => typeof requested[key] !== "boolean")) {
+            || CORE_TENANT_FEATURES.some(key => typeof requested[key] !== "boolean")
+            || Object.values(requested).some(value => typeof value !== "boolean")) {
           return respond({ ok: false, error: "La selección contiene un módulo no administrable." }, 400, origin);
         }
-        managedFeatures = requested as typeof defaultFeatures;
+        managedFeatures = { ...defaultFeatures, ...requested, ...standardFeatures } as typeof defaultFeatures;
       }
       let companiesUsed: number | null = null;
       if (scopeOrganizationId) {

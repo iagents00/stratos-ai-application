@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Building2, Check, Copy, Eye, EyeOff, Plus, Search, ShieldCheck, Users } from 'lucide-react';
 import { createWhatsAppOrganization, createWhatsAppTenantUser } from '../../../lib/whatsapp-admin';
-import { MANAGED_TENANT_FEATURES, managedTenantFeatures } from '../../../clients/tenant/managed-features';
+import { MANAGED_TENANT_FEATURES, newCompanyFeatures } from '../../../clients/tenant/managed-features';
 import { getClientConfigByOrgId } from '../../../clients';
 import { companyReadiness, companySummary, ROOT_COMPANY_ROLES, visibleCompanies, validateCompany, validateCompanyUser } from './company-onboarding';
 
-const initialCompany = () => ({ name: '', seats: 5, features: managedTenantFeatures() });
+const initialCompany = () => ({ name: '', seats: 5, features: newCompanyFeatures() });
 const initialUser = organizationId => ({ organization_id: organizationId, name: '', email: '', role: 'admin' });
 const roleName = { admin: 'Administrador', super_admin: 'Superadministrador de empresa', director: 'Director', asesor: 'Asesor', ceo: 'Dirección general', marketing: 'Marketing', colaborador: 'Colaborador' };
 const companyLabel = company => {
@@ -124,7 +124,7 @@ export default function CompanyOnboarding({ data, refresh, onIntegrations, onUse
         <fieldset disabled={busy || !quotaAvailable}><legend>Datos de la empresa</legend>
           <label htmlFor="company-name">Nombre de la empresa</label><input id="company-name" autoFocus required minLength={2} maxLength={120} autoComplete="organization" placeholder="Ej. Inmobiliaria Horizonte" value={companyForm.name} onChange={event => setCompanyForm(form => ({ ...form, name: event.target.value }))} />
           <label htmlFor="company-seats">Licencias de usuarios</label><input id="company-seats" type="number" required min="1" max="1000" step="1" aria-describedby="company-seats-help" value={companyForm.seats} onChange={event => setCompanyForm(form => ({ ...form, seats: event.target.value }))} /><p id="company-seats-help" className="company-help">Incluye al administrador. Puedes ampliar el cupo más adelante.</p>
-          {root && <fieldset className="company-modules"><legend>Módulos iniciales</legend><p className="company-help">CRM incluido en todas las empresas.</p>{MANAGED_TENANT_FEATURES.map(item => <label className="company-check" key={item.key}><input type="checkbox" checked={companyForm.features[item.key]} onChange={event => setCompanyForm(form => ({ ...form, features: { ...form.features, [item.key]: event.target.checked } }))} /><span>{item.label}</span></label>)}</fieldset>}
+          {root && <fieldset className="company-modules"><legend>Módulos iniciales</legend><p className="company-help">CRM, Copilot y los cinco módulos estándar incluidos desde el inicio.</p>{MANAGED_TENANT_FEATURES.map(item => <label className="company-check" key={item.key}><input type="checkbox" disabled={item.requiredOnCreate} checked={companyForm.features[item.key]} onChange={event => setCompanyForm(form => ({ ...form, features: { ...form.features, [item.key]: event.target.checked } }))} /><span>{item.label}</span></label>)}</fieldset>}
           <button className="company-primary" type="submit">{busy ? 'Creando empresa…' : 'Crear empresa y continuar'}<ArrowRight size={17} /></button>
         </fieldset>
       </form>

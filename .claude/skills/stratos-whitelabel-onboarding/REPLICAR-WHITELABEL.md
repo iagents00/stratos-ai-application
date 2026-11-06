@@ -17,6 +17,17 @@ Hay **3 capas** y solo UNA se toca de verdad por marca:
 > Regla base: **datos y bot = por tenant; código y cerebro = compartidos.** Si te descubrís copiando lógica de negocio a un
 > flujo, parала: casi siempre va en el cerebro (SQL), no en n8n (n8n solo transporta).
 
+## Piso de módulos en nuevas instalaciones (6-nov-2026)
+
+Toda empresa nueva debe incluir **Comando, Proyectos, Finanzas, Mi Drive y Create**, además de CRM, Copilot, Space y las funciones ya incluidas. Es una regla general solicitada por Ángel; aplica al alta raíz y al alta de partners.
+
+- El alta de consola usa `whatsapp-admin/create_company` → `fn_provision_company` (migración 292). Fuerza `comandoDirectivo/erp/finanzas/miDrive/landingPages=true`, incluso con un formulario antiguo. Rails y WhatsApp siguen apagados; conectar WhatsApp es un paso independiente.
+- Para instalaciones con configuración propia, reflejar esos cinco flags y verificar sus permisos. **Proyectos es el catálogo ERP (`e`); el gestor opcional de tareas (`mkt`) es distinto.** En la entrada neutral se llama Tareas.
+- Finanzas utiliza Caja y datos de la propia organización. El alta prepara el entitlement y `read_all/create/update_all` para admin, super_admin, director y ceo; no concede borrado ni acceso financiero a asesores. Se conservan denegaciones explícitas. No confundir visibilidad con permiso de datos.
+- Mi Drive de una empresa nueva muestra sus carpetas de Google Drive guardadas en **Space → Documentos** (`organizations.meta_config.documents`). Una empresa vacía comienza sin carpetas. No heredar URLs de las áreas internas de Duke ni inventar archivos; los permisos de Google siguen aplicando.
+- Verificar con una cuenta real de la empresa: los cinco módulos abren en PC y en el menú de iPhone/Android, catálogo y finanzas quedan limitados a su organización y las carpetas coinciden con Space. Verificar también un asesor sin permisos financieros.
+- Las empresas anteriores no se modifican masivamente. La reparación de Gerardo se limita a su UUID `410570d9-2ce4-46eb-b77b-4a732861e238`, conservando su pipeline, citas, documentos y datos.
+
 ## 1. Alta del tenant (Supabase) — CREAR, nunca DROP
 
 1. Insertá la **org** en `organizations` → obtenés su `organization_id` (UUID).
