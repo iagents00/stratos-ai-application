@@ -1,5 +1,9 @@
 # Historial de versiones del Service Worker (CACHE_VERSION)
 
+## v463 — Seguimiento con límite por empresa
+
+La preferencia de Copilot muestra la secuencia configurada por la empresa. Para Gerardo, después del aviso inicial hay seguimientos a los 3, 30 y 60 minutos; después se detienen. Responder antes detiene los restantes. La actividad permanece en la agenda y los ciclos agotados no se reinician al activar la insistencia.
+
 ## v458 — Varias etapas de cita
 
 El administrador puede elegir una o varias etapas de citas. El formulario, las fechas, los avisos, las reagendas y los cambios de nombre siguen la etapa elegida. Las aplicaciones anteriores conservan la selección múltiple al guardar sin cambiarla. iPhone y Android 4.9.5 incluyen también el login blanco y los documentos de Space.

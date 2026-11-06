@@ -57,6 +57,93 @@ test('Copilot follow-ups use durable three-minute cycles, explicit acknowledgeme
     const migration = readFileSync('supabase/migrations/291_copilot_reminder_followups.sql', 'utf8');
     await db.exec(migration);
     await db.exec(migration);
+    const boundedMigration = readFileSync('supabase/migrations/300_copilot_bounded_followups.sql', 'utf8');
+    await db.exec(boundedMigration);
+    await db.exec(boundedMigration);
+
+    const bounded = async () => {
+      await reset();
+      await db.query("update organizations set meta_config=$1 where id=$2", [{ crm: { copilotFollowupScheduleMinutes: [3,30,60] } }, org]);
+    };
+
+    await t.test('bounded policy sends at 3, 30 and 60 minutes from original delivery, then stops permanently', async () => {
+      await bounded();
+      const settings=(await one('select copilot_reminder_settings() result')).result;
+      assert.deepEqual(settings.followup_minutes,[3,30,60]);
+      assert.equal(settings.max_followups,3);
+      const f=await remind();
+      for(const [minute,sent] of [[2.99,0],[3,1],[6,0],[29.99,0],[30,1],[33,0],[59.99,0],[60,1],[63,0],[120,0],[1440,0]]) {
+        assert.equal((await tick(minute)).sent,sent,`minute ${minute}`);
+        assert.equal((await tick(minute)).sent,0,'same tick is idempotent');
+      }
+      assert.equal((await state(f.id)).repeat_count,3);
+      assert.equal((await state(f.id)).next_followup_at,null);
+      assert.equal((await one("select count(*)::int n from tg_bot_activity where content like '%último aviso%'")).n,1);
+      assert.equal((await one('select count(*)::int n from push_test')).n,4);
+      await db.query('select copilot_reminder_settings(false)');
+      await db.query('select copilot_reminder_settings(true)');
+      assert.equal((await state(f.id)).next_followup_at,null);
+      assert.equal((await tick(1443)).sent,0);
+    });
+
+    await t.test('bounded warning delivery and preference changes never move the original schedule', async () => {
+      await bounded();
+      await db.query('insert into team_actions(id,organization_id,text,due_at,asesor_id) values($1,$2,$3,$4,$5)',[task,org,'Revisar propuesta',at(120),user]);
+      const f=await remind({kind:'team_action',payload:{action_id:task,fase:'10'}});
+      await tick(3);
+      const again=await remind({kind:'team_action',payload:{action_id:task,fase:'0'}});
+      assert.equal(again.id,f.id);
+      assert.equal(new Date((await state(f.id)).next_followup_at).getTime(),new Date(at(30)).getTime());
+      await db.query('select copilot_reminder_settings(false)');
+      await db.query('select copilot_reminder_settings(true)');
+      assert.equal(new Date((await state(f.id)).next_followup_at).getTime(),new Date(at(30)).getTime());
+      await tick(30); await tick(60);
+      await remind({kind:'team_action',payload:{action_id:task,fase:'0'}});
+      assert.equal((await state(f.id)).next_followup_at,null);
+      assert.equal((await tick(90)).sent,0);
+      assert.equal((await one('select done from team_actions where id=$1',[task])).done,false);
+    });
+
+    await t.test('bounded policy stops when acknowledged and the reduced preference has two scheduled notices', async () => {
+      await bounded();
+      const f=await remind();
+      await tick(3);
+      assert.equal((await one("select copilot_reminder_reply('sí') result")).result.handled,true);
+      assert.equal((await tick(30)).sent,0);
+      assert.equal((await state(f.id)).status,'answered');
+      await bounded();
+      const reply=(await one("select copilot_reminder_reply('Desactiva la insistencia') result")).result;
+      assert.match(reply.reply,/3 y a los 30 minutos/);
+      const reduced=await remind();
+      for(const [minute,sent] of [[3,1],[6,0],[30,1],[60,0]]) assert.equal((await tick(minute)).sent,sent);
+      assert.equal((await state(reduced.id)).next_followup_at,null);
+    });
+
+    await t.test('delayed workers skip missed slots and expired cycles rather than catching up indefinitely', async () => {
+      await bounded();
+      const f=await remind();
+      assert.equal((await tick(45)).sent,1);
+      assert.equal((await tick(45)).sent,0);
+      assert.equal(new Date((await state(f.id)).next_followup_at).getTime(),new Date(at(60)).getTime());
+      assert.equal((await tick(60.4)).sent,1);
+      assert.equal((await tick(64)).sent,0);
+      assert.equal((await state(f.id)).next_followup_at,null);
+      await bounded();
+      const expired=await remind();
+      assert.equal((await tick(90)).sent,0);
+      assert.equal((await state(expired.id)).next_followup_at,null);
+    });
+
+    await t.test('the bounded policy is organization-scoped and cannot be read by anonymous users', async () => {
+      await bounded();
+      await remind();
+      await remind({owner:other,organization:otherOrg});
+      assert.equal((await tick(3)).sent,2);
+      assert.equal((await tick(6)).sent,1); // Other company retains its existing policy.
+      await db.exec('set role anon');
+      await assert.rejects(db.query('select fn_copilot_followup_bounded($1)',[org]),{code:'42501'});
+      await db.exec('reset role');
+    });
 
     await t.test('intense mode repeats at three minutes, continues beyond two, and emits one push per message', async () => {
       await reset();

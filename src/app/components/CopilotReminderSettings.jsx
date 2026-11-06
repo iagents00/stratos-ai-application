@@ -6,6 +6,7 @@ export default function CopilotReminderSettings({ T, compact = false }) {
   const { user } = useAuth();
   const [preference, setPreference] = useState({ owner: null, enabled: null });
   const enabled = preference.owner === user?.id ? preference.enabled : null;
+  const bounded = preference.owner === user?.id && Array.isArray(preference.followupMinutes);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [reload, setReload] = useState(0);
@@ -26,7 +27,7 @@ export default function CopilotReminderSettings({ T, compact = false }) {
         setError('No pudimos consultar tu preferencia.');
         return;
       }
-      setPreference({ owner: user.id, enabled: data.enabled });
+      setPreference({ owner: user.id, enabled: data.enabled, followupMinutes: data.followup_minutes });
       setError('');
     }).catch(() => { if (current) setError('No pudimos consultar tu preferencia.'); });
     return () => { current = false; };
@@ -39,7 +40,7 @@ export default function CopilotReminderSettings({ T, compact = false }) {
     try {
       const { data, error: rpcError } = await supabase.rpc('copilot_reminder_settings', { p_enabled: !enabled });
       if (rpcError || typeof data?.enabled !== 'boolean') throw new Error('unconfirmed');
-      setPreference({ owner: user.id, enabled: data.enabled });
+      setPreference({ owner: user.id, enabled: data.enabled, followupMinutes: data.followup_minutes });
     } catch {
       setPreference({ owner: user.id, enabled: null });
       setError('No pudimos confirmar el cambio. Consulta de nuevo tu preferencia.');
@@ -51,7 +52,7 @@ export default function CopilotReminderSettings({ T, compact = false }) {
       <div>
         <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>Insistencia de Copilot</h2>
         <p aria-live="polite" style={{ margin: '5px 0 0', fontSize: 12, color: T.txt2 }}>
-          {!available ? 'Disponible al iniciar sesión en tu cuenta.' : enabled === null ? (error ? 'Preferencia por confirmar' : 'Consultando preferencia…') : enabled ? 'Activa · cada 3 minutos hasta responder' : 'Reducida · 2 avisos adicionales'}
+          {!available ? 'Disponible al iniciar sesión en tu cuenta.' : enabled === null ? (error ? 'Preferencia por confirmar' : 'Consultando preferencia…') : enabled ? (bounded ? 'Activa · 3, 30 y 60 minutos; después se detiene' : 'Activa · cada 3 minutos hasta responder') : 'Reducida · 2 avisos adicionales'}
         </p>
       </div>
       <button type="button" role="switch" aria-label="Insistencia de Copilot" aria-checked={enabled === true} aria-busy={busy}
@@ -61,7 +62,7 @@ export default function CopilotReminderSettings({ T, compact = false }) {
       </button>
     </div>
     <p style={{ margin: '10px 0 0', color: T.txt3, fontSize: 12, lineHeight: 1.5 }}>
-      Para tareas, Zooms, citas y recordatorios. Al desactivarla, recibirás como máximo dos avisos adicionales, cada tres minutos. Responder detiene el seguimiento. Se respeta tu horario de avisos.
+      {bounded ? 'Después del aviso inicial, recibirás hasta tres avisos: a los 3 minutos, a los 30 minutos y a la hora. Después no habrá más. Al reducirla, solo a los 3 y a los 30 minutos. Responder antes detiene el seguimiento.' : 'Para tareas, Zooms, citas y recordatorios. Al desactivarla, recibirás como máximo dos avisos adicionales, cada tres minutos. Responder detiene el seguimiento. Se respeta tu horario de avisos.'}
     </p>
     {error && <div role="alert" style={{ marginTop: 10, color: T.txt2, fontSize: 12 }}>
       {error}{' '}<button type="button" disabled={busy} onClick={() => setReload(n => n + 1)} style={{ color: T.accent, border: 0, padding: 3, background: 'transparent', font: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}>Volver a consultar</button>
