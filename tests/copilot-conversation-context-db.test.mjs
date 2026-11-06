@@ -41,7 +41,7 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
   // The pending writer and note writer are existing production contracts, not mocked writes.
   await db.exec(`create function _bsc_upsert_pending(bigint,uuid,uuid,text,jsonb) returns text language plpgsql as $$declare t text:=coalesce($4,gen_random_uuid()::text);begin insert into bot_pending_actions(token,telegram_chat_id,asesor_id,organization_id,action_type,payload,expires_at) values(t,$1,$2,$3,'create_lead',$5,now()+interval '1 hour') on conflict(token) do update set payload=excluded.payload;return t;end$$;
    create function bot_add_expediente_note(bigint,text,text,text,text) returns jsonb language plpgsql as $$declare p record;begin select * into p from profiles where telegram_chat_id=$1;insert into expediente_items(organization_id,lead_id,asesor_id,titulo,descripcion) values(p.organization_id,$2::uuid,p.id,$3,$4);return '{"success":true}'::jsonb;end$$;`);
-  await db.exec(`alter table team_actions add column id uuid default gen_random_uuid(),add column asesor_id uuid,add column category text,add column priority text,add column completed_at timestamptz,add column nota text,add column status text;
+  await db.exec(`alter table team_actions add column id uuid default gen_random_uuid(),add column asesor_id uuid,add column category text,add column priority text,add column completed_at timestamptz,add column nota text,add column status text,add column last_response_at timestamptz,add column evidence_at timestamptz;
    create function _bot_agenda_extract_text(jsonb) returns text language sql as $$select $1->>'input_text'$$;
    create function _bot_agenda_parse_due_at(text,jsonb,text) returns jsonb language sql as $$select jsonb_build_object('ok',true,'due_at',($2->>'due_at')::timestamptz)$$;
    create function _bot_agenda_extract_title(text) returns text language sql as $$select $1$$;
@@ -50,7 +50,7 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
    create function _bot_agenda_reply_date(timestamptz,text) returns text language sql as $$select $1::text$$;`);
   const agendaSource=readFileSync('supabase/migrations/099_copilot_agenda_title_logging_dedupe.sql','utf8');
   await db.exec(agendaSource.slice(agendaSource.indexOf('create or replace function public.bot_agenda_personal_create('),agendaSource.indexOf('create or replace function public.copilot_agenda_create_from_text(')));
-  for(const f of ['293_copilot_conversation_helpers.sql','294_copilot_conversation_context.sql','295_copilot_pending_context_priority.sql','296_copilot_explicit_notes_precede_pending_tasks.sql','297_copilot_contact_operation_supersedes_old_draft.sql','298_copilot_original_dictation_and_visible_reminders.sql']) await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
+  for(const f of ['293_copilot_conversation_helpers.sql','294_copilot_conversation_context.sql','295_copilot_pending_context_priority.sql','296_copilot_explicit_notes_precede_pending_tasks.sql','297_copilot_contact_operation_supersedes_old_draft.sql','298_copilot_original_dictation_and_visible_reminders.sql','299_copilot_personal_reminder_delivery_at_due.sql']) await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
   const stages=['RS Primer contacto','RS Contactado','RS Reunión','RS Cliente Ganado','M Primer Contacto','M Contactado','M Reunión','M Cliente Ganado'];
   const businessLines=[{id:'realestate',label:'Bienes raíces',entryStage:stages[0],stages:stages.slice(0,4),aliases:['bienes raíces']},{id:'medicine',label:'Medicina',entryStage:stages[4],stages:stages.slice(4),aliases:['medicina']}];
   await db.query("insert into organizations(id,name,slug,meta_config) values($1,'Own','own',$2),($3,'Other','other','{}')",[org,{crm:{businessLines,pipeline:stages.map(name=>({name}))}},other]);
@@ -96,6 +96,16 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
   const reminder=(await db.query('select *,extract(epoch from(due_at-created_at))/3600 hours from team_actions where id=$1',[r.action_id])).rows[0];
   assert.equal(reminder.asesor_id,actor);assert.equal(reminder.organization_id,org);assert.equal(Number(reminder.hours),2);assert.equal(reminder.text,'Consultar a la propietaria');
   assert.equal((await db.query('select count(*)::int n from team_actions')).rows[0].n,1);
+  assert.match(reminder.nota,/copilot_personal_reminder/);
+  const queue=(await db.query("select * from proactive_reminders where organization_id=$1 and payload->>'action_id'=$2",[org,r.action_id])).rows;
+  assert.equal(queue.length,1);assert.equal(queue[0].tipo,'personal');assert.equal(queue[0].asesor_id,actor);assert.equal(queue[0].scheduled_at.getTime(),reminder.due_at.getTime());
+  r=await call('create_personal_reminder',{text:'Consultar a la propietaria',when:'en dos horas'});assert.equal(r.deduped,true);
+  assert.equal((await db.query('select count(*)::int n from team_actions')).rows[0].n,1);assert.equal((await db.query('select count(*)::int n from proactive_reminders')).rows[0].n,1);
+  await db.query("insert into proactive_config(organization_id,enabled,shadow_mode,timezone,team_reminder_offsets) values($1,true,false,'America/Cancun',array[0])",[org]);
+  await db.query("update team_actions set due_at=now()+interval '1 minute' where id=$1",[r.action_id]);
+  await db.query("insert into team_actions(organization_id,text,asesor_id,asesor_name,due_at,done) values($1,'Normal team work',$2,'Operator',now()+interval '1 minute',false)",[org,actor]);
+  const scan=(await db.query('select fn_proactive_scan_team_actions(jsonb_build_object(\'organization_id\',$1::text)) result',[org])).rows[0].result;
+  assert.equal(scan.enqueued,1);assert.equal((await db.query("select count(*)::int n from proactive_reminders where tipo='team_action'")).rows[0].n,1);
   // Missing names produce a question without a fake confirmation button.
   r=await call('upsert_lead',{phone:'5512345678'});assert.doesNotMatch(r.reply.text,/Confirmas/);
  } finally { await db.close(); }
