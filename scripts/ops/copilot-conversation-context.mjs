@@ -27,6 +27,19 @@ export function patchConversationNodes(nodes, { surface = 'copilot' } = {}) {
   const result = structuredClone(nodes);
   const classifier = result.find(n => n.name === 'AI Agent');
   if (!classifier) throw new Error('Missing CRM classifier');
+  const pick = result.find(n => n.name === 'Parse Pick');
+  if (!pick) throw new Error('Missing CRM operation parser');
+  if (!pick.parameters.jsCode.includes('ORIGINAL_DICTATION_SOURCE_20261106')) {
+    const anchor = 'return [{ json: { tool_name, args } }];';
+    if (!pick.parameters.jsCode.includes(anchor)) throw new Error('CRM operation parser changed');
+    pick.parameters.jsCode = pick.parameters.jsCode.replace(anchor, `// ORIGINAL_DICTATION_SOURCE_20261106
+const sourceTools = new Set(['upsert_lead','create_lead','update_client','add_expediente_note','add_expediente_voice']);
+if (sourceTools.has(tool_name)) args._dictation_source = inputText;
+if (Array.isArray(args.actions)) for (const action of args.actions) {
+  if (action && sourceTools.has(action.tool_name)) action.args = { ...(action.args || {}), _dictation_source: inputText };
+}
+${anchor}`);
+  }
   if (!classifier.parameters.options.systemMessage.includes(conversationMarker)) {
     classifier.parameters.options.systemMessage = classifier.parameters.options.systemMessage
       .replace('del CRM Stratos (Duke)', 'del CRM de la empresa del contexto')
