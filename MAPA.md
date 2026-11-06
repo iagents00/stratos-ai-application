@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**303 archivos · 85.031 líneas**
+**303 archivos · 85.032 líneas**
 
 ---
 
@@ -102,7 +102,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `CopilotMark.jsx` | 115 | _sin describir_ |
 | `IAOSIsland.jsx` | 90 | Indicador IAOS en el header — muestra métricas animadas del pipeline. |
 | `Logo.jsx` | 87 | Logos SVG de Stratos AI. |
-| `CopilotReminderSettings.jsx` | 71 | _sin describir_ |
+| `CopilotReminderSettings.jsx` | 72 | _sin describir_ |
 | `MobileHeaderMenu.jsx` | 66 | _sin describir_ |
 | `PermissionGate.jsx` | 52 | Pantalla de acceso restringido por rol. |
 | `LoginEmailPanel.jsx` | 51 | _sin describir_ |
@@ -946,9 +946,9 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/avisos-nativos.js` (79 líneas)
 - `src/lib/transcribir.js` (77 líneas)
 - `src/hooks/useTeam.js` (74 líneas)
+- `src/app/components/CopilotReminderSettings.jsx` (72 líneas)
 - `src/guest/backend.js` (72 líneas)
 - `src/lib/ringer.js` (72 líneas)
-- `src/app/components/CopilotReminderSettings.jsx` (71 líneas)
 - `src/lib/agenda.js` (71 líneas)
 - `src/app/views/LandingPages/CreateWorkspace.jsx` (70 líneas)
 - `src/contexts/ClientContext.jsx` (70 líneas)
