@@ -21,6 +21,7 @@ import { Send, Check, X, ExternalLink, MessageCircle, RefreshCw, User, Bot, Lock
 import { P, LP, font, fontDisp } from "../../design-system/tokens";
 import { G, Pill } from "../SharedComponents";
 import EstadoAvisos from "../components/EstadoAvisos";
+import CopilotReminderSettings from "../components/CopilotReminderSettings";
 import { useAuth } from "../../hooks/useAuth";
 import { useClient } from "../../hooks/useClient";
 import { supabase } from "../../lib/supabase";
@@ -93,6 +94,7 @@ export default function Profile({ theme = "dark", T: Tprop }) {
       {/* Va PRIMERO a proposito: si los avisos no llegan, es lo que la persona
           vino a buscar. Dentro del navegador no se muestra. */}
       <EstadoAvisos T={T} isLight={isLight} userId={user?.id} />
+      <CopilotReminderSettings T={T} />
       <LoginEmailPanel T={T} user={user} />
       <PasswordPanel T={T} isLight={isLight} user={user} />
       <RecoveryEmailPanel T={T} isLight={isLight} user={user} />
