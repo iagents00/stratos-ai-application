@@ -7,6 +7,41 @@ ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS documents jsonb NOT NULL DEFAU
 COMMENT ON COLUMN public.leads.documents IS
   'Named identity documents and property offer letters. Paths are private evidencia objects; legacy identification is preserved on first edit.';
 
+-- An older open tab/native client still edits the original ID fields. Mirror
+-- those edits into the first identity only, preserving all other documents.
+CREATE OR REPLACE FUNCTION public.lead_documents_legacy_bu()
+RETURNS trigger LANGUAGE plpgsql SET search_path=public,pg_temp AS $$
+DECLARE v_first jsonb; v_number text; v_path text;
+BEGIN
+  IF NEW.documents IS DISTINCT FROM OLD.documents OR
+     (NEW.id_document IS NOT DISTINCT FROM OLD.id_document AND NEW.id_document_path IS NOT DISTINCT FROM OLD.id_document_path)
+     OR jsonb_array_length(NEW.documents)=0 THEN RETURN NEW; END IF;
+  v_number:=nullif(btrim(NEW.id_document),''); v_path:=nullif(NEW.id_document_path,'');
+  SELECT d INTO v_first FROM jsonb_array_elements(NEW.documents) WITH ORDINALITY a(d,ord)
+    WHERE d->>'kind'='identity' ORDER BY ord LIMIT 1;
+  IF v_first IS NULL THEN
+    IF v_number IS NOT NULL OR v_path IS NOT NULL THEN
+      NEW.documents:=NEW.documents||jsonb_build_array(jsonb_build_object('id',NEW.id,'kind','identity',
+        'name',coalesce(nullif(NEW.name,''),'Titular'),'number',v_number,'path',v_path));
+    END IF;
+  ELSE
+    SELECT coalesce(jsonb_agg(CASE WHEN d->>'id'=v_first->>'id' THEN d||jsonb_build_object(
+      'number',v_number,'path',v_path,'updated_at',now(),
+      'filename',CASE WHEN v_path IS DISTINCT FROM OLD.id_document_path THEN NULL ELSE d->>'filename' END)
+      ELSE d END ORDER BY ord),'[]'::jsonb) INTO NEW.documents
+      FROM jsonb_array_elements(NEW.documents) WITH ORDINALITY a(d,ord)
+      WHERE NOT(d->>'id'=v_first->>'id' AND v_number IS NULL AND v_path IS NULL);
+  END IF;
+  SELECT d INTO v_first FROM jsonb_array_elements(NEW.documents) WITH ORDINALITY a(d,ord)
+    WHERE d->>'kind'='identity' ORDER BY ord LIMIT 1;
+  NEW.id_document:=v_first->>'number'; NEW.id_document_path:=v_first->>'path';
+  RETURN NEW;
+END; $$;
+REVOKE ALL ON FUNCTION public.lead_documents_legacy_bu() FROM PUBLIC,anon;
+DROP TRIGGER IF EXISTS lead_documents_legacy_bu ON public.leads;
+CREATE TRIGGER lead_documents_legacy_bu BEFORE UPDATE OF id_document,id_document_path ON public.leads
+FOR EACH ROW EXECUTE FUNCTION public.lead_documents_legacy_bu();
+
 CREATE OR REPLACE FUNCTION public.fn_lead_document_save(p_lead_id uuid, p_document jsonb, p_remove boolean DEFAULT false)
 RETURNS jsonb LANGUAGE plpgsql SECURITY INVOKER SET search_path = public, pg_temp AS $$
 DECLARE

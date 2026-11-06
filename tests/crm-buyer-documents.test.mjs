@@ -59,6 +59,11 @@ test('multiple lead documents preserve legacy data and enforce lead RLS; related
     saved = await save(lead,{ ...second, name:'Compradora QA · Pasaporte',number:'TEST-3' });
     assert.equal(saved.documents.length,3);
     assert.equal(saved.documents[1].number,'TEST-3');
+    const oldClient = (await db.query('UPDATE leads SET id_document=$1 WHERE id=$2 RETURNING documents',['LEGACY-UPDATED',lead])).rows[0];
+    assert.equal(oldClient.documents[0].number,'LEGACY-UPDATED');
+    assert.equal(oldClient.documents.length,3);
+    assert.equal(oldClient.documents[1].number,'TEST-3');
+    assert.equal(oldClient.documents[2].kind,'offer');
     assert.equal((await db.query('SELECT notas FROM leads WHERE id=$1',[lead])).rows[0].notas,'Notas conservadas');
     for (const blocked of [hidden,foreign]) await assert.rejects(save(blocked,second),{code:'42501'});
     await assert.rejects(save(lead,{...second,path:`id-doc/${other}/${lead}/other.pdf`}),{code:'22023'});
@@ -78,6 +83,8 @@ test('multiple lead documents preserve legacy data and enforce lead RLS; related
     assert.deepEqual((await db.query('UPDATE lead_related_contacts SET phones=$1,phone=NULL WHERE id=$2 RETURNING phones,phone',[[],contact])).rows[0],{phones:[],phone:null});
     await assert.rejects(db.query('INSERT INTO lead_related_contacts(lead_id,name,phones) VALUES($1,$2,$3)',[lead,'Too many',Array.from({length:21},(_,i)=>String(i))]),{code:'22023'});
     await assert.rejects(db.query('INSERT INTO lead_related_contacts(lead_id,name) VALUES($1,$2)',[foreign,'Foreign']),{code:'42501'});
+    const cleared = (await db.query('UPDATE leads SET id_document=NULL,id_document_path=NULL WHERE id=$1 RETURNING documents,id_document',[lead])).rows[0];
+    assert.equal(cleared.documents.length,2); assert.equal(cleared.id_document,'TEST-3');
     saved=await save(lead,{id:lead},true);
     assert.equal(saved.documents.length,2); assert.equal(saved.id_document,'TEST-3');
     saved=await save(lead,{id:doc},true);
