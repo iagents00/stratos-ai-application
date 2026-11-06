@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**298 archivos · 84.779 líneas**
+**298 archivos · 84.780 líneas**
 
 ---
 
@@ -421,7 +421,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `useViewport.js` | 92 | Hook único para detectar tamaño de pantalla. Lo usan los componentes del |
 | `useTeam.js` | 74 | _sin describir_ |
 | `useScheduledCalls.js` | 73 | Devuelve un Map<phoneDigits, { id, phone_e164, scheduled_at }> con las |
-| `useChatScroll.js` | 68 | _sin describir_ |
+| `useChatScroll.js` | 69 | _sin describir_ |
 | `useProperties.js` | 45 | _sin describir_ |
 | `useDialogFocus.js` | 44 | _sin describir_ |
 | `useRailsConfig.js` | 43 | _sin describir_ |
@@ -946,7 +946,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/LandingPages/CreateWorkspace.jsx` (70 líneas)
 - `src/contexts/ClientContext.jsx` (70 líneas)
 - `src/lib/supabase.js` (70 líneas)
-- `src/hooks/useChatScroll.js` (68 líneas)
+- `src/hooks/useChatScroll.js` (69 líneas)
 - `src/contexts/TenantConfigGate.jsx` (67 líneas)
 - `src/app/components/MobileHeaderMenu.jsx` (66 líneas)
 - `src/landing/ModuleShowcase.css` (66 líneas)
