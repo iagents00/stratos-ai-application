@@ -96,3 +96,10 @@ test('inspect reads back the public submission build and automatic release witho
  const result=await releaseIOS({version:'4.9.5',buildNumber:'148',mode:'inspect',request:m.request});
  assert.equal(result.target.build,'148');assert.equal(result.target.releaseType,'AFTER_APPROVAL');assert.ok(m.calls.every(c=>c.method==='GET'));
 });
+
+test('business-aware public release selects the exact 4.9.6 build and updated release notes',async()=>{
+ const m=mock({version:'4.9.6',buildNumber:'149'});
+ const result=await releaseIOS({version:'4.9.6',buildNumber:'149',mode:'submit',request:m.request});
+ assert.equal(result.submissionState,'WAITING_FOR_REVIEW');assert.equal(result.releaseType,'AFTER_APPROVAL');
+ assert.match(m.calls.find(c=>c.body?.data?.attributes?.whatsNew).body.data.attributes.whatsNew,/negocio.*seguimientos/i);
+});

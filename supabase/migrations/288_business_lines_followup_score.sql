@@ -103,7 +103,7 @@ BEGIN
   END IF;
 
   v_score := v_base + v_zoom + v_seg + v_pres + v_bant - v_penal;
-  IF v_stage = 'postventa' THEN v_score := LEAST(v_score, 60); END IF;
+  IF v_stage = 'postventa' AND NOT coalesce(v_custom,false) THEN v_score := LEAST(v_score, 60); END IF;
   v_score := GREATEST(0, LEAST(100, v_score));
 
   v_hot := (v_score >= 78 AND v_di <= 5)

@@ -80,6 +80,8 @@ test('business-aware registration, continuation, renaming and scoring stay organ
  assert.equal((await db.query('select updated_at from leads where id=$1 and organization_id=$2',[lead.id,own])).rows[0].updated_at.getTime(),updated.updated_at.getTime());
  await db.exec('commit');
  const capped=(await db.query("insert into leads(organization_id,name,stage,seguimientos) values($1,'Capped','RS Contacto',1000) returning score",[own])).rows[0];assert.equal(capped.score,100);
+ const postCustom=(await db.query("insert into leads(organization_id,name,stage,seguimientos) values($1,'Post custom','Postventa',20) returning score",[own])).rows[0];assert.equal(postCustom.score,75);
+ const postLegacy=(await db.query("insert into leads(organization_id,name,stage,seguimientos) values($1,'Post legacy','Postventa',20) returning score",[other])).rows[0];assert.equal(postLegacy.score,55);
  assert.equal((await db.query("select has_function_privilege('authenticated','fn_org_business_match(uuid,text)','EXECUTE') allowed")).rows[0].allowed,false);
  }finally{await db.close();}
 });
