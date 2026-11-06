@@ -5,22 +5,24 @@
  * (normalmente la esposa/o, un socio o un familiar) con su propio teléfono/email.
  *
  * A diferencia del panel de Perfilamiento IA (LeadDiscoveryPanel, solo lectura),
- * esto lo EDITA el asesor: agrega / edita / borra allegados. 1 lead → N allegados,
+ * esto lo EDITA el administrador: agrega / edita / borra allegados. 1 lead → N allegados,
  * en la tabla `public.lead_related_contacts` (RLS: org + lead visible, igual que
  * discovery_data — un asesor solo toca los allegados de SUS leads).
  *
  * Modo demo (o lead sin id real): funciona en memoria, sin tocar la BD.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Users, Plus, Phone, Mail, Trash2, Pencil, X, Check } from "lucide-react";
 import { P, font, fontDisp } from "../../../design-system/tokens";
 import { L } from "../../constants/labels";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../hooks/useAuth";
+import { contactChannels } from "../../../lib/lead-documents.mjs";
 
 const REL_SUGGESTIONS = ["Esposa", "Esposo", "Pareja", "Socio", "Socia", "Familiar", "Hermano/a", "Hijo/a"];
-const EMPTY = { name: "", relationship: "", phone: "", email: "", notas: "" };
+const EMPTY = { name: "", relationship: "", phones: [""], emails: [""], notas: "" };
+const CONTACT_FIELDS = "id, name, relationship, phone, email, phones, emails, notas";
 
 export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
   const { user } = useAuth();
@@ -35,38 +37,51 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
   const [form, setForm]         = useState(EMPTY);
   const [saving, setSaving]     = useState(false);
   const [err, setErr]           = useState("");
+  const active = useRef(true);
+  useEffect(() => { active.current = true; return () => { active.current = false; }; }, []);
 
-  const load = useCallback(async () => {
-    if (!lead?.id) { setLoading(false); return; }
-    if (isDemo)    { setLoading(false); return; }
+  useEffect(() => {
+    let cancelled = false;
+    setContacts([]); setEditing(null); setErr("");
+    if (!lead?.id || isDemo) { setLoading(false); return; }
     setLoading(true);
-    const { data, error } = await supabase
+    supabase
       .from("lead_related_contacts")
-      .select("id, name, relationship, phone, email, notas")
+      .select(CONTACT_FIELDS)
       .eq("lead_id", lead.id)
-      .order("created_at", { ascending: true });
-    if (!error) setContacts(data || []);
-    setLoading(false);
+      .order("created_at", { ascending: true })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) setErr("No se pudieron cargar los contactos. Vuelve a abrir el expediente.");
+        else setContacts(data || []);
+        setLoading(false);
+      }).catch(() => {
+        if (!cancelled) { setErr("No se pudieron cargar los contactos. Vuelve a abrir el expediente."); setLoading(false); }
+      });
+    return () => { cancelled = true; };
   }, [lead?.id, isDemo]);
-
-  useEffect(() => { load(); }, [load]);
 
   const reset = () => { setForm(EMPTY); setEditing(null); setErr(""); setSaving(false); };
   const startNew  = () => { setForm(EMPTY); setEditing("new"); setErr(""); };
   const startEdit = (c) => {
-    setForm({ name: c.name || "", relationship: c.relationship || "", phone: c.phone || "", email: c.email || "", notas: c.notas || "" });
+    const phones = contactChannels(c, "phone"), emails = contactChannels(c, "email");
+    setForm({ name: c.name || "", relationship: c.relationship || "", phones: phones.length ? phones : [""], emails: emails.length ? emails : [""], notas: c.notas || "" });
     setEditing(c.id); setErr("");
   };
 
   const save = async () => {
+    if (saving) return;
     const name = form.name.trim();
     if (!name) { setErr("El nombre es obligatorio."); return; }
+    const phones = contactChannels(form, "phone"), emails = contactChannels(form, "email");
+    if (emails.some(email => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) { setErr("Revisa los correos electrónicos antes de guardar."); return; }
     setSaving(true); setErr("");
     const payload = {
       name,
       relationship: form.relationship.trim() || null,
-      phone:        form.phone.trim() || null,
-      email:        form.email.trim() || null,
+      phones, emails,
+      phone:        phones[0] || null,
+      email:        emails[0] || null,
       notas:        form.notas.trim() || null,
     };
     if (isDemo) {
@@ -74,35 +89,43 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
       else                   setContacts(prev => prev.map(c => (c.id === editing ? { ...c, ...payload } : c)));
       reset(); return;
     }
-    if (editing === "new") {
-      const { data, error } = await supabase
+    try {
+      if (editing === "new") {
+        const { data, error } = await supabase
         .from("lead_related_contacts")
         .insert({ lead_id: lead.id, ...payload })
-        .select("id, name, relationship, phone, email, notas")
+        .select(CONTACT_FIELDS)
         .single();
-      if (error) { setErr("No se pudo guardar. Intenta de nuevo."); setSaving(false); return; }
-      setContacts(prev => [...prev, data]);
-    } else {
-      const { error } = await supabase.from("lead_related_contacts").update(payload).eq("id", editing);
-      if (error) { setErr("No se pudo guardar. Intenta de nuevo."); setSaving(false); return; }
-      setContacts(prev => prev.map(c => (c.id === editing ? { ...c, ...payload } : c)));
+        if (error) throw error;
+        if (active.current) setContacts(prev => [...prev, data]);
+      } else {
+        const { data, error } = await supabase.from("lead_related_contacts").update(payload).eq("id", editing).eq("lead_id", lead.id).select(CONTACT_FIELDS).single();
+        if (error) throw error;
+        if (active.current) setContacts(prev => prev.map(c => (c.id === editing ? data : c)));
+      }
+      if (active.current) reset();
+    } catch {
+      if (active.current) { setErr("No se pudo guardar. Tus cambios siguen aquí; intenta de nuevo."); setSaving(false); }
     }
-    reset();
   };
 
   const remove = async (id) => {
-    const snapshot = contacts;
-    setContacts(snapshot.filter(c => c.id !== id));
-    if (editing === id) reset();
-    if (isDemo || String(id).startsWith("demo_")) return;
-    const { error } = await supabase.from("lead_related_contacts").delete().eq("id", id);
-    if (error) { setContacts(snapshot); setErr("No se pudo eliminar."); }
+    if (saving) return;
+    setSaving(true); setErr("");
+    try {
+      if (!isDemo) {
+        const { error } = await supabase.from("lead_related_contacts").delete().eq("id", id).eq("lead_id", lead.id).select("id").single();
+        if (error) throw error;
+      }
+      if (active.current) { setContacts(prev => prev.filter(c => c.id !== id)); if (editing === id) reset(); }
+    } catch { if (active.current) setErr("No se pudo eliminar el contacto. Intenta de nuevo."); }
+    finally { if (active.current) setSaving(false); }
   };
 
   if (loading) return null; // silencioso mientras carga
   // El asesor solo LEE. Si no es admin y no hay allegados, ocultamos la sección
   // (no le mostramos un panel vacío que no puede llenar). Solo en el expediente.
-  if (!isAdmin && contacts.length === 0) return null;
+  if (!isAdmin && contacts.length === 0 && !err) return null;
 
   // ── Estilos derivados (mismo lenguaje que LeadDiscoveryPanel) ──
   const headerC    = isLight ? "rgba(15,23,42,0.62)" : "rgba(255,255,255,0.62)";
@@ -133,33 +156,37 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <label style={labelStyle}>Nombre *</label>
-          <input value={form.name} placeholder="Ej. María Pérez" autoFocus onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} style={inputStyle} />
+          <input aria-label="Nombre del contacto adicional" maxLength={200} disabled={saving} value={form.name} placeholder="Ej. María Pérez" autoFocus onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} style={inputStyle} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <label style={labelStyle}>Relación / parentesco</label>
-          <input value={form.relationship} placeholder="Esposa, socio, hermano…" list="lrc-rel-suggestions" onChange={(e) => setForm(f => ({ ...f, relationship: e.target.value }))} style={inputStyle} />
+          <input aria-label="Relación o parentesco" disabled={saving} value={form.relationship} placeholder="Esposa, socio, hermano…" list="lrc-rel-suggestions" onChange={(e) => setForm(f => ({ ...f, relationship: e.target.value }))} style={inputStyle} />
         </div>
       </div>
       <datalist id="lrc-rel-suggestions">
         {REL_SUGGESTIONS.map(r => <option key={r} value={r} />)}
       </datalist>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <label style={labelStyle}>Teléfono</label>
-          <input type="tel" value={form.phone} placeholder="+52 …" onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))} style={inputStyle} />
+      {[{ field: "phones", label: "Teléfono", type: "tel", placeholder: "+52 …", add: "Agregar teléfono" },
+        { field: "emails", label: "Correo", type: "email", placeholder: "correo@ejemplo.com", add: "Agregar correo" }].map(channel => (
+        <div key={channel.field} style={{ display: "grid", gap: 6 }}>
+          <span style={labelStyle}>{channel.field === "phones" ? "Teléfonos" : "Correos electrónicos"}</span>
+          {form[channel.field].map((value, index) => <div key={index} style={{ display: "flex", gap: 6 }}>
+            <input aria-label={`${channel.label} adicional ${index + 1}`} type={channel.type} maxLength={254} disabled={saving} value={value} placeholder={channel.placeholder}
+              onChange={event => setForm(previous => ({ ...previous, [channel.field]: previous[channel.field].map((item, i) => i === index ? event.target.value : item) }))} style={inputStyle} />
+            {form[channel.field].length > 1 && <button type="button" aria-label={`Quitar ${channel.label.toLowerCase()} ${index + 1}`} disabled={saving}
+              onClick={() => setForm(previous => ({ ...previous, [channel.field]: previous[channel.field].filter((_, i) => i !== index) }))}
+              style={{ display: "flex", alignItems: "center", padding: 8, borderRadius: 8, background: "transparent", border: `1px solid ${inputBorder}`, color: T.txt3, cursor: "pointer" }}><X size={14} /></button>}
+          </div>)}
+          <button type="button" disabled={saving || form[channel.field].length >= 20} onClick={() => setForm(previous => ({ ...previous, [channel.field]: [...previous[channel.field], ""] }))}
+            style={{ display: "inline-flex", alignItems: "center", justifySelf: "start", gap: 5, padding: "5px 0", background: "transparent", border: 0, color: accentStrong, cursor: "pointer", fontSize: 12 }}><Plus size={12} />{channel.add}</button>
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <label style={labelStyle}>Email</label>
-          <input type="email" value={form.email} placeholder="correo@ejemplo.com" onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))} style={inputStyle} />
-        </div>
-      </div>
+      ))}
       <div>
         <label style={labelStyle}>Nota (opcional)</label>
-        <input value={form.notas} onChange={(e) => setForm(f => ({ ...f, notas: e.target.value }))} placeholder="Ej. decide junto con el titular" style={inputStyle} />
+        <input aria-label="Nota del contacto adicional" disabled={saving} value={form.notas} onChange={(e) => setForm(f => ({ ...f, notas: e.target.value }))} placeholder="Ej. decide junto con el titular" style={inputStyle} />
       </div>
-      {err && <p style={{ margin: 0, color: "#F87171", fontSize: 12.5, fontFamily: font }}>{err}</p>}
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-        <button type="button" onClick={reset} style={{
+        <button type="button" onClick={reset} disabled={saving} style={{
           display: "inline-flex", alignItems: "center", gap: 5, padding: "8px 14px", borderRadius: 9,
           background: "transparent", border: `1px solid ${inputBorder}`, color: T.txt3,
           fontSize: 12.5, fontWeight: 400, fontFamily: fontDisp, cursor: "pointer",
@@ -187,7 +214,7 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
           <Users size={11} /> {L.relatedContacts}
         </span>
         {isAdmin && editing === null && (
-          <button type="button" onClick={startNew} style={{
+          <button type="button" onClick={startNew} disabled={saving} style={{
             display: "inline-flex", alignItems: "center", gap: 5,
             padding: "5px 11px", borderRadius: 8,
             background: `${T.accent}14`, border: `1px solid ${T.accent}3A`,
@@ -201,7 +228,7 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
         {isAdmin && contacts.length === 0 && editing !== "new" && (
           <p style={{ margin: 0, fontSize: 12.5, color: T.txt3, fontFamily: font, lineHeight: 1.5 }}>
             {L.relatedContacts === "Familiares o Socios"
-              ? "Sin familiares o socios aún. Agrega el contacto de la esposa/o, un socio o un familiar del cliente."
+              ? "Agrega a quienes compran con el cliente, con sus teléfonos y correos."
               : `Sin contactos aún. Agrega aquí a las personas relacionadas con esta ${L.entity}.`}
           </p>
         )}
@@ -219,23 +246,23 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
                   )}
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 16px", marginTop: 5 }}>
-                  {c.phone && (
-                    <a href={`tel:${c.phone}`} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, color: T.txt2, textDecoration: "none", fontFamily: font }}>
-                      <Phone size={12} style={{ opacity: 0.7 }} /> {c.phone}
+                  {contactChannels(c, "phone").map(phone => (
+                    <a key={phone} href={`tel:${phone}`} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, color: T.txt2, textDecoration: "none", fontFamily: font, overflowWrap: "anywhere" }}>
+                      <Phone size={12} style={{ opacity: 0.7, flexShrink: 0 }} /> {phone}
                     </a>
-                  )}
-                  {c.email && (
-                    <a href={`mailto:${c.email}`} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, color: T.txt2, textDecoration: "none", fontFamily: font, wordBreak: "break-all" }}>
-                      <Mail size={12} style={{ opacity: 0.7 }} /> {c.email}
+                  ))}
+                  {contactChannels(c, "email").map(email => (
+                    <a key={email} href={`mailto:${email}`} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, color: T.txt2, textDecoration: "none", fontFamily: font, wordBreak: "break-all" }}>
+                      <Mail size={12} style={{ opacity: 0.7, flexShrink: 0 }} /> {email}
                     </a>
-                  )}
+                  ))}
                 </div>
                 {c.notas && <p style={{ margin: "5px 0 0", fontSize: 12.5, color: T.txt3, fontFamily: font, lineHeight: 1.45 }}>{c.notas}</p>}
               </div>
               {isAdmin && (
                 <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                  <button type="button" title="Editar" onClick={() => startEdit(c)} style={{ padding: 6, borderRadius: 7, background: "transparent", border: `1px solid ${inputBorder}`, color: T.txt3, cursor: "pointer", display: "inline-flex" }}><Pencil size={13} /></button>
-                  <button type="button" title="Eliminar" onClick={() => remove(c.id)} style={{ padding: 6, borderRadius: 7, background: "transparent", border: "1px solid rgba(239,68,68,0.30)", color: "#F87171", cursor: "pointer", display: "inline-flex" }}><Trash2 size={13} /></button>
+                  <button type="button" title={`Editar contacto ${c.name}`} disabled={saving || editing !== null} onClick={() => startEdit(c)} style={{ padding: 8, borderRadius: 7, background: "transparent", border: `1px solid ${inputBorder}`, color: T.txt3, cursor: "pointer", display: "inline-flex" }}><Pencil size={13} /></button>
+                  <button type="button" title={`Eliminar contacto ${c.name}`} disabled={saving || editing !== null} onClick={() => remove(c.id)} style={{ padding: 8, borderRadius: 7, background: "transparent", border: "1px solid rgba(239,68,68,0.30)", color: "#F87171", cursor: "pointer", display: "inline-flex" }}><Trash2 size={13} /></button>
                 </div>
               )}
             </div>
@@ -243,6 +270,7 @@ export default function LeadRelatedContacts({ lead, T = P, isLight = false }) {
         ))}
 
         {editing === "new" && formCard}
+        {err && <p role="alert" style={{ margin: 0, color: isLight ? "#B42318" : "#FCA5A5", fontSize: 12.5, fontFamily: font }}>{err}</p>}
       </div>
     </div>
   );

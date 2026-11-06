@@ -713,9 +713,20 @@ function CRM({ oc, co, leadsData, setLeadsData, theme = "dark", setTheme = () =>
   //
   // opts.skipAutoLog = true → desactiva el auto-log (útil para imports masivos
   // o ediciones que ya traen su propio actionHistory explícito).
-  const updateLead = (updated, { skipAutoLog = false } = {}) => {
+  const updateLead = (updated, { skipAutoLog = false, persist = true } = {}) => {
     // Interceptor para Zoom Agendado obligatorio en Stratos (aplica a todos los asesores)
     const prev = leadsDataRef.current.find(l => l.id === updated.id);
+    // Document RPCs already saved a small patch under a row lock. Hydrate only
+    // those returned fields; do not resend the rest of a potentially stale lead.
+    if (!persist) {
+      const patch = item => item?.id === updated.id ? { ...item, ...updated } : item;
+      leadsDataRef.current = leadsDataRef.current.map(patch);
+      setLeadsData(items => items.map(patch));
+      setSelectedLead(patch);
+      setNotesLead(patch);
+      setAnalyzingLead(patch);
+      return;
+    }
     const isTargetClient = true; // Aplica para todo Stratos
     const isChangingToZoom = isAppointmentStage(updated.st) && updated.st !== prev?.st;
 

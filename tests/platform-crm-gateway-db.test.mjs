@@ -7,7 +7,7 @@ import { STAGES } from '../src/design-system/tokens.js';
 import { stgC } from '../src/app/constants/crm.js';
 
 test('server historical fallback preserves each registered client pipeline', () => {
-  const sql=readFileSync('supabase/migrations/274_platform_crm_gateway.sql','utf8');
+  const sql=readFileSync('supabase/migrations/290_duke_failed_closings.sql','utf8');
   const registry=JSON.parse(sql.match(/v_static jsonb := '(.+)'::jsonb;/)[1].replaceAll("''","'"));
   const readConfig=(path,tenantConfig)=>{
     const source=readFileSync(path,'utf8').replace(/^import .*;?$/gm,'').replace('export default','globalThis.config =');
@@ -17,7 +17,7 @@ test('server historical fallback preserves each registered client pipeline', () 
   for(const dir of readdirSync('src/clients',{withFileTypes:true}).filter(x=>x.isDirectory()&&x.name!=='_shared')) {
     const cfg=readConfig(`src/clients/${dir.name}/config.js`,neutral);
     const org=cfg?.tenant?.organizationId;if(!org)continue;
-    const pipeline=cfg.crm?.pipelines?.flatMap(x=>x.stages)||cfg.crm?.pipeline||STAGES.map(name=>({name,color:stgC[name]||'#64748B'}));
+    const pipeline=cfg.crm?.pipelines?.flatMap(x=>x.stages)||cfg.crm?.pipeline||[...STAGES.map(name=>({name,color:stgC[name]||'#64748B'})),...(cfg.crm?.additionalStages||[])];
     assert.deepEqual(registry[org],JSON.parse(JSON.stringify(pipeline.map(({name,color})=>({name,color:color||'#64748B'})))),dir.name);
   }
 });

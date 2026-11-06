@@ -57,7 +57,7 @@ columna, estos son los archivos que hay que revisar.
 |---|---|---|
 | `profiles` | 13 | `app/features/ISpace/useBoard.js` · `app/views/CRM/index.jsx` · `app/views/Caja.jsx` _+10_ |
 | `leads` | 7 | `app/App.jsx` · `app/views/CRM/index.jsx` · `app/views/Caja.jsx` _+4_ |
-| `evidencia` | 6 | `app/views/CRM/components.jsx` · `app/views/Caja.jsx` · `app/views/ChatEquipo.jsx` _+3_ |
+| `evidencia` | 6 | `app/views/CRM/LeadDocuments.jsx` · `app/views/Caja.jsx` · `app/views/ChatEquipo.jsx` _+3_ |
 | `organizations` | 5 | `app/App.jsx` · `app/views/LandingPages/index.jsx` · `contexts/TenantConfigGate.jsx` _+2_ |
 | `team_expenses` | 4 | `app/views/Caja.jsx` · `app/views/Copilot.jsx` · `app/views/FinanzasAdmin.jsx` _+1_ |
 | `mkt_tasks` | 3 | `app/features/ISpace/useBoard.js` · `app/views/Marketing.jsx` · `app/views/PlanSemanal.jsx` |
@@ -125,6 +125,7 @@ error no está en el frontend.
 | `fn_informe_nota_agregar` | `app/views/InformeAvances.jsx` |
 | `fn_informe_nota_borrar` | `app/views/InformeAvances.jsx` |
 | `fn_informe_notas_listar` | `app/views/InformeAvances.jsx` |
+| `fn_lead_document_save` | `app/views/CRM/LeadDocuments.jsx` |
 | `fn_llamada_en_curso` | `app/App.jsx` |
 | `fn_mkt_intel` | `app/App.jsx` |
 | `fn_my_company_module_access` | `contexts/TenantConfigGate.jsx` |

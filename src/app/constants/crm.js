@@ -26,6 +26,7 @@ export const stgC = {
   "Visita Agendada":  "#06B6D4",
   "Cierre":           "#34D399",
   "Postventa":        "#64748B",
+  "Cierres Caídos":   "#D97757",
 };
 
 export const SRC_META = {

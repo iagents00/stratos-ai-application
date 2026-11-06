@@ -39,6 +39,7 @@ import { getEntityHistory, fieldLabel, actionLabel } from "../../../lib/audit";
 import { canTriggerIaActions } from "../../../lib/iagents-actions";
 import LeadDiscoveryPanel from "./LeadDiscoveryPanel";
 import LeadRelatedContacts from "./LeadRelatedContacts";
+import LeadDocuments from "./LeadDocuments";
 import LeadVoiceCalls from "./LeadVoiceCalls";
 import LeadChatHistory from "./LeadChatHistory";
 import LeadWhatsAppChat from "./LeadWhatsAppChat";
@@ -3553,89 +3554,10 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
   const saveTimerRef = useRef(null);
   const dirtyRef = useRef(false);
   const currentLeadIdRef = useRef(lead?.id);
-  // ── IDENTIFICACIÓN DEL CLIENTE (INE / pasaporte) ──────────────────────
-  // Campo compacto de una línea dentro de la sección de notas. Se guarda
-  // on blur (o Enter) vía onUpdate → columna leads.id_document. Cuando hay
-  // valor, el avatar del expediente y el de la tabla pasan a persona verde.
-  const [idDocDraft, setIdDocDraft] = useState(lead?.id_document || "");
-  const idDocDirtyRef = useRef(false);
-  useEffect(() => {
-    idDocDirtyRef.current = false;
-    setIdDocDraft(lead?.id_document || "");
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lead?.id]);
-  useEffect(() => {
-    if (!idDocDirtyRef.current) setIdDocDraft(lead?.id_document || "");
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lead?.id_document]);
-  const saveIdDoc = () => {
-    idDocDirtyRef.current = false;
-    const v = idDocDraft.trim();
-    if (v === String(lead?.id_document || "").trim()) return;
-    onUpdate?.({ ...lead, id_document: v || null });
-  };
-  // Foto del documento — sube al bucket privado `evidencia`, carpeta
-  // id-doc/<orgId>/<leadId>/ (RLS: org + visibilidad del lead, migración 231).
-  // El path queda en leads.id_document_path y se abre con URL firmada.
-  const idDocFileRef = useRef(null);
-  const [idDocUploading, setIdDocUploading] = useState(false);
-  const [idDocError, setIdDocError] = useState("");
-  const uploadIdDocFile = async (file) => {
-    if (!file || !lead?.id) return;
-    if (notesUser?.isDemo) { setIdDocError("No disponible en modo demo."); return; }
-    const orgId = notesUser?.organizationId;
-    if (!orgId) { setIdDocError("Sin organización activa — recarga la app."); return; }
-    setIdDocUploading(true); setIdDocError("");
-    try {
-      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-      const path = `id-doc/${orgId}/${lead.id}/${Date.now()}.${ext}`;
-      const up = await supabase.storage.from("evidencia").upload(path, file, { upsert: true });
-      if (up.error) throw up.error;
-      onUpdate?.({ ...lead, id_document_path: path });
-    } catch (e) {
-      // Se muestra la causa real (lección de la Caja: "probá con otra imagen"
-      // tapaba errores de permisos del bucket).
-      setIdDocError(`No se pudo subir: ${e?.message || "error desconocido"}`);
-    } finally {
-      setIdDocUploading(false);
-      if (idDocFileRef.current) idDocFileRef.current.value = "";
-    }
-  };
-  // Visor propio (lightbox) en vez de window.open: abrir una pestaña DESPUÉS
-  // de un await pierde el gesto del usuario y el navegador lo bloquea como
-  // ventana emergente (reporte de Ivan: "me aparece como si hubiera ventana
-  // emergente pero no sale") — sobre todo en Safari/iPhone. El mismo patrón
-  // que el visor de comprobantes de la Caja: imagen a pantalla completa +
-  // botón Descargar con URL firmada `download` (funciona también en iPhone).
-  const [idDocViewer, setIdDocViewer] = useState(null); // null | {loading} | {url, urlDescarga, esPdf}
-  const viewIdDocFile = async () => {
-    const path = lead?.id_document_path;
-    if (!path) return;
-    setIdDocError("");
-    setIdDocViewer({ loading: true });
-    try {
-      const esPdf = /\.pdf($|\?)/i.test(path);
-      const [ver, bajar] = await Promise.all([
-        supabase.storage.from("evidencia").createSignedUrl(path, 3600),
-        supabase.storage.from("evidencia").createSignedUrl(path, 3600, { download: true }),
-      ]);
-      if (ver.error) throw ver.error;
-      setIdDocViewer({ url: ver.data.signedUrl, urlDescarga: bajar.data?.signedUrl || ver.data.signedUrl, esPdf });
-    } catch (e) {
-      setIdDocViewer(null);
-      setIdDocError(`No se pudo abrir el documento: ${e?.message || "intenta de nuevo"}`);
-    }
-  };
-  const removeIdDocFile = () => {
-    setIdDocError("");
-    onUpdate?.({ ...lead, id_document_path: null });
-  };
-
   // Si cambia el lead activo (drawer abierto a otro lead), reset draft
   useEffect(() => {
     if (currentLeadIdRef.current !== lead?.id) {
       currentLeadIdRef.current = lead?.id;
-      setIdDocViewer(null);
       setNotesDraft(lead?.notas || "");
       setSaveStatus("idle");
       setLastSavedAt(null);
@@ -3809,6 +3731,16 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
                 }}>
                   <InlineEdit value={lead.n} onSave={v => onUpdate?.({...lead, n: v})} T={T} isLight={isLight} placeholder="Nombre" />
                 </h2>
+                <div aria-label="Datos de contacto del cliente" style={{ display: "grid", gap: 3, marginTop: 5, fontFamily: font, fontSize: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0, color: T.txt2 }}>
+                    <Phone size={12} style={{ flexShrink: 0 }} />
+                    <InlineEdit value={lead.phone} onSave={v => onUpdate?.({ ...lead, phone: v })} T={T} isLight={isLight} placeholder="Teléfono" emptyText="Agregar teléfono" />
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0, color: T.txt2, overflowWrap: "anywhere" }}>
+                    <Mail size={12} style={{ flexShrink: 0 }} />
+                    <InlineEdit value={lead.email} onSave={v => onUpdate?.({ ...lead, email: v })} T={T} isLight={isLight} placeholder="Correo electrónico" emptyText="Agregar correo" />
+                  </div>
+                </div>
                 <div style={{
                   marginTop: 3, fontSize: 12, color: T.txt3,
                   fontFamily: font, fontWeight: 500,
@@ -3983,7 +3915,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
 
           {/* 1.6. FAMILIARES O SOCIOS — allegados del contacto (esposa/o, socio,
               familiar) con su teléfono/email. Editable por el asesor. */}
-          <LeadRelatedContacts lead={lead} T={T} isLight={isLight} />
+          <LeadRelatedContacts key={lead.id} lead={lead} T={T} isLight={isLight} />
 
           {/* 2. ETAPA + SEGUIMIENTOS — pills compactos.
               RequiresHumanButton: solo visible para iagents@stratos.ai. */}
@@ -4006,91 +3938,7 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
           <div>
             <SectionLabel T={T} icon={FileText}>Notas del expediente</SectionLabel>
 
-            {/* ID / PASAPORTE — una sola línea, discreta, arriba del textarea.
-                Vacía: gris neutro. Con valor (texto o foto): tinte verde +
-                persona, el mismo código visual del avatar. El texto guarda on
-                blur o Enter; la foto sube al bucket privado `evidencia`. */}
-            {(() => {
-              const hasFile = !!lead.id_document_path;
-              const filled = !!idDocDraft.trim() || hasFile;
-              const g = T.emerald;
-              const gTxt = isLight ? `color-mix(in srgb, ${g} 72%, #0B1220 28%)` : g;
-              const miniBtn = (active) => ({
-                display: "inline-flex", alignItems: "center", gap: 4,
-                padding: "3px 8px", borderRadius: 7, cursor: "pointer",
-                background: active ? (isLight ? `${g}14` : `${g}1A`) : "transparent",
-                border: `1px solid ${active ? (isLight ? `${g}4D` : `${g}44`) : T.border}`,
-                color: active ? gTxt : T.txt3,
-                fontSize: 10.5, fontWeight: 500, fontFamily: fontDisp,
-                letterSpacing: "0.04em", flexShrink: 0, transition: "all 0.15s",
-              });
-              return (
-                <div style={{ margin: "0 0 10px" }}>
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    padding: "7px 12px", borderRadius: 10,
-                    background: filled
-                      ? (isLight ? `${g}0F` : `${g}0D`)
-                      : (isLight ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.03)"),
-                    border: `1px solid ${filled ? (isLight ? `${g}42` : `${g}38`) : T.border}`,
-                    transition: "border-color 0.18s, background 0.18s",
-                  }}>
-                    {filled
-                      ? <BadgeCheck size={13} color={gTxt} strokeWidth={2.4} style={{ flexShrink: 0 }} />
-                      : <User size={13} color={T.txt3} strokeWidth={2.2} style={{ flexShrink: 0 }} />}
-                    <span style={{
-                      fontSize: 10.5, fontWeight: 500, letterSpacing: "0.08em",
-                      textTransform: "uppercase", fontFamily: fontDisp, flexShrink: 0,
-                      color: filled ? gTxt : T.txt3,
-                    }}>ID / Pasaporte</span>
-                    <input
-                      value={idDocDraft}
-                      onChange={e => { idDocDirtyRef.current = true; setIdDocDraft(e.target.value); }}
-                      onBlur={saveIdDoc}
-                      onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur(); }}
-                      placeholder="INE, pasaporte o identificación…"
-                      spellCheck={false}
-                      style={{
-                        flex: 1, minWidth: 0,
-                        background: "transparent", border: "none", outline: "none",
-                        color: T.txt, fontSize: 12.5, fontFamily: font, padding: 0,
-                      }}
-                    />
-                    {/* Foto del documento: subir / ver / quitar */}
-                    <input
-                      ref={idDocFileRef}
-                      type="file"
-                      accept="image/*,application/pdf"
-                      style={{ display: "none" }}
-                      onChange={e => uploadIdDocFile(e.target.files?.[0])}
-                    />
-                    {idDocUploading ? (
-                      <span style={{ ...miniBtn(false), cursor: "default" }}>Subiendo…</span>
-                    ) : hasFile ? (
-                      <>
-                        <button type="button" onClick={viewIdDocFile} title="Ver el documento subido" style={miniBtn(true)}>
-                          <Eye size={11} strokeWidth={2.4} />
-                          Ver
-                        </button>
-                        <button type="button" onClick={removeIdDocFile} title="Quitar el documento" style={{ ...miniBtn(false), padding: "3px 6px" }}>
-                          <Trash2 size={11} strokeWidth={2.2} />
-                        </button>
-                      </>
-                    ) : (
-                      <button type="button" onClick={() => idDocFileRef.current?.click()} title="Subir foto del documento (imagen o PDF)" style={miniBtn(false)}>
-                        <Image size={11} strokeWidth={2.2} />
-                        Foto
-                      </button>
-                    )}
-                  </div>
-                  {idDocError && (
-                    <p style={{ margin: "5px 2px 0", fontSize: 11, color: "#F87171", fontFamily: font }}>
-                      {idDocError}
-                    </p>
-                  )}
-                </div>
-              );
-            })()}
+            <div style={{ marginBottom: 16 }}><LeadDocuments key={lead.id} lead={lead} onUpdate={onUpdate} T={T} isLight={isLight} /></div>
 
             <textarea
               value={notesDraft}
@@ -4305,55 +4153,6 @@ const NotesModal = ({ lead, onClose, onSave, onUpdate, onSwitchTab, onShowHistor
         <DrawerTabIsland current="discovery" onSwitch={onSwitchTab} T={T} />
       </div>
 
-      {/* Visor del documento de identidad — lightbox propio (mismo patrón que
-          el visor de comprobantes de la Caja). Muestra la imagen COMPLETA
-          dentro de la app y ofrece Descargar / Abrir aparte; el click en el
-          <a> sí es gesto directo del usuario, así que el navegador no lo
-          bloquea como popup. zIndex sobre el drawer (401). */}
-      {idDocViewer && (
-        <div onClick={() => setIdDocViewer(null)} style={{
-          position: "fixed", inset: 0, zIndex: 100000, background: "rgba(0,0,0,0.82)",
-          backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
-          display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
-        }}>
-          <button onClick={() => setIdDocViewer(null)} title="Cerrar" style={{
-            position: "absolute", top: 18, right: 18, background: "rgba(255,255,255,0.12)",
-            border: "none", borderRadius: 10, padding: 8, cursor: "pointer", color: "#fff", display: "flex",
-          }}><X size={18} /></button>
-          {idDocViewer.loading ? (
-            <div style={{ color: "#fff", fontSize: 14, fontFamily: font }}>Abriendo documento…</div>
-          ) : (
-            <div onClick={e => e.stopPropagation()} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, maxWidth: "94vw" }}>
-              {idDocViewer.esPdf ? (
-                // Un <img> con un PDF adentro da un ícono roto — tarjeta + descarga.
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: "34px 40px", borderRadius: 16, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}>
-                  <FileText size={38} color="#fff" strokeWidth={1.5} />
-                  <span style={{ color: "#fff", fontSize: 14, fontFamily: font }}>El documento es un PDF</span>
-                </div>
-              ) : (
-                <img src={idDocViewer.url} alt="Documento de identidad"
-                  style={{ maxWidth: "94vw", maxHeight: "76vh", borderRadius: 12, objectFit: "contain", boxShadow: "0 12px 48px rgba(0,0,0,0.5)" }} />
-              )}
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
-                <a href={idDocViewer.urlDescarga || idDocViewer.url} download style={{
-                  display: "inline-flex", alignItems: "center", gap: 7, padding: "11px 20px", borderRadius: 999,
-                  background: "#FFFFFF", color: "#0B1220", fontSize: 13.5, fontWeight: 600,
-                  fontFamily: font, textDecoration: "none",
-                }}>
-                  <Download size={15} /> Descargar
-                </a>
-                <a href={idDocViewer.url} target="_blank" rel="noreferrer" style={{
-                  display: "inline-flex", alignItems: "center", gap: 7, padding: "11px 20px", borderRadius: 999,
-                  border: "1px solid rgba(255,255,255,0.25)", color: "#fff", fontSize: 13.5,
-                  fontFamily: font, textDecoration: "none",
-                }}>
-                  <ExternalLink size={15} /> Abrir aparte
-                </a>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
     </>,
     document.body
   );
