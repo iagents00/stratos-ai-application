@@ -11,7 +11,7 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
   await db.exec(`
    alter table profiles add column if not exists crm_prefs jsonb default '{}';
    create table bot_pending_actions(id uuid default gen_random_uuid(),token text unique,asesor_id uuid,organization_id uuid,telegram_chat_id bigint,action_type text,payload jsonb,summary text,consumed_at timestamptz,expires_at timestamptz,created_at timestamptz default now());
-   create table bot_pending_confirm(telegram_chat_id bigint,organization_id uuid,action text,payload jsonb);
+   create table bot_pending_confirm(telegram_chat_id bigint,organization_id uuid,action text,payload jsonb,created_at timestamptz default now());
    create table expediente_items(id uuid default gen_random_uuid(),organization_id uuid,lead_id uuid,asesor_id uuid,tipo text,titulo text,descripcion text,metadata jsonb,created_at timestamptz default now(),deleted_at timestamptz);
    create table team_actions(organization_id uuid,created_by uuid,text text,asesor_name text,due_at timestamptz,created_at timestamptz default now(),done boolean);
    create or replace function unaccent(text) returns text language sql immutable as $$select translate($1,'áéíóúñÁÉÍÓÚÑ','aeiounAEIOUN')$$;
@@ -41,7 +41,7 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
   // The pending writer and note writer are existing production contracts, not mocked writes.
   await db.exec(`create function _bsc_upsert_pending(bigint,uuid,uuid,text,jsonb) returns text language plpgsql as $$declare t text:=coalesce($4,gen_random_uuid()::text);begin insert into bot_pending_actions(token,telegram_chat_id,asesor_id,organization_id,action_type,payload,expires_at) values(t,$1,$2,$3,'create_lead',$5,now()+interval '1 hour') on conflict(token) do update set payload=excluded.payload;return t;end$$;
    create function bot_add_expediente_note(bigint,text,text,text,text) returns jsonb language plpgsql as $$declare p record;begin select * into p from profiles where telegram_chat_id=$1;insert into expediente_items(organization_id,lead_id,asesor_id,titulo,descripcion) values(p.organization_id,$2::uuid,p.id,$3,$4);return '{"success":true}'::jsonb;end$$;`);
-  for(const f of ['293_copilot_conversation_helpers.sql','294_copilot_conversation_context.sql']) await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
+  for(const f of ['293_copilot_conversation_helpers.sql','294_copilot_conversation_context.sql','295_copilot_pending_context_priority.sql']) await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
   const stages=['RS Primer contacto','RS Contactado','RS Reunión','RS Cliente Ganado','M Primer Contacto','M Contactado','M Reunión','M Cliente Ganado'];
   const businessLines=[{id:'realestate',label:'Bienes raíces',entryStage:stages[0],stages:stages.slice(0,4),aliases:['bienes raíces']},{id:'medicine',label:'Medicina',entryStage:stages[4],stages:stages.slice(4),aliases:['medicina']}];
   await db.query("insert into organizations(id,name,slug,meta_config) values($1,'Own','own',$2),($3,'Other','other','{}')",[org,{crm:{businessLines,pipeline:stages.map(name=>({name}))}},other]);
@@ -50,8 +50,12 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
   const call=async(tool,args)=>(await db.query('select bot_nlu_dispatch_gvintell(-771,$1,$2) result',[tool,args])).rows[0].result;
   let r=await call('upsert_lead',{name:'Marco Valerio Pérez Goya',notas:'Terreno casi 10 ha en Tequila. Revisa agua con un arquitecto.',business:'bienes raíces',input_text:'Dame de alta a Marco en bienes raíces, mañana revisa el agua.'});
   assert.equal(r.staged,true);assert.match(r.reply.text,/Confirmas/);const token=r.token;
+  assert.match(r.reply.text,/Sin teléfono por ahora/);
+  // An older team plan cannot steal a confirmation of this contact card.
+  await db.query("insert into bot_pending_confirm(telegram_chat_id,organization_id,action,payload,created_at) values(-771,$1,'team_plan','{\"tareas\":[{}]}',now()-interval '1 hour')",[org]);
+  assert.equal((await db.query('select fn_copilot_contexto(-771) result')).rows[0].result.plan_esperando_confirmacion,null);
   assert.equal((await db.query('select count(*)::int n from leads')).rows[0].n,0);
-  r=(await db.query('select _bot_execute_pending(-771,$1) result',[token])).rows[0].result;assert.equal(r.ok,true,JSON.stringify(r));
+  r=(await db.query('select bot_confirm_latest_pending(-771) result')).rows[0].result;assert.equal(r.ok,true,JSON.stringify(r));
   let saved=(await db.query('select * from leads where organization_id=$1',[org])).rows[0];
   assert.equal(saved.phone,null);assert.equal(saved.next_action_at,null);assert.equal(saved.stage,'RS Primer contacto');
   assert.match((await db.query('select descripcion from expediente_items where lead_id=$1',[saved.id])).rows[0].descripcion,/10 ha/);

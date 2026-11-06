@@ -429,7 +429,7 @@ function looksLikeCopilotAgendaCreateIntent(text) {
   if (!norm) return false;
   // Personal reminders can include a client's story and several unrelated dates.
   // Let the shared conversational classifier separate the requested time and owner.
-  if (/\b(recuerdame|recordame|avisame)\b/.test(norm)) return false;
+  if (/\b(recuerdame|recordame|av[ií]same)\b/.test(norm)) return false;
   if (/^(agenda|pendientes|mis pendientes|que tengo hoy|que tengo en agenda)$/.test(norm)) return false;
 
   const hasCreateVerb = /\b(recuerdame|recordame|recuestame|agendame|agenda me|anotame|ponme|programame|creame|agrega|agregame)\b/.test(norm);
