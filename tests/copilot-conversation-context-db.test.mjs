@@ -18,7 +18,7 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
    create function fn_norm_nombre(text) returns text language sql immutable as $$select lower(unaccent(btrim($1)))$$;
    create function fn_uuid_o_nulo(text) returns uuid language plpgsql immutable as $$begin return $1::uuid;exception when invalid_text_representation then return null;end$$;
    create function fn_user_tz(uuid,bigint) returns text language sql as $$select 'America/Cancun'::text$$;
-   create function parse_relative_or_abs_es(text,text) returns timestamptz language plpgsql as $$begin if $1 ~ '^20[0-9][0-9]-' then return $1::timestamptz;end if;return null;end$$;
+   create function parse_relative_or_abs_es(text,text) returns timestamptz language plpgsql as $$begin if $1='en dos horas' then return now()+interval '2 hours';end if;if $1 ~ '^20[0-9][0-9]-' then return $1::timestamptz;end if;return null;end$$;
    create function identify_asesor_by_telegram(bigint) returns jsonb language sql as $$select jsonb_build_object('paired',true,'organization_id',organization_id,'profile_id',id,'role',role) from profiles where telegram_chat_id=$1 and active$$;
    create function fn_org_stages_list(uuid) returns text[] language sql stable as $$select array_agg(nombre order by orden) from org_stages where organization_id=$1$$;
    create function fn_org_stage(uuid,text) returns text language sql stable as $$select nombre from org_stages where organization_id=$1 and (nombre ilike '%'||$2||'%' or $2='primera etapa') order by length(nombre),orden limit 1$$;
@@ -41,14 +41,23 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
   // The pending writer and note writer are existing production contracts, not mocked writes.
   await db.exec(`create function _bsc_upsert_pending(bigint,uuid,uuid,text,jsonb) returns text language plpgsql as $$declare t text:=coalesce($4,gen_random_uuid()::text);begin insert into bot_pending_actions(token,telegram_chat_id,asesor_id,organization_id,action_type,payload,expires_at) values(t,$1,$2,$3,'create_lead',$5,now()+interval '1 hour') on conflict(token) do update set payload=excluded.payload;return t;end$$;
    create function bot_add_expediente_note(bigint,text,text,text,text) returns jsonb language plpgsql as $$declare p record;begin select * into p from profiles where telegram_chat_id=$1;insert into expediente_items(organization_id,lead_id,asesor_id,titulo,descripcion) values(p.organization_id,$2::uuid,p.id,$3,$4);return '{"success":true}'::jsonb;end$$;`);
-  for(const f of ['293_copilot_conversation_helpers.sql','294_copilot_conversation_context.sql','295_copilot_pending_context_priority.sql','296_copilot_explicit_notes_precede_pending_tasks.sql','297_copilot_contact_operation_supersedes_old_draft.sql']) await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
+  await db.exec(`alter table team_actions add column id uuid default gen_random_uuid(),add column asesor_id uuid,add column category text,add column priority text,add column completed_at timestamptz,add column nota text,add column status text,add column last_response_at timestamptz,add column evidence_at timestamptz;
+   create function _bot_agenda_extract_text(jsonb) returns text language sql as $$select $1->>'input_text'$$;
+   create function _bot_agenda_parse_due_at(text,jsonb,text) returns jsonb language sql as $$select jsonb_build_object('ok',true,'due_at',($2->>'due_at')::timestamptz)$$;
+   create function _bot_agenda_extract_title(text) returns text language sql as $$select $1$$;
+   create function _bot_agenda_detect_category(text,jsonb) returns text language sql as $$select coalesce($2->>'category','personal')$$;
+   create function _bot_agenda_norm(text) returns text language sql as $$select lower($1)$$;
+   create function _bot_agenda_reply_date(timestamptz,text) returns text language sql as $$select $1::text$$;`);
+  const agendaSource=readFileSync('supabase/migrations/099_copilot_agenda_title_logging_dedupe.sql','utf8');
+  await db.exec(agendaSource.slice(agendaSource.indexOf('create or replace function public.bot_agenda_personal_create('),agendaSource.indexOf('create or replace function public.copilot_agenda_create_from_text(')));
+  for(const f of ['293_copilot_conversation_helpers.sql','294_copilot_conversation_context.sql','295_copilot_pending_context_priority.sql','296_copilot_explicit_notes_precede_pending_tasks.sql','297_copilot_contact_operation_supersedes_old_draft.sql','298_copilot_original_dictation_and_visible_reminders.sql','299_copilot_personal_reminder_delivery_at_due.sql']) await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
   const stages=['RS Primer contacto','RS Contactado','RS Reunión','RS Cliente Ganado','M Primer Contacto','M Contactado','M Reunión','M Cliente Ganado'];
   const businessLines=[{id:'realestate',label:'Bienes raíces',entryStage:stages[0],stages:stages.slice(0,4),aliases:['bienes raíces']},{id:'medicine',label:'Medicina',entryStage:stages[4],stages:stages.slice(4),aliases:['medicina']}];
   await db.query("insert into organizations(id,name,slug,meta_config) values($1,'Own','own',$2),($3,'Other','other','{}')",[org,{crm:{businessLines,pipeline:stages.map(name=>({name}))}},other]);
   for(const [i,name] of stages.entries())await db.query('insert into org_stages(organization_id,orden,nombre) values($1,$2,$3)',[org,i+1,name]);
   await db.query("insert into profiles(id,organization_id,name,role,telegram_chat_id,active) values($1,$2,'Operator','admin',-771,true)",[actor,org]);
   const call=async(tool,args)=>(await db.query('select bot_nlu_dispatch_gvintell(-771,$1,$2) result',[tool,args])).rows[0].result;
-  let r=await call('upsert_lead',{name:'Marco Valerio Pérez Goya',notas:'Terreno casi 10 ha en Tequila. Revisa agua con un arquitecto.',business:'bienes raíces',input_text:'Dame de alta a Marco en bienes raíces, mañana revisa el agua.'});
+  let r=await call('upsert_lead',{name:'Marco Valerio Pérez Goya',notas:'Terreno casi 10 ha en Tequila. Revisa agua con un arquitecto.',business:'bienes raíces',input_text:'Dame de alta a Marco en bienes raíces, mañana revisa el agua.',_dictation_source:'Dictado con repeticiones sobre 10 ha y estudios de Conagua en el terreno.'});
   assert.equal(r.staged,true);assert.match(r.reply.text,/Confirmas/);const token=r.token;
   assert.match(r.reply.text,/Sin teléfono por ahora/);
   // An older team plan cannot steal a confirmation of this contact card.
@@ -59,6 +68,7 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
   let saved=(await db.query('select * from leads where organization_id=$1',[org])).rows[0];
   assert.equal(saved.phone,null);assert.equal(saved.next_action_at,null);assert.equal(saved.stage,'RS Primer contacto');
   assert.match((await db.query('select descripcion from expediente_items where lead_id=$1',[saved.id])).rows[0].descripcion,/10 ha/);
+  assert.match((await db.query('select descripcion from expediente_items where lead_id=$1',[saved.id])).rows[0].descripcion,/Dictado original:[\s\S]*Conagua/);
   assert.equal((await db.query('select _bot_execute_pending(-771,$1) result',[token])).rows[0].result.ok,false);
   r=await call('update_client',{lead_id:saved.id,second_surname:'Golán',stage:'Contactado'});assert.equal(r.ok,true,JSON.stringify(r));
   assert.equal((await db.query('select action from bot_pending_confirm where telegram_chat_id=-771')).rows[0].action,'team_plan_superseded');
@@ -70,6 +80,8 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
   r=await call('add_expediente_note',{client_name:saved.name,nota:'La propietaria confirma el punto de encuentro; el arquitecto irá lunes o martes.'});
   assert.equal(r.ok,true,JSON.stringify(r));
   assert.equal((await db.query("select count(*)::int n from expediente_items where lead_id=$1 and descripcion like 'La propietaria%'",[saved.id])).rows[0].n,1);
+  r=await call('add_expediente_note',{client_name:saved.name,nota:'Nueva información resumida',_dictation_source:'La persona describió que el arquitecto trabajó en Conagua y revisará el agua el lunes o martes. Entonces recuérdame en dos horas consultar a la propietaria.'});
+  assert.equal(r.ok,true);assert.match((await db.query("select descripcion from expediente_items where lead_id=$1 and descripcion like 'Nueva información%'",[saved.id])).rows[0].descripcion,/arquitecto trabajó en Conagua/);
   // Read permissions do not grant the right to modify another company's explicit ID.
   const foreign=(await db.query("insert into leads(organization_id,name,stage) values($1,'Foreign','M Contactado') returning id",[other])).rows[0].id;
   assert.equal((await call('update_client',{lead_id:foreign,second_surname:'Changed'})).ok,false);
@@ -79,6 +91,21 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
   assert.equal((await db.query("select fn_crm_stage_for_contact($1,'M Primer Contacto','Contactado') result",[org])).rows[0].result,'M Contactado');
   assert.equal((await db.query("select fn_crm_stage_for_contact($1,null,'Contactado') result",[org])).rows[0].result,null);
   assert.equal((await call('update_client',{lead_id:saved.id,stage:'RS Reunión'})).needs_input,'date');
+  r=await call('create_personal_reminder',{input_text:'El arquitecto irá lunes o martes. Recuérdame en dos horas consultar a la propietaria.',text:'Consultar a la propietaria',when:'en dos horas'});
+  assert.equal(r.ok,true,JSON.stringify(r));
+  const reminder=(await db.query('select *,extract(epoch from(due_at-created_at))/3600 hours from team_actions where id=$1',[r.action_id])).rows[0];
+  assert.equal(reminder.asesor_id,actor);assert.equal(reminder.organization_id,org);assert.equal(Number(reminder.hours),2);assert.equal(reminder.text,'Consultar a la propietaria');
+  assert.equal((await db.query('select count(*)::int n from team_actions')).rows[0].n,1);
+  assert.match(reminder.nota,/copilot_personal_reminder/);
+  const queue=(await db.query("select * from proactive_reminders where organization_id=$1 and payload->>'action_id'=$2",[org,r.action_id])).rows;
+  assert.equal(queue.length,1);assert.equal(queue[0].tipo,'personal');assert.equal(queue[0].asesor_id,actor);assert.equal(queue[0].scheduled_at.getTime(),reminder.due_at.getTime());
+  r=await call('create_personal_reminder',{text:'Consultar a la propietaria',when:'en dos horas'});assert.equal(r.deduped,true);
+  assert.equal((await db.query('select count(*)::int n from team_actions')).rows[0].n,1);assert.equal((await db.query('select count(*)::int n from proactive_reminders')).rows[0].n,1);
+  await db.query("insert into proactive_config(organization_id,enabled,shadow_mode,timezone,team_reminder_offsets) values($1,true,false,'America/Cancun',array[0])",[org]);
+  await db.query("update team_actions set due_at=now()+interval '1 minute' where id=$1",[r.action_id]);
+  await db.query("insert into team_actions(organization_id,text,asesor_id,asesor_name,due_at,done) values($1,'Normal team work',$2,'Operator',now()+interval '1 minute',false)",[org,actor]);
+  const scan=(await db.query('select fn_proactive_scan_team_actions(jsonb_build_object(\'organization_id\',$1::text)) result',[org])).rows[0].result;
+  assert.equal(scan.enqueued,1);assert.equal((await db.query("select count(*)::int n from proactive_reminders where tipo='team_action'")).rows[0].n,1);
   // Missing names produce a question without a fake confirmation button.
   r=await call('upsert_lead',{phone:'5512345678'});assert.doesNotMatch(r.reply.text,/Confirmas/);
  } finally { await db.close(); }
