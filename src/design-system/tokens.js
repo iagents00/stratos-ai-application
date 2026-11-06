@@ -236,6 +236,7 @@ export const STAGE_COLORS = {
   "Visita Agendada":  P.cyan,
   "Cierre":           "#6EE7C2", // verde comercial independiente de la marca
   "Postventa":        "#64748B",
+  "Cierres Caídos":   "#D97757",
 };
 
 // Mapping de migración: etapa vieja → etapa nueva.

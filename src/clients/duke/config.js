@@ -83,6 +83,8 @@ const dukeConfig = {
   // - advisorMetricsTab: true → admins/director/super_admin/ceo de Duke
   //   ahora ven el botón "Indicadores" en el header del CRM.
   crm: {
+    // Extend only Duke's historical pipeline, keeping its score/Zoom layout.
+    additionalStages: [{ name: "Cierres Caídos", color: "#D97757" }],
     defaultProjects:     [],
     advisorMetricsTab:   true,
     // Discovery simplificado (PR del 2026-05): un solo drawer scrolleable

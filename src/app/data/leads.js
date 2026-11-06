@@ -25,6 +25,7 @@ export const stgC = {
   "Visita Agendada":  P.cyan,
   "Cierre":           P.accent,
   "Postventa":        "#64748B",
+  "Cierres Caídos":   "#D97757",
 };
 
 // Only synthetic records may be bundled as CRM demo examples.

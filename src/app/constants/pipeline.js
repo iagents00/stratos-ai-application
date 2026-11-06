@@ -55,7 +55,9 @@ function resolverPipeline(cfg) {
     ? groups.flatMap(g => g.stages)
     : (Array.isArray(cfg?.crm?.pipeline) && cfg.crm.pipeline.length ? cfg.crm.pipeline : null);
 
-  const stages = custom ? custom.map(s => s.name) : [...DUKE_STAGES];
+  const additional = !custom && Array.isArray(cfg?.crm?.additionalStages)
+    ? cfg.crm.additionalStages.filter(stage => stage?.name && !DUKE_STAGES.includes(stage.name)) : [];
+  const stages = custom ? custom.map(s => s.name) : [...DUKE_STAGES, ...additional.map(stage => stage.name)];
   const pipelineGroups = groups
     ? groups.map(g => ({
         id:     g.id,
@@ -78,7 +80,7 @@ function resolverPipeline(cfg) {
     hasGroups: !!groups && groups.length > 1,
     colors: custom
       ? Object.fromEntries(custom.map(s => [s.name, s.color]))
-      : { ...DUKE_STGC },
+      : { ...DUKE_STGC, ...Object.fromEntries(additional.map(stage => [stage.name, stage.color || "#64748B"])) },
     businessLines: businessLinesForPipeline(cfg?.crm?.businessLines, stages),
     appointmentStages,
     appointmentStage: appointmentStages[0] || null,

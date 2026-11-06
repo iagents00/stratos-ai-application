@@ -179,7 +179,7 @@ const DEFINIR_PASO = {
   eta: "hoy",
 };
 
-const ETAPAS_CERRADAS = new Set(["Cierre", "Postventa", "Descartado"]);
+const ETAPAS_CERRADAS = new Set(["Cierre", "Postventa", "Cierres Caídos", "Descartado"]);
 
 /**
  * Etapas donde "primer contacto" todavía tiene sentido. El campo `isNew` del
