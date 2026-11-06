@@ -32,6 +32,8 @@ import { transcribirEnServidor } from "../../lib/transcribir";
 import { supabase } from "../../lib/supabase";
 import { isNativeApp } from "../../lib/native";
 import { useIsMobile } from "../../hooks/useViewport";
+import { useChatScroll } from "../../hooks/useChatScroll";
+import { mergeCopilotHistory } from "../../lib/copilot-history";
 
 const SUGGESTIONS = [
   { label: "Mis clientes", text: "mis clientes" },
@@ -215,6 +217,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           todo el chat — eso es parte de la lentitud que se siente. */
   const lastSendRef = useRef(0);
   const lastReloadRef = useRef(0);
+  const { followingRef, showLatest, onScroll, followLatest } = useChatScroll(scrollRef, { messages, sending, recording, pendingVoiceBlob });
 
   // ── TIEMPO LÍMITE (17-ago-2026) — por qué existe ──────────────────────────
   // Ángel reportó el chat clavado en "Cargando conversación…" desde el celular.
@@ -258,40 +261,9 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     setErrorCarga(false);
     lastReloadRef.current = Date.now();
     const delServidor = [...(r.messages || [])].reverse();
-    setMessages((prev) => {
-      if (!opts.merge) return delServidor;
-      // Se conserva lo LOCAL que el servidor todavía no refleja (comparando por
-      // rol + texto). Sin esto, un refresco a destiempo te borra el mensaje.
-      // Un local cuenta como «ya está en el servidor» solo si el texto coincide
-      // Y las horas quedan a menos de 90s. Comparar por texto pelado hacía que
-      // un tap repetido («En proceso», «Sí», «Hecho») se borrara de pantalla al
-      // refrescar porque matcheaba con su gemelo VIEJO de arriba — «mi mensaje
-      // se fue para arriba de la nada» (Ángel, 30-jul).
-      const hora = (m) => new Date(m.occurred_at || 0).getTime() || 0;
-      const enServidor = delServidor.map((m) => ({ k: `${m.role}|${(m.content || "").trim()}`, t: hora(m) }));
-      const yaEsta = (m) => {
-        const k = `${m.role}|${(m.content || "").trim()}`;
-        const t = hora(m);
-        return enServidor.some((s) => s.k === k && Math.abs(s.t - t) < 90000);
-      };
-      const huerfanos = prev.filter(
-        (m) => String(m.id || "").startsWith("tmp-") || String(m.id || "").startsWith("ai-")
-      ).filter((m) => !yaEsta(m));
-      if (!huerfanos.length) return delServidor;
-      // Los huérfanos se INTERCALAN por hora, no se cuelgan al final: colgarlos
-      // hacía que un mensaje viejo que el servidor aún no tenía saltara al fondo
-      // en cada refresco — el «se cambia el orden» que reportó Ángel (30-jul).
-      // Orden estable: a igual hora se respeta el orden que ya tenían.
-      const merged = [...delServidor, ...huerfanos].map((m, i) => [m, i]);
-      merged.sort((a, b) => {
-        const ta = new Date(a[0].occurred_at || 0).getTime() || 0;
-        const tb = new Date(b[0].occurred_at || 0).getTime() || 0;
-        return (ta - tb) || (a[1] - b[1]);
-      });
-      return merged.map(([m]) => m);
-    });
+    setMessages(prev => mergeCopilotHistory(prev, delServidor, { merge: opts.merge, preserveEarlier: !followingRef.current }));
     setLoading(false);
-  }, [isDemo]);
+  }, [isDemo, followingRef]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -352,11 +324,6 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   useEffect(() => { eligiendoTareaRef.current = !!pendingEvidence; }, [pendingEvidence]);
 
   useEffect(() => {
-    const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [messages, sending, recording, pendingVoiceBlob]);
-
-  useEffect(() => {
     if (!pendingVoiceBlob) { setPendingVoiceUrl(null); return; }
     const url = URL.createObjectURL(pendingVoiceBlob);
     setPendingVoiceUrl(url);
@@ -370,6 +337,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     const text = (rawText ?? "").trim();
     if (!text && !options.callback_data) return;
     if (sending) return;
+    followLatest();
     if (isDemo) {
       setInput("");
       const at = new Date().toISOString();
@@ -1106,7 +1074,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
             el "180" de WhatsApp). */}
         {showBackBtn && (
           <button type="button" onClick={onBack} aria-label="Volver" style={{
-            display: "flex", alignItems: "center", gap: 1, padding: "4px 6px 4px 2px", marginRight: 2,
+            display: "flex", alignItems: "center", gap: 1, minWidth: 44, minHeight: 44, padding: "4px 6px 4px 2px", marginRight: 2,
             background: "transparent", border: "none", cursor: "pointer", flexShrink: 0,
             WebkitTapHighlightColor: "transparent",
           }}>
@@ -1141,7 +1109,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           </div>
         </div>
         {!isMarketing && !puedeCajaFoto && <button type="button" aria-label="Qué puede hacer el Copilot" title="Qué puede hacer" aria-expanded={capabilitiesOpen} onClick={() => setCapabilitiesOpen(o => !o)} style={{ width: 36, height: 36, borderRadius: 8, background: "transparent", border: "none", color: T.accent, cursor: "pointer" }}><BookOpen size={18} /></button>}
-        <button type="button" onClick={reload} title="Refrescar"
+        <button type="button" onClick={() => reload({ merge: true })} title="Refrescar"
           style={{ width: 30, height: 30, borderRadius: 8, background: "transparent", border: "none", color: T.txt3, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <RefreshCw size={14} strokeWidth={2} />
         </button>
@@ -1177,7 +1145,8 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           El Copilot ocupa TODO el ancho (full-bleed como el Pipeline) — decisión de
           Ángel 24-jul. Antes iba en una columna centrada de 920px (fix del 21-jul);
           se revierte para que en web llene la pantalla igual que el resto de la plataforma. */}
-      <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "12px 14px" }}>
+      <div style={{ flex: 1, minHeight: 0, position: "relative", display: "flex", flexDirection: "column" }}>
+      <div ref={scrollRef} onScroll={onScroll} role="log" aria-label="Conversación de Copilot" style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "12px 14px" }}>
         <div style={{ width: "100%", maxWidth: "none", minHeight: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
           {loading ? (
             <div style={{ margin: "auto", color: T.txt3, fontSize: 12.5, fontFamily: font }}>Cargando conversación…</div>
@@ -1205,6 +1174,9 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           )}
           {sending && <Typing T={T} isLight={isLight} aiBg={bubbleAiBg} aiBd={bubbleAiBd} />}
         </div>
+      </div>
+
+      {showLatest && messages.length > 0 && <button type="button" onClick={followLatest} style={{ position: "absolute", right: 16, bottom: 12, minHeight: 44, padding: "8px 14px", borderRadius: 24, border: `1px solid ${T.border}`, background: composerBg, color: T.accent, fontFamily: font, fontSize: chatType.chip, boxShadow: `0 2px 8px ${T.border}`, display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}><ChevronDown size={16} />Ir al último mensaje</button>}
       </div>
 
       {/* ── Banner de error ── */}

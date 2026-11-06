@@ -103,3 +103,10 @@ test('business-aware public release selects the exact 4.9.6 build and updated re
  assert.equal(result.submissionState,'WAITING_FOR_REVIEW');assert.equal(result.releaseType,'AFTER_APPROVAL');
  assert.match(m.calls.find(c=>c.body?.data?.attributes?.whatsNew).body.data.attributes.whatsNew,/negocio.*seguimientos/i);
 });
+
+test('navigation and reading fix uses exact 4.9.7 build and public release notes',async()=>{
+ const m=mock({version:'4.9.7',buildNumber:'150'});
+ const result=await releaseIOS({version:'4.9.7',buildNumber:'150',mode:'submit',request:m.request});
+ assert.equal(result.submissionState,'WAITING_FOR_REVIEW');assert.equal(result.releaseType,'AFTER_APPROVAL');
+ assert.match(m.calls.find(c=>c.body?.data?.attributes?.whatsNew).body.data.attributes.whatsNew,/posición.*reabrir/i);
+});
