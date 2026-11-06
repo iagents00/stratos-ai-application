@@ -18,6 +18,7 @@ test('administrators see standard modules on desktop, iOS and Android; financial
  const oldWindow=globalThis.window;
  try{for(const platform of ['web','ios','android']){globalThis.window=platform==='web'?{}:{Capacitor:{isNativePlatform:()=>true,getPlatform:()=>platform}};const visible=getAccessibleNavigation(admin,config).map(x=>x.id);for(const module of modules)assert.ok(visible.includes(module),platform+':'+module);}
  assert.equal(canAccessModule('fa',admin,{...config,features:{...config.features,cajaPolicy:{enabled:true,read_all:false}}}),false);
+ assert.equal(canAccessModule('fa',admin,{id:'new-white-label',features:{finanzas:true}}),true,'a dedicated company config can explicitly enable Finance without a managed-tenant policy projection');
  const advisor={...admin,role:'asesor'};assert.equal(canAccessModule('fa',advisor,config),false);assert.equal(canAccessModule('d',advisor,config),false);
  for(const module of ['e','lp','midrive'])assert.equal(canAccessModule(module,advisor,config),true);
  for(const module of modules)assert.equal(canAccessModule(module,{...admin,crmOnly:true},config),false);

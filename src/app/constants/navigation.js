@@ -317,7 +317,7 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   if (moduleId === "fa") {
     if (clientConfig?.features?.finanzas === false) return false;
     if (!isStratosOrg(user.organizationId) && clientConfig?.features?.finanzas !== true) return false;
-    if (!isStratosOrg(user.organizationId) && !(clientConfig?.features?.cajaPolicy?.enabled === true
+    if (clientConfig?.id === "tenant" && !(clientConfig?.features?.cajaPolicy?.enabled === true
         && clientConfig.features.cajaPolicy.read_all === true)) return false;
     return MODULE_ROLES.fa.includes(user.role);
   }
