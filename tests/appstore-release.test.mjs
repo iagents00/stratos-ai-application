@@ -110,3 +110,12 @@ test('navigation and reading fix uses exact 4.9.7 build and public release notes
  assert.equal(result.submissionState,'WAITING_FOR_REVIEW');assert.equal(result.releaseType,'AFTER_APPROVAL');
  assert.match(m.calls.find(c=>c.body?.data?.attributes?.whatsNew).body.data.attributes.whatsNew,/posición.*reabrir/i);
 });
+
+test('buyer-document release selects the exact mobile build and public CRM notes',async()=>{
+ const m=mock({version:'4.9.8',buildNumber:'152'});
+ const result=await releaseIOS({version:'4.9.8',buildNumber:'152',mode:'submit',request:m.request});
+ assert.equal(result.submissionState,'WAITING_FOR_REVIEW');assert.equal(result.releaseType,'AFTER_APPROVAL');
+ assert.equal(m.calls.find(c=>c.method==='PATCH'&&c.path.endsWith('/relationships/build')).body.data.id,'build152');
+ const whatsNew=m.calls.find(c=>c.body?.data?.attributes?.whatsNew).body.data.attributes.whatsNew;
+ assert.match(whatsNew,/identificaciones.*cartas oferta.*teléfonos.*correos.*Cierres Caídos/);
+});

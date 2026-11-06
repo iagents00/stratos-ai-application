@@ -5,7 +5,11 @@ import { pathToFileURL } from 'node:url';
 export const APP_ID = '6804826565';
 const editable = new Set(['PREPARE_FOR_SUBMISSION','REJECTED','METADATA_REJECTED','DEVELOPER_REJECTED']);
 const inReview = new Set(['WAITING_FOR_REVIEW','IN_REVIEW','PENDING_APPLE_RELEASE','PENDING_DEVELOPER_RELEASE','READY_FOR_DISTRIBUTION','READY_FOR_SALE','PROCESSING_FOR_DISTRIBUTION','PROCESSING_FOR_APP_STORE']);
-const notes = (locale, version) => version === '4.9.7'
+const notes = (locale, version) => version === '4.9.8'
+  ? (locale.startsWith('es')
+    ? 'Guarda varias identificaciones con nombre de titular y adjunta cartas oferta por propiedad. Registra varios teléfonos y correos por comprador adicional y consulta el contacto principal debajo del nombre del cliente. Incluye la etapa Cierres Caídos para Duke, conservando las identificaciones anteriores y las mejoras de Copilot, documentos de Space y citas.'
+    : 'Save multiple named identity documents and attach property offer letters. Add multiple phone numbers and email addresses for additional buyers, with the main contact shown below the client name. Includes the Failed Closings stage for Duke while preserving existing identification records and Copilot, Space documents and appointment improvements.')
+  : version === '4.9.7'
   ? (locale.startsWith('es')
     ? 'Copilot conserva tu posición cuando lees mensajes anteriores, aunque se actualice la conversación o lleguen recordatorios. Vuelve al CRM y a tus módulos desde Copilot incluso después de cerrar y reabrir la app. Incluye las mejoras del login blanco, documentos de Space, negocios y citas múltiples con avisos de 3 horas.'
     : 'Copilot keeps your reading position in earlier messages while the conversation refreshes or reminders arrive. Return to CRM and your modules from Copilot even after closing and reopening the app. Includes white sign-in, Space documents, business pipelines and multiple appointment stages with three-hour reminders.')
