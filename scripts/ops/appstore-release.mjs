@@ -5,7 +5,11 @@ import { pathToFileURL } from 'node:url';
 export const APP_ID = '6804826565';
 const editable = new Set(['PREPARE_FOR_SUBMISSION','REJECTED','METADATA_REJECTED','DEVELOPER_REJECTED']);
 const inReview = new Set(['WAITING_FOR_REVIEW','IN_REVIEW','PENDING_APPLE_RELEASE','PENDING_DEVELOPER_RELEASE','READY_FOR_DISTRIBUTION','READY_FOR_SALE','PROCESSING_FOR_DISTRIBUTION','PROCESSING_FOR_APP_STORE']);
-const notes = (locale, version) => version === '4.9.6'
+const notes = (locale, version) => version === '4.9.7'
+  ? (locale.startsWith('es')
+    ? 'Copilot conserva tu posición cuando lees mensajes anteriores, aunque se actualice la conversación o lleguen recordatorios. Vuelve al CRM y a tus módulos desde Copilot incluso después de cerrar y reabrir la app. Incluye las mejoras del login blanco, documentos de Space, negocios y citas múltiples con avisos de 3 horas.'
+    : 'Copilot keeps your reading position in earlier messages while the conversation refreshes or reminders arrive. Return to CRM and your modules from Copilot even after closing and reopening the app. Includes white sign-in, Space documents, business pipelines and multiple appointment stages with three-hour reminders.')
+  : version === '4.9.6'
   ? (locale.startsWith('es')
     ? 'Identifica el negocio de cada contacto y elige su recorrido al registrarlo. Copilot propone la etapa inicial del negocio configurado y pide aclaración si hay más de una opción. Los seguimientos suman puntos en pipelines personalizados. Conserva el login blanco, los documentos de Space y las citas múltiples con recordatorios de 3 horas.'
     : 'Identify each contact’s business and choose its pipeline when registering. Copilot proposes the configured business entry stage and asks for clarification when needed. Follow-ups add points in custom pipelines. Includes white sign-in, Space documents and multiple appointment stages with three-hour reminders.')

@@ -76,7 +76,7 @@ const PlatformAdminConsole = lazy(() => import("./features/Admin/PlatformAdminCo
 const RailsSettings = lazy(() => import("./features/Admin/RailsSettings"));
 
 /* ── Navigation & roles ── */
-import { nav, MODULE_ROLES, MOBILE_PRIMARY_NAV, getAccessibleNavigation, canAccessModule, isMarketingUser } from "./constants/navigation";
+import { nav, MODULE_ROLES, MOBILE_PRIMARY_NAV, getAccessibleNavigation, canAccessModule, isMarketingUser, resolveImmersiveBackView } from "./constants/navigation";
 
 // Vistas que NO se persisten entre F5: son flujos efímeros (entrar a Planes
 // desde una promo, abrir admin desde un settings click). El F5 te regresa
@@ -359,9 +359,15 @@ export default function App() {
 
   // Vista PREVIA a las vistas INMERSIVAS (Copilot / WhatsApp) — su flecha
   // "‹ volver" regresa acá. Se guarda la última vista que NO sea inmersiva.
-  const prevViewRef = useRef(clientConfig?.features?.projectKanban ? "mkt" : (isAsesorRole ? "c" : "d"));
-  useEffect(() => { if (v !== "copilot" && v !== "wa") prevViewRef.current = v; }, [v]);
-  const backToPrevView = useCallback(() => setV(prevViewRef.current || (isAsesorRole ? "c" : "d")), [isAsesorRole]);
+  const prevViewRef = useRef({ userId: null, view: null });
+  useEffect(() => {
+    if (prevViewRef.current.userId !== user?.id) prevViewRef.current = { userId: user?.id, view: null };
+    if (v !== "copilot" && v !== "wa" && canAccessModule(v, user, clientConfig)) prevViewRef.current.view = v;
+  }, [v, user, clientConfig]);
+  const backToPrevView = useCallback(() => {
+    const previous = prevViewRef.current.userId === user?.id ? prevViewRef.current.view : null;
+    setV(resolveImmersiveBackView(previous, user, clientConfig));
+  }, [user, clientConfig]);
 
 
   // Persistir vista cuando cambia para que el próximo F5 te deje donde estabas.

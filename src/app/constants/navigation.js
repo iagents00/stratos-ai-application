@@ -197,6 +197,20 @@ export function isStratosOrg(orgId) {
   return orgId === STRATOS_ORG_ID;
 }
 
+// Volver no restaura la preferencia guardada: puede ser el propio chat.
+// En un arranque en frío no existe una vista anterior; elegir una pantalla
+// real y permitida evita el bucle chat → módulo restringido → chat guardado.
+export function resolveImmersiveBackView(previous, user, clientConfig) {
+  const home = clientConfig?.features?.projectKanban ? "mkt"
+    : user?.role === "colaborador" ? "plan"
+      : (isMarketingUser(user) || clientConfig?.features?.crm === false) ? "mkt_reporte"
+        : (!isStratosOrg(user?.organizationId) || user?.role === "asesor") ? "c" : "d";
+  return [previous, home, "c", "mkt", "d", "plan", "mkt_reporte", "perfil"].find(view =>
+    view && !["copilot", "wa", "miespacio", "mi_espacio"].includes(view)
+    && nav.some(item => item.id === view) && canAccessModule(view, user, clientConfig)
+  ) || "perfil";
+}
+
 /**
  * Decide si un usuario puede acceder a un módulo.
  * Combina cuatro capas:
