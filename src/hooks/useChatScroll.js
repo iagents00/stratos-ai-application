@@ -37,7 +37,8 @@ export function useChatScroll(scrollRef, { messages, sending, recording, pending
     if (box.scrollTop < lastPositionRef.current - 1
         && box.scrollHeight - box.clientHeight - box.scrollTop > NEAR_BOTTOM_PX) {
       followingRef.current = false;
-      setShowLatest(true);
+      // The queued scroll handler updates the button without a second render
+      // inside the layout effect.
       return;
     }
     scrollToLatest();
