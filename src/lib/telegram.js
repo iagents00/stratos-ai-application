@@ -427,6 +427,9 @@ function normalizeAgendaText(text) {
 function looksLikeCopilotAgendaCreateIntent(text) {
   const norm = normalizeAgendaText(text);
   if (!norm) return false;
+  // Personal reminders can include a client's story and several unrelated dates.
+  // Let the shared conversational classifier separate the requested time and owner.
+  if (/\b(recuerdame|recordame|avisame)\b/.test(norm)) return false;
   if (/^(agenda|pendientes|mis pendientes|que tengo hoy|que tengo en agenda)$/.test(norm)) return false;
 
   const hasCreateVerb = /\b(recuerdame|recordame|recuestame|agendame|agenda me|anotame|ponme|programame|creame|agrega|agregame)\b/.test(norm);
@@ -664,7 +667,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
       if (isIntrusive && !/^men[uú]$/i.test(cleanText) && !options.callback_data) {
         if (/clientes de|tiene|quién|quien|cuál|cual|cómo|como/i.test(cleanText)) {
           return {
-            reply: `Estoy procesando tu consulta en el CRM: "${cleanText}". Puedes afinar la búsqueda por asesor o cliente en la sección **Personas / Buscar**, o preguntarme por un nombre o teléfono específico para abrir su ficha al instante.`,
+            reply: 'No pude resolver esa consulta. Dime el nombre del contacto o abre su ficha para continuar.',
             buttons: [
               { label: "👥 Ir a Fichas / Personas", action: "buscar", isUrl: false, primary: true },
               { label: "📖 Ver Manual Completo", action: "https://app.stratoscapitalgroup.com/manual-asistente-telegram", isUrl: true, primary: false }
@@ -672,7 +675,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
           };
         }
         return {
-          reply: `Anotado: "${cleanText}". Si deseas registrar un cliente, programar un recordatorio ("recuérdame en 15 minutos llamar a Juan") o ver tus pendientes, indícamelo en lenguaje natural o consulta el manual.`,
+          reply: 'No pude completar esa acción. No confirmé ningún cambio. Puedes decirme qué contacto o actividad quieres actualizar.',
           buttons: []
         };
       }
