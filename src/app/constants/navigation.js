@@ -274,8 +274,8 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
     if (!AREA_MEMBER_MODULES.has(moduleId)) return false;
     // El Copilot sigue siendo del cliente: sin el flag, nadie lo ve.
     if (moduleId === "copilot") return clientConfig?.features?.copilotModule === true;
-    // Las carpetas de "Mi Drive" son las de Duke; fuera de esa org no aplican.
-    if (moduleId === "midrive") return isStratosOrg(user.organizationId);
+    // Duke conserva sus áreas; otra empresa necesita su Drive habilitado.
+    if (moduleId === "midrive") return isStratosOrg(user.organizationId) || clientConfig?.features?.miDrive === true;
     return true;
   }
 
@@ -309,6 +309,18 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
       && MODULE_ROLES.mkt.includes(user.role)) return false;
 
   // Explicit opt-in for organization-scoped property and presentation tools.
+  if (moduleId === "midrive") {
+    return clientConfig?.features?.miDrive === true
+      ? [...MODULE_ROLES.midrive, "asesor"].includes(user.role)
+      : isStratosOrg(user.organizationId) && MODULE_ROLES.midrive.includes(user.role);
+  }
+  if (moduleId === "fa") {
+    if (clientConfig?.features?.finanzas === false) return false;
+    if (!isStratosOrg(user.organizationId) && clientConfig?.features?.finanzas !== true) return false;
+    if (!isStratosOrg(user.organizationId) && !(clientConfig?.features?.cajaPolicy?.enabled === true
+        && clientConfig.features.cajaPolicy.read_all === true)) return false;
+    return MODULE_ROLES.fa.includes(user.role);
+  }
   if (moduleId === "lp" || moduleId === "e") {
     const feature = moduleId === "lp" ? "landingPages" : "erp";
     if (clientConfig?.features?.[feature] === false) return false;

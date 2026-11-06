@@ -292,3 +292,13 @@ test('appointment selection is published atomically with stages and read back pe
    assert.equal((await h.call({...body,pipeline:[{...pipeline[0],previous_name:123},...pipeline.slice(1)]})).status,400);
   }
  });
+
+test('root and partner installations always request the standard company modules, including old creation payloads',async()=>{
+ const required=['comandoDirectivo','erp','finanzas','miDrive','landingPages'];
+ for(const root of [true,false])for(const features of [undefined,{teamAdmin:true,mktModule:false,comandoDirectivo:false}]){
+  const h=harness({root});const result=await h.call({action:'create_organization',name:'New company',seats:5,...(features?{features}:{})});
+  assert.equal(result.status,200);const call=h.rpcs.find(r=>r.name==='fn_provision_company');assert.ok(call);
+  for(const key of required)assert.equal(call.args.p_features[key],true,key);
+ }
+ const h=harness({root:true});assert.equal((await h.call({action:'create_organization',name:'New company',features:{teamAdmin:true,mktModule:false,comandoDirectivo:false,unknown:true}})).status,400);
+});

@@ -2847,7 +2847,7 @@ export default function App() {
                   {v === "d"      && (clientConfig?.features?.comandoOps
                     ? <ComandoOps T={T} accent={clientConfig?.brand?.accent} />
                     : clientConfig?.features?.comandoDirectivo
-                      ? <ComandoDirectivo leadsData={leadsData} T={T} theme={theme} loading={leadsLoading || leadsRefreshing} loadError={leadsLoadError} onRetry={() => fetchLeads()} />
+                      ? <ComandoDirectivo key={user?.organizationId} leadsData={leadsData} T={T} theme={theme} loading={leadsLoading || leadsRefreshing} loadError={leadsLoadError} onRetry={() => fetchLeads()} />
                       : <Dash oc={oc} leadsData={leadsData} T={T} />)}
                   {v === "c"      && (clientConfig.liveHuli ? <HuliWorkspace view="patients" /> : <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} isRefreshing={leadsRefreshing} loadError={leadsLoadError} onRetry={() => fetchLeads({ silent: true })} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} autoOpenNewLead={crmNewLeadTick} onNewLeadHandled={() => setCrmNewLeadTick(0)} onOpenComando={() => setV("d")} />)}
                   {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} openExpediente={openLeadExpediente} onBack={backToPrevView} chatCount={waInbox.conversations?.length || 0} />}
@@ -2860,14 +2860,14 @@ export default function App() {
                   {v === "plan"   && canAccessModule("plan", user, clientConfig) && (
                     <PlanSemanal T={T} onOpenCopilot={canAccessModule("copilot", user, clientConfig) ? () => setV("copilot") : undefined} />
                   )}
-                  {v === "midrive" && canAccessModule("midrive", user, clientConfig) && <MiDrive T={T} />}
+                  {v === "midrive" && canAccessModule("midrive", user, clientConfig) && <MiDrive T={T} onOpenSpace={() => setMetaOpen(true)} />}
                   {v === "trash"  && <Trash trashedLeads={trashedLeads} onRestore={restoreLead} onHardDelete={hardDeleteLead} onRefresh={refreshTrash} T={T} />}
                   {v === "ia"     && <IACRM oc={oc} T={T} theme={theme} />}
                   {v === "e"      && <ERP oc={oc} T={T} />}
                   {v === "a"      && <Team oc={oc} T={T} leadsData={leadsData} />}
                   {v === "mi_espacio" && clientConfig.liveHuli && <HuliWorkspace view="agenda" />}
                   {v === "lp"     && <LandingPages T={T} />}
-                  {v === "fa"     && <FinanzasAdmin T={T} />}
+                  {v === "fa"     && <FinanzasAdmin key={user?.organizationId} T={T} />}
                   {v === "caja"   && canAccessModule("caja", user, clientConfig) && <Caja T={T} />}
                   {v === "chat"   && canAccessModule("chat", user, clientConfig) && <ChatEquipo T={T} onInmersivo={setChatInmersivo} />}
                   {v === "rrhh"   && <RRHHModule T={T} />}

@@ -110,7 +110,7 @@ for (const clientId of tenants) {
 // combinaciones administrables deben conservar CRM y respetar cada interruptor.
 if (!soloTenant || soloTenant === "tenant") {
   const base = clients.getClientConfig("tenant");
-  if (base.navLabels?.mkt !== "Proyectos" || !["pipeline", "solicitudes"].every(tab => base.mkt?.hideTabs?.includes(tab))) {
+  if (base.navLabels?.mkt !== "Tareas" || !["pipeline", "solicitudes"].every(tab => base.mkt?.hideTabs?.includes(tab))) {
     fail("tenant/config: Proyectos muestra pestañas propias de Duke");
   }
   const ignored = managed.managedTenantFeatures({ crm: false, whatsappModule: true, caja: true });
