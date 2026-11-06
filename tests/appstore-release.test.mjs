@@ -119,3 +119,12 @@ test('buyer-document release selects the exact mobile build and public CRM notes
  const whatsNew=m.calls.find(c=>c.body?.data?.attributes?.whatsNew).body.data.attributes.whatsNew;
  assert.match(whatsNew,/identificaciones.*cartas oferta.*teléfonos.*correos.*Cierres Caídos/);
 });
+
+test('reminder follow-up release describes both modes without claiming task completion',async()=>{
+ const m=mock({version:'4.9.9',buildNumber:'153'});
+ const result=await releaseIOS({version:'4.9.9',buildNumber:'153',mode:'submit',request:m.request});
+ assert.equal(result.submissionState,'WAITING_FOR_REVIEW');
+ assert.equal(result.releaseType,'AFTER_APPROVAL');
+ const whatsNew=m.calls.find(c=>c.body?.data?.attributes?.whatsNew).body.data.attributes.whatsNew;
+ assert.match(whatsNew,/tres minutos.*dos avisos adicionales.*sin marcar la actividad como terminada/);
+});

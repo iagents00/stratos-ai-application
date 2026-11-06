@@ -15,6 +15,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Send, Sparkles, RefreshCw, Mic, Square, X, ChevronDown, ChevronUp, ChevronLeft, Bot, BookOpen, Play, Pause, Bell, Camera, Paperclip } from "lucide-react";
+import CopilotReminderSettings from "../components/CopilotReminderSettings";
+import { followupButtons } from "../../lib/copilot-reminders";
 import { P, LP, font, fontDisp, chatType } from "../../design-system/tokens";
 import { G } from "../SharedComponents";
 import { demoCopilotReply } from "../../lib/copilot-demo";
@@ -137,6 +139,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
   // Este estado se enciende SOLO cuando el asistente esta realmente inalcanzable.
   const [asistenteCaido, setAsistenteCaido] = useState(false);
   const [capabilitiesOpen, setCapabilitiesOpen] = useState(false);
+  const [reminderSettingsOpen, setReminderSettingsOpen] = useState(false);
   useEffect(() => {
     if (!capabilitiesOpen) return;
     const close = e => { if (e.key === "Escape") setCapabilitiesOpen(false); };
@@ -505,6 +508,8 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           ? "Tu mensaje no llegó al motor (falló la conexión). Mándalo de nuevo — no se guardó nada."
         : r.error === "sesion_expirada"
           ? "Tu sesión se cerró. Vuelve a entrar para seguir hablando con el asistente — lo que escribiste no se envió."
+        : r.error === "reminder_response_unconfirmed"
+          ? "No pudimos confirmar tu respuesta al recordatorio. Recarga la conversación para comprobar su estado."
         : r.error === "profile_unavailable"
           ? "No pudimos consultar tu cuenta porque el servicio no respondió. Tu mensaje no se envió al asistente. Intenta de nuevo."
           : "No se pudo enviar. Intenta de nuevo.");
@@ -1109,6 +1114,8 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
           </div>
         </div>
         {!isMarketing && !puedeCajaFoto && <button type="button" aria-label="Qué puede hacer el Copilot" title="Qué puede hacer" aria-expanded={capabilitiesOpen} onClick={() => setCapabilitiesOpen(o => !o)} style={{ width: 36, height: 36, borderRadius: 8, background: "transparent", border: "none", color: T.accent, cursor: "pointer" }}><BookOpen size={18} /></button>}
+        <button type="button" aria-label="Configurar insistencia" title="Insistencia" aria-expanded={reminderSettingsOpen} onClick={() => setReminderSettingsOpen(open => !open)}
+          style={{ width: 36, height: 36, borderRadius: 8, background: reminderSettingsOpen ? `${T.accent}18` : "transparent", border: "none", color: reminderSettingsOpen ? T.accent : T.txt3, cursor: "pointer", display: "grid", placeItems: "center" }}><Bell size={17} /></button>
         <button type="button" onClick={() => reload({ merge: true })} title="Refrescar"
           style={{ width: 30, height: 30, borderRadius: 8, background: "transparent", border: "none", color: T.txt3, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <RefreshCw size={14} strokeWidth={2} />
@@ -1122,6 +1129,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
       {capabilitiesOpen && createPortal(<><div onClick={() => setCapabilitiesOpen(false)} style={{position:"fixed",inset:0,zIndex:100001,background:"rgba(0,0,0,.25)"}} /><CopilotCapabilities T={T} isLight={isLight} features={guidance?.capabilities} onClose={() => setCapabilitiesOpen(false)} onPrefill={prompt => {setInput(prompt);setCapabilitiesOpen(false);inputRef.current?.focus();}} /></>, document.body)}
 
       {/* ── Banner "Activar notificaciones" (push) ── */}
+      {reminderSettingsOpen && <CopilotReminderSettings T={T} compact />}
       {!isDemo && <NotifBanner T={T} isLight={isLight} message={guidance?.notificationText} />}
 
       {/* ── Sugerencias colapsables ── */}
@@ -1480,7 +1488,9 @@ function Bubble({ m, T, isLight, userBg, userTxt, aiBg, aiBd, onPick, sending, i
   /* ── Detección de botones inline (misma lógica que Telegram y botones explícitos) ── */
   let inlineButtons = [];
   if (!isUser) {
-    if (m.meta?.can_comment && m.meta?.task_id) {
+    if (m.meta?.kind === "copilot_followup" && m.meta?.copilot_followup_id) {
+      inlineButtons = followupButtons(m.meta.copilot_followup_id);
+    } else if (m.meta?.can_comment && m.meta?.task_id) {
       // Evidencia recibida por el líder: puede comentarla (feedback al que la hizo) o aprobarla.
       inlineButtons = [
         { label: "Comentar", action: `mktcomment:${m.meta.task_id}:${m.meta.from_name || ""}`, primary: true },

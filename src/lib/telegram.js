@@ -17,6 +17,7 @@
 import { supabase } from './supabase'
 import { sendProjectCopilot } from './project-copilot.js'
 import { loadCopilotProfile } from './copilot-profile.js'
+import { replyToCopilotReminder, followupButtons } from './copilot-reminders.js'
 import { resolveClientFromLocation, getClientConfigByOrgId } from '../clients'
 
 // ── Puerta del chat por TENANT (white-label) ─────────────────────────────────
@@ -80,6 +81,8 @@ function buildReminderButtons(reminder) {
   const payload = reminder?.payload || {}
   const leadId = reminder?.lead_id || payload.lead_id
   const actionId = payload.action_id || payload.team_action_id
+
+  if (payload.followup_repeat && payload.copilot_followup_id) return followupButtons(payload.copilot_followup_id)
 
   if ((tipo === 'team_action' || tipo === 'personal') && actionId) {
     return [
@@ -457,6 +460,12 @@ function extractRpcReplyText(data) {
  * @returns {Promise<{ reply: string|null, buttons?: Array, error: string|null }>}
  */
 export async function sendCopilotMessage(rawText, options = {}) {
+  try {
+    const reminderReply = await replyToCopilotReminder((rawText || '').trim(), options.callback_data || '');
+    if (reminderReply) return reminderReply;
+  } catch {
+    return { reply: null, error: 'reminder_response_unconfirmed' };
+  }
   // PERSISTENCIA: el turno del USUARIO se guarda AL ENVIAR, no al final. Antes se
   // guardaba después de la respuesta y, con la base lenta, el motor registraba su
   // respuesta PRIMERO → el historial quedaba persistido al revés y al refrescar el

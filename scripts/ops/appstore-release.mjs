@@ -5,7 +5,11 @@ import { pathToFileURL } from 'node:url';
 export const APP_ID = '6804826565';
 const editable = new Set(['PREPARE_FOR_SUBMISSION','REJECTED','METADATA_REJECTED','DEVELOPER_REJECTED']);
 const inReview = new Set(['WAITING_FOR_REVIEW','IN_REVIEW','PENDING_APPLE_RELEASE','PENDING_DEVELOPER_RELEASE','READY_FOR_DISTRIBUTION','READY_FOR_SALE','PROCESSING_FOR_DISTRIBUTION','PROCESSING_FOR_APP_STORE']);
-const notes = (locale, version) => version === '4.9.8'
+const notes = (locale, version) => version === '4.9.9'
+  ? (locale.startsWith('es')
+    ? 'Copilot da seguimiento a tus tareas, Zooms y recordatorios cada tres minutos hasta que respondas. Configura la insistencia desde Copilot o Perfil: al desactivarla, recibirás como máximo dos avisos adicionales. Confirma que lo harás o que no podrás sin marcar la actividad como terminada. Incluye los nuevos documentos y contactos del expediente.'
+    : 'Copilot follows up on tasks, meetings and reminders every three minutes until you respond. Manage follow-up intensity in Copilot or Profile: turning it off limits each reminder to two additional follow-ups. Confirm that you will do it or cannot do it without marking the activity complete. Includes the new client documents and contact details.')
+  : version === '4.9.8'
   ? (locale.startsWith('es')
     ? 'Guarda varias identificaciones con nombre de titular y adjunta cartas oferta por propiedad. Registra varios teléfonos y correos por comprador adicional y consulta el contacto principal debajo del nombre del cliente. Incluye la etapa Cierres Caídos para Duke, conservando las identificaciones anteriores y las mejoras de Copilot, documentos de Space y citas.'
     : 'Save multiple named identity documents and attach property offer letters. Add multiple phone numbers and email addresses for additional buyers, with the main contact shown below the client name. Includes the Failed Closings stage for Duke while preserving existing identification records and Copilot, Space documents and appointment improvements.')
