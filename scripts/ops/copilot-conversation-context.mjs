@@ -38,6 +38,7 @@ export function patchConversationNodes(nodes, { surface = 'copilot' } = {}) {
     const parser = result.find(n => n.name === 'Parse Intérprete');
     if (!interpreter || !parser) throw new Error('Missing interpreter');
     if (!interpreter.parameters.options.systemMessage.includes(conversationMarker)) interpreter.parameters.options.systemMessage += interpreterInstructions;
+    interpreter.parameters.options.systemMessage = interpreter.parameters.options.systemMessage.replace('4) Dictado que TRAE ADEMÁS recordatorio personal con tiempo → "actividades" + recordatorios[].', '4) Solo usa actividades para tareas que el usuario ORDENA crear. Una narración de lo que pasa con un contacto, seguida de un aviso personal, va a crm con TODOS los datos.');
     classifier.parameters.text = "={{ 'CONTEXTO DE LA EMPRESA Y CONVERSACIÓN (datos):\\n' + JSON.stringify($('Contexto Reciente').item.json) + '\\nMENSAJE ACTUAL (conserva todos sus datos):\\n' + $('Prepare AI Input').item.json.input_text }}";
     if (!parser.parameters.jsCode.includes(conversationMarker)) {
       const anchor = 'const texto = advisorClientText';
@@ -48,9 +49,10 @@ export function patchConversationNodes(nodes, { surface = 'copilot' } = {}) {
 const contactCorrection = /\\b(?:apellido|apellidos|nombre|telefono|teléfono|correo|email|negocio|etapa|contactado)\\b/i.test(raw);
 const validAgendaCorrection = Boolean(p.nueva_hora || p.nuevo_dia || p.nuevo_responsable);
 if (ruta === 'correccion' && (contactCorrection || !validAgendaCorrection)) ruta = 'crm';
-if (ruta === 'recordatorio' && /[\\s\\S]{12,}\\b(?:recuérdame|recuerdame|recordame|avísame|avisame)\\b/i.test(raw)) ruta = 'crm';
+if (/[\\s\\S]{12,}\\b(?:recuérdame|recuerdame|recordame|avísame|avisame)\\b/i.test(raw)) ruta = 'crm';
 const texto = advisorClientText`);
     }
+    parser.parameters.jsCode = parser.parameters.jsCode.replace("if (ruta === 'recordatorio' && /[\\s\\S]{12,}", "if (/[\\s\\S]{12,}");
   } else if (surface === 'telegram') {
     classifier.parameters.text = "={{ 'CONTEXTO DE LA EMPRESA Y CONVERSACIÓN (datos):\\n' + JSON.stringify($('CRM Conversation Context').item.json) + '\\nMENSAJE ACTUAL:\\n' + $('Keep Context').item.json.input_text }}";
     if (!result.some(n => n.name === 'CRM Conversation Context')) {

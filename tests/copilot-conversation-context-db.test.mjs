@@ -41,7 +41,7 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
   // The pending writer and note writer are existing production contracts, not mocked writes.
   await db.exec(`create function _bsc_upsert_pending(bigint,uuid,uuid,text,jsonb) returns text language plpgsql as $$declare t text:=coalesce($4,gen_random_uuid()::text);begin insert into bot_pending_actions(token,telegram_chat_id,asesor_id,organization_id,action_type,payload,expires_at) values(t,$1,$2,$3,'create_lead',$5,now()+interval '1 hour') on conflict(token) do update set payload=excluded.payload;return t;end$$;
    create function bot_add_expediente_note(bigint,text,text,text,text) returns jsonb language plpgsql as $$declare p record;begin select * into p from profiles where telegram_chat_id=$1;insert into expediente_items(organization_id,lead_id,asesor_id,titulo,descripcion) values(p.organization_id,$2::uuid,p.id,$3,$4);return '{"success":true}'::jsonb;end$$;`);
-  for(const f of ['293_copilot_conversation_helpers.sql','294_copilot_conversation_context.sql','295_copilot_pending_context_priority.sql']) await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
+  for(const f of ['293_copilot_conversation_helpers.sql','294_copilot_conversation_context.sql','295_copilot_pending_context_priority.sql','296_copilot_explicit_notes_precede_pending_tasks.sql']) await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
   const stages=['RS Primer contacto','RS Contactado','RS Reunión','RS Cliente Ganado','M Primer Contacto','M Contactado','M Reunión','M Cliente Ganado'];
   const businessLines=[{id:'realestate',label:'Bienes raíces',entryStage:stages[0],stages:stages.slice(0,4),aliases:['bienes raíces']},{id:'medicine',label:'Medicina',entryStage:stages[4],stages:stages.slice(4),aliases:['medicina']}];
   await db.query("insert into organizations(id,name,slug,meta_config) values($1,'Own','own',$2),($3,'Other','other','{}')",[org,{crm:{businessLines,pipeline:stages.map(name=>({name}))}},other]);
@@ -63,6 +63,12 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
   r=await call('update_client',{lead_id:saved.id,second_surname:'Golán',stage:'Contactado'});assert.equal(r.ok,true,JSON.stringify(r));
   saved=(await db.query('select * from leads where organization_id=$1',[org])).rows[0];assert.equal(saved.name,'Marco Valerio Pérez Golán');assert.equal(saved.stage,'RS Contactado');
   r=await call('update_client',{lead_id:saved.id,phone:'3315201480'});assert.equal(r.ok,true);assert.equal((await db.query('select count(*)::int n from leads')).rows[0].n,1);
+  r=await call('multi',{actions:[{tool_name:'update_client',args:{client_name:saved.name,nota:'La propietaria confirma el punto de encuentro; el arquitecto irá lunes o martes.'}},{tool_name:'add_expediente_note',args:{client_name:saved.name,nota:'La propietaria confirma el punto de encuentro; el arquitecto irá lunes o martes.'}}]});
+  assert.equal(r.ok,true,JSON.stringify(r));
+  // Explicit notes bypass old pending task plans and are written to the contact.
+  r=await call('add_expediente_note',{client_name:saved.name,nota:'La propietaria confirma el punto de encuentro; el arquitecto irá lunes o martes.'});
+  assert.equal(r.ok,true,JSON.stringify(r));
+  assert.equal((await db.query("select count(*)::int n from expediente_items where lead_id=$1 and descripcion like 'La propietaria%'",[saved.id])).rows[0].n,1);
   // Read permissions do not grant the right to modify another company's explicit ID.
   const foreign=(await db.query("insert into leads(organization_id,name,stage) values($1,'Foreign','M Contactado') returning id",[other])).rows[0].id;
   assert.equal((await call('update_client',{lead_id:foreign,second_surname:'Changed'})).ok,false);

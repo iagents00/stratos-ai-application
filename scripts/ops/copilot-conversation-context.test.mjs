@@ -10,5 +10,6 @@ test('classifier receives the same actual conversation and company as the interp
  assert.equal(parser({ruta:'correccion'},'El segundo apellido es Golán','')[0].json.ruta,'crm');
  assert.equal(parser({ruta:'correccion',nuevo_dia:'viernes'},'mejor el viernes','')[0].json.ruta,'correccion');
  assert.equal(parser({ruta:'correccion'},'ya te paso los detalles','')[0].json.ruta,'crm');
+ assert.equal(parser({ruta:'actividades'},'Para el cliente queda pendiente confirmar una visita. Entonces recuérdame en dos horas consultar a la propietaria.','')[0].json.ruta,'crm');
  assert.ok(patched[0].parameters.options.systemMessage.includes(conversationMarker));
 });
