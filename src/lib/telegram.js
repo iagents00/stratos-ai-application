@@ -309,8 +309,15 @@ export async function getRecentBotActivity(limit = 20) {
  * @param {number} limit  máximo de mensajes (default 40, máx 200)
  * @returns {Promise<{ messages: Array<{id:number, occurred_at:string, role:string, content:string}>, error: string|null }>}
  */
-export async function getCopilotActivity(limit = 50) {
+export async function getCopilotActivity(limit = 50, expectedActor = null) {
   try {
+    const { data: { session: initialSession } } = await supabase.auth.getSession()
+    const actorId = initialSession?.user?.id
+    if (!actorId || (expectedActor?.id && expectedActor.id !== actorId)) return { messages: [], error: 'sesion_expirada' }
+    const { profile, error: profileError } = await loadCopilotProfile(supabase, actorId)
+    if (profileError || !profile?.organization_id || (expectedActor?.organizationId && expectedActor.organizationId !== profile.organization_id)) return { messages: [], error: profileError || 'sesion_expirada' }
+    const sameActor = async () => (await supabase.auth.getSession()).data?.session?.user?.id === actorId
+
     const { data, error } = await supabase.rpc('get_my_copilot_activity', { p_limit: limit })
     let messages = Array.isArray(data) ? [...data] : []
     // Si el historial falla (por ejemplo un permiso revocado en la base), NO se corta
@@ -325,12 +332,13 @@ export async function getCopilotActivity(limit = 50) {
     // Sincronización en tiempo real con recordatorios proactivos programados (proactive_reminders)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user?.id) {
+      if (session?.user?.id === actorId) {
         const nowIso = new Date().toISOString()
         const { data: proact } = await supabase
           .from('proactive_reminders')
           .select('id, lead_id, asesor_name, tipo, scheduled_at, sent_at, status, payload, dedupe_key')
-          .eq('asesor_id', session.user.id)
+          .eq('asesor_id', actorId)
+          .eq('organization_id', profile.organization_id)
           .or(`status.eq.sent,and(status.eq.pending,scheduled_at.lte.${nowIso})`)
           .order('scheduled_at', { ascending: false })
           .limit(30)
@@ -403,6 +411,7 @@ export async function getCopilotActivity(limit = 50) {
       seenAt.set(key, t)
       deduped.push(m)
     }
+    if (!await sameActor()) return { messages: [], error: 'sesion_expirada' }
     return { messages: deduped.slice(0, limit), error: deduped.length === 0 ? errorHistorial : null }
   } catch (e) {
     return { messages: [], error: e?.message || 'Error de conexión' }
@@ -726,12 +735,13 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
     // A lost response does not prove that n8n rejected the command. Sending
     // it again can create the task or lead twice. Submit once, then let the
     // existing history reconciliation resolve an uncertain delivery.
+    if (!session.access_token) return { reply: null, error: 'sesion_expirada' };
     const ctrl = new AbortController();
     const timeout = setTimeout(() => ctrl.abort(), 40000);
     try {
       const res = await fetch(webhookUrl, {
         method: 'POST', signal: ctrl.signal,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({
           chat_id: chatId, text: cleanText,
           callback_data: options.callback_data || undefined,
@@ -763,6 +773,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
           }
         }
 
+      if (res.status === 401 || res.status === 403) return { reply: null, buttons: [], error: 'sesion_expirada' };
       if (res.status >= 400 && res.status < 500 && res.status !== 408) {
         return { reply: null, buttons: [], error: 'no_llego' };
       }

@@ -15,6 +15,8 @@
  * Safari normal (sin instalar) NO soporta Web Push — solo la PWA instalada.
  */
 
+import { supabase } from './supabase';
+
 // ── VAPID public key ──────────────────────────────────────────────────────
 // Clave PÚBLICA de VAPID en formato RAW P-256 (base64url, 87 chars) — el que
 // espera applicationServerKey de pushManager.subscribe(). La versión vieja
@@ -210,6 +212,8 @@ export async function saveSubscriptionToBackend(userId, subscription) {
   }
 
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token || session.user.id !== userId) return false;
     const sub = subscription.toJSON();
     const body = {
       p_user_id: userId,
@@ -224,7 +228,7 @@ export async function saveSubscriptionToBackend(userId, subscription) {
       headers: {
         'Content-Type': 'application/json',
         'apikey': _supabaseAnonKey,
-        'Authorization': `Bearer ${_supabaseAnonKey}`,
+        'Authorization': `Bearer ${session.access_token}`,
       },
       body: JSON.stringify(body),
     });
@@ -248,6 +252,8 @@ export async function removeSubscriptionFromBackend(userId) {
   if (!_supabaseUrl || !_supabaseAnonKey || !userId) return false;
 
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token || session.user.id !== userId) return false;
     const res = await fetch(
       `${_supabaseUrl}/rest/v1/rpc/push_unsubscribe`,
       {
@@ -255,7 +261,7 @@ export async function removeSubscriptionFromBackend(userId) {
         headers: {
           'Content-Type': 'application/json',
           'apikey': _supabaseAnonKey,
-          'Authorization': `Bearer ${_supabaseAnonKey}`,
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ p_user_id: userId }),
       },

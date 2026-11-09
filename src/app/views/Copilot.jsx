@@ -101,13 +101,13 @@ export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp
   // el chat — jamás la vieja pantalla "Conecta tu Telegram para activar", que
   // parecía un muro. (`ConnectPrompt` queda en el archivo por si algún tenant
   // futuro con pairing manual lo necesita, pero no se muestra por defecto.)
-  return <Chat T={T} isLight={isLight} botUsername={botUsername} onUnpaired={onUnpaired} onBack={onBack} score={score} isMarketing={isMarketing} puedeCajaFoto={puedeCajaFoto} orgId={orgId} isDemo={!!user?.isDemo} demoContext={demoContext} />;
+  return <Chat key={`${user?.id}:${orgId}`} actorId={user?.id} T={T} isLight={isLight} botUsername={botUsername} onUnpaired={onUnpaired} onBack={onBack} score={score} isMarketing={isMarketing} puedeCajaFoto={puedeCajaFoto} orgId={orgId} isDemo={!!user?.isDemo} demoContext={demoContext} />;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* Chat — layout WhatsApp: header fino, mensajes expansivos, composer compacto */
 /* ─────────────────────────────────────────────────────────────────────────── */
-function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing, puedeCajaFoto, orgId, isDemo, demoContext }) {
+function Chat({ actorId, T, isLight, botUsername, onUnpaired, onBack, score, isMarketing, puedeCajaFoto, orgId, isDemo, demoContext }) {
   const { config: clientConfig } = useClient();
   const guidance = clientConfig?.copilot;
   const suggestions = guidance?.suggestions || SUGGESTIONS;
@@ -251,7 +251,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     // try/catch es el cinturón por si alguna vez deja de hacerlo.
     let r = null;
     try {
-      r = await Promise.race([getCopilotActivity(50), reloj]);
+      r = await Promise.race([getCopilotActivity(50, { id: actorId, organizationId: orgId }), reloj]);
     } catch (_) { r = null; }
     if (!mountedRef.current) return;
     if (venció || !r || r.error) {
@@ -266,7 +266,7 @@ function Chat({ T, isLight, botUsername, onUnpaired, onBack, score, isMarketing,
     const delServidor = [...(r.messages || [])].reverse();
     setMessages(prev => mergeCopilotHistory(prev, delServidor, { merge: opts.merge, preserveEarlier: !followingRef.current }));
     setLoading(false);
-  }, [isDemo, followingRef]);
+  }, [isDemo, followingRef, actorId, orgId]);
 
   useEffect(() => {
     mountedRef.current = true;

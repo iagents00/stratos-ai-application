@@ -87,7 +87,6 @@ VITE_ se publica al navegador. Las demás necesitan clasificación y custodia de
 | PLATFORM_ALERT_WEBHOOK_URL | [supabase/functions/whatsapp-admin/index.ts](../../supabase/functions/whatsapp-admin/index.ts) |
 | PROD | [src/lib/push-native.js](../../src/lib/push-native.js), [src/main.jsx](../../src/main.jsx) |
 | PROJECT_COPILOT_MODEL | [supabase/functions/project-copilot/index.ts](../../supabase/functions/project-copilot/index.ts) |
-| PUSH_WEBHOOK_SECRET | [supabase/functions/send-push/index.ts](../../supabase/functions/send-push/index.ts) |
 | RECOVERY_CODE_PEPPER | [supabase/functions/password-recovery/index.ts](../../supabase/functions/password-recovery/index.ts) |
 | RESEND_API_KEY | [supabase/functions/form-submit/index.ts](../../supabase/functions/form-submit/index.ts) |
 | SB_ANON_KEY | [supabase/functions/admin-create-user/index.ts](../../supabase/functions/admin-create-user/index.ts), [supabase/functions/delete-my-account/index.ts](../../supabase/functions/delete-my-account/index.ts), [supabase/functions/whatsapp-admin/index.ts](../../supabase/functions/whatsapp-admin/index.ts) |
