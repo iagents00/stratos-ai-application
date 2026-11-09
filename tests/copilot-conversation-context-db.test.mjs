@@ -54,7 +54,7 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
   await db.exec(`create or replace function auth.role() returns text language sql stable as $$select ''::text$$;
     alter table leads add primary key(id);
     create unique index if not exists uniq_leads_org_phone on leads(organization_id,phone_normalized) where phone_normalized is not null and deleted_at is null;`);
-  for(const f of ['301_copilot_business_contact_identity.sql','302_copilot_registration_contracts.sql','303_copilot_business_family_queries.sql','304_copilot_server_business_effect_guard.sql','305_copilot_all_typed_contact_multi_actions.sql','306_copilot_pending_business_identity_priority.sql','307_copilot_compound_registration_single_card.sql','308_copilot_pending_business_context_preserved.sql','309_copilot_explicit_copy_intent_in_upsert.sql','310_copilot_compact_card_and_dictated_next_action.sql','311_copilot_shared_phone_requires_business.sql']) await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
+  for(const f of ['301_copilot_business_contact_identity.sql','302_copilot_registration_contracts.sql','303_copilot_business_family_queries.sql','304_copilot_server_business_effect_guard.sql','305_copilot_all_typed_contact_multi_actions.sql','306_copilot_pending_business_identity_priority.sql','307_copilot_compound_registration_single_card.sql','308_copilot_pending_business_context_preserved.sql','309_copilot_explicit_copy_intent_in_upsert.sql','310_copilot_compact_card_and_dictated_next_action.sql','311_copilot_shared_phone_requires_business.sql','312_copilot_business_identity_archive_lifecycle.sql']) await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
   const stages=['RS Primer contacto','RS Contactado','RS Reunión','RS Cliente Ganado','M Primer Contacto','M Contactado','M Reunión','M Cliente Ganado'];
   const businessLines=[{id:'realestate',label:'Bienes raíces',entryStage:stages[0],stages:stages.slice(0,4),aliases:['bienes raíces']},{id:'medicine',label:'Medicina',entryStage:stages[4],stages:stages.slice(4),aliases:['medicina']}];
   await db.query("insert into organizations(id,name,slug,meta_config) values($1,'Own','own',$2),($3,'Other','other','{}')",[org,{crm:{businessLines,pipeline:stages.map(name=>({name}))}},other]);
@@ -147,5 +147,13 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
   assert.equal((await call('change_stage',{client_name:'8118809010',stage:'Contactado'})).needs_input,'client');
   assert.equal((await call('duplicate_client',{source_lead_id:foreign,name:'Foreign clone',business:'bienes raíces',stage:'RS Contactado'})).ok,false);
   await assert.rejects(db.query("insert into leads(organization_id,name,phone,stage,business_entry_of,business_line_id) values($1,'Cross company','8118809010','RS Contactado',$2,'realestate')",[other,samara]));
+  await db.query('update leads set phone=$1 where organization_id=$2 and id=$3',['5512340987',org,samara]);
+  assert.equal((await db.query('select phone from leads where organization_id=$1 and id=$2',[org,copyId])).rows[0].phone,'5512340987');
+  await db.query('update leads set deleted_at=now() where organization_id=$1 and id=$2',[org,samara]);
+  const promoted=(await db.query('select * from leads where organization_id=$1 and id=$2',[org,copyId])).rows[0];
+  assert.equal(promoted.business_entry_of,null);assert.equal(promoted.stage,'RS Contactado');assert.equal(promoted.deleted_at,null);
+  await db.query('update leads set deleted_at=null where organization_id=$1 and id=$2',[org,samara]);
+  const restored=(await db.query('select * from leads where organization_id=$1 and id=$2',[org,samara])).rows[0];
+  assert.equal(restored.business_entry_of,copyId);assert.equal(restored.stage,'M Contactado');assert.equal(restored.phone,promoted.phone);
  } finally { await db.close(); }
 });
