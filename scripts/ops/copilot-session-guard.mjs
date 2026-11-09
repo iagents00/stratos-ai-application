@@ -4,7 +4,18 @@ export function patchCopilotSessionGuard(workflow, anonKey) {
  const result=structuredClone(workflow);
  const webhook=result.nodes.filter(n=>n.type==='n8n-nodes-base.webhook');
  if(webhook.length!==1||webhook[0].parameters.responseMode!=='responseNode') throw Error('Expected one response-node webhook');
- if(result.nodes.some(n=>n.name==='Copilot Session Guard')) return result;
+ const inputCode = `const source = $('${webhook[0].name.replaceAll("'","\\'")}').first();
+const json = {...source.json};
+delete json.headers;
+const item = {json};
+if (source.binary) item.binary = source.binary;
+return [item];`;
+ if(result.nodes.some(n=>n.name==='Copilot Session Guard')) {
+  const input=result.nodes.find(n=>n.name==='Copilot Session Input');
+  if(!input) throw Error('Incomplete session guard');
+  input.parameters.jsCode=inputCode;
+  return result;
+ }
  const entry=webhook[0];
  const original=result.connections[entry.name];
  if(!original?.main?.[0]?.length||original.main.length!==1) throw Error('Unexpected ingress connections');
@@ -15,10 +26,7 @@ export function patchCopilotSessionGuard(workflow, anonKey) {
   sendBody:true,specifyBody:'json',jsonBody:'={{ {p_chat_id: $json.body?.chat_id ?? null} }}',options:{timeout:10000}
  }});
  result.nodes.push({id:'copilot-session-authorized',name:'Copilot Session Authorized',type:'n8n-nodes-base.if',typeVersion:2.2,position:[entry.position[0]+360,entry.position[1]],parameters:{conditions:{options:{caseSensitive:true,leftValue:'',typeValidation:'strict',version:2},conditions:[{id:'verified-session',leftValue:'={{ $json.authorized === true }}',rightValue:true,operator:{type:'boolean',operation:'true',singleValue:true}}],combinator:'and'},options:{}}});
- result.nodes.push({id:'copilot-session-input',name:'Copilot Session Input',type:'n8n-nodes-base.code',typeVersion:2,position:[entry.position[0]+540,entry.position[1]],parameters:{jsCode:`const source = $('${entry.name.replaceAll("'","\\'")}').first();
-const json = structuredClone(source.json);
-delete json.headers;
-return [{json,binary:source.binary}];`}});
+ result.nodes.push({id:'copilot-session-input',name:'Copilot Session Input',type:'n8n-nodes-base.code',typeVersion:2,position:[entry.position[0]+540,entry.position[1]],parameters:{jsCode:inputCode}});
  result.nodes.push({id:'copilot-session-denied',name:'Copilot Session Denied',type:'n8n-nodes-base.respondToWebhook',typeVersion:1.4,position:[entry.position[0]+540,entry.position[1]+180],parameters:{respondWith:'json',responseBody:'={{ {ok:false,error:"session_required",reply:"Tu sesión no corresponde a este Copilot. Actualiza la aplicación e inicia sesión."} }}',options:{responseCode:401}}});
  result.connections[entry.name]={main:[[{node:'Copilot Session Guard',type:'main',index:0}]]};
  result.connections['Copilot Session Guard']={main:[[{node:'Copilot Session Authorized',type:'main',index:0}]]};
