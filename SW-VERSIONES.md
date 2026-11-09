@@ -1,5 +1,9 @@
 # Historial de versiones del Service Worker (CACHE_VERSION)
 
+## v466 — Un envío permanece en su cuenta
+
+Cada operación conserva la sesión con la que comenzó, incluso al escribir su historial. Cambiar de cuenta descarta respuestas anteriores en pantalla y no traslada una conversación al nuevo usuario. Aplica a CRM, recordatorios y Copilot de proyectos.
+
 ## v465 — Sesión del Copilot y avisos limitados
 
 Duke adopta los avisos a los 3, 30 y 60 minutos, sin reiniciar los ciclos agotados. El Copilot valida la sesión antes de entrar al motor y limpia el hilo al cambiar de cuenta. Las notificaciones se registran con sesión y los dispositivos compartidos reciben avisos de su cuenta más reciente.

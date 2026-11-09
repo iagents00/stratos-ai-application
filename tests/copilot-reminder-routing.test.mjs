@@ -17,13 +17,18 @@ test('reminder confirmations stay deterministic and uncertain writes never fall 
     assert.deepEqual(calls, [{ name: 'copilot_reminder_reply', args: { p_text: 'Lo voy a hacer', p_followup_id: id, p_response: 'will_do' } }]);
     assert.equal(result.persisted, true);
     const { sendCopilotMessage } = await server.ssrLoadModule('/src/lib/telegram.js');
-    globalThis.fetch = async () => { throw new Error('A reminder response must not call the model webhook'); };
+    supabase.auth.getSession=async()=>({data:{session:{access_token:'fixed-user-token',user:{id:'own-user'}}}});
+    globalThis.fetch = async (url,options) => {
+      assert.match(String(url), /rpc\/copilot_reminder_reply$/);
+      calls.push({name:'copilot_reminder_reply',args:JSON.parse(options.body)});
+      return new Response(JSON.stringify({handled:true,reply:'Confirmación recibida.',persisted:true}),{headers:{'Content-Type':'application/json'}});
+    };
     calls = [];
     assert.equal((await sendCopilotMessage('Lo voy a hacer', { callback_data: `copilot_followup:will_do:${id}` })).reply, 'Confirmación recibida.');
     assert.equal(calls.length, 1); // No competing user-log trigger and no duplicate assistant log.
-    supabase.rpc = async () => ({ data: null, error: { message: 'response lost' } });
+    globalThis.fetch=async()=>new Response(JSON.stringify({message:'response lost'}),{status:503,headers:{'Content-Type':'application/json'}});
     assert.equal((await sendCopilotMessage('No voy a poder', { callback_data: `copilot_followup:unavailable:${id}` })).error, 'reminder_response_unconfirmed');
-    supabase.rpc = async () => { throw new TypeError('network interrupted'); };
+    globalThis.fetch=async()=>{throw new TypeError('network interrupted');};
     assert.equal((await sendCopilotMessage('Activa la insistencia')).error, 'reminder_response_unconfirmed');
   } finally { globalThis.fetch = originalFetch; await server.close(); }
 });

@@ -10,10 +10,10 @@ export function isReminderReplyCandidate(text, callback = '') {
     || /^(?:ok|okay|vale|entendido|recibido|de acuerdo|si)[.!]*$/.test(value);
 }
 
-export async function replyToCopilotReminder(text, callback = '') {
+export async function replyToCopilotReminder(text, callback = '', client = supabase) {
   if (!isReminderReplyCandidate(text, callback)) return null;
   const parts = callback.startsWith('copilot_followup:') ? callback.split(':') : null;
-  const { data, error } = await supabase.rpc('copilot_reminder_reply', {
+  const { data, error } = await client.rpc('copilot_reminder_reply', {
     p_text: text,
     p_followup_id: parts?.[2] || null,
     p_response: parts?.[1] || null,

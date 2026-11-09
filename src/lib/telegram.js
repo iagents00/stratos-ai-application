@@ -15,6 +15,7 @@
  * Migración relacionada: supabase/migrations/007_telegram_bot_asesor_mode.sql
  */
 import { supabase } from './supabase'
+import { copilotRequestClient } from './copilot-session'
 import { sendProjectCopilot } from './project-copilot.js'
 import { loadCopilotProfile } from './copilot-profile.js'
 import { replyToCopilotReminder, followupButtons } from './copilot-reminders.js'
@@ -472,9 +473,19 @@ function extractRpcReplyText(data) {
  * @returns {Promise<{ reply: string|null, buttons?: Array, error: string|null }>}
  */
 export async function sendCopilotMessage(rawText, options = {}) {
+  let session;
+  try { ({data:{session}}=await withTimeout(supabase.auth.getSession(),GETSESSION_TIMEOUT,'getSession')); }
+  catch { return { reply:null,error:'sesion_expirada' }; }
+  if (!session?.access_token || !session?.user?.id || (options.actorId && options.actorId!==session.user.id)) return {reply:null,error:'sesion_expirada'};
+  const client=copilotRequestClient(session);
+  const actorId=session.user.id;
+  const sameActor=async()=> {
+    try {return (await withTimeout(supabase.auth.getSession(),GETSESSION_TIMEOUT,'getSession')).data?.session?.user?.id===actorId;}
+    catch {return false;}
+  };
   try {
-    const reminderReply = await replyToCopilotReminder((rawText || '').trim(), options.callback_data || '');
-    if (reminderReply) return reminderReply;
+    const reminderReply = await replyToCopilotReminder((rawText || '').trim(), options.callback_data || '', client);
+    if (reminderReply) return await sameActor() ? reminderReply : { reply: null, error: 'sesion_expirada' };
   } catch {
     return { reply: null, error: 'reminder_response_unconfirmed' };
   }
@@ -484,25 +495,27 @@ export async function sendCopilotMessage(rawText, options = {}) {
   // chat «se reordenaba» (Ángel, 30-jul). Fire-and-forget: no bloquea ni rompe el envío.
   const userText = (rawText || "").trim();
   if (userText) {
-    supabase.rpc('copilot_log_msg', { p_role: 'user', p_content: userText }).then(() => {}, () => {});
+    client.rpc('copilot_log_msg', { p_role: 'user', p_content: userText }).then(() => {}, () => {});
   }
-  const r = await _sendCopilotMessageInner(rawText, options);
+  const r = await _sendCopilotMessageInner(rawText, options, { client, session });
+  if (!await sameActor()) return { reply: null, error: 'sesion_expirada' };
   // La respuesta directa (cuando no la registra el propio flujo) se guarda igual que
   // siempre. Best-effort (no bloquea la UI).
   try {
     if (r && !r.persisted && typeof r.reply === 'string' && r.reply.trim()) {
-      await withTimeout(supabase.rpc('copilot_log_msg', { p_role: 'ai', p_content: r.reply }), 3000, 'copilot_log_msg');
+      await withTimeout(client.rpc('copilot_log_msg', { p_role: 'ai', p_content: r.reply }), 3000, 'copilot_log_msg');
     }
   } catch { /* logging best-effort, nunca romper el envío */ }
-  return r;
+  return await sameActor() ? r : { reply: null, error: 'sesion_expirada' };
 }
 
-async function _sendCopilotMessageInner(rawText, options = {}) {
+async function _sendCopilotMessageInner(rawText, options, scope) {
+  const supabase=scope.client;
+  const session=scope.session;
   const cleanText = (rawText || "").trim();
   if (!cleanText && !options.callback_data) return { reply: null, error: null };
 
   try {
-    const { data: { session } } = await withTimeout(supabase.auth.getSession(), GETSESSION_TIMEOUT, 'getSession');
     // Sin sesión NO es una respuesta del asistente. Volvía como `reply` con
     // error:null, así que la pantalla pintaba una burbuja del Copilot diciendo
     // "Sesión expirada." y nada más: sin explicación, sin salida, y con el
@@ -512,6 +525,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
 
     const { profile, error: profileError } = await loadCopilotProfile(supabase, session.user.id);
     if (profileError) return { reply: null, error: profileError };
+    if (options.organizationId && options.organizationId!==profile.organization_id) return {reply:null,error:'sesion_expirada'};
     const chatId = Number(profile.telegram_chat_id);
     // Lado MARKETING → su propio flujo/cerebro; NO pasa por las capas CRM de asesores
     // (quick commands copilot_send, callbacks proactivos, awaiting-plan). Cubre tanto al
@@ -528,7 +542,7 @@ async function _sendCopilotMessageInner(rawText, options = {}) {
       const orgCfg = getClientConfigByOrgId(profile?.organization_id);
       if (orgCfg) tenant = tenantCopilotShape(orgCfg);
     } catch { /* noop — se queda la resolución por URL */ }
-    if (tenant.projectAgent) return sendProjectCopilot(cleanText, options);
+    if (tenant.projectAgent) return sendProjectCopilot(cleanText, options, supabase);
     // COLABORADOR de área (Comercial, Operativo, Administrativo, Finanzas, RRHH):
     // habla con el MISMO cerebro de tareas que marketing, porque es el que sabe de
     // pendientes, bitácora del día y «ya terminé X». El cerebro de ventas no le

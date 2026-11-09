@@ -42,14 +42,19 @@ test('I Space resolves by authenticated organization and keeps its Copilot isola
     assert.equal(nav.canAccessModule('pipelines', user, { ...newCompany, crm: { pipelines: [{ id: 'patients', stages: [] }] } }), false);
     assert.equal(cfg.features.procesoGuiado, false);
     assert.ok(cfg.copilot.capabilities.every(x => x.kind === 'pedis'));
-    supabase.auth.getSession = async () => ({ data: { session: { user: { id: user.id } } } });
+    supabase.auth.getSession = async () => ({ data: { session: { access_token:'space-user-token',user: { id: user.id } } } });
     supabase.from = () => ({ select() { return this; }, eq() { return this; }, abortSignal() { return this; }, single: async () => ({ data: { telegram_chat_id: -9000000000999, role: 'admin', organization_id: user.organizationId } }) });
     const called = [];
     supabase.rpc = async (name) => { called.push(name); return { data: null, error: null }; };
     let webhook;
     const invoked=[];
     Object.defineProperty(supabase,'functions',{configurable:true,value:{invoke:async(name,options)=>{invoked.push({name,options});return {data:{reply:'Tu espacio está listo.'},error:null};}}});
-    globalThis.fetch = async (url) => { webhook = url; return new Response(JSON.stringify({ reply: 'Tu espacio está listo.' })); };
+    globalThis.fetch = async (url,options) => {
+      if(String(url).includes('/profiles?')) return new Response(JSON.stringify({telegram_chat_id:-9000000000999,role:'admin',organization_id:user.organizationId}),{headers:{'Content-Type':'application/json'}});
+      if(String(url).includes('/functions/v1/')) {invoked.push({name:'project-copilot',options:{body:JSON.parse(options.body)}});return new Response(JSON.stringify({reply:'Tu espacio está listo.'}),{headers:{'Content-Type':'application/json'}});}
+      if(String(url).includes('/rpc/')) return new Response('null',{headers:{'Content-Type':'application/json'}});
+      webhook=url;throw Error('Project Copilot must not use an unrelated webhook');
+    };
     const { sendCopilotMessage } = await server.ssrLoadModule('/src/lib/telegram.js');
     const help = await sendCopilotMessage('¿Qué puedes hacer?');
     assert.match(help.reply, /I Space/);
