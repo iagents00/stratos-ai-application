@@ -33,7 +33,7 @@
  *   sola en la próxima navegación. Ver `main.jsx` → SERVICE WORKER.
  */
 
-const CACHE_VERSION = 'stratos-v465'; // Sesión verificada del Copilot y límite de avisos en Duke.
+const CACHE_VERSION = 'stratos-v466'; // Cada envío conserva su sesión hasta terminar.
 // const CACHE_VERSION = 'stratos-v424'; // v424: ficha de Google Play (textos + graficos de tienda)
 
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;

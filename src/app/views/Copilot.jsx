@@ -484,7 +484,8 @@ function Chat({ actorId, T, isLight, botUsername, onUnpaired, onBack, score, isM
       return;
     }
 
-    const r = await sendCopilotMessage(text, options);
+    const r = await sendCopilotMessage(text, { ...options, actorId, organizationId: orgId });
+    if (!mountedRef.current) return;
     setSending(false);
 
     // Sin identidad de chat no hay a dónde mandar el mensaje. Antes esto llamaba

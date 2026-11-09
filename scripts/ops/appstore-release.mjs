@@ -5,7 +5,11 @@ import { pathToFileURL } from 'node:url';
 export const APP_ID = '6804826565';
 const editable = new Set(['PREPARE_FOR_SUBMISSION','REJECTED','METADATA_REJECTED','DEVELOPER_REJECTED']);
 const inReview = new Set(['WAITING_FOR_REVIEW','IN_REVIEW','PENDING_APPLE_RELEASE','PENDING_DEVELOPER_RELEASE','READY_FOR_DISTRIBUTION','READY_FOR_SALE','PROCESSING_FOR_DISTRIBUTION','PROCESSING_FOR_APP_STORE']);
-const notes = (locale, version) => version === '4.9.10'
+const notes = (locale, version) => ['4.9.11','4.9.12'].includes(version)
+  ? (locale.startsWith('es')
+    ? 'Mejoras de seguridad del Copilot: cada conversación y envío conserva su cuenta y empresa. Las notificaciones respetan la cuenta actual del dispositivo. Seguimiento de recordatorios con límite y mejoras al registrar clientes por negocio.'
+    : 'Copilot security improvements: conversations and requests stay with their account and company. Notifications respect the current device account. Bounded reminder follow-ups and improvements to client registration by business.')
+  : version === '4.9.10'
   ? (locale.startsWith('es')
     ? 'Las nuevas empresas incluyen Comando, Proyectos, Finanzas, Mi Drive y Create, con los mismos módulos autorizados en computadora y móvil. Mi Drive muestra las carpetas de la empresa guardadas en Space. Se conservan las mejoras de Copilot, recordatorios, expedientes y citas.'
     : 'New companies include Command, Projects, Finance, My Drive and Create, with the same authorized modules on desktop and mobile. My Drive displays company folders saved in Space. Includes the latest Copilot, reminder, client record and appointment improvements.')

@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**303 archivos · 85.049 líneas**
+**304 archivos · 85.076 líneas**
 
 ---
 
@@ -20,7 +20,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | **CRM** | `src/dental-demo/TenantHuliWorkspace.jsx`<br>`src/app/views/CRM/index.jsx` | 11<br>6706 |
 | **Space** | _sin vista propia (redirige a otra)_ | — |
 | **Plan Semanal** | `src/app/views/PlanSemanal.jsx` | 516 |
-| **Copilot** | `src/dental-demo/TenantHuliWorkspace.jsx`<br>`src/app/views/Copilot.jsx` | 11<br>2001 |
+| **Copilot** | `src/dental-demo/TenantHuliWorkspace.jsx`<br>`src/app/views/Copilot.jsx` | 11<br>2002 |
 | **Marketing** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 148<br>3084 |
 | **Actividades** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 148<br>3084 |
 | **Equipo** | `src/app/views/ISpaceBoard.jsx`<br>`src/app/views/Marketing.jsx` | 148<br>3084 |
@@ -178,7 +178,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `index.jsx` | 6706 | _sin describir_ |
 | `components.jsx` | 5675 | Todos los sub-componentes del módulo CRM |
 | `Marketing.jsx` | 3084 | _sin describir_ |
-| `Copilot.jsx` | 2001 | v2 (15-jul) |
+| `Copilot.jsx` | 2002 | v2 (15-jul) |
 | `index.jsx` | 1562 | Generador de landing pages inmobiliarias |
 | `index.jsx` | 1223 | Panel "Control de Zooms" — pestaña dentro de Comando Directivo (Duke). |
 | `Profile.jsx` | 1125 | vista de perfil del asesor. |
@@ -479,7 +479,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `telegram.js` | 833 | Pareo del bot de Telegram con el perfil del asesor. |
+| `telegram.js` | 847 | Pareo del bot de Telegram con el perfil del asesor. |
 | `auth.js` | 702 | _sin describir_ |
 | `push.js` | 422 | Sistema de suscripción a notificaciones Web Push |
 | `next-action-engine.js` | 371 | _sin describir_ |
@@ -537,6 +537,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `copilot-history.js` | 20 | _sin describir_ |
 | `project-copilot.js` | 18 | _sin describir_ |
 | `app-review-access.js` | 12 | Implementación web: App Review no existe fuera del binario móvil. |
+| `copilot-session.js` | 12 | _sin describir_ |
 | `huli.js` | 10 | _sin describir_ |
 | `email-confirmation.js` | 9 | Consume only email-change callbacks, without installing a URL-supplied session. |
 | `login-identity.js` | 8 | Short Stratos usernames use the same registered domain as full email logins. |
@@ -555,10 +556,10 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | ¿A qué cliente se le cobra? (ej: Duke) | `src/app/views/CuentasCobro.jsx:321` |
 | ¿Cómo funciona el Escáner IA? | `src/app/views/RRHHModule.jsx:820` |
 | ¿Cuánto te llevó? (opcional) | `src/app/views/Marketing.jsx:2469` |
-| ¿Cuánto? | `src/app/views/Copilot.jsx:1263` |
+| ¿Cuánto? | `src/app/views/Copilot.jsx:1264` |
 | ¿De qué empresa es? | `src/app/views/Marketing.jsx:1598` |
 | ¿De qué empresa? | `src/app/views/Marketing.jsx:1742` |
-| ¿De qué es? (opcional) | `src/app/views/Copilot.jsx:1276` |
+| ¿De qué es? (opcional) | `src/app/views/Copilot.jsx:1277` |
 | ¿De qué se habla acá? (opcional) | `src/app/views/ChatEquipo.jsx:529` |
 | ¿Eliminar usuario? | `src/app/features/Admin/AdminPanel.jsx:513` |
 | ¿En qué empresa? (opcional) | `src/app/views/Marketing.jsx:2460` |
@@ -600,7 +601,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Acciones acumuladas · Asesores vs. iAgents | `src/app/views/Dash.jsx:85` |
 | Acciones de cierre IA | `src/app/views/CRM/components.jsx:5417` |
 | Acciones por bloque | `src/app/features/Admin/RailsSettings.jsx:79` |
-| Activa tu Copilot AI | `src/app/views/Copilot.jsx:1959` |
+| Activa tu Copilot AI | `src/app/views/Copilot.jsx:1960` |
 | Activar para el equipo | `src/app/features/Admin/RailsSettings.jsx:72` |
 | Activar solo lectura | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:230` |
 | Actividad | `src/dental-demo/ClinicalReadiness.jsx:58` |
@@ -641,7 +642,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Agregar propiedad | `src/app/views/LandingPages/CreateWorkspace.jsx:44` |
 | Agregar tarea de prioridad… | `src/app/views/PlanSemanal.jsx:486` |
 | Agregar una columna propia a la hoja | `src/app/views/Marketing.jsx:1466` |
-| Ahora no | `src/app/views/Copilot.jsx:1904` |
+| Ahora no | `src/app/views/Copilot.jsx:1905` |
 | Al mover un cliente a | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:368` |
 | ALDEA ZAMA · TULUM | `src/app/views/LandingPages/index.jsx:308` |
 | Alergias registradas | `src/dental-demo/ClinicalDemoApp.jsx:272` |
@@ -727,13 +728,13 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Canal de la gestión | `src/app/views/MiDia.jsx:44` |
 | Canales | `src/app/views/ChatEquipo.jsx:303` |
 | Cancelar | `src/app/features/Admin/AdminPanel.jsx:518` |
-| Cancelar comentario | `src/app/views/Copilot.jsx:1244` |
+| Cancelar comentario | `src/app/views/Copilot.jsx:1245` |
 | CANDIDATO IDENTIFICADO | `src/app/views/RRHHModule.jsx:747` |
 | Características | `src/app/views/LandingPages/index.jsx:707` |
 | Cargando accesos… | `src/app/features/Admin/PlatformAdminConsole.jsx:143` |
 | Cargando actividad… | `src/app/views/Profile.jsx:974` |
 | Cargando clientes… | `src/app/features/Admin/PlatformCompanyCRM.jsx:252` |
-| Cargando conversación… | `src/app/views/Copilot.jsx:1160` |
+| Cargando conversación… | `src/app/views/Copilot.jsx:1161` |
 | Cargando conversaciones… | `src/app/views/WhatsApp.jsx:263` |
 | Cargando demo dental… | `src/main.jsx:324` |
 | Cargando el catálogo de tu empresa… | `src/app/views/LandingPages/CreateWorkspace.jsx:46` |
