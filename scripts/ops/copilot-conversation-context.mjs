@@ -74,6 +74,13 @@ if (Array.isArray(args.actions) && args.actions.some(a => ['update_client','dupl
 }
 return [{ json: { tool_name, args } }];`);
   }
+  if (!pick.parameters.jsCode.includes('PERSONAL_REMINDER_LANGUAGE_V2')) {
+    const original = '!/\\b(?:recu[eé]rdame|recuerdame|recordame|av[ií]same|notificame|ponme un recordatorio)\\b/i.test(inputText)';
+    if (!pick.parameters.jsCode.includes(original)) throw new Error('Reminder intent contract changed');
+    const explicitReminder = /\b(?:recuerdame|recordame|acuerdame|avisame|notificame|(?:me|nos)(?:\s+lo)?\s+(?:recuerdes|recuerdas|recuerden|avises|avisas|avisen|notifiques)|(?:pon(?:me)?|hazme|crea(?:me)?|programa(?:me)?|quiero|necesito)\s+(?:un\s+)?(?:recordatorio|aviso))\b/;
+    pick.parameters.jsCode = pick.parameters.jsCode.replace(original, `!${explicitReminder}.test(inputText.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase())`)
+      .replace('// CONTACT_ACTION_LIST_CONTRACT_V1', '// PERSONAL_REMINDER_LANGUAGE_V2\n// CONTACT_ACTION_LIST_CONTRACT_V1');
+  }
   if (surface === 'copilot') {
     const interpreter = result.find(n => n.name === 'Intérprete');
     const parser = result.find(n => n.name === 'Parse Intérprete');

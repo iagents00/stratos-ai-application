@@ -22,4 +22,8 @@ test('classifier receives the same actual conversation and company as the interp
  assert.equal(action[0].args._dictation_source,raw);assert.equal(action[1].args._dictation_source,undefined);
  const details=pick('multi',{actions:[{tool_name:'update_client',args:{nota:'Busca renta'}},{tool_name:'create_personal_reminder',args:{text:'Buscar renta',when:'sin plazo explícito'}}]},'El presupuesto es 19,000 pesos y busca renta en Selva Nova.')[0].json.args.actions;
  assert.equal(details.length,1);assert.equal(details[0].tool_name,'update_client');
+ for (const request of ['Además quiero que me recuerdes en dos horas llamar a la propietaria.','Busca renta y me avisas mañana a las nueve.','Anota lo de Samara y programa un recordatorio para mañana.']) {
+   const requested=pick('multi',{actions:[{tool_name:'update_client',args:{nota:'Busca renta'}},{tool_name:'create_personal_reminder',args:{text:'Consultar',when:'mañana'}}]},request)[0].json.args.actions;
+   assert.equal(requested.length,2,request);
+ }
 });
