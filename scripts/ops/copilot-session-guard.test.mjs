@@ -28,3 +28,15 @@ test('all webhook paths must pass verified session RPC before any original node'
  assert.equal(media[0].binary.audio.data,'file');
  assert.throws(()=>patchCopilotSessionGuard(source,`header.${Buffer.from('{"role":"service_role"}').toString('base64url')}.sig`),/public anon/);
 });
+test('dedicated company endpoints reject a valid session of another organization',()=>{
+ const key=`header.${Buffer.from(JSON.stringify({role:'anon'})).toString('base64url')}.signature`;
+ for(const [path,organization] of [['copilot-nsg-c4d81e2f','4a17b181-35d2-41b3-b639-6e0bd4c38acc'],['copilot-dental-9f2c7a41','6c5cf32a-3db4-477d-bbed-26d90231bc9a']]) {
+  const source={nodes:[{name:'Ingress',type:'n8n-nodes-base.webhook',position:[0,0],parameters:{path,responseMode:'responseNode'}}],connections:{Ingress:{main:[[{node:'Original',type:'main',index:0}]]}},settings:{}};
+  const result=patchCopilotSessionGuard(source,key);
+  const expression=result.nodes.find(n=>n.name==='Copilot Session Authorized').parameters.conditions.conditions[0].leftValue.slice(3,-2);
+  assert.equal(runInNewContext(expression,{$json:{authorized:true,organization_id:'another-company'}}),false);
+  assert.equal(runInNewContext(expression,{$json:{authorized:true,organization_id:organization}}),true);
+  assert.equal(runInNewContext(expression,{$json:{authorized:false,organization_id:organization}}),false);
+  assert.deepEqual(patchCopilotSessionGuard(result,key),result);
+ }
+});
