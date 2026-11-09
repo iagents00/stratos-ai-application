@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**303 archivos · 85.032 líneas**
+**303 archivos · 85.049 líneas**
 
 ---
 
@@ -479,9 +479,9 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `telegram.js` | 822 | Pareo del bot de Telegram con el perfil del asesor. |
+| `telegram.js` | 833 | Pareo del bot de Telegram con el perfil del asesor. |
 | `auth.js` | 702 | _sin describir_ |
-| `push.js` | 416 | Sistema de suscripción a notificaciones Web Push |
+| `push.js` | 422 | Sistema de suscripción a notificaciones Web Push |
 | `next-action-engine.js` | 371 | _sin describir_ |
 | `offline-mode.js` | 351 | _sin describir_ |
 | `lead-storage.js` | 343 | _sin describir_ |

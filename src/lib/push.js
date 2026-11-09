@@ -1,4 +1,3 @@
-import { supabase } from './supabase';
 /**
  * push.js — Sistema de suscripción a notificaciones Web Push
  * ─────────────────────────────────────────────────────────────────────────────
@@ -15,6 +14,8 @@ import { supabase } from './supabase';
  * iOS requiere iOS 16.4+ y que la PWA esté instalada en la pantalla de inicio.
  * Safari normal (sin instalar) NO soporta Web Push — solo la PWA instalada.
  */
+
+import { supabase } from './supabase';
 
 // ── VAPID public key ──────────────────────────────────────────────────────
 // Clave PÚBLICA de VAPID en formato RAW P-256 (base64url, 87 chars) — el que
