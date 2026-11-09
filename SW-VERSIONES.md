@@ -1,5 +1,9 @@
 # Historial de versiones del Service Worker (CACHE_VERSION)
 
+## v465 — Sesión del Copilot y avisos limitados
+
+Duke adopta los avisos a los 3, 30 y 60 minutos, sin reiniciar los ciclos agotados. El Copilot valida la sesión antes de entrar al motor y limpia el hilo al cambiar de cuenta. Las notificaciones se registran con sesión y los dispositivos compartidos reciben avisos de su cuenta más reciente.
+
 ## v464 — Una persona en dos negocios
 
 El Copilot conserva la ficha original al crear una ficha vinculada para otro negocio habilitado. Cada ficha tiene su etapa, presupuesto y notas; el teléfono real se comparte sin números inventados. Las altas no sobrescriben otros nombres por teléfono y las confirmaciones verifican el registro guardado. Se mantiene la moneda dictada y las consultas de ubicación muestran ambos negocios.

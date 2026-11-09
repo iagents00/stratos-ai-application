@@ -16,6 +16,7 @@
 //
 // Deploy: supabase functions deploy send-push --no-verify-jwt
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { currentBindings } from "./current-bindings.js";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import webpush from "npm:web-push@3.6.7";
 import { enviarANativos, type Dispositivo } from "./canales-nativos.ts";
@@ -32,10 +33,6 @@ const SERVICE_ROLE =
 const VAPID_SUBJECT = "mailto:angel@iagents.io";
 const VAPID_PUBLIC_KEY =
   "BI73OWNrVS1mQwL825rbFkv7PxGCRklmJdrCgV6tvJtL2hx1cZSIbg_xs8sfnemFTBz0gtq-lBRFe_5Pypcif2o";
-
-// Secreto compartido simple (debe coincidir con quien llame: n8n / trigger DB)
-const PUSH_SECRET =
-  Deno.env.get("PUSH_WEBHOOK_SECRET") ?? "stratos-push-internal-2026";
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -96,7 +93,13 @@ Deno.serve(async (req) => {
 
   // Auth por secreto compartido (sin JWT — lo llaman flujos internos / trigger DB)
   const secret = req.headers.get("x-push-secret") ?? "";
-  if (secret !== PUSH_SECRET) {
+  const {data: secretRows,error: secretError}=await admin.from("push_secure_config")
+    .select("key,value").in("key",["webhook_secret","webhook_secret_previous","webhook_secret_previous_until"]);
+  const secrets=Object.fromEntries((secretRows||[]).map(r=>[r.key,r.value]));
+  const validCurrent=!!secrets.webhook_secret && secret===secrets.webhook_secret;
+  const validPrevious=Date.parse(secrets.webhook_secret_previous_until||'')>Date.now()
+    && !!secrets.webhook_secret_previous && secret===secrets.webhook_secret_previous;
+  if (secretError || !secret || !(validCurrent||validPrevious)) {
     return json({ ok: false, error: "unauthorized" }, 401, origin);
   }
 
@@ -170,7 +173,11 @@ Deno.serve(async (req) => {
         continue; // usuario sin suscripciones → no es error
       }
 
-      for (const sub of subs as Array<{ endpoint: string; p256dh: string; auth: string; platform: string }>) {
+      const { data: bindings, error: bindingError } = await admin.from("push_subscriptions")
+        .select("user_id,endpoint,updated_at,created_at").in("endpoint",subs.map((s: {endpoint:string})=>s.endpoint));
+      if(bindingError) throw new Error("Cannot verify push endpoint ownership");
+      const ownedSubs=currentBindings(subs.map((s: Record<string,unknown>)=>({...s,user_id:userId})),bindings,"endpoint");
+      for (const sub of ownedSubs as Array<{ endpoint: string; p256dh: string; auth: string; platform: string }>) {
         try {
           await webpush.sendNotification(
             {
@@ -224,13 +231,17 @@ Deno.serve(async (req) => {
   try {
     const { data: devs, error: errDev } = await admin
       .from("device_tokens")
-      .select("token, platform, entorno")
+      .select("user_id, token, platform, entorno, updated_at, created_at")
       .in("user_id", userIds);
 
     if (errDev) {
       notasNativas.push(`device_tokens: ${errDev.message}`);
     } else if (devs && devs.length > 0) {
-      const r = await enviarANativos(devs as Dispositivo[], {
+      const { data: bindings, error: bindingError } = await admin.from("device_tokens")
+        .select("user_id,token,updated_at,created_at").in("token",devs.map(d=>d.token));
+      if(bindingError) throw new Error("Cannot verify native device ownership");
+      const ownedDevices=currentBindings(devs,bindings,"token");
+      const r = await enviarANativos(ownedDevices as Dispositivo[], {
         title,
         body,
         tag,
