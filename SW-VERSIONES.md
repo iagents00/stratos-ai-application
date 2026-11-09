@@ -1,5 +1,9 @@
 # Historial de versiones del Service Worker (CACHE_VERSION)
 
+## v464 — Una persona en dos negocios
+
+El Copilot conserva la ficha original al crear una ficha vinculada para otro negocio habilitado. Cada ficha tiene su etapa, presupuesto y notas; el teléfono real se comparte sin números inventados. Las altas no sobrescriben otros nombres por teléfono y las confirmaciones verifican el registro guardado. Se mantiene la moneda dictada y las consultas de ubicación muestran ambos negocios.
+
 ## v463 — Seguimiento con límite por empresa
 
 La preferencia de Copilot muestra la secuencia configurada por la empresa. Para Gerardo, después del aviso inicial hay seguimientos a los 3, 30 y 60 minutos; después se detienen. Responder antes detiene los restantes. La actividad permanece en la agenda y los ciclos agotados no se reinician al activar la insistencia.

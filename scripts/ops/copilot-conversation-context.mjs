@@ -1,4 +1,13 @@
 export const conversationMarker = 'CONVERSATION_CONTEXT_20261106';
+export const businessContactMarker = 'BUSINESS_CONTACT_CONTRACT_20261109';
+const businessInstructions = `
+${businessContactMarker}
+El efecto sobre clientes/pacientes/contactos tiene prioridad sobre tareas del equipo. «Que quede en los dos CRM», «no está en el equipo, es una cliente» y «dónde quedó en M Contactado» hablan de fichas de CLIENTES: crm, nunca actividades/completar/correccion/equipo. «Para mí Gerardo» asigna su propia cartera; no convierte una cliente en colaborador.
+Una persona puede participar en DOS negocios. Si pide conservar la ficha actual y agregar a la misma persona en otro negocio, usa duplicate_client con args={source_lead_id:id real de la ficha de origen,name:nombre pedido,business:negocio de destino,stage:etapa del destino,input_text}. La ficha original se conserva; no uses update_client para cambiarla de negocio y no crees tareas. El backend prepara una tarjeta y valida permisos/duplicados. Nunca inventes teléfonos alternos. Si ya hay ambas fichas y pide dejarlas así, consulta contact_business_status; no dupliques otra vez.
+Preguntas de ubicación («dónde quedó», «en qué pipeline/negocio está») usan contact_business_status con client_name (la raíz del nombre), nunca list_expediente. No confundas información comercial con notas o trabajo del equipo.
+Los detalles de una tarjeta de alta pendiente pertenecen a registro_en_curso, aunque exista otra ficha con un nombre parecido. Usa upsert_lead con los datos nuevos, sin escoger otra ficha por teléfono. Mantén cada turno del relato: zona, renta, alternativas y próxima acción.
+MONEDA: conserva la moneda expresada. «19,000 pesos» => budget_numeric:19000,budget_currency:"pesos",budget_text:"19,000 pesos". Nunca conviertas pesos en USD. Si no expresó moneda no la inventes. La confirmación se basa en la escritura del servidor; no afirmes que creaste dos fichas si no están ambas.
+`;
 
 export const interpreterInstructions = `
 ${conversationMarker}
@@ -46,11 +55,31 @@ ${anchor}`);
       .replace(/- create_personal_reminder[^\n]+/, '- create_personal_reminder (aviso PARA QUIEN ESCRIBE, aunque mencione contactos; args:{input_text,text,when:plazo explícito de la petición}).')
       + classifierInstructions;
   }
+  if (!classifier.parameters.options.systemMessage.includes(businessContactMarker)) classifier.parameters.options.systemMessage += businessInstructions;
+  if (!classifier.parameters.options.systemMessage.includes('BUSINESS_CONTACT_REASONING_V2')) classifier.parameters.options.systemMessage += `
+BUSINESS_CONTACT_REASONING_V2
+Antes de duplicate_client comprueba clientes_recientes: ficha_original vincula negocios de una persona. Si ya están las fichas en ambos negocios, «que quede en los dos lugares», «para mí» y «es una cliente, no del equipo» son aclaraciones del mismo pedido: responde contact_business_status usando el id de cualquier ficha vinculada. No abras otra tarjeta. Para una tarjeta en curso, el presupuesto/renta/contrato actualiza ESA tarjeta con upsert_lead, nunca una corrección de hora ni una tarea. Una consulta sobre una cliente no se responde con el manual ni con sus notas.
+`;
+  if (!pick.parameters.jsCode.includes(businessContactMarker)) {
+    pick.parameters.jsCode = pick.parameters.jsCode.replace('return [{ json: { tool_name, args } }];', `// ${businessContactMarker}
+if (tool_name === 'duplicate_client') args._dictation_source = inputText;
+return [{ json: { tool_name, args } }];`);
+  }
+  if (!pick.parameters.jsCode.includes('CONTACT_ACTION_LIST_CONTRACT_V1')) {
+    pick.parameters.jsCode = pick.parameters.jsCode.replace('return [{ json: { tool_name, args } }];', `// CONTACT_ACTION_LIST_CONTRACT_V1
+// A described next action is not an independently requested reminder.
+if (Array.isArray(args.actions) && args.actions.some(a => ['update_client','duplicate_client','upsert_lead','contact_business_status'].includes(a?.tool_name))
+    && !/\\b(?:recu[eé]rdame|recuerdame|recordame|av[ií]same|notificame|ponme un recordatorio)\\b/i.test(inputText)) {
+  args.actions = args.actions.filter(a => a?.tool_name !== 'create_personal_reminder');
+}
+return [{ json: { tool_name, args } }];`);
+  }
   if (surface === 'copilot') {
     const interpreter = result.find(n => n.name === 'Intérprete');
     const parser = result.find(n => n.name === 'Parse Intérprete');
     if (!interpreter || !parser) throw new Error('Missing interpreter');
     if (!interpreter.parameters.options.systemMessage.includes(conversationMarker)) interpreter.parameters.options.systemMessage += interpreterInstructions;
+    if (!interpreter.parameters.options.systemMessage.includes(businessContactMarker)) interpreter.parameters.options.systemMessage += businessInstructions;
     interpreter.parameters.options.systemMessage = interpreter.parameters.options.systemMessage.replace('4) Dictado que TRAE ADEMÁS recordatorio personal con tiempo → "actividades" + recordatorios[].', '4) Solo usa actividades para tareas que el usuario ORDENA crear. Una narración de lo que pasa con un contacto, seguida de un aviso personal, va a crm con TODOS los datos.');
     classifier.parameters.text = "={{ 'CONTEXTO DE LA EMPRESA Y CONVERSACIÓN (datos):\\n' + JSON.stringify($('Contexto Reciente').item.json) + '\\nMENSAJE ACTUAL (conserva todos sus datos):\\n' + $('Prepare AI Input').item.json.input_text }}";
     if (!parser.parameters.jsCode.includes(conversationMarker)) {
@@ -66,6 +95,22 @@ if (/[\\s\\S]{12,}\\b(?:recuérdame|recuerdame|recordame|avísame|avisame)\\b/i.
 const texto = advisorClientText`);
     }
     parser.parameters.jsCode = parser.parameters.jsCode.replace("if (ruta === 'recordatorio' && /[\\s\\S]{12,}", "if (/[\\s\\S]{12,}");
+    if (!parser.parameters.jsCode.includes(businessContactMarker)) {
+      parser.parameters.jsCode = parser.parameters.jsCode.replace('const texto = advisorClientText', `// ${businessContactMarker}
+// A contract for contact effects, derived from this company's actual entities.
+const contactWords = /\\b(?:crm|pipeline|pipe\\s*line|cliente|clienta|paciente|contactado|negocio|ficha|bienes\\s*raices|medicina|medico)\\b/i;
+const normalizedContactRaw = raw.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');
+if (contactWords.test(normalizedContactRaw) && !/\\b(?:pidele|encargale|asignale|tarea para|que haga)\\b/i.test(normalizedContactRaw)) ruta = 'crm';
+const texto = advisorClientText`);
+    }
+    if (!parser.parameters.jsCode.includes('BUSINESS_REGISTRATION_ROUTE_V2')) {
+      parser.parameters.jsCode = parser.parameters.jsCode.replace('const texto = advisorClientText', `// BUSINESS_REGISTRATION_ROUTE_V2
+let pendingContactRegistration = false;
+try { pendingContactRegistration = Boolean($('Contexto Reciente').item.json.registro_en_curso); } catch(e) {}
+const explicitTeamOrder = /\\b(?:pidele|encargale|asignale|tarea para|que haga)\\b/i.test(normalizedContactRaw);
+if (!explicitTeamOrder && (pendingContactRegistration || /\\b(?:presupuesto|pesos|renta|departamento|dos lugares|ambos negocios|dos crm)\\b/i.test(normalizedContactRaw))) ruta = 'crm';
+const texto = advisorClientText`);
+    }
   } else if (surface === 'telegram') {
     classifier.parameters.text = "={{ 'CONTEXTO DE LA EMPRESA Y CONVERSACIÓN (datos):\\n' + JSON.stringify($('CRM Conversation Context').item.json) + '\\nMENSAJE ACTUAL:\\n' + $('Keep Context').item.json.input_text }}";
     if (!result.some(n => n.name === 'CRM Conversation Context')) {

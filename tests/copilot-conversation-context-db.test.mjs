@@ -51,6 +51,10 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
   const agendaSource=readFileSync('supabase/migrations/099_copilot_agenda_title_logging_dedupe.sql','utf8');
   await db.exec(agendaSource.slice(agendaSource.indexOf('create or replace function public.bot_agenda_personal_create('),agendaSource.indexOf('create or replace function public.copilot_agenda_create_from_text(')));
   for(const f of ['293_copilot_conversation_helpers.sql','294_copilot_conversation_context.sql','295_copilot_pending_context_priority.sql','296_copilot_explicit_notes_precede_pending_tasks.sql','297_copilot_contact_operation_supersedes_old_draft.sql','298_copilot_original_dictation_and_visible_reminders.sql','299_copilot_personal_reminder_delivery_at_due.sql']) await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
+  await db.exec(`create or replace function auth.role() returns text language sql stable as $$select ''::text$$;
+    alter table leads add primary key(id);
+    create unique index if not exists uniq_leads_org_phone on leads(organization_id,phone_normalized) where phone_normalized is not null and deleted_at is null;`);
+  for(const f of ['301_copilot_business_contact_identity.sql','302_copilot_registration_contracts.sql','303_copilot_business_family_queries.sql','304_copilot_server_business_effect_guard.sql','305_copilot_all_typed_contact_multi_actions.sql','306_copilot_pending_business_identity_priority.sql','307_copilot_compound_registration_single_card.sql','308_copilot_pending_business_context_preserved.sql','309_copilot_explicit_copy_intent_in_upsert.sql','310_copilot_compact_card_and_dictated_next_action.sql','311_copilot_shared_phone_requires_business.sql']) await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
   const stages=['RS Primer contacto','RS Contactado','RS Reunión','RS Cliente Ganado','M Primer Contacto','M Contactado','M Reunión','M Cliente Ganado'];
   const businessLines=[{id:'realestate',label:'Bienes raíces',entryStage:stages[0],stages:stages.slice(0,4),aliases:['bienes raíces']},{id:'medicine',label:'Medicina',entryStage:stages[4],stages:stages.slice(4),aliases:['medicina']}];
   await db.query("insert into organizations(id,name,slug,meta_config) values($1,'Own','own',$2),($3,'Other','other','{}')",[org,{crm:{businessLines,pipeline:stages.map(name=>({name}))}},other]);
@@ -108,5 +112,40 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
   assert.equal(scan.enqueued,1);assert.equal((await db.query("select count(*)::int n from proactive_reminders where tipo='team_action'")).rows[0].n,1);
   // Missing names produce a question without a fake confirmation button.
   r=await call('upsert_lead',{phone:'5512345678'});assert.doesNotMatch(r.reply.text,/Confirmas/);
+  // Explicit same-person business entries preserve the original, actual phone and currency.
+  await db.query('update bot_pending_actions set consumed_at=now() where organization_id=$1',[org]);
+  await db.query("update organizations set meta_config=jsonb_set(meta_config,'{crm,allowBusinessContactCopies}','true') where id=$1",[org]);
+  const samara=(await db.query("insert into leads(organization_id,asesor_id,asesor_name,name,phone,phone_normalized,stage) values($1,$2,'Operator','Samara García Vázquez','8118809010','8118809010','M Contactado') returning id",[org,actor])).rows[0].id;
+  r=await call('update_client',{lead_id:samara,name:'Samara uno García Vázquez',stage:'RS Contactado',input_text:'La misma Samara en bienes raíces, conservando la médica.'});
+  assert.equal(r.staged,true,JSON.stringify(r));assert.match(r.reply.text,/conservaré la ficha original/);
+  r=await call('upsert_lead',{name:'Samara uno García Vázquez',phone:'8118809010',business:'bienes raíces',stage:'RS Contactado',input_text:'Agrega la misma persona en otro negocio conservando la médica.'});
+  assert.equal(r.staged,true);assert.match(r.reply.text,/conservaré la ficha original/);
+  r=await call('update_client',{client_name:'Samara García Vázquez',name:'Samara García Vázquez',stage:'M Contactado',input_text:'Conserva la original en medicina.'});
+  assert.equal(r.staged,true,JSON.stringify(r));assert.match(r.reply.text,/Samara uno/);assert.match(r.reply.text,/RS Contactado/);
+  r=await call('update_client',{client_name:'Samara',budget_numeric:19000,budget_currency:'pesos',nota:'Selva Nova, Coto ocho; renta o renegociar contrato.',input_text:'De Samara, el presupuesto es 19,000 pesos y busca renta en Selva Nova.'});
+  assert.equal(r.staged,true,JSON.stringify(r));assert.match(r.reply.text,/19,000 pesos/);assert.doesNotMatch(r.reply.text,/USD/);
+  r=await call('multi',{actions:[{tool_name:'update_client',args:{client_name:'Samara García Vázquez',budget_numeric:19000,budget_currency:'pesos',nota:'Selva Nova, Coto ocho; renta o renegociar contrato.'}},{tool_name:'update_client',args:{client_name:'Samara uno García Vázquez',next_action:'Buscar departamento para renta.'}}]});
+  assert.equal(r.staged,true,JSON.stringify(r));assert.equal((r.reply.text.match(/Confirmas/g)||[]).length,1);
+  const confirmation=(await db.query('select bot_confirm_latest_pending(-771) result')).rows[0].result;
+  assert.equal(confirmation.ok,true,JSON.stringify(confirmation));const copyId=confirmation.data.lead_id;
+  assert.notEqual(copyId,samara);
+  const original=(await db.query('select * from leads where organization_id=$1 and id=$2',[org,samara])).rows[0];
+  const copy=(await db.query('select * from leads where organization_id=$1 and id=$2',[org,copyId])).rows[0];
+  assert.equal(original.name,'Samara García Vázquez');assert.equal(original.stage,'M Contactado');assert.equal(Number(original.presupuesto||0),0);
+  assert.equal(copy.name,'Samara uno García Vázquez');assert.equal(copy.stage,'RS Contactado');assert.equal(copy.business_entry_of,samara);
+  assert.equal(copy.phone,original.phone);assert.equal(copy.phone_normalized,null);assert.equal(copy.presupuesto,19000);assert.equal(copy.budget_currency,'pesos');
+  const note=(await db.query('select descripcion from expediente_items where organization_id=$1 and lead_id=$2',[org,copyId])).rows[0].descripcion;
+  assert.match(note,/Selva Nova/);assert.match(note,/conservando la médica/);assert.match(note,/19,000 pesos/);
+  r=await call('contact_business_status',{client_name:'Samara'});assert.match(r.reply.text,/M Contactado/);assert.match(r.reply.text,/RS Contactado/);
+  r=await call('duplicate_client',{source_lead_id:samara,name:'Samara uno García Vázquez',business:'bienes raíces',stage:'RS Contactado'});
+  assert.match(r.reply.text,/Así está registrado/);assert.match(r.reply.text,/M Contactado/);assert.match(r.reply.text,/RS Contactado/);
+  r=await call('multi',{actions:[{tool_name:'duplicate_client',args:{source_lead_id:copyId,name:'Samara García Vázquez',business:'medicina',stage:'M Contactado'}},{tool_name:'contact_business_status',args:{client_name:'Samara uno García Vázquez'}}]});
+  assert.equal(r.ok,true,JSON.stringify(r));assert.match(r.reply.text,/M Contactado/);assert.match(r.reply.text,/RS Contactado/);
+  assert.equal((await db.query('select count(*)::int n from leads where business_entry_of=$1',[samara])).rows[0].n,1);
+  assert.equal((await db.query("select bot_upsert_lead(-771,'8118809010','Different person',null,'M Contactado') result")).rows[0].result.error,'existing_contact_requires_explicit_update');
+  assert.equal((await call('update_client',{client_name:'8118809010',nota:'Do not guess between businesses'})).needs_input,'client');
+  assert.equal((await call('change_stage',{client_name:'8118809010',stage:'Contactado'})).needs_input,'client');
+  assert.equal((await call('duplicate_client',{source_lead_id:foreign,name:'Foreign clone',business:'bienes raíces',stage:'RS Contactado'})).ok,false);
+  await assert.rejects(db.query("insert into leads(organization_id,name,phone,stage,business_entry_of,business_line_id) values($1,'Cross company','8118809010','RS Contactado',$2,'realestate')",[other,samara]));
  } finally { await db.close(); }
 });
