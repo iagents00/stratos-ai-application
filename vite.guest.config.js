@@ -7,6 +7,7 @@ const replacements = new Map([
   ['src/contexts/AuthContext', 'AuthContext.jsx'],
   ['src/contexts/ClientContext', 'ClientContext.jsx'],
   ['src/lib/supabase', 'backend.js'],
+  ['src/lib/copilot-session', 'copilot-session.js'],
   ['src/lib/native', 'native.js'],
 ]);
 export default defineConfig({
@@ -26,7 +27,7 @@ export default defineConfig({
     generateBundle() {
       for (const id of this.getModuleIds()) {
         const path = id.replaceAll('\\', '/');
-        if (/\/src\/(?:contexts\/(?:AuthContext|ClientContext)|lib\/(?:supabase|native))\.(?:js|jsx)$/.test(path) || path.includes('/node_modules/@supabase/')) {
+        if (/\/src\/(?:contexts\/(?:AuthContext|ClientContext)|lib\/(?:supabase|native|copilot-session))\.(?:js|jsx)$/.test(path) || path.includes('/node_modules/@supabase/')) {
           this.error(`Guest build contains a production capability: ${path}`);
         }
       }

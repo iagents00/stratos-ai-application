@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**304 archivos · 85.076 líneas**
+**305 archivos · 85.080 líneas**
 
 ---
 
@@ -413,6 +413,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ClientContext.jsx` | 14 | _sin describir_ |
 | `native.js` | 10 | _sin describir_ |
 | `main.jsx` | 6 | _sin describir_ |
+| `copilot-session.js` | 4 | _sin describir_ |
 
 ### `src/hooks/`
 
