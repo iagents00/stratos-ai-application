@@ -24,7 +24,7 @@ return [item];`;
  const hasSession = `Boolean(${sourceHeaders}?.authorization)`;
  const deniedParameters = {
   respondWith:'json',
-  responseBody:`={{ ${hasSession} ? {ok:false,error:"session_required",reply:"Tu sesión no corresponde a este Copilot. Actualiza la aplicación e inicia sesión."} : {ok:false,error:"client_update_required",reply:{text:"Tu versión de Stratos AI necesita actualizarse para usar el Copilot. Actualiza la app o abre la versión web actualizada y vuelve a enviar tu solicitud. Este intento no registró ningún cambio.",inline_keyboard:[[{text:"Actualizar en iPhone",url:"https://apps.apple.com/app/id6804826565"}],[{text:"Abrir Stratos actualizado",url:"https://app.getstratosai.com"}]]}} }}`,
+  responseBody:`={{ ${hasSession} ? {ok:false,error:"session_required",reply:"Tu sesión no corresponde a este Copilot. Actualiza la aplicación e inicia sesión."} : {ok:false,error:"client_update_required",reply:{text:"Tu versión de Stratos AI necesita actualizarse para usar el Copilot. Actualiza la app o abre la versión web actualizada y vuelve a enviar tu solicitud. Este intento no registró ningún cambio.",inline_keyboard:[[{text:"Actualizar en iPhone",url:"https://apps.apple.com/app/id6804826565"}],[{text:"Abrir Stratos actualizado",url:"https://app.getstratosai.com"}]] } } }}`,
   options:{responseCode:`={{ ${hasSession} ? 401 : 200 }}`},
  };
  if(result.nodes.some(n=>n.name==='Copilot Session Guard')) {

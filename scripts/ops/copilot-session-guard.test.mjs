@@ -11,6 +11,9 @@ test('all webhook paths must pass verified session RPC before any original node'
  assert.equal(result.connections['Copilot Session Authorized'].main[1][0].node,'Copilot Session Denied');
  assert.deepEqual(result.connections['Copilot Session Input'],source.connections.Ingress);
  const denied=result.nodes.find(n=>n.name==='Copilot Session Denied').parameters;
+ // n8n closes an expression at the first adjacent braces, including nested
+ // object literals that JavaScript itself would accept without whitespace.
+ assert.equal((denied.responseBody.match(/}}/g)||[]).length,1);
  const evaluate=(expression,headers)=>runInNewContext(expression.slice(3,-2),{$:()=>({first:()=>({json:{headers}})})});
  assert.equal(evaluate(denied.options.responseCode,{authorization:'Bearer invalid'}),401);
  assert.equal(evaluate(denied.responseBody,{authorization:'Bearer invalid'}).error,'session_required');
