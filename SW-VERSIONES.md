@@ -1,3 +1,7 @@
+## v467 — 10-nov-2026
+
+Invitado: Documentos muestra una guía ficticia y permite leerla sin red ni acceso a empresas. Android 4.9.12 (54).
+
 # Historial de versiones del Service Worker (CACHE_VERSION)
 
 ## v466 — Un envío permanece en su cuenta
