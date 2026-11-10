@@ -17,6 +17,16 @@ delete json.headers;
 const item = {json};
 if (source.binary) item.binary = source.binary;
 return [item];`;
+ // Older installed apps did not attach a session to the webhook. They also
+ // discard non-2xx response bodies, hiding the instructions needed to recover.
+ // Return a readable rejection to those clients without entering the CRM path.
+ const sourceHeaders = `$('${webhook[0].name.replaceAll("'","\\'")}').first().json.headers`;
+ const hasSession = `Boolean(${sourceHeaders}?.authorization)`;
+ const deniedParameters = {
+  respondWith:'json',
+  responseBody:`={{ ${hasSession} ? {ok:false,error:"session_required",reply:"Tu sesión no corresponde a este Copilot. Actualiza la aplicación e inicia sesión."} : {ok:false,error:"client_update_required",reply:{text:"Tu versión de Stratos AI necesita actualizarse para usar el Copilot. Actualiza la app o abre la versión web actualizada y vuelve a enviar tu solicitud. Este intento no registró ningún cambio.",inline_keyboard:[[{text:"Actualizar en iPhone",url:"https://apps.apple.com/app/id6804826565"}],[{text:"Abrir Stratos actualizado",url:"https://app.getstratosai.com"}]]}} }}`,
+  options:{responseCode:`={{ ${hasSession} ? 401 : 200 }}`},
+ };
  if(result.nodes.some(n=>n.name==='Copilot Session Guard')) {
   const input=result.nodes.find(n=>n.name==='Copilot Session Input');
   if(!input) throw Error('Incomplete session guard');
@@ -24,6 +34,9 @@ return [item];`;
   const condition=result.nodes.find(n=>n.name==='Copilot Session Authorized')?.parameters?.conditions?.conditions;
   if(condition?.length!==1||condition[0].id!=='verified-session') throw Error('Session condition changed');
   condition[0].leftValue=authorizedExpression;
+  const denied=result.nodes.find(n=>n.name==='Copilot Session Denied');
+  if(!denied) throw Error('Incomplete session rejection');
+  denied.parameters=deniedParameters;
   return result;
  }
  const entry=webhook[0];
@@ -37,7 +50,7 @@ return [item];`;
  }});
  result.nodes.push({id:'copilot-session-authorized',name:'Copilot Session Authorized',type:'n8n-nodes-base.if',typeVersion:2.2,position:[entry.position[0]+360,entry.position[1]],parameters:{conditions:{options:{caseSensitive:true,leftValue:'',typeValidation:'strict',version:2},conditions:[{id:'verified-session',leftValue:authorizedExpression,rightValue:true,operator:{type:'boolean',operation:'true',singleValue:true}}],combinator:'and'},options:{}}});
  result.nodes.push({id:'copilot-session-input',name:'Copilot Session Input',type:'n8n-nodes-base.code',typeVersion:2,position:[entry.position[0]+540,entry.position[1]],parameters:{jsCode:inputCode}});
- result.nodes.push({id:'copilot-session-denied',name:'Copilot Session Denied',type:'n8n-nodes-base.respondToWebhook',typeVersion:1.4,position:[entry.position[0]+540,entry.position[1]+180],parameters:{respondWith:'json',responseBody:'={{ {ok:false,error:"session_required",reply:"Tu sesión no corresponde a este Copilot. Actualiza la aplicación e inicia sesión."} }}',options:{responseCode:401}}});
+ result.nodes.push({id:'copilot-session-denied',name:'Copilot Session Denied',type:'n8n-nodes-base.respondToWebhook',typeVersion:1.4,position:[entry.position[0]+540,entry.position[1]+180],parameters:deniedParameters});
  result.connections[entry.name]={main:[[{node:'Copilot Session Guard',type:'main',index:0}]]};
  result.connections['Copilot Session Guard']={main:[[{node:'Copilot Session Authorized',type:'main',index:0}]]};
  result.connections['Copilot Session Authorized']={main:[[{node:'Copilot Session Input',type:'main',index:0}],[{node:'Copilot Session Denied',type:'main',index:0}]]};
