@@ -6,7 +6,14 @@ let tables = {};
 let nextId = 1;
 export function resetGuestData() {
   nextId = 1;
-  tables = { team_actions: [], profiles: [
+  tables = { team_actions: [], team_documents: [{
+    id: 'guest-document-1',
+    titulo: 'Guía de trabajo de ejemplo',
+    tipo: 'Demostración',
+    fecha: '2026-01-01',
+    autor: 'Equipo de ejemplo',
+    contenido: 'GUÍA DE TRABAJO DE EJEMPLO\n\nEste documento contiene únicamente datos ficticios.\n\n• Consulta la ficha de Alex Ejemplo en el CRM.\n• Registra una próxima acción y revisa la agenda en Space.\n• Usa el Copilot para consultar respuestas de ejemplo.\n\nLos cambios de esta demo solo duran mientras está abierta. No se accede a documentos, cuentas ni servicios de empresas reales.',
+  }], profiles: [
     { id: 'demo-user-local', name: 'Invitado', role: 'admin' },
     { id: 'guest-advisor-1', name: 'Asesor 1 Ejemplo', role: 'asesor' },
     { id: 'guest-advisor-2', name: 'Asesor 2 Ejemplo', role: 'asesor' },
@@ -56,8 +63,15 @@ export const SUPABASE_REST_URL = '';
 export const SUPABASE_ANON_KEY = '';
 export const supabase = {
   from: query,
-  rpc: async name => name === 'fn_org_team_members'
-    ? { data: copy(tables.profiles), error: null } : { data: null, error: denied },
+  rpc: async (name, params = {}) => {
+    if (name === 'fn_org_team_members') return { data: copy(tables.profiles), error: null };
+    if (name === 'fn_docs_listar') return { data: copy(tables.team_documents), error: null };
+    if (name === 'fn_space_document_read') {
+      const document = tables.team_documents.find(row => row.id === params.p_document_id);
+      return { data: copy(document ?? null), error: null };
+    }
+    return { data: null, error: denied };
+  },
   auth: {
     getSession: async () => ({ data: { session: null }, error: null }),
     getUser: async () => ({ data: { user: null }, error: null }),

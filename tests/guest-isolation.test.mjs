@@ -119,6 +119,36 @@ test('guest tasks are local, resettable and cannot mutate unknown enterprise tab
   assert.deepEqual((await supabase.from('team_actions').select()).data, []);
 });
 
+test('guest documents can be listed and read without enterprise access', async () => {
+  resetGuestData();
+  const result = await supabase.rpc('fn_docs_listar', { p_profile_id: 'outside-profile' });
+  assert.equal(result.error, null);
+  assert.equal(result.data.length, 1);
+  const document = result.data[0];
+  assert.match(document.titulo, /ejemplo/);
+  assert.match(document.contenido, /únicamente datos ficticios/);
+  const read = await supabase.rpc('fn_space_document_read', { p_document_id: document.id });
+  assert.deepEqual(read.data, document);
+  assert.equal(read.error, null);
+  assert.deepEqual(await supabase.rpc('fn_space_document_read', { p_document_id: 'company-private-document' }), { data: null, error: null });
+});
+
+test('guest document results cannot mutate the demo or enable document writes', async () => {
+  resetGuestData();
+  const result = await supabase.rpc('fn_docs_listar');
+  const id = result.data[0].id;
+  result.data[0].contenido = 'Changed outside the provider';
+  result.data.push({ id: 'outside-document' });
+  const read = await supabase.rpc('fn_space_document_read', { p_document_id: id });
+  assert.match(read.data.contenido, /únicamente datos ficticios/);
+  read.data.titulo = 'Changed read';
+  assert.equal((await supabase.rpc('fn_docs_listar')).data[0].titulo, 'Guía de trabajo de ejemplo');
+  assert.equal((await supabase.from('team_documents').update({ contenido: 'Unsafe' }).eq('id', id)).error.code, 'GUEST_ONLY');
+  assert.equal((await supabase.rpc('fn_doc_guardar', { p_contenido: 'Unsafe' })).error.code, 'GUEST_ONLY');
+  resetGuestData();
+  assert.equal((await supabase.rpc('fn_docs_listar')).data.length, 1);
+});
+
 test('guest preserves browser enforced network denial', () => {
   const html = readFileSync('guest.html', 'utf8');
   for (const directive of ['default', 'connect', 'frame', 'worker', 'media', 'object']) {

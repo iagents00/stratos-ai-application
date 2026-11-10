@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**305 archivos · 85.080 líneas**
+**305 archivos · 85.094 líneas**
 
 ---
 
@@ -406,7 +406,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `backend.js` | 72 | _sin describir_ |
+| `backend.js` | 86 | _sin describir_ |
 | `Workspace.jsx` | 29 | _sin describir_ |
 | `boundary.js` | 28 | _sin describir_ |
 | `AuthContext.jsx` | 14 | _sin describir_ |
@@ -942,6 +942,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/clients/tgenius/config.js` (90 líneas)
 - `src/landing/FeatureMotion.jsx` (90 líneas)
 - `src/app/features/Admin/RailsSettings.css` (86 líneas)
+- `src/guest/backend.js` (86 líneas)
 - `src/lib/backup.js` (85 líneas)
 - `src/contexts/ClientOrgGuard.jsx` (83 líneas)
 - `src/clients/i-space/config.js` (80 líneas)
@@ -949,7 +950,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/lib/transcribir.js` (77 líneas)
 - `src/hooks/useTeam.js` (74 líneas)
 - `src/app/components/CopilotReminderSettings.jsx` (72 líneas)
-- `src/guest/backend.js` (72 líneas)
 - `src/lib/ringer.js` (72 líneas)
 - `src/lib/agenda.js` (71 líneas)
 - `src/app/views/LandingPages/CreateWorkspace.jsx` (70 líneas)
