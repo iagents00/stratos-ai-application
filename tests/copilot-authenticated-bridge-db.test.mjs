@@ -31,13 +31,14 @@ test('installed clients forward their own session once; disabled/foreign/inactiv
    create function fn_proactive_check_report(jsonb) returns jsonb language sql as $$select '{"has_report":false}'::jsonb$$;`);
   await db.exec(readFileSync('supabase/migrations/317_copilot_delivery_receipts_and_incidents.sql','utf8'));
   await db.exec(readFileSync('supabase/migrations/319_copilot_authenticated_installed_client_bridge.sql','utf8'));
+  await db.exec(readFileSync('supabase/migrations/320_copilot_rpc_header_transport.sql','utf8'));
   await db.query("insert into organizations(id,meta_config) values($1,'{\"crm\":{\"authenticatedCopilotBridge\":true}}'),($2,'{}')",[org,other]);
   await db.query("insert into profiles(id,organization_id,active,telegram_chat_id,name,role) values($1,$2,true,-1,'Own','asesor'),($3,$4,true,-2,'Foreign','asesor')",[actor,org,foreign,other]);
   const call=()=>one("select copilot_handle_pending('Regístrala en contactado') reply");
   await assert.rejects(db.query("select copilot_authenticated_bridge('Anything')"),/Session/);
   await db.query("select set_config('test.uid',$1,false)",[actor]);
   await assert.rejects(call(),/headers/);
-  await db.exec(`select set_config('request.headers','{"authorization":"Bearer own-user-token","apikey":"public-key"}',false);`);
+  await db.exec(`select set_config('request.headers','{"authorization":"Bearer own-user-token"}',false);`);
   await db.query("insert into tg_bot_activity(organization_id,telegram_chat_id,role,content) values($1,-1,'user','Regístrala en contactado')",[org]);
   assert.equal((await call()).reply,'Accepted');
   assert.match((await call()).reply,/Estoy atendiendo/);
