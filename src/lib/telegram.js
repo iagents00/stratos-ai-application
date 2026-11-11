@@ -16,6 +16,7 @@
  */
 import { supabase } from './supabase'
 import { copilotRequestClient } from './copilot-session'
+import { deliverCopilot } from './copilot-delivery'
 import { sendProjectCopilot } from './project-copilot.js'
 import { loadCopilotProfile } from './copilot-profile.js'
 import { replyToCopilotReminder, followupButtons } from './copilot-reminders.js'
@@ -750,51 +751,13 @@ async function _sendCopilotMessageInner(rawText, options, scope) {
     // it again can create the task or lead twice. Submit once, then let the
     // existing history reconciliation resolve an uncertain delivery.
     if (!session.access_token) return { reply: null, error: 'sesion_expirada' };
-    const ctrl = new AbortController();
-    const timeout = setTimeout(() => ctrl.abort(), 40000);
-    try {
-      const res = await fetch(webhookUrl, {
-        method: 'POST', signal: ctrl.signal,
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({
-          chat_id: chatId, text: cleanText,
-          callback_data: options.callback_data || undefined,
-          original_type: options.callback_data ? 'callback' : 'text',
-        }),
-      });
-        if (res.ok) {
-          const raw = await res.text();
-          if (raw && raw.length > 2) {
-            try {
-              const json = JSON.parse(raw);
-              const reply = json?.reply || json?.output || (typeof json === 'string' ? json : null);
-              if (reply && typeof reply === 'object') {
-                const text = reply.text || reply.content || 'Listo.';
-                const buttons = flatKeyboard(reply.inline_keyboard);
-                const filtered = filterIntrusiveReply(text, buttons);
-                return { reply: filtered.reply, buttons: filtered.buttons, error: null };
-              }
-              if (reply && typeof reply === 'string' && reply.length > 2) {
-                const filtered = filterIntrusiveReply(reply, []);
-                return { reply: filtered.reply, buttons: filtered.buttons, error: null };
-              }
-            } catch {
-              if (raw.length > 5 && !raw.includes('<html')) {
-                const filtered = filterIntrusiveReply(raw, []);
-                return { reply: filtered.reply, buttons: filtered.buttons, error: null };
-              }
-            }
-          }
-        }
-
-      if (res.status === 401 || res.status === 403) return { reply: null, buttons: [], error: 'sesion_expirada' };
-      if (res.status >= 400 && res.status < 500 && res.status !== 408) {
-        return { reply: null, buttons: [], error: 'no_llego' };
-      }
-    } catch (err) {
-      console.warn('[Copilot] Entrega pendiente de confirmar:', err?.name || 'network_error');
-    } finally {
-      clearTimeout(timeout);
+    const delivery=await deliverCopilot({client:supabase,session,webhookUrl,chatId,text:cleanText,callback:options.callback_data});
+    if(delivery.error)return {reply:null,buttons:[],error:delivery.error};
+    const rawReply=delivery.data?.reply;
+    const text=typeof rawReply==='string'?rawReply:rawReply?.text;
+    if(text){
+      const filtered=filterIntrusiveReply(text,flatKeyboard(rawReply?.inline_keyboard));
+      return {reply:filtered.reply,buttons:filtered.buttons,error:null,persisted:delivery.data.persisted===true,request_id:delivery.data.request_id};
     }
 
     // Fallback cuando el webhook no respondió a tiempo o dio error.

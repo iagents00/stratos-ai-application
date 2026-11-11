@@ -98,11 +98,13 @@ error no está en el frontend.
 | `fn_doc_link_agregar` | `app/features/MetaPanel/DocsStratos.jsx` · `app/views/InformeAvances.jsx` |
 | `add_expediente_item` | `app/views/CRM/LeadNotesTimeline.jsx` |
 | `copilot_agenda_create_from_text` | `lib/telegram.js` |
+| `copilot_delivery_status` | `lib/copilot-delivery.js` |
 | `copilot_handle_callback` | `lib/telegram.js` |
 | `copilot_handle_pending` | `lib/telegram.js` |
 | `copilot_log_msg_media` | `app/views/Copilot.jsx` |
 | `copilot_reminder_reply` | `lib/copilot-reminders.js` |
 | `copilot_reminder_settings` | `app/components/CopilotReminderSettings.jsx` |
+| `copilot_report_problem` | `lib/copilot-delivery.js` |
 | `copilot_send` | `lib/telegram.js` |
 | `create_portfolio_link` | `app/views/LandingPages/index.jsx` |
 | `find_lead_duplicate` | `lib/lead-save.js` |

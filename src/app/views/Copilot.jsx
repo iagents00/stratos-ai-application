@@ -506,9 +506,9 @@ function Chat({ actorId, T, isLight, botUsername, onUnpaired, onBack, score, isM
       setMessages((prev) => prev.map(m => m.id === tmpId ? { ...m, pending: false } : m));
       setErrBanner(
         r.error === "no_llego"
-          ? "Tu mensaje no llegó al motor (falló la conexión). Mándalo de nuevo — no se guardó nada."
+          ? "No pude confirmar la entrega. Conservé tu mensaje; revisa la conversación antes de volver a enviarlo."
         : r.error === "sesion_expirada"
-          ? "Tu sesión se cerró. Vuelve a entrar para seguir hablando con el asistente — lo que escribiste no se envió."
+          ? "Necesitas volver a iniciar sesión para seguir con el asistente. Tu mensaje sigue visible en esta conversación."
         : r.error === "reminder_response_unconfirmed"
           ? "No pudimos confirmar tu respuesta al recordatorio. Recarga la conversación para comprobar su estado."
         : r.error === "profile_unavailable"
@@ -781,6 +781,7 @@ function Chat({ actorId, T, isLight, botUsername, onUnpaired, onBack, score, isM
     if (resultado && typeof resultado.then === "function") {
       resultado.then((texto) => {
         if (!mountedRef.current) return;
+        texto = texto || voiceTranscriptRef.current;
         // Se limpia SIEMPRE, incluso si no se entendio nada: dejarlo en true
         // haria que la proxima grabacion se enviara sola sin que nadie lo pida.
         const eraAutomatico = autoSendVoiceRef.current;
@@ -850,7 +851,7 @@ function Chat({ actorId, T, isLight, botUsername, onUnpaired, onBack, score, isM
       if (sesionNativa) { recognitionRef.current = sesionNativa; usandoNativo = true; }
     } catch { /* sigue por el camino del navegador */ }
 
-    transcribirAfueraRef.current = false;
+    transcribirAfueraRef.current = !usandoNativo;
 
     // ── PLAN B: que lo transcriba el servidor ──────────────────────────────
     //
@@ -889,10 +890,10 @@ function Chat({ actorId, T, isLight, botUsername, onUnpaired, onBack, score, isM
         // Brave SÍ define webkitSpeechRecognition pero corta el servicio al arrancar
         // (error network/service-not-allowed) → el transcript queda vacío para siempre.
         // Se marca para avisarlo EN VIVO en la barra de grabación.
-        recSpeech.onerror = () => { if (mountedRef.current) setSpeechDown(true); };
+        recSpeech.onerror = () => { transcribirAfueraRef.current = true; if (mountedRef.current) setSpeechDown(true); };
         recSpeech.start();
         recognitionRef.current = recSpeech;
-      } catch { setSpeechDown(true); }
+      } catch { transcribirAfueraRef.current = true; setSpeechDown(true); }
       }
     }
 
@@ -962,25 +963,26 @@ function Chat({ actorId, T, isLight, botUsername, onUnpaired, onBack, score, isM
     // hace el servidor. Antes acá se tiraba la grabación y se mostraba un
     // cartel — la persona hablaba y no pasaba nada.
     const blob = pendingVoiceBlobRef.current;
-    if (transcribirAfueraRef.current && blob) {
-      setPendingVoiceBlob(null);
+    if (blob) {
+      if (transcribiendo) return;
       setTranscribiendo(true);
       const r = await transcribirEnServidor(blob);
+      if (!mountedRef.current) return;
       setTranscribiendo(false);
       if (r.texto) {
+        setPendingVoiceBlob(null);
         setVoiceTranscript("");
         voiceTranscriptRef.current = "";
         sendRef.current?.(r.texto);
         inputRef.current?.focus();
         return;
       }
-      setErrBanner(r.error || "No se pudo convertir tu voz en texto.");
+      setErrBanner(r.error || "No pude transcribir todavía. Conservé tu audio: puedes volver a intentarlo.");
       inputRef.current?.focus();
       return;
     }
 
-    setPendingVoiceBlob(null); setVoiceTranscript("");
-    setErrBanner("No pude convertir tu voz en texto en este navegador (le pasa a Brave). Escribe el mensaje, o dicta desde la app, Chrome o Safari.");
+    setErrBanner("No escuché palabras. Toca el micrófono y vuelve a intentarlo, o escribe tu mensaje.");
     inputRef.current?.focus();
   };
 
@@ -1229,7 +1231,7 @@ function Chat({ actorId, T, isLight, botUsername, onUnpaired, onBack, score, isM
           <span style={{ flex: 1, fontSize: 12.5, fontWeight: 500, color: isLight ? "#B91C1C" : "#FCA5A5", fontFamily: fontDisp }}>
             Grabando {fmtRecSecs(recordSecs)}
             {voiceTranscript ? <span style={{ fontWeight: 400, opacity: 0.9, marginLeft: 6, fontSize: 12 }}>({voiceTranscript})</span> : null}
-            {speechDown && !voiceTranscript ? <span style={{ fontWeight: 400, opacity: 0.9, marginLeft: 6, fontSize: 12 }}>(este navegador no está transcribiendo — lo que digas no se convertirá en texto)</span> : null}
+            {speechDown && !voiceTranscript ? <span style={{ fontWeight: 400, opacity: 0.9, marginLeft: 6, fontSize: 12 }}>(al terminar convertiré tu audio en texto)</span> : null}
           </span>
           <button onClick={cancelRecording} title="Esc" style={{ padding: "3px 8px", borderRadius: 6, background: "transparent", border: `1px solid ${T.border}`, color: T.txt2, fontSize: 12, fontFamily: font, cursor: "pointer" }}><X size={10} /> Cancelar</button>
           <button onClick={finishRecording} title="Listo (con Enter se envía directo)" style={{ padding: "3px 10px", borderRadius: 6, border: "none", background: "#EF4444", color: "#FFF", fontSize: 12, fontWeight: 600, fontFamily: fontDisp, cursor: "pointer" }}><Square size={9} /> Listo</button>

@@ -1,3 +1,7 @@
+## v468 — 11-nov-2026
+
+Copilot conserva un comprobante por solicitud, recupera resultados sin repetir acciones y muestra una respuesta clara ante errores. El audio web usa respaldo cuando no hay transcripción y conserva la grabación ante un fallo. Alertas operativas de correo y AIOS con categorías agrupadas, sin contenido de clientes.
+
 ## v467 — 10-nov-2026
 
 Invitado: Documentos muestra una guía ficticia y permite leerla sin red ni acceso a empresas. Android 4.9.12 (54).

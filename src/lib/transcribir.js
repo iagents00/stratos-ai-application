@@ -54,6 +54,7 @@ export async function transcribirEnServidor(blob) {
       method: "POST",
       headers: { authorization: `Bearer ${token}` },
       body: form,
+      signal: AbortSignal.timeout(65000),
     });
 
     const d = await r.json().catch(() => ({}));
@@ -66,11 +67,11 @@ export async function transcribirEnServidor(blob) {
     // Cada motivo manda a un lugar distinto a buscar el problema. Un
     // "no se pudo" a secas hace que la persona revise el micrófono, que es
     // justamente donde NO está la causa.
-    if (d?.error === "sin_saldo") return { error: "La cuenta de transcripción se quedó sin saldo. Avísale a Ángel." };
-    if (d?.error === "falta_credencial") return { error: "Falta configurar la transcripción. Avísale a Ángel." };
+    if (d?.error === "sin_saldo") return { error: "La transcripción no está disponible por ahora. Conservé tu audio y avisé al equipo; puedes escribir mientras lo solucionamos." };
+    if (d?.error === "falta_credencial") return { error: "La transcripción necesita atención del equipo. Conservé tu audio y envié el aviso." };
     if (d?.error === "audio_muy_largo") return { error: "El dictado es muy largo. Prueba con algo más corto." };
-    return { error: "No se pudo convertir tu voz en texto. Escribe el mensaje." };
+    return { error: "No pude transcribir todavía. Conservé tu audio; puedes volver a intentarlo o escribir el mensaje." };
   } catch {
-    return { error: "No hay internet para convertir tu voz en texto. Escribe el mensaje." };
+    return { error: "No pude recibir la transcripción. Conservé tu audio; comprueba tu conexión y vuelve a intentarlo." };
   }
 }
