@@ -32,7 +32,8 @@ Deno.serve(async req=>{
   result=classifyDelivery(response.status,data);
  }catch(e){result=failure(e.name==='TimeoutError'?'engine_timeout':'engine_network');}
  try{
-  await rpc('fn_copilot_delivery_finish',{p_org:actor.organization_id,p_profile:actor.profile_id,p_id:receipt.id,p_status:result.status,p_response:result.response,p_code:result.code},'Bearer '+service);
+  const saved=await rpc('fn_copilot_delivery_finish',{p_org:actor.organization_id,p_profile:actor.profile_id,p_id:receipt.id,p_status:result.status,p_response:result.response,p_code:result.code},'Bearer '+service);
+  if(saved!==true)throw Error('receipt_state_changed');
  }catch(e){console.error('Copilot receipt finish failed',e.message);return reply({ok:false,pending:true,error:'receipt_unavailable',request_id:receipt.id,reply:{text:'La respuesta llegó, pero no pude confirmar su registro. Revisa la conversación antes de repetir la solicitud.',inline_keyboard:[]}},202);}
  return reply({...result.response,persisted:true,request_id:receipt.id});
 });
