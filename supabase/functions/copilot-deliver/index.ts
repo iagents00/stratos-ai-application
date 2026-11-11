@@ -23,17 +23,33 @@ Deno.serve(async req=>{
  try{receipt=await rpc('copilot_delivery_begin',{p_id:body.request_id,p_text:body.text,p_callback:body.callback_data||'',p_route:body.route},token);}
  catch{return reply({error:'receipt_unavailable'},503);}
  if(!receipt.run)return reply(receipt.response?{...receipt.response,persisted:true,request_id:receipt.id}:{ok:false,pending:true,request_id:receipt.id,reply:{text:'Esta solicitud ya está en curso. Estoy esperando su respuesta; no necesitas enviarla otra vez.',inline_keyboard:[]}});
+ const complete=async()=>{
  let result;
  try{
+  if(body.background===true){
+   const deadline=Date.now()+45000;
+   while(await rpc('copilot_delivery_waiting',{p_id:receipt.id},token)===true){
+    if(Date.now()>=deadline)throw Object.assign(new Error('Earlier turn still processing'),{name:'QueueTimeout'});
+    await new Promise(resolve=>setTimeout(resolve,1000));
+   }
+  }
   const response=await fetch('https://personal-n8n.suwsiw.easypanel.host/webhook/'+routes[body.route],{
    method:'POST',headers:{'Content-Type':'application/json',Authorization:token},
    body:JSON.stringify({chat_id:actor.chat_id,text:body.text,callback_data:body.callback_data||undefined,original_type:body.callback_data?'callback':'text',request_id:receipt.id}),signal:AbortSignal.timeout(80000)});
   let data={};try{data=await response.json();}catch{/* Empty/HTML responses are delivery failures. */}
   result=classifyDelivery(response.status,data);
- }catch(e){result=failure(e.name==='TimeoutError'?'engine_timeout':'engine_network');}
+ }catch(e){result=failure(e.name==='TimeoutError'?'engine_timeout':e.name==='QueueTimeout'?'engine_queue_timeout':'engine_network');}
  try{
   const saved=await rpc('fn_copilot_delivery_finish',{p_org:actor.organization_id,p_profile:actor.profile_id,p_id:receipt.id,p_status:result.status,p_response:result.response,p_code:result.code},'Bearer '+service);
   if(saved!==true)throw Error('receipt_state_changed');
  }catch(e){console.error('Copilot receipt finish failed',e.message);return reply({ok:false,pending:true,error:'receipt_unavailable',request_id:receipt.id,reply:{text:'La respuesta llegó, pero no pude confirmar su registro. Revisa la conversación antes de repetir la solicitud.',inline_keyboard:[]}},202);}
  return reply({...result.response,persisted:true,request_id:receipt.id});
+ };
+ // The authenticated RPC used by installed clients only waits for acceptance.
+ // The same receipt and history writer deliver the final reply afterwards.
+ if(body.background===true){
+  EdgeRuntime.waitUntil(complete());
+  return reply({ok:true,pending:true,request_id:receipt.id,reply:{text:'Estoy atendiendo tu solicitud. Te confirmaré aquí el resultado.',inline_keyboard:[]}},202);
+ }
+ return await complete();
 });
