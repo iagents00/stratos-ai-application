@@ -1,0 +1,36 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {PGlite} from '@electric-sql/pglite';
+test('delivery identity prevents replays and foreign receipts; incident channels are private and grouped',async()=>{
+ const db=new PGlite();const a='10000000-0000-4000-8000-000000000001',b='10000000-0000-4000-8000-000000000002',u='20000000-0000-4000-8000-000000000001',v='20000000-0000-4000-8000-000000000002',id='30000000-0000-4000-8000-000000000001';
+ const one=async(sql,args=[])=>(await db.query(sql,args)).rows[0];
+ try{
+  await db.exec(`create role anon;create role authenticated;create role service_role;create schema auth;
+   create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('test.uid',true),'')::uuid$$;
+   create table organizations(id uuid primary key);create table profiles(id uuid primary key,organization_id uuid,active boolean,telegram_chat_id bigint);
+   create table tg_bot_activity(organization_id uuid,telegram_chat_id bigint,role text,content text,meta jsonb);
+   create table front_rpc_registry(nombre text primary key,nota text);`);
+  await db.query('insert into organizations values($1),($2)',[a,b]);await db.query('insert into profiles values($1,$2,true,-1),($3,$4,true,-2)',[u,a,v,b]);
+  await db.exec(readFileSync('supabase/migrations/317_copilot_delivery_receipts_and_incidents.sql','utf8'));
+  await assert.rejects(db.query('select copilot_delivery_begin($1,$2,$3,$4)',[id,'Create client','','crm']),/Session/);
+  await db.query("select set_config('test.uid',$1,false)",[u]);
+  const begin=()=>one('select copilot_delivery_begin($1,$2,$3,$4) r',[id,'Create client','','crm']);
+  assert.equal((await begin()).r.run,true);assert.equal((await begin()).r.run,false);
+  await assert.rejects(db.query('select copilot_delivery_begin($1,$2,$3,$4)',[id,'Changed operation','','crm']),/operation/);
+  await db.query("select set_config('test.uid',$1,false)",[v]);
+  assert.equal((await one('select copilot_delivery_status($1) r',[id])).r,null);
+  await assert.rejects(begin(),/operation/);
+  assert.equal((await one('select fn_copilot_delivery_finish($1,$2,$3,$4,$5,$6) r',[b,v,id,'completed',{reply:{text:'Wrong tenant'}},null])).r,false);
+  const finish=()=>one('select fn_copilot_delivery_finish($1,$2,$3,$4,$5,$6) r',[a,u,id,'uncertain',{reply:{text:'Could not confirm'}},'empty_response']);
+  assert.equal((await finish()).r,true);assert.equal((await finish()).r,false);
+  assert.equal((await one('select count(*)::int n from tg_bot_activity')).n,1);
+  await db.query('select fn_copilot_ops_report($1,$2,$3)',[a,'copilot','empty_response']);
+  assert.equal((await one('select count(*)::int n,max(occurrences) n_events from copilot_ops_incidents')).n,1);
+  assert.equal(Number((await one('select max(occurrences) n from copilot_ops_incidents')).n),2);
+  assert.equal((await one("select has_table_privilege('authenticated','copilot_ops_incidents','select') allowed")).allowed,false);
+  assert.equal((await one("select has_function_privilege('authenticated','fn_copilot_delivery_finish(uuid,uuid,uuid,text,jsonb,text)','execute') allowed")).allowed,false);
+  await db.query("select set_config('test.uid',$1,false)",[u]);
+  assert.equal((await begin()).r.run,false);assert.equal((await begin()).r.status,'uncertain');
+ }finally{await db.close();}
+});

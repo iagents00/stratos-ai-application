@@ -17,7 +17,7 @@ test('switching accounts during a send cannot log or display the previous accoun
    if(String(url).includes('/profiles?')) return Response.json({telegram_chat_id:-123,organization_id:cfg.tenant.organizationId,role:'asesor'});
    if(String(url).includes('/rpc/copilot_log_msg')) {writes.push(JSON.parse(options.body));return Response.json(null);}
    if(String(url).includes('/rpc/')) return Response.json(null);
-   assert.match(String(url),/\/webhook\//);
+   assert.match(String(url),/\/functions\/v1\/copilot-deliver/);
    id='account-b';token='jwt-b';
    return Response.json({reply:'Private account A response'});
   };

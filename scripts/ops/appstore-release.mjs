@@ -5,7 +5,11 @@ import { pathToFileURL } from 'node:url';
 export const APP_ID = '6804826565';
 const editable = new Set(['PREPARE_FOR_SUBMISSION','REJECTED','METADATA_REJECTED','DEVELOPER_REJECTED']);
 const inReview = new Set(['WAITING_FOR_REVIEW','IN_REVIEW','PENDING_APPLE_RELEASE','PENDING_DEVELOPER_RELEASE','READY_FOR_DISTRIBUTION','READY_FOR_SALE','PROCESSING_FOR_DISTRIBUTION','PROCESSING_FOR_APP_STORE']);
-const notes = (locale, version) => ['4.9.11','4.9.12'].includes(version)
+const notes = (locale, version) => version === '4.9.13'
+  ? (locale.startsWith('es')
+    ? 'Copilot confirma sus respuestas y recupera el resultado de una solicitud sin duplicarla. Si falla el reconocimiento de voz, intenta transcribir el audio y conserva la grabación para reintentar. Mensajes más claros cuando el servicio necesita atención.'
+    : 'Copilot confirms replies and recovers request results without repeating an action. If voice recognition fails, it tries audio transcription and keeps the recording available to retry. Clearer messages when the service needs attention.')
+  : ['4.9.11','4.9.12'].includes(version)
   ? (locale.startsWith('es')
     ? 'Mejoras de seguridad del Copilot: cada conversación y envío conserva su cuenta y empresa. Las notificaciones respetan la cuenta actual del dispositivo. Seguimiento de recordatorios con límite y mejoras al registrar clientes por negocio.'
     : 'Copilot security improvements: conversations and requests stay with their account and company. Notifications respect the current device account. Bounded reminder follow-ups and improvements to client registration by business.')

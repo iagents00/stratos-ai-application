@@ -23,7 +23,7 @@
 // COSTO — leer antes de subir el límite
 //
 // Se usa gpt-4o-mini-transcribe, el más barato de OpenAI para esto. Un dictado
-// típico del Copilot dura entre 5 y 20 segundos. El tope de 60 segundos de abajo
+// típico del Copilot dura entre 5 y 20 segundos. El límite de tamaño de abajo
 // no es un capricho: sin él, un teléfono en un bolsillo puede mandar minutos de
 // ruido y pagarlos.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -42,8 +42,8 @@ const ELEVEN_KEY = Deno.env.get("ELEVENLABS_API_KEY") ?? "";
 // sigue respondiendo. El orden lo decide QUÉ_PRIMERO.
 const QUE_PRIMERO = (Deno.env.get("TRANSCRIPTOR") ?? "eleven").toLowerCase();
 
-/** Tope de tamaño: ~1 minuto de audio comprimido. Más que eso no es un dictado. */
-const MAX_BYTES = 2 * 1024 * 1024;
+/** Accommodate the five-minute recording UI while bounding upload size. */
+const MAX_BYTES = 8 * 1024 * 1024;
 
 function cors(origin: string | null) {
   return {
@@ -67,7 +67,15 @@ Deno.serve(async (req) => {
 
   if (!await requireUser(req)) return json({ ok: false, error: "sesion_requerida" }, 401, origin);
 
+  function incident(code:string){
+    const task=fetch((Deno.env.get('SUPABASE_URL')||'')+'/rest/v1/rpc/copilot_report_problem',{
+      method:'POST',headers:{apikey:Deno.env.get('SUPABASE_ANON_KEY')||'',Authorization:req.headers.get('Authorization')||'','Content-Type':'application/json'},
+      body:JSON.stringify({p_component:'transcription',p_code:code}),signal:AbortSignal.timeout(5000),
+    }).catch(()=>{});
+    EdgeRuntime.waitUntil(task);
+  }
   if (!OPENAI_KEY && !ELEVEN_KEY) {
+    incident('audio_provider');
     // Se dice, no se calla: un "no se pudo transcribir" a secas manda a buscar
     // el problema al teléfono, que es donde NO está.
     return json({ ok: false, error: "falta_credencial", detalle: "no hay ninguna credencial de transcripción cargada en esta función" }, 503, origin);
@@ -81,7 +89,7 @@ Deno.serve(async (req) => {
     if (!(f instanceof File)) return json({ ok: false, error: "sin_audio" }, 400, origin);
     if (f.size === 0) return json({ ok: false, error: "audio_vacio" }, 400, origin);
     if (f.size > MAX_BYTES) {
-      return json({ ok: false, error: "audio_muy_largo", detalle: "el dictado no puede pasar de un minuto" }, 413, origin);
+      return json({ ok: false, error: "audio_muy_largo", detalle: "el audio supera el tamaño permitido" }, 413, origin);
     }
     audio = f;
     if (f.name) nombre = f.name;
@@ -105,6 +113,7 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: { authorization: `Bearer ${OPENAI_KEY}` },
       body: envio,
+      signal: AbortSignal.timeout(24000),
     });
     if (!r.ok) {
       const detalle = (await r.text()).slice(0, 220);
@@ -129,10 +138,11 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: { "xi-api-key": ELEVEN_KEY },
       body: envio,
+      signal: AbortSignal.timeout(24000),
     });
     if (!r.ok) {
       const detalle = (await r.text()).slice(0, 220);
-      const sinSaldo = r.status === 401 || detalle.includes("quota") || detalle.includes("credits");
+      const sinSaldo = detalle.includes("quota_exceeded") || detalle.includes("insufficient_quota") || detalle.includes("credit_balance_exhausted");
       throw new Error((sinSaldo ? "sin_saldo" : "fallo") + ": eleven " + r.status + " " + detalle);
     }
     const d = await r.json();
@@ -147,12 +157,13 @@ Deno.serve(async (req) => {
     if (!llave) { intentos.push(`${nombreProv}: sin credencial`); continue; }
     try {
       const texto = await fn();
-      if (!texto) return json({ ok: true, texto: "", vacio: true, via: nombreProv }, 200, origin);
+      if (!texto) { intentos.push(nombreProv+': empty transcript'); continue; }
       return json({ ok: true, texto, via: nombreProv }, 200, origin);
     } catch (e) {
       const msg = (e as Error).message;
       console.error("[transcribir-voz]", msg);
       intentos.push(msg);
+      incident(msg.startsWith('sin_saldo')?'audio_quota':'audio_provider');
       // Se sigue al siguiente proveedor: que uno se quede sin saldo no puede
       // dejar mudo el dictado de todo el equipo.
     }
