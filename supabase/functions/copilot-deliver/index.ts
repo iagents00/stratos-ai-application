@@ -23,6 +23,7 @@ Deno.serve(async req=>{
  try{receipt=await rpc('copilot_delivery_begin',{p_id:body.request_id,p_text:body.text,p_callback:body.callback_data||'',p_route:body.route},token);}
  catch{return reply({error:'receipt_unavailable'},503);}
  if(!receipt.run)return reply(receipt.response?{...receipt.response,persisted:true,request_id:receipt.id}:{ok:false,pending:true,request_id:receipt.id,reply:{text:'Esta solicitud ya está en curso. Estoy esperando su respuesta; no necesitas enviarla otra vez.',inline_keyboard:[]}});
+ const complete=async()=>{
  let result;
  try{
   const response=await fetch('https://personal-n8n.suwsiw.easypanel.host/webhook/'+routes[body.route],{
@@ -36,4 +37,12 @@ Deno.serve(async req=>{
   if(saved!==true)throw Error('receipt_state_changed');
  }catch(e){console.error('Copilot receipt finish failed',e.message);return reply({ok:false,pending:true,error:'receipt_unavailable',request_id:receipt.id,reply:{text:'La respuesta llegó, pero no pude confirmar su registro. Revisa la conversación antes de repetir la solicitud.',inline_keyboard:[]}},202);}
  return reply({...result.response,persisted:true,request_id:receipt.id});
+ };
+ // The authenticated RPC used by installed clients only waits for acceptance.
+ // The same receipt and history writer deliver the final reply afterwards.
+ if(body.background===true){
+  EdgeRuntime.waitUntil(complete());
+  return reply({ok:true,pending:true,request_id:receipt.id,reply:{text:'Estoy atendiendo tu solicitud. Te confirmaré aquí el resultado.',inline_keyboard:[]}},202);
+ }
+ return await complete();
 });

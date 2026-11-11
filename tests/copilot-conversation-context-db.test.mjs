@@ -56,10 +56,18 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
     create unique index if not exists uniq_leads_org_phone on leads(organization_id,phone_normalized) where phone_normalized is not null and deleted_at is null;`);
   for(const f of ['301_copilot_business_contact_identity.sql','302_copilot_registration_contracts.sql','303_copilot_business_family_queries.sql','304_copilot_server_business_effect_guard.sql','305_copilot_all_typed_contact_multi_actions.sql','306_copilot_pending_business_identity_priority.sql','307_copilot_compound_registration_single_card.sql','308_copilot_pending_business_context_preserved.sql','309_copilot_explicit_copy_intent_in_upsert.sql','310_copilot_compact_card_and_dictated_next_action.sql','311_copilot_shared_phone_requires_business.sql','312_copilot_business_identity_archive_lifecycle.sql','313_copilot_keep_canonical_phone_resolution.sql']) await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
   const stages=['RS Primer contacto','RS Contactado','RS Reunión','RS Cliente Ganado','M Primer Contacto','M Contactado','M Reunión','M Cliente Ganado'];
+  await db.exec(readFileSync('supabase/migrations/318_copilot_delivered_replies_are_conversation.sql','utf8'));
   const businessLines=[{id:'realestate',label:'Bienes raíces',entryStage:stages[0],stages:stages.slice(0,4),aliases:['bienes raíces']},{id:'medicine',label:'Medicina',entryStage:stages[4],stages:stages.slice(4),aliases:['medicina']}];
   await db.query("insert into organizations(id,name,slug,meta_config) values($1,'Own','own',$2),($3,'Other','other','{}')",[org,{crm:{businessLines,pipeline:stages.map(name=>({name}))}},other]);
   for(const [i,name] of stages.entries())await db.query('insert into org_stages(organization_id,orden,nombre) values($1,$2,$3)',[org,i+1,name]);
   await db.query("insert into profiles(id,organization_id,name,role,telegram_chat_id,active) values($1,$2,'Operator','admin',-771,true)",[actor,org]);
+  await db.query("insert into tg_bot_activity(organization_id,telegram_chat_id,role,content,meta) values($1,-771,'ai','Jessica quedó registrada','{\"kind\":\"copilot_delivery\"}'),($1,-771,'ai','Recordatorio automático','{\"kind\":\"team_action\"}'),($1,-771,'ai','Estoy atendiendo tu solicitud. Te confirmaré aquí el resultado.',null)",[org]);
+  const context=(await db.query('select fn_copilot_contexto(-771) result')).rows[0].result;
+  assert.ok(context.ultimos_mensajes.some(m=>m.texto==='Jessica quedó registrada'));
+  assert.ok(!context.ultimos_mensajes.some(m=>m.texto==='Recordatorio automático'||m.texto.startsWith('Estoy atendiendo')));
+  assert.ok(!context.avisos_automaticos_recientes.some(m=>m.aviso==='Jessica quedó registrada'));
+  const success=(await db.query("select fn_fmt_hecho($1) text",['Voy a registrar a Jessica\nPara que quede completo me falta: presupuesto. Pásamelo si lo tienes; o regístralo así con el botón de abajo.'])).rows[0].text;
+  assert.match(success,/registré a Jessica/);assert.doesNotMatch(success,/regístralo así/);assert.match(success,/ya quedó registrado/);
   const call=async(tool,args)=>(await db.query('select bot_nlu_dispatch_gvintell(-771,$1,$2) result',[tool,args])).rows[0].result;
   let r=await call('upsert_lead',{name:'Marco Valerio Pérez Goya',notas:'Terreno casi 10 ha en Tequila. Revisa agua con un arquitecto.',business:'bienes raíces',input_text:'Dame de alta a Marco en bienes raíces, mañana revisa el agua.',_dictation_source:'Dictado con repeticiones sobre 10 ha y estudios de Conagua en el terreno.'});
   assert.equal(r.staged,true);assert.match(r.reply.text,/Confirmas/);const token=r.token;
