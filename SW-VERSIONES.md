@@ -1,3 +1,7 @@
+## v469 — 12-nov-2026
+
+La verificación administrativa de WhatsApp consulta el número indicado y reconoce los formatos mexicanos 52/521, sin asignar el mismo número a otra empresa.
+
 ## v468 — 11-nov-2026
 
 Copilot conserva un comprobante por solicitud, recupera resultados sin repetir acciones y muestra una respuesta clara ante errores. El audio web usa respaldo cuando no hay transcripción y conserva la grabación ante un fallo. Alertas operativas de correo y AIOS con categorías agrupadas, sin contenido de clientes.
