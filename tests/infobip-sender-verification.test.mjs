@@ -5,7 +5,9 @@ import { senderQualityUrl, sameWhatsAppPhone } from "../supabase/functions/whats
 test("quality lookup supplies the required sender filter in provider format", () => {
   const request = new URL(senderQualityUrl("https://api.infobip.com/", "+52 81 8396 3030"));
   assert.equal(request.pathname, "/whatsapp/1/senders/quality");
-  assert.deepEqual([...request.searchParams], [["senders", "528183963030"]]);
+  assert.deepEqual([...request.searchParams], [["senders", "528183963030,5218183963030"]]);
+  assert.equal(new URL(senderQualityUrl("https://api.infobip.com", "5218183963030")).searchParams.get("senders"), "5218183963030,528183963030");
+  assert.equal(new URL(senderQualityUrl("https://api.infobip.com", "+573237451221")).searchParams.get("senders"), "573237451221");
   assert.throws(() => senderQualityUrl("https://api.infobip.com", ""));
   assert.throws(() => senderQualityUrl("https://api.infobip.com", "+0123456789"));
 });
