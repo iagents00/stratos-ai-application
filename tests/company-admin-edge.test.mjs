@@ -43,6 +43,18 @@ test('Edge rejects nonoperators and deactivated operators before reading company
   const h=harness(options);const result=await h.call({action:'bootstrap'});assert.equal(result.status,403);assert.equal(h.creates.length,0);
  }
 });
+
+test('portal receipt checks bind privileged RPCs to the authenticated operator, ignoring forged actor ids',async()=>{
+ const h=harness();
+ const result=await h.call({action:'check_portal_connection',run_id:'own-run',p_actor_id:'root',actor_id:'root'});
+ assert.equal(result.status,200);
+ const probe=h.rpcs.find(call=>call.name==='fn_whatsapp_portal_probe');
+ assert.equal(probe.args.p_actor_id,'operator');
+ assert.equal(probe.args.p_run_id,'own-run');
+ const denied=harness({operator:false});
+ assert.equal((await denied.call({action:'check_portal_connection',run_id:'own-run'})).status,403);
+ assert.equal(denied.rpcs.length,0);
+});
 test('partner bootstrap and forged create_user requests cannot access Duke, NSG or another partner',async()=>{
  const h=harness();const result=await h.call({action:'bootstrap'});
  assert.equal(result.status,200);assert.deepEqual(result.body.organizations.map(row=>row.id),['own']);

@@ -9,17 +9,17 @@ import { MANAGED_TENANT_FEATURES, newCompanyFeatures } from "../../../clients/te
 import {
   approveWhatsAppTests, completeWhatsAppSignup, createWhatsAppOnboardingRun,
   createWhatsAppOrganization, createWhatsAppTenantUser, loadWhatsAppAdmin,
-  retryWhatsAppShare, verifyInfobipPortalSender,
+  retryWhatsAppShare, verifyInfobipPortalSender, checkWhatsAppPortalConnection,
 } from "../../../lib/whatsapp-admin";
 import { isSignupConfigured, launchWhatsAppSignup } from "../../../lib/whatsapp-signup";
 
 const STATUS = {
   draft: ["Borrador", "#94A3B8"],
-  waiting_customer: ["Esperando al cliente", "#F59E0B"],
+  waiting_customer: ["Pendiente de vincular", "#F59E0B"],
   meta_finished: ["Meta terminado", "#38BDF8"],
   infobip_registering: ["Registrando en Infobip", "#A78BFA"],
-  ready_to_test: ["Listo para probar", "#22D3EE"],
-  active: ["Activo", "#6EE7C2"],
+  ready_to_test: ["Esperando mensaje de prueba", "#22D3EE"],
+  active: ["Recibiendo leads", "#6EE7C2"],
   failed: ["Requiere atención", "#F87171"],
   disconnected: ["Desconectado", "#94A3B8"],
 };
@@ -51,6 +51,8 @@ export default function WhatsAppOnboardingAdmin({ T, onBack, initialOrganization
   const [channelForm, setChannelForm] = useState(() => ({ ...EMPTY_CHANNEL, organization_id: initialOrganizationId }));
   const [credentials, setCredentials] = useState(null);
   const [testRun, setTestRun] = useState(null);
+  const [trackingRun, setTrackingRun] = useState(null);
+  const [evidence, setEvidence] = useState({});
   const [checks, setChecks] = useState({ inbound: false, lead: false, advisor: false, isolation: false });
 
   const refresh = useCallback(async () => {
@@ -62,15 +64,48 @@ export default function WhatsAppOnboardingAdmin({ T, onBack, initialOrganization
 
   useEffect(() => { refresh(); }, [refresh]);
 
+  // Poll only the selected test, for at most two minutes. No provider writes
+  // and no background monitoring across other companies.
+  useEffect(() => {
+    if (!trackingRun?.id) return;
+    let live = true, pending = false, attempts = 0;
+    const probe = async () => {
+      if (pending || document.visibilityState === "hidden") return;
+      pending = true;
+      try {
+        const result = await checkWhatsAppPortalConnection(trackingRun.id);
+        if (!live) return;
+        setEvidence(previous => ({ ...previous, [trackingRun.id]: result.evidence }));
+        if (result.status === "active") {
+          setTrackingRun(null); setSuccess("Mensaje real recibido: el lead quedó en su empresa y con su asesor.");
+          await refresh();
+        }
+      } catch (err) { if (live) { setError(err.message); setTrackingRun(null); } }
+      finally { pending = false; }
+      if (++attempts >= 24 && live) setTrackingRun(null);
+    };
+    void probe();
+    const timer = setInterval(probe, 5000);
+    return () => { live = false; clearInterval(timer); };
+  }, [trackingRun?.id, refresh]);
+
   const organizations = data?.organizations || [];
   const profiles = useMemo(() => data?.profiles || [], [data?.profiles]);
-  const runs = data?.runs || [];
+  const runs = (data?.runs || []).filter(run => !channelForm.organization_id || run.organization_id === channelForm.organization_id);
   const configured = isSignupConfigured(config);
+  const selfServiceReady = data?.provider?.readonlySetupReady;
+  const connectionTarget = organizations.find(org => org.id === channelForm.organization_id);
   const providerReady = configured && data?.provider?.infobipConfigured;
   const selectedProfiles = useMemo(
-    () => profiles.filter(p => p.organization_id === channelForm.organization_id && p.active !== false),
+    () => profiles.filter(p => p.organization_id === channelForm.organization_id && p.active !== false && ["admin", "director", "ceo", "asesor"].includes(p.role)),
     [profiles, channelForm.organization_id],
   );
+
+  useEffect(() => {
+    if (!channelForm.advisor_id && selectedProfiles.length === 1) {
+      setChannelForm(previous => ({ ...previous, advisor_id: selectedProfiles[0].id }));
+    }
+  }, [selectedProfiles, channelForm.advisor_id]);
 
   const input = {
     width: "100%", minHeight: 44, padding: "0 12px", borderRadius: 10,
@@ -135,12 +170,13 @@ export default function WhatsAppOnboardingAdmin({ T, onBack, initialOrganization
   };
 
   const startQuickRegistration = async () => {
+    if (actionLock.current) return;
     if (!data?.provider?.portalRegistrationReady) {
       setError("Falta configurar la clave API de Infobip en el servidor para poder verificar el número.");
       return;
     }
-    if (!channelForm.organization_id || !channelForm.phone_e164.trim()) {
-      setError("Selecciona la empresa y escribe el número completo con código de país.");
+    if (!channelForm.organization_id || !channelForm.phone_e164.trim() || !channelForm.advisor_id) {
+      setError("Selecciona empresa y asesor, y escribe el número completo con código de país.");
       return;
     }
     const portalWindow = window.open("", "_blank");
@@ -148,11 +184,39 @@ export default function WhatsAppOnboardingAdmin({ T, onBack, initialOrganization
     const created = await runAction("quick-channel", () => createWhatsAppOnboardingRun({
       ...channelForm,
       registration_mode: "infobip_portal",
-    }), "Proceso guardado. Completa el registro en Infobip y después pulsa Verificar en Infobip.");
+    }), "Proceso guardado. Completa el QR en Infobip, vuelve aquí y pulsa “Ya lo vinculé en Infobip”.");
     if (!created?.run) { portalWindow?.close(); return; }
     if (portalWindow) portalWindow.location.href = INFOBIP_SENDERS_URL;
     else setSuccess("Proceso guardado. Tu navegador bloqueó la pestaña; usa “Abrir registro” en Procesos recientes y luego vuelve a verificar.");
-    setChannelForm(p => ({ ...EMPTY_CHANNEL, organization_id: p.organization_id }));
+    // Keep the exact company/advisor/number visible on return from Infobip.
+  };
+
+  const prepareRun = async (run) => {
+    const result = await runAction(`setup-${run.id}`, () => verifyInfobipPortalSender(run.id), result =>
+      result.status === "active" ? "Conexión comprobada: ya recibe leads en esta empresa." : "Recepción preparada. Envía ahora un mensaje de prueba al número conectado.");
+    if (!result) return;
+    setEvidence(previous => ({ ...previous, [run.id]: result.evidence }));
+    if (result.status !== "active") setTrackingRun(run);
+  };
+
+  const linkExisting = async () => {
+    if (!channelForm.organization_id || !channelForm.advisor_id || !channelForm.phone_e164.trim()) {
+      setError("Selecciona empresa y asesor, y escribe el número completo con código de país."); return;
+    }
+    const result = await runAction("link-existing", async () => {
+      const created = await createWhatsAppOnboardingRun({ ...channelForm, registration_mode: "infobip_portal" });
+      const setup = await verifyInfobipPortalSender(created.run.id);
+      return { ...setup, run: created.run };
+    }, result => result.status === "active" ? "Conexión comprobada: ya recibe leads en esta empresa." : "Recepción preparada. Envía un mensaje nuevo desde otro WhatsApp para comprobar el registro automático.");
+    if (!result) return;
+    setEvidence(previous => ({ ...previous, [result.run.id]: result.evidence }));
+    if (result.status !== "active") setTrackingRun(result.run);
+  };
+
+  const checkRun = async run => {
+    const result = await runAction(`probe-${run.id}`, () => checkWhatsAppPortalConnection(run.id), result =>
+      result.status === "active" ? "Mensaje real comprobado: lead, asesor y empresa correctos." : "Todavía no llegó un mensaje de prueba. Envíalo desde otro WhatsApp y vuelve a comprobar.");
+    if (result) setEvidence(previous => ({ ...previous, [run.id]: result.evidence }));
   };
 
   const approve = () => runAction("approve", () => approveWhatsAppTests(testRun.id, checks), "Canal activado en modo solo lectura después de verificar las cuatro pruebas.").then(result => { if (!result) return; setTestRun(null); setChecks({ inbound: false, lead: false, advisor: false, isolation: false }); });
@@ -171,7 +235,7 @@ export default function WhatsAppOnboardingAdmin({ T, onBack, initialOrganization
       {!loading && !providerReady && (
         <div style={{ ...card, marginBottom: 16, display: "flex", gap: 12, borderColor: "rgba(245,158,11,.35)", background: "rgba(245,158,11,.06)" }}>
           <CircleAlert size={19} color={T.amber} style={{ flexShrink: 0 }} />
-          <div><strong style={{ fontSize: 13 }}>{data?.provider?.portalRegistrationReady ? "Conecta el número desde Infobip" : "WhatsApp aún no está configurado"}</strong><div style={{ color: T.txt2, fontSize: 12, lineHeight: 1.55, marginTop: 4 }}>{data?.provider?.portalRegistrationReady ? "Usa Registro rápido con Infobip. Después del registro, vuelve aquí para verificar el número y su empresa." : "La empresa puede empezar a usar el CRM. Para vincular WhatsApp, Stratos debe completar la conexión con el proveedor."}</div></div>
+          <div><strong style={{ fontSize: 13 }}>{data?.provider?.portalRegistrationReady ? "Conecta el número desde Infobip" : "WhatsApp aún no está configurado"}</strong><div style={{ color: T.txt2, fontSize: 12, lineHeight: 1.55, marginTop: 4 }}>{data?.provider?.portalRegistrationReady ? "1. Selecciona empresa y asesor. 2. Vincula WhatsApp mediante el QR de Infobip. 3. Pulsa “Ya lo vinculé en Infobip” y comprueba un mensaje real." : "La empresa puede empezar a usar el CRM. Para vincular WhatsApp, Stratos debe completar la conexión con el proveedor."}</div></div>
         </div>
       )}
       {error && <div role="alert" style={{ ...card, marginBottom: 14, color: T.rose, borderColor: "rgba(248,113,113,.35)" }}>{error}</div>}
@@ -199,13 +263,17 @@ export default function WhatsAppOnboardingAdmin({ T, onBack, initialOrganization
         </section>}
 
         <section style={card}>
-          <div style={{ display: "flex", gap: 9, alignItems: "center", marginBottom: 14 }}><MessageCircle size={17} color={T.accent} /><strong>{integrationsOnly ? "Número de la empresa" : "3. Conectar número"}</strong></div>
-          <label htmlFor="whatsapp-field-8" style={label}>Empresa</label><select id="whatsapp-field-8" style={input} value={channelForm.organization_id} onChange={e => setChannelForm(p => ({ ...p, organization_id: e.target.value, advisor_id: "" }))}><option value="">Seleccionar…</option>{organizations.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</select>
+          <div style={{ display: "flex", gap: 9, alignItems: "center", marginBottom: 14 }}><MessageCircle size={17} color={T.accent} /><strong>{integrationsOnly ? "Conectar un número a su empresa" : "3. Conectar número"}</strong></div>
+          <label htmlFor="whatsapp-field-8" style={label}>Empresa</label><select id="whatsapp-field-8" style={input} value={channelForm.organization_id} disabled={!!busy} onChange={e => { setTrackingRun(null); setSuccess(""); setError(""); setChannelForm(p => ({ ...p, organization_id: e.target.value, advisor_id: "" })); }}><option value="">Seleccionar…</option>{organizations.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</select>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9, marginTop: 10 }}><div><label htmlFor="whatsapp-field-9" style={label}>Propietario</label><select id="whatsapp-field-9" style={input} value={channelForm.owner_type} onChange={e => setChannelForm(p => ({ ...p, owner_type: e.target.value }))}><option value="company">Empresa</option><option value="advisor">Asesor</option></select></div><div><label htmlFor="whatsapp-field-10" style={label}>Asignar a</label><select id="whatsapp-field-10" style={input} value={channelForm.advisor_id} onChange={e => setChannelForm(p => ({ ...p, advisor_id: e.target.value }))}><option value="">Sin asignar</option>{selectedProfiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div></div>
           <label htmlFor="whatsapp-field-11" style={{ ...label, marginTop: 10 }}>Número internacional</label><input id="whatsapp-field-11" style={input} value={channelForm.phone_e164} onChange={e => setChannelForm(p => ({ ...p, phone_e164: e.target.value }))} placeholder="+57 300 123 4567" />
-          <button onClick={startQuickRegistration} disabled={!data?.provider?.portalRegistrationReady || busy === "quick-channel"} style={{ ...button, width: "100%", marginTop: 13, opacity: data?.provider?.portalRegistrationReady ? 1 : .5 }}>{busy === "quick-channel" ? <Loader2 size={14} /> : <ExternalLink size={14} />} Registro rápido con Infobip</button>
-          <div style={{ color: T.txt3, fontSize: 11.5, lineHeight: 1.5, marginTop: 8 }}>Abre directamente WhatsApp → Remitentes en Infobip. Pulsa “Registrar remitente”, elige coexistencia, escanea el QR y selecciona “Don’t share chats”, como exige este flujo de Infobip. Esa opción evita intentar importar el historial anterior; desde la activación, el equipo seguirá atendiendo en WhatsApp Business y Stratos registrará los mensajes nuevos en modo solo lectura.</div>
-          <button onClick={connect} disabled={!providerReady || busy === "meta" || busy === "channel"} style={{ ...button, width: "100%", marginTop: 10, background: "transparent", borderColor: T.border, color: T.txt2, opacity: providerReady ? 1 : .5 }}>{busy === "meta" || busy === "channel" ? <Loader2 size={14} /> : <ExternalLink size={14} />} Alta automática Stratos</button>
+          <button onClick={startQuickRegistration} disabled={!data?.provider?.portalRegistrationReady || !!busy || loading || !channelForm.advisor_id || !channelForm.organization_id || !channelForm.phone_e164.trim()} style={{ ...button, width: "100%", marginTop: 13, opacity: data?.provider?.portalRegistrationReady ? 1 : .5 }}>{busy === "quick-channel" ? <Loader2 size={14} /> : <ExternalLink size={14} />} 1. Abrir Infobip y vincular por QR</button>
+          <div style={{ color: T.txt3, fontSize: 12, lineHeight: 1.6, marginTop: 10 }}>En Infobip, elige coexistencia y “No compartir chats”. El titular completa el QR en WhatsApp Business. La app seguirá funcionando y Stratos recibirá los mensajes nuevos; el historial anterior no se importa.</div>
+          {connectionTarget && <div style={{ padding: 12, borderRadius: 10, border: `1px solid ${T.border}`, marginTop: 14, fontSize: 13, lineHeight: 1.65 }}><strong>{connectionTarget.name}</strong><br />Los leads de {channelForm.phone_e164 || "este número"} se asignarán a <strong>{selectedProfiles.find(p => p.id === channelForm.advisor_id)?.name || "selecciona un asesor"}</strong>. Esta conexión corresponde únicamente a esa empresa.</div>}
+          <button onClick={linkExisting} disabled={!!busy || loading || !selfServiceReady || !channelForm.advisor_id || !channelForm.organization_id || !channelForm.phone_e164.trim()} style={{ ...button, width: "100%", marginTop: 12, opacity: !selfServiceReady ? .55 : 1 }}>{busy === "link-existing" ? <Loader2 size={14} /> : <ShieldCheck size={14} />} 2. Ya lo vinculé en Infobip · Conectar a Stratos</button>
+          {!loading && !selfServiceReady && <div role="status" style={{ color: T.amber, marginTop: 9, fontSize: 12 }}>Falta terminar la configuración inicial de recepción de Stratos. No necesitas volver a registrar el número en Meta.</div>}
+          {providerReady && <button onClick={connect} disabled={!!busy || loading} style={{ ...button, width: "100%", marginTop: 10, background: "transparent" }}><ExternalLink size={14} /> Vinculación integrada con Meta</button>}
+
         </section>
       </div>
 
@@ -220,7 +288,21 @@ export default function WhatsAppOnboardingAdmin({ T, onBack, initialOrganization
               const advisor = profiles.find(p => p.id === run.advisor_id);
               return <div key={run.id} style={{ border: `1px solid ${T.border}`, borderRadius: 12, padding: 12, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                 <div><div style={{ fontWeight: 650, fontSize: 13 }}>{org?.name || "Empresa"} · {run.phone_e164 || "Número por confirmar"}</div><div style={{ color: T.txt3, fontSize: 11.5, marginTop: 4 }}>{advisor?.name || "Sin asignar"}{run.last_error ? ` · ${run.last_error}` : ""}</div></div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}><StatusPill status={run.status} />{run.status === "waiting_customer" && run.provider_state?.mode === "infobip_portal" && <><a href={INFOBIP_SENDERS_URL} target="_blank" rel="noreferrer" style={{ ...button, textDecoration: "none", background: "transparent", borderColor: T.border, color: T.txt2 }}><ExternalLink size={14} /> 1. Abrir registro</a><button onClick={() => runAction(`verify-${run.id}`, () => verifyInfobipPortalSender(run.id), "Infobip confirmó el remitente. Ahora ejecuta las cuatro pruebas reales.")} style={button}>2. Verificar en Infobip</button></>}{run.status === "failed" && run.waba_id && <button onClick={() => runAction(`retry-${run.id}`, () => retryWhatsAppShare(run.id), "Reintento enviado a Infobip.")} style={button}>Reintentar</button>}{run.status === "ready_to_test" && <button onClick={() => setTestRun(run)} style={button}><CheckCircle2 size={14} /> Verificar pruebas</button>}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}><StatusPill status={run.status} />
+                  {run.provider_state?.mode === "infobip_portal" ? <>
+                    {!run.provider_state?.receiver?.configured_at && <><a href={INFOBIP_SENDERS_URL} target="_blank" rel="noreferrer" style={{ ...button, textDecoration: "none", background: "transparent", borderColor: T.border, color: T.txt2 }}><ExternalLink size={14} /> Abrir Infobip</a><button disabled={!!busy || !selfServiceReady} onClick={() => prepareRun(run)} style={button}>{busy === `setup-${run.id}` ? <Loader2 size={14} /> : <ShieldCheck size={14} />} Ya lo vinculé en Infobip</button></>}
+                    {run.provider_state?.receiver?.configured_at && <button disabled={!!busy} onClick={() => checkRun(run)} style={button}><RefreshCw size={14} /> Comprobar recepción</button>}
+                  </> : <>
+                    {run.status === "failed" && run.waba_id && <button disabled={!!busy} onClick={() => runAction(`retry-${run.id}`, () => retryWhatsAppShare(run.id), "Reintento enviado a Infobip.")} style={button}>Reintentar</button>}
+                    {run.status === "ready_to_test" && <button onClick={() => setTestRun(run)} style={button}><CheckCircle2 size={14} /> Verificar pruebas</button>}
+                  </>}
+                </div>
+                {run.provider_state?.mode === "infobip_portal" && run.provider_state?.receiver?.configured_at && <div style={{ flexBasis: "100%", color: T.txt2, fontSize: 12, lineHeight: 1.65, borderTop: `1px solid ${T.border}`, paddingTop: 10 }}>
+                  <div><CheckCircle2 size={13} /> Infobip vinculado · Recepción preparada para {org?.name}</div>
+                  {evidence[run.id]?.received_at || run.verified_at ? <div>Entrada real comprobada: {new Date(evidence[run.id]?.received_at || run.verified_at).toLocaleString()} · Lead y asesor verificados.</div> : <div><strong>3. Prueba real:</strong> escribe a {run.phone_e164} desde otro WhatsApp. {trackingRun?.id === run.id ? "Comprobando automáticamente…" : "Después pulsa Comprobar recepción."}</div>}
+                  <div>{evidence[run.id]?.echo_received_at ? "Respuesta de WhatsApp Business reflejada en el CRM." : "Respuesta desde la app: pendiente de comprobar con un mensaje manual del asesor."}</div>
+                </div>}
+
               </div>;
             })}
           </div>

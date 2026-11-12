@@ -6,6 +6,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import * as XLSX from "npm:xlsx@0.18.5";
 import { decryptCredentialRows, saveTemporaryCredential } from "../_shared/temporary-credentials.ts";
 import { senderQualityUrl, sameWhatsAppPhone } from "./infobip-sender.mjs";
+import { ensureReadOnlySubscriptions, ReadonlySetupError } from "./infobip-readonly-setup.mjs";
 
 const SUPABASE_URL = Deno.env.get("SB_URL") ?? Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE = Deno.env.get("SB_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -15,6 +16,27 @@ const INFOBIP_API_KEY = Deno.env.get("INFOBIP_API_KEY") ?? "";
 const PLATFORM_ALERT_WEBHOOK_URL = Deno.env.get("PLATFORM_ALERT_WEBHOOK_URL") ?? "";
 const PLATFORM_ALERT_WEBHOOK_SECRET = Deno.env.get("PLATFORM_ALERT_WEBHOOK_SECRET") ?? "";
 const TEMP_CREDENTIALS_KEY = Deno.env.get("TEMP_CREDENTIALS_KEY") ?? "";
+const READONLY_PROFILE_IN = Deno.env.get("INFOBIP_READONLY_IN_PROFILE_ID") ?? "";
+const READONLY_PROFILE_ECHO = Deno.env.get("INFOBIP_READONLY_ECHO_PROFILE_ID") ?? "";
+const READONLY_AUTH_ID = Deno.env.get("INFOBIP_READONLY_AUTH_ID") ?? "";
+const READONLY_RECEIVER_BASE = "https://personal-n8n.suwsiw.easypanel.host/webhook";
+
+async function subscriptionApi(path: string, options: { method?: string; body?: unknown } = {}) {
+  const response = await fetch(`${INFOBIP_BASE_URL}${path}`, {
+    method: options.method ?? "GET", headers: infobipHeaders(),
+    body: options.body ? JSON.stringify(options.body) : undefined,
+    signal: AbortSignal.timeout(8000),
+  }).catch(() => { throw new ReadonlySetupError("Infobip tardó en responder. Puedes volver a comprobar sin duplicar el alta.", "INFOBIP_TIMEOUT"); });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      throw new ReadonlySetupError("La clave de esta cuenta Infobip necesita el permiso subscriptions:manage para preparar la recepción.", "INFOBIP_PERMISSIONS");
+    }
+    if (response.status === 404) throw new ReadonlySetupError("No se encontró el receptor configurado en esta cuenta Infobip. Revisa la cuenta de conexión.", "INFOBIP_NOT_FOUND");
+    throw new ReadonlySetupError(`Infobip no pudo guardar o comprobar la recepción (HTTP ${response.status}). Vuelve a comprobar antes de repetir el registro.`, "INFOBIP_SUBSCRIPTION");
+  }
+  return payload;
+}
 
 const VALID_ROLES = new Set(["super_admin", "admin", "director", "ceo", "asesor", "marketing", "colaborador"]);
 const VALID_STATUSES = new Set(["draft", "waiting_customer", "meta_finished", "infobip_registering", "ready_to_test", "active", "failed", "disconnected"]);
@@ -418,6 +440,7 @@ Deno.serve(async (req) => {
         provider: {
           infobipConfigured: Boolean(INFOBIP_API_KEY),
           portalRegistrationReady: Boolean(INFOBIP_API_KEY),
+          readonlySetupReady: Boolean(INFOBIP_API_KEY && READONLY_PROFILE_IN && READONLY_PROFILE_ECHO && READONLY_AUTH_ID),
           embeddedSignupReady: Boolean(INFOBIP_API_KEY),
         },
       }, 200, origin);
@@ -1081,6 +1104,15 @@ Deno.serve(async (req) => {
         const { data: advisor } = await admin.from("profiles").select("id").eq("id", advisorId).eq("organization_id", organizationId).eq("active", true).maybeSingle();
         if (!advisor) return respond({ ok: false, error: "El asesor no pertenece a esa empresa." }, 400, origin);
       }
+      if (body.registration_mode === "infobip_portal") {
+        if (!advisorId) return respond({ ok: false, error: "Selecciona a quién se asignarán los leads de este número." }, 400, origin);
+        const { data, error } = await admin.rpc("fn_whatsapp_portal_start", {
+          p_actor_id: callerId, p_org: organizationId, p_advisor: advisorId,
+          p_phone: phone, p_owner_type: ownerType,
+        });
+        if (error) throw error;
+        return respond({ ok: true, run: data }, 200, origin);
+      }
       const { data, error } = await admin.from("whatsapp_onboarding_runs").insert({
         organization_id: organizationId, requested_by: callerId, advisor_id: advisorId,
         owner_type: ownerType, owner_name: String(body.owner_name ?? "").trim() || null,
@@ -1126,53 +1158,50 @@ Deno.serve(async (req) => {
         return respond({ ok: false, error: `Infobip encontró el número, pero su estado es ${senderStatus}. Corrige el registro antes de asignarlo.` }, 409, origin);
       }
 
-      const { data: activeChannels, error: channelError } = await admin.from("whatsapp_numero_asesor")
-        .select("id,organization_id,numero_whatsapp").eq("active", true).limit(5000);
-      if (channelError) throw channelError;
-      const sameNumber = (activeChannels ?? []).find(channel => sameWhatsAppPhone(channel.numero_whatsapp, phone));
-      if (sameNumber && sameNumber.organization_id !== run.organization_id) {
-        return respond({ ok: false, error: "Ese número ya está asignado a otra empresa. No se modificó ninguna conexión." }, 409, origin);
+      const providerSender = String(senderPhone(sender) ?? "").replace(/\D/g, "");
+      try {
+        const receiver = await ensureReadOnlySubscriptions({
+          api: subscriptionApi,
+          config: { inProfileId: READONLY_PROFILE_IN, echoProfileId: READONLY_PROFILE_ECHO,
+            authId: READONLY_AUTH_ID, inUrl: `${READONLY_RECEIVER_BASE}/stratos-infobip-readonly-in-v1`,
+            echoUrl: `${READONLY_RECEIVER_BASE}/stratos-infobip-readonly-echo-v1` },
+          sender: providerSender,
+          prepareChannel: async () => {
+            const { data, error } = await admin.rpc("fn_whatsapp_portal_prepare", {
+              p_actor_id: callerId, p_run_id: runId, p_sender_phone: providerSender,
+            });
+            if (error) throw error;
+            return data;
+          },
+        });
+        const { error: runError } = await admin.from("whatsapp_onboarding_runs").update({
+          status: run.status === "active" ? "active" : "ready_to_test",
+          provider_state: { mode: "infobip_portal", sender: phone, status: senderStatus,
+            receiver: { ...receiver, configured_at: new Date().toISOString() } },
+          provider_completed_at: run.provider_completed_at ?? new Date().toISOString(), last_error: null,
+        }).eq("id", runId).eq("organization_id", run.organization_id);
+        if (runError) throw runError;
+        const { data: evidence, error: probeError } = await admin.rpc("fn_whatsapp_portal_probe", {
+          p_actor_id: callerId, p_run_id: runId,
+        });
+        if (probeError) throw probeError;
+        return respond({ ok: true, run_id: runId, receiver_ready: true, evidence,
+          status: evidence.status }, 200, origin);
+      } catch (error) {
+        const message = (error as Error)?.message || "No se pudo preparar la recepción.";
+        await admin.from("whatsapp_onboarding_runs").update({ last_error: message })
+          .eq("id", runId).eq("organization_id", run.organization_id);
+        return respond({ ok: false, error: message, code: (error as { code?: string }).code ?? "RECEIVER_SETUP" }, 409, origin);
       }
+    }
 
-      const { data: advisor } = run.advisor_id
-        ? await admin.from("profiles").select("id,name").eq("id", run.advisor_id).eq("organization_id", run.organization_id).maybeSingle()
-        : { data: null };
-      const qualityRating = String(sender.qualityRating ?? sender.quality ?? sender.qualityScore ?? "").trim() || null;
-      const channel = {
-        organization_id: run.organization_id,
-        numero_whatsapp: phone,
-        proveedor: "infobip",
-        asesor_id: advisor?.id ?? null,
-        asesor_name: advisor?.name ?? run.owner_name ?? "Sin asignar",
-        platform_type: "CLOUD_API",
-        quality_rating: qualityRating,
-        onboarded_via: "manual",
-        onboarded_at: new Date().toISOString(),
-        estado_conexion: "desconocido",
-        active: true,
-        ultimo_error: null,
-      };
-      if (sameNumber?.id) {
-        const { error } = await admin.from("whatsapp_numero_asesor").update(channel).eq("id", sameNumber.id).eq("organization_id", run.organization_id);
-        if (error) throw error;
-      } else {
-        const { error } = await admin.from("whatsapp_numero_asesor").insert(channel);
-        if (error) throw error;
-      }
-
-      const safeProviderState = {
-        mode: "infobip_portal",
-        sender: phone,
-        status: senderStatus,
-        qualityRating,
-        checkedAt: new Date().toISOString(),
-      };
-      const { error: runError } = await admin.from("whatsapp_onboarding_runs").update({
-        status: "ready_to_test", provider_state: safeProviderState,
-        provider_completed_at: new Date().toISOString(), last_error: null,
-      }).eq("id", runId);
-      if (runError) throw runError;
-      return respond({ ok: true, run_id: runId, status: "ready_to_test", sender: safeProviderState }, 200, origin);
+    if (action === "check_portal_connection") {
+      const runId = String(body.run_id ?? "");
+      const { data: evidence, error } = await admin.rpc("fn_whatsapp_portal_probe", {
+        p_actor_id: callerId, p_run_id: runId,
+      });
+      if (error) throw error;
+      return respond({ ok: true, evidence, status: evidence.status }, 200, origin);
     }
 
     if (action === "complete_signup" || action === "retry_share") {
@@ -1213,10 +1242,16 @@ Deno.serve(async (req) => {
       if (!checks || required.some(key => checks[key] !== true)) {
         return respond({ ok: false, error: "Deben pasar entrada, registro del lead, asignación e aislamiento." }, 400, origin);
       }
-      const { data: run } = await admin.from("whatsapp_onboarding_runs").select("id,organization_id,phone_e164,phone_number_id,status").eq("id", runId).maybeSingle();
+      const { data: run } = await admin.from("whatsapp_onboarding_runs").select("id,organization_id,phone_e164,phone_number_id,status,provider_state").eq("id", runId).maybeSingle();
       if (!run || run.status !== "ready_to_test") return respond({ ok: false, error: "El canal todavía no está listo para aprobar pruebas." }, 409, origin);
       if (!await organizationIsVisible(run.organization_id)) {
         return respond({ ok: false, error: "No tienes acceso a esa empresa." }, 403, origin);
+      }
+      if (run.provider_state?.mode === "infobip_portal") {
+        const { data: evidence, error } = await admin.rpc("fn_whatsapp_portal_probe", { p_actor_id: callerId, p_run_id: runId });
+        if (error) throw error;
+        if (evidence?.status !== "active") return respond({ ok: false, error: "Todavía no llegó un mensaje real a esta empresa. Envía la prueba y vuelve a comprobar." }, 409, origin);
+        return respond({ ok: true, status: "active", evidence }, 200, origin);
       }
       const { error: featureError } = await admin.rpc("fn_activate_whatsapp_readonly", {
         p_organization_id: run.organization_id,

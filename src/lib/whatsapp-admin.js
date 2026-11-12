@@ -24,7 +24,7 @@ function readStoredAccessToken() {
   return null;
 }
 
-async function call(action, payload = {}) {
+async function call(action, payload = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
   let token;
   try {
     const { data } = await withTimeout(
@@ -53,7 +53,7 @@ async function call(action, payload = {}) {
       const body = await response.json().catch(() => ({}));
       return { response, body };
     })(),
-    REQUEST_TIMEOUT_MS,
+    timeoutMs,
     "La plataforma está tardando. Intenta nuevamente en unos segundos.",
   );
   if (!response.ok || body?.ok === false) {
@@ -97,7 +97,8 @@ export const importOrganizationCatalog = (organizationId, sourceUrl) => call("im
 export const createWhatsAppOrganization = (payload) => call("create_organization", payload);
 export const createWhatsAppTenantUser = (payload) => call("create_user", payload);
 export const createWhatsAppOnboardingRun = (payload) => call("create_run", payload);
-export const verifyInfobipPortalSender = (runId) => call("verify_portal_sender", { run_id: runId });
+export const verifyInfobipPortalSender = (runId) => call("verify_portal_sender", { run_id: runId }, 45000);
+export const checkWhatsAppPortalConnection = (runId) => call("check_portal_connection", { run_id: runId });
 export const completeWhatsAppSignup = (payload) => call("complete_signup", payload);
 export const retryWhatsAppShare = (runId) => call("retry_share", { run_id: runId });
 export const approveWhatsAppTests = (runId, checks) => call("approve_tests", { run_id: runId, checks });
