@@ -1,3 +1,7 @@
+## v470 — 12-nov-2026
+
+Infobip se consulta con ambas representaciones del mismo número mexicano, 52 y 521, para encontrar el remitente registrado por Meta.
+
 ## v469 — 12-nov-2026
 
 La verificación administrativa de WhatsApp consulta el número indicado y reconoce los formatos mexicanos 52/521, sin asignar el mismo número a otra empresa.
