@@ -5,6 +5,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import * as XLSX from "npm:xlsx@0.18.5";
 import { decryptCredentialRows, saveTemporaryCredential } from "../_shared/temporary-credentials.ts";
+import { senderQualityUrl, sameWhatsAppPhone } from "./infobip-sender.mjs";
 
 const SUPABASE_URL = Deno.env.get("SB_URL") ?? Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE = Deno.env.get("SB_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -1101,7 +1102,7 @@ Deno.serve(async (req) => {
       const phone = normalizePhone(run.phone_e164);
       if (!phone) return respond({ ok: false, error: "Este proceso no tiene un número internacional válido." }, 400, origin);
 
-      const qualityResponse = await fetch(`${INFOBIP_BASE_URL}/whatsapp/1/senders/quality`, { headers: infobipHeaders() });
+      const qualityResponse = await fetch(senderQualityUrl(INFOBIP_BASE_URL, phone), { headers: infobipHeaders() });
       const qualityPayload = await qualityResponse.json().catch(() => ({}));
       if (!qualityResponse.ok) {
         const errorPayload = qualityPayload && typeof qualityPayload === "object"
@@ -1113,7 +1114,7 @@ Deno.serve(async (req) => {
         const message = String(serviceException.text ?? errorPayload.message ?? `Infobip HTTP ${qualityResponse.status}`);
         return respond({ ok: false, error: `Infobip no permitió comprobar los remitentes: ${message}` }, 502, origin);
       }
-      const sender = rowsFrom(qualityPayload).find(row => senderPhone(row) === phone);
+      const sender = rowsFrom(qualityPayload).find(row => sameWhatsAppPhone(senderPhone(row), phone));
       if (!sender) {
         return respond({
           ok: false,
@@ -1128,7 +1129,7 @@ Deno.serve(async (req) => {
       const { data: activeChannels, error: channelError } = await admin.from("whatsapp_numero_asesor")
         .select("id,organization_id,numero_whatsapp").eq("active", true).limit(5000);
       if (channelError) throw channelError;
-      const sameNumber = (activeChannels ?? []).find(channel => normalizePhone(channel.numero_whatsapp) === phone);
+      const sameNumber = (activeChannels ?? []).find(channel => sameWhatsAppPhone(channel.numero_whatsapp, phone));
       if (sameNumber && sameNumber.organization_id !== run.organization_id) {
         return respond({ ok: false, error: "Ese número ya está asignado a otra empresa. No se modificó ninguna conexión." }, 409, origin);
       }
@@ -1140,6 +1141,7 @@ Deno.serve(async (req) => {
       const channel = {
         organization_id: run.organization_id,
         numero_whatsapp: phone,
+        proveedor: "infobip",
         asesor_id: advisor?.id ?? null,
         asesor_name: advisor?.name ?? run.owner_name ?? "Sin asignar",
         platform_type: "CLOUD_API",
