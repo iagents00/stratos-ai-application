@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**306 archivos · 85.087 líneas**
+**306 archivos · 85.170 líneas**
 
 ---
 
@@ -147,10 +147,10 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `index.jsx` | 487 | Panel de chat con Agente Stratos AI. |
 | `index.jsx` | 454 | Portal de Candidatos — Stratos People |
 | `PipelineConfiguratorAdmin.jsx` | 387 | _sin describir_ |
+| `WhatsAppOnboardingAdmin.jsx` | 316 | _sin describir_ |
 | `DocsStratos.jsx` | 293 | _sin describir_ |
 | `PlatformAdminConsole.jsx` | 285 | _sin describir_ |
 | `PlatformCompanyCRM.jsx` | 258 | _sin describir_ |
-| `WhatsAppOnboardingAdmin.jsx` | 234 | _sin describir_ |
 | `PlatformAdminConsole.css` | 224 | _sin describir_ |
 | `CatalogConfiguratorAdmin.jsx` | 158 | _sin describir_ |
 | `PlatformUsersAdmin.jsx` | 158 | _sin describir_ |
@@ -505,7 +505,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `iagents-actions.js` | 126 | _sin describir_ |
 | `webhook-diagnostico-stratos.js` | 112 | Envía los resultados del diagnóstico Stratos AI al webhook n8n del funnel. |
 | `rails-config.js` | 107 | _sin describir_ |
-| `whatsapp-admin.js` | 104 | _sin describir_ |
+| `whatsapp-admin.js` | 105 | _sin describir_ |
 | `chunk-recovery.js` | 103 | _sin describir_ |
 | `llamadas.js` | 93 | Consultas y estado local de los avisos de llamada del equipo. |
 | `backup.js` | 85 | _sin describir_ |
@@ -581,6 +581,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Abrir el expediente completo del cliente | `src/app/views/WhatsApp.jsx:456` |
 | Abrir evidencia | `src/app/views/Marketing.jsx:2347` |
 | Abrir Huli para completar la configuración | `src/dental-demo/HuliWorkspace.jsx:30` |
+| Abrir Infobip | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:293` |
 | Abrir la ficha completa | `src/app/views/Marketing.jsx:1571` |
 | Abrir la ficha completa — acá se edita todo | `src/app/views/Marketing.jsx:1380` |
 | Abrir la ficha de la propiedad | `src/app/views/Marketing.jsx:2015` |
@@ -605,7 +606,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Acciones por bloque | `src/app/features/Admin/RailsSettings.jsx:79` |
 | Activa tu Copilot AI | `src/app/views/Copilot.jsx:1962` |
 | Activar para el equipo | `src/app/features/Admin/RailsSettings.jsx:72` |
-| Activar solo lectura | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:230` |
+| Activar solo lectura | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:312` |
 | Actividad | `src/dental-demo/ClinicalReadiness.jsx:58` |
 | Actividad del equipo IA — hoy | `src/app/views/IACRM.jsx:299` |
 | Actividad reciente | `src/app/views/CRM/index.jsx:5940` |
@@ -670,7 +671,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Asesor | `src/app/features/Admin/PlatformCompanyCRM.jsx:249` |
 | Asesor: | `src/app/features/Admin/PlatformCompanyCRM.jsx:253` |
 | Así te ayuda a operar | `src/app/components/CopilotCapabilities.jsx:117` |
-| Asignar a | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:204` |
+| Asignar a | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:268` |
 | Asignar a un asesor | `src/app/features/MetaPanel/index.jsx:1009` |
 | Asignar a… | `src/app/views/Marketing.jsx:870` |
 | Asignar responsable | `src/app/features/MetaPanel/index.jsx:998` |
@@ -804,10 +805,9 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Compartir presentación | `src/app/views/LandingPages/index.jsx:1289` |
 | Complejidad: | `src/app/views/Marketing.jsx:2197` |
 | Comprobando la agenda de hoy… | `src/app/views/MiDia.jsx:134` |
-| Conectado | `src/app/views/Profile.jsx:727` |
 
 
-_(860 textos más — usá `npm run buscar "texto"`)_
+_(863 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -859,6 +859,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/ComandoOps.jsx` (327 líneas)
 - `src/lib/whatsapp-chat.js` (326 líneas)
 - `src/app/App.css` (321 líneas)
+- `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx` (316 líneas)
 - `src/clients/clinica-dental/config.js` (311 líneas)
 - `src/dental-demo/clinical-readiness.css` (301 líneas)
 - `src/app/features/MetaPanel/DocsStratos.jsx` (293 líneas)
@@ -878,7 +879,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/landing/ManualLegacy.jsx` (246 líneas)
 - `src/app/views/Nomina.jsx` (238 líneas)
 - `src/landing/ManualBrasa.jsx` (235 líneas)
-- `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx` (234 líneas)
 - `src/lib/manual-stratos-doc.js` (230 líneas)
 - `src/app/views/ProductividadTab.jsx` (225 líneas)
 - `src/app/features/Admin/PlatformAdminConsole.css` (224 líneas)
@@ -929,7 +929,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/Admin/PlatformCompanyCRM.css` (111 líneas)
 - `src/landing/marketing-content.js` (108 líneas)
 - `src/lib/rails-config.js` (107 líneas)
-- `src/lib/whatsapp-admin.js` (104 líneas)
+- `src/lib/whatsapp-admin.js` (105 líneas)
 - `src/lib/chunk-recovery.js` (103 líneas)
 - `src/app/views/CRM/command-metrics.js` (101 líneas)
 - `src/clients/grupo28/config.js` (100 líneas)

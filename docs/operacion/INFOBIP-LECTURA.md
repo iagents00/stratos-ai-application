@@ -42,22 +42,50 @@ de persistencia devuelven 503, no un falso 200. Infobip debe usar los dos evento
 la autenticación exacta; comprobar un evento real antes de activar cada canal.
 Las ejecuciones no guardan cuerpos de mensajes ni cabeceras de autenticación.
 
-## Alta controlada de una empresa nueva
+## Alta desde el panel de soporte
 
-1. Obtener autorización del dueño para compartir activos y registrar su número
-   por coexistencia en su propio portafolio. Esto no se hace mediante esta migración.
-2. Registrar el canal y su asesor en la empresa correcta. No usar una fila protegida.
-3. Operaciones habilita modo lectura y la ruta del canal con las RPC privadas
-   `fn_activate_whatsapp_readonly(uuid)` y
-   `fn_set_whatsapp_readonly_route(uuid,uuid,boolean)`, exclusivamente por servidor.
-   Comprobar empresa/canal/asesor antes de invocarlas; nunca desde el navegador.
-4. Configurar únicamente ese remitente o una suscripción con recursos específicos
-   en Infobip. No cambiar el webhook global ni las suscripciones de remitentes actuales.
-5. Enviar un mensaje de prueba autorizado desde un contacto controlado y responder
-   desde WhatsApp Business. Verificar lead, asesor, etapa, entrada, eco, bandeja y
-   visibilidad. No prometer acceso a grupos o importación histórica.
-6. Acreditar el recorrido y aprobar las pruebas en soporte. El botón actual de
-   aprobación no inscribe automáticamente una ruta en el receptor nuevo.
+1. Crear o elegir la empresa y un usuario activo que recibirá sus leads. En
+   **WhatsApp**, seleccionar esa empresa, asesor y número internacional.
+2. Pulsar **Abrir Infobip y vincular por QR**. El titular autoriza sus activos y
+   escanea el QR desde WhatsApp Business. En este flujo de Infobip seleccionar
+   **No compartir chats**: no se importa el historial. Preferir el portafolio del
+   cliente; cualquier alojamiento temporal debe quedar identificado expresamente.
+3. Volver a Stratos y pulsar **Ya lo vinculé en Infobip · Conectar a Stratos**.
+   También sirve si el número ya se registró antes de abrir el panel. El servidor
+   comprueba el remitente (incluidos alias mexicanos 52/521), la empresa y el asesor.
+   Prepara el canal y crea o reutiliza dos suscripciones exclusivas de ese número,
+   una de entrada y otra de eco, sin reemplazar reglas existentes.
+4. Escribir desde otro WhatsApp al número conectado. El panel comprueba durante dos
+   minutos la recepción real, el lead y su asignación; después se puede usar
+   **Comprobar recepción**. Solo entonces muestra **Recibiendo leads**. Un QR o
+   casillas marcadas por el navegador no acreditan el funcionamiento.
+5. Para comprobar el espejo de respuestas, el asesor escribe manualmente desde
+   WhatsApp Business. Esa evidencia se muestra por separado: un saludo automático
+   no prueba el eco manual. No prometer acceso a grupos ni importación histórica.
+
+La cuenta Infobip y el portafolio Meta **no determinan la empresa del CRM**. La
+ruta privada une número, organización y asesor. Un número ya asignado a otra
+empresa, un canal protegido o un receptor específico diferente detienen el alta.
+Los reintentos reutilizan proceso, canal y suscripciones; no crean copias.
+
+## Preparación inicial del servidor (una vez por cuenta operativa)
+
+- Aplicar únicamente la migración incremental 322 y desplegar `whatsapp-admin`
+  conservando JWT. Las cuatro RPC nuevas solo admiten `service_role`; el actor se
+  obtiene de la sesión verificada, no de un campo enviado por el navegador.
+- La clave Infobip debe permitir consultar remitentes y `subscriptions:manage`.
+  Configurar en servidor `INFOBIP_READONLY_IN_PROFILE_ID`,
+  `INFOBIP_READONLY_ECHO_PROFILE_ID` e `INFOBIP_READONLY_AUTH_ID`. Son referencias a
+  perfiles ya preparados en la **misma cuenta operativa de confianza**, con las
+  dos URL exactas anteriores y la credencial existente del receptor.
+- El panel no recibe la clave API ni la contraseña Basic. Si faltan referencias,
+  pide completar la preparación inicial sin volver a registrar el número.
+- La automatización solo crea suscripciones con `resources:[remitente]` y un
+  evento. No actualiza ni elimina perfiles, seguridad, grupos o reglas de Duke.
+  Una configuración del número que reenvíe por HTTP con mayor prioridad requiere
+  revisión; la prueba real permanecerá pendiente si el evento no llega.
+- Una cuenta de proveedor de un tercero requiere ingreso aislado y credencial
+  propios; no introducir allí las referencias ni credenciales del receptor central.
 
 ## Evidencia y recuperación
 
@@ -73,11 +101,16 @@ Las ejecuciones no guardan cuerpos de mensajes ni cabeceras de autenticación.
   RPC privada. Conservar columnas y mensajes; no borrar datos ni tocar los flujos
   anteriores. El rollback web no revierte la base ni n8n.
 
-Pendiente independiente: piloto real, permisos/aprobaciones y capacidad comercial
-de Meta/Infobip. No asumir números ilimitados ni que verificar Duke aprueba Stratos.
+Piloto acreditado el 12-nov-2026: dos mensajes reales crearon un solo lead en la
+empresa de Gerardo y lo asignaron a su usuario. Su número se registró en el
+portafolio Jarvis AIOS; eso no cambia su empresa en el CRM. El eco de una respuesta
+manual sigue sin acreditar. No asumir números ilimitados ni que verificar Duke
+aprueba Stratos; permisos, límites y costos del proveedor son independientes.
 
 Fuentes primarias del contrato de transporte:
 
 - https://www.infobip.com/docs/reporting/webhooks
 - https://www.infobip.com/docs/subscriptions/available-events
 - https://www.infobip.com/docs/whatsapp/get-started/embedded-signup
+- https://www.infobip.com/docs/api/platform/subscriptions-api/subscription/create-subscription
+- https://www.infobip.com/docs/subscriptions/inbound-messages-subscription-routing

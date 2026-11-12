@@ -69,6 +69,9 @@ VITE_ se publica al navegador. Las demás necesitan clasificación y custodia de
 | HULI_CONNECTIONS_JSON | [supabase/functions/huli-copilot/index.ts](../../supabase/functions/huli-copilot/index.ts) |
 | INFOBIP_API_KEY | [supabase/functions/whatsapp-admin/index.ts](../../supabase/functions/whatsapp-admin/index.ts) |
 | INFOBIP_BASE_URL | [supabase/functions/whatsapp-admin/index.ts](../../supabase/functions/whatsapp-admin/index.ts) |
+| INFOBIP_READONLY_AUTH_ID | [supabase/functions/whatsapp-admin/index.ts](../../supabase/functions/whatsapp-admin/index.ts) |
+| INFOBIP_READONLY_ECHO_PROFILE_ID | [supabase/functions/whatsapp-admin/index.ts](../../supabase/functions/whatsapp-admin/index.ts) |
+| INFOBIP_READONLY_IN_PROFILE_ID | [supabase/functions/whatsapp-admin/index.ts](../../supabase/functions/whatsapp-admin/index.ts) |
 | INFOBIP_REGISTRATION_WEBHOOK_SECRET | [supabase/functions/infobip-registration-webhook/index.ts](../../supabase/functions/infobip-registration-webhook/index.ts) |
 | META_ACCESS_TOKEN | [supabase/functions/meta-lead-ads/index.ts](../../supabase/functions/meta-lead-ads/index.ts) |
 | META_APP_SECRET | [supabase/functions/meta-lead-ads/index.ts](../../supabase/functions/meta-lead-ads/index.ts) |

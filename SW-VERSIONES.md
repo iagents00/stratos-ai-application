@@ -1,3 +1,7 @@
+## v471 — 12-nov-2026
+
+Soporte puede completar la conexión de cada número ya vinculado en Infobip y comprobar un lead real, su empresa y su asesor. Los reintentos reutilizan el proceso y las reglas del mismo número; las conexiones protegidas no se sustituyen.
+
 ## v470 — 12-nov-2026
 
 Infobip se consulta con ambas representaciones del mismo número mexicano, 52 y 521, para encontrar el remitente registrado por Meta.
