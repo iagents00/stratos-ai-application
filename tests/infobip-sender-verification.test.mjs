@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { senderQualityUrl, sameWhatsAppPhone } from "../supabase/functions/whatsapp-admin/infobip-sender.mjs";
 
 test("quality lookup supplies the required sender filter in provider format", () => {
@@ -19,4 +20,12 @@ test("provider Mexico mobile aliases resolve to the same business number", () =>
   assert.equal(sameWhatsAppPhone("+573237451221", "573237451221"), true);
   assert.equal(sameWhatsAppPhone("+12125551234", "+125551234"), false);
   assert.equal(sameWhatsAppPhone(null, null), false);
+});
+
+test("admin channel writes respect the existing database connection-state contract", () => {
+  const source = readFileSync(new URL("../supabase/functions/whatsapp-admin/index.ts", import.meta.url), "utf8");
+  const states = [...source.matchAll(/estado_conexion:\s*"([^"]+)"/g)].map(match => match[1]);
+  const databaseStates = new Set(["conectado", "sin_conexion", "on_premise", "desconocido"]);
+  assert.ok(states.length > 0);
+  for (const state of states) assert.ok(databaseStates.has(state), `Database rejects state: ${state}`);
 });

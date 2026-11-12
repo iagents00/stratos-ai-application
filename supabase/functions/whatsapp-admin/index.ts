@@ -1148,12 +1148,12 @@ Deno.serve(async (req) => {
         quality_rating: qualityRating,
         onboarded_via: "manual",
         onboarded_at: new Date().toISOString(),
-        estado_conexion: "INFOBIP_REGISTERED",
+        estado_conexion: "desconocido",
         active: true,
         ultimo_error: null,
       };
       if (sameNumber?.id) {
-        const { error } = await admin.from("whatsapp_numero_asesor").update(channel).eq("id", sameNumber.id);
+        const { error } = await admin.from("whatsapp_numero_asesor").update(channel).eq("id", sameNumber.id).eq("organization_id", run.organization_id);
         if (error) throw error;
       } else {
         const { error } = await admin.from("whatsapp_numero_asesor").insert(channel);
@@ -1222,17 +1222,20 @@ Deno.serve(async (req) => {
         p_organization_id: run.organization_id,
       });
       if (featureError) throw featureError;
-      await admin.from("whatsapp_onboarding_runs").update({ status: "active", verified_at: new Date().toISOString() }).eq("id", runId);
       if (run.phone_number_id) {
-        await admin.from("whatsapp_numero_asesor").update({ estado_conexion: "CONNECTED", verificado_at: new Date().toISOString(), ultimo_error: null }).eq("phone_number_id", run.phone_number_id);
+        const { error } = await admin.from("whatsapp_numero_asesor").update({ estado_conexion: "conectado", verificado_at: new Date().toISOString(), ultimo_error: null }).eq("phone_number_id", run.phone_number_id).eq("organization_id", run.organization_id);
+        if (error) throw error;
       } else if (run.phone_e164) {
         const { data: candidates } = await admin.from("whatsapp_numero_asesor")
           .select("id,numero_whatsapp").eq("organization_id", run.organization_id).eq("active", true).limit(100);
         const channel = (candidates ?? []).find(candidate => normalizePhone(candidate.numero_whatsapp) === normalizePhone(run.phone_e164));
         if (channel?.id) {
-          await admin.from("whatsapp_numero_asesor").update({ estado_conexion: "CONNECTED", verificado_at: new Date().toISOString(), ultimo_error: null }).eq("id", channel.id);
+          const { error } = await admin.from("whatsapp_numero_asesor").update({ estado_conexion: "conectado", verificado_at: new Date().toISOString(), ultimo_error: null }).eq("id", channel.id).eq("organization_id", run.organization_id);
+          if (error) throw error;
         }
       }
+      const { error: approvalError } = await admin.from("whatsapp_onboarding_runs").update({ status: "active", verified_at: new Date().toISOString() }).eq("id", runId).eq("organization_id", run.organization_id);
+      if (approvalError) throw approvalError;
       return respond({ ok: true, status: "active" }, 200, origin);
     }
 
