@@ -97,9 +97,12 @@ Los reintentos reutilizan proceso, canal y suscripciones; no crean copias.
   ficticios, sin sesiones ni mensajes externos; finaliza con rollback.
 - Comprobar `activeVersionId == versionId` del workflow nuevo y HTTP sin/con
   autenticación. Un lote vacío prueba transporte sin crear leads.
-- Reversa: desactivar SOLO el workflow nuevo y deshabilitar sus rutas mediante la
-  RPC privada. Conservar columnas y mensajes; no borrar datos ni tocar los flujos
-  anteriores. El rollback web no revierte la base ni n8n.
+- Reversa de un alta individual: deshabilitar únicamente su ruta mediante la RPC
+  privada y conciliar solo las suscripciones de ese número. **No desactivar el
+  receptor compartido:** ya puede atender a otras empresas. Conservar columnas,
+  leads y mensajes; no borrar datos ni tocar los flujos anteriores. Para revertir
+  la automatización del panel, restaurar web/Edge y conservar las RPC aditivas.
+  El rollback web no revierte la base ni n8n.
 
 Piloto acreditado el 12-nov-2026: dos mensajes reales crearon un solo lead en la
 empresa de Gerardo y lo asignaron a su usuario. Su número se registró en el
