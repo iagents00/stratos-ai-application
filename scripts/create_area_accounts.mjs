@@ -1,6 +1,27 @@
 #!/usr/bin/env node
 /**
  * scripts/create_area_accounts.mjs
+ *
+ * ✅ YA SE CORRIÓ — 31-jul-2026. NO hace falta volver a ejecutarlo.
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Verificado contra `stratos-prod` el 31-jul: las migraciones 227 y 228 están
+ * aplicadas y las 5 cuentas creadas (5 de 5). Las 11 personas tienen su `area`:
+ * Marketing (Yazmin · Emmanuel S. · Luis) · Comercial (Emmanuel O. · Carolina)
+ * Operativo (Mario · Shaday) · Administrativo (Paz · Alexander)
+ * Finanzas (Wilbert) · RRHH (Yolanda).
+ *
+ * Chequeo rápido si querés confirmarlo vos mismo (solo lectura):
+ *   select count(*) from auth.users where email in
+ *     ('mario.ops@stratos.ai','shaday.ops@stratos.ai','paz.adm@stratos.ai',
+ *      'alexander.adm@stratos.ai','wilbert.fin@stratos.ai');   -- debe dar 5
+ *
+ * ⚠️ Lo ÚNICO que queda es de ENTREGA, no técnico: al 31-jul, 6 de las 11
+ * personas NUNCA habían iniciado sesión (Mario, Shaday, Paz, Alexander,
+ * Wilbert y Yolanda). Las cuentas existen y funcionan — falta repartirles
+ * usuario y contraseña.
+ *
+ * El script es idempotente, así que correrlo de nuevo no rompe nada; pero no
+ * hay motivo para hacerlo. Detalle completo en `memory/changelog.md` del AIOS.
  * ─────────────────────────────────────────────────────────────────────────────
  * Da de alta (y deja listo el espacio de) al equipo de ÁREAS de Duke — el que
  * arrancó el «Plan de Trabajo Semanal» el 30-jul-2026.
