@@ -27,3 +27,13 @@ test('search requires all meaningful words and empty queries keep the full index
   assert.deepEqual(searchManual('   '), sections);
   assert.deepEqual(searchManual('agenda palabraquenuncaseusa'), []);
 });
+
+
+test('searching a displayed area name finds all of its guides, including plural Equipos', () => {
+  for (const category of CATEGORIES) {
+    const found = new Set(searchManual(category.label).map(s => s.id));
+    for (const section of sections.filter(s => s.category === category.id)) assert.ok(found.has(section.id), category.label + ': ' + section.id);
+  }
+  assert.ok(searchManual('equipos').some(s => s.id === 'roles-permisos'));
+  assert.ok(searchManual('varios clientes').some(s => s.id === 'copilot-registrar'));
+});

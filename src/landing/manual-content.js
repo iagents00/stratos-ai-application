@@ -1309,7 +1309,11 @@ const GUIDES = [
     "summary": "Prepara el alta, corrige los datos y confirma el guardado.",
     "where": "Copilot → mensaje de texto o audio",
     "access": "Usuarios con permiso sobre el CRM",
-    "tags": [],
+    "tags": [
+      "varios clientes",
+      "lista",
+      "lote"
+    ],
     "content": [
       {
         "type": "steps",
@@ -1336,6 +1340,14 @@ const GUIDES = [
           "clientes-varios-negocios",
           "mover-etapa-pipeline"
         ]
+      },
+      {
+        "type": "heading",
+        "text": "Registrar varios clientes de una vez"
+      },
+      {
+        "type": "p",
+        "text": "Puedes pegar una lista con una persona por línea e indicar su nombre y teléfono, más los datos de negocio o contexto disponibles. Revisa el resumen y el resultado de cada registro. Si detecta un contacto existente, comprueba la ficha y el negocio antes de crear o reasignar otra oportunidad."
       }
     ]
   },
@@ -2918,7 +2930,7 @@ export function searchManual(query) {
   return MANUAL_SECTIONS.map(section => {
     const title = normalize(section.title);
     const tags = normalize((section.tags || []).join(' '));
-    const haystack = normalize([section.title, section.summary, section.category, section.where, section.access, tags, ...section.content.map(contentText)].join(' '));
+    const haystack = normalize([section.title, section.summary, section.category, CATEGORIES.find(category => category.id === section.category)?.label, section.where, section.access, tags, ...section.content.map(contentText)].join(' '));
     if (!tokens.every(token => haystack.includes(token))) return {section, score: 0};
     const score = (haystack.includes(phrase) ? 20 : 0) + tokens.reduce((sum, token) => sum + 1 + (title.includes(token) ? 6 : 0) + (tags.includes(token) ? 3 : 0), 0);
     return {section, score};
