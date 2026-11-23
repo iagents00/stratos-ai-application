@@ -8,9 +8,9 @@ const APP_URL = 'https://app.stratoscapitalgroup.com';
 const ICONS = { Home, Users, UsersRound, Layers, NotebookPen, CalendarDays, Bot, FolderOpen, CalendarRange, MessageCircle, MessagesSquare, Building2, Hexagon, Wallet, BarChart3, Megaphone, HardDrive, Send, Settings, LifeBuoy, LayoutGrid, Zap };
 const categoryIcon = name => ICONS[name] || BookOpen;
 const isSafeLink = url => typeof url === 'string' && (/^\/(?!\/)/.test(url) || /^(https:\/\/|mailto:)/.test(url));
-function SectionLink({ section, onSelect, children, className = '' }) {
+function SectionLink({ section, onSelect, children, className = '', active = false }) {
   if (!section) return null;
-  return <a className={className} href={'#' + section.id} onClick={event => {
+  return <a className={className} aria-current={active ? 'page' : undefined} href={'#' + section.id} onClick={event => {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault(); onSelect(section.id);
   }}>{children || section.title}</a>;
@@ -31,7 +31,7 @@ function ContentBlock({ block, sections, categories, onSelect }) {
   if (block.type === 'directory') return <div className="mn-directory">{categories.filter(c => c.id !== 'funciones').map(cat => {
     const items = sections.filter(s => s.category === cat.id); const Icon = categoryIcon(cat.icon);
     if (!items.length) return null;
-    return <section key={cat.id}><div className="mn-directory-heading"><Icon size={23} aria-hidden="true"/><h2>{cat.label}</h2><span>{items.length} guías</span></div><div>{items.map(s => <SectionLink key={s.id} section={s} onSelect={onSelect}><span>{s.title}</span><ChevronRight size={16} aria-hidden="true"/></SectionLink>)}</div></section>;
+    return <section key={cat.id}><div className="mn-directory-heading"><Icon size={23} aria-hidden="true"/><h2>{cat.label}</h2><span>{items.length} {items.length === 1 ? 'guía' : 'guías'}</span></div><div>{items.map(s => <SectionLink key={s.id} section={s} onSelect={onSelect}><span>{s.title}</span><ChevronRight size={16} aria-hidden="true"/></SectionLink>)}</div></section>;
   })}</div>;
   return null;
 }
@@ -100,7 +100,7 @@ export default function ManualCRM({ sections = MANUAL_SECTIONS, categories = CAT
         <nav className="mn-topics" aria-label="Índice del manual">
           <SectionLink section={sections.find(s=>s.id===primaryId)} onSelect={select} className="mn-all-link"><LayoutGrid size={17}/> {isMain ? 'Ver todas las funciones' : 'Empezar a leer'}<ArrowRight size={15}/></SectionLink>
           {categories.map(cat=>{const items=grouped.get(cat.id)||[];if(!items.length)return null;const Icon=categoryIcon(cat.icon); const open=expanded.includes(cat.id);
-            return <details className="mn-topic" key={cat.id} open={open}><summary onClick={e=>{e.preventDefault();setExpanded(prev=>prev.includes(cat.id)?prev.filter(id=>id!==cat.id):[...prev,cat.id]);}}><Icon size={17}/><span>{cat.label}</span><small>{items.length}</small><ChevronDown size={14}/></summary><div>{items.map(s=><SectionLink key={s.id} section={s} onSelect={select} className={'mn-topic-link '+(s.id===current?.id?'mn-active':'')}><span aria-current={s.id===current?.id?'page':undefined}>{s.title}</span></SectionLink>)}</div></details>;
+            return <details className="mn-topic" key={cat.id} open={open}><summary onClick={e=>{e.preventDefault();setExpanded(prev=>prev.includes(cat.id)?prev.filter(id=>id!==cat.id):[...prev,cat.id]);}}><Icon size={17}/><span>{cat.label}</span><small>{items.length}</small><ChevronDown size={14}/></summary><div>{items.map(s=><SectionLink key={s.id} section={s} onSelect={select} active={s.id===current?.id} className={'mn-topic-link '+(s.id===current?.id?'mn-active':'')}><span>{s.title}</span></SectionLink>)}</div></details>;
           })}
         </nav><div className="mn-sidebar-footer"><ShieldCheck size={16}/><span>Las funciones disponibles dependen de tu empresa y tus permisos.</span></div>
       </aside>
