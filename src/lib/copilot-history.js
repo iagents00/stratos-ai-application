@@ -17,3 +17,17 @@ export function mergeCopilotHistory(previous, incoming, { merge = false, preserv
     .sort((a, b) => (time(a.message) - time(b.message)) || (a.index - b.index))
     .map(row => row.message);
 }
+// Two identical answers to different requests are still two real answers.
+export function dedupeCopilotMessages(messages) {
+  const seen = new Map();
+  return messages.filter(message => {
+    if (message.media_path || message.imageUrl || message.videoUrl) return true;
+    const requestId = message.meta?.kind === 'copilot_delivery' && message.meta?.request_id;
+    const key = requestId ? `${message.role}|request:${requestId}` : `${message.role || ''}|${message.content || ''}`;
+    const at = new Date(message.occurred_at || message.created_at || 0).getTime() || 0;
+    const previous = seen.get(key);
+    if (previous !== undefined && (requestId || Math.abs(previous - at) < 15000)) return false;
+    seen.set(key, at);
+    return true;
+  });
+}

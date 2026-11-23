@@ -17,6 +17,7 @@
 import { supabase } from './supabase'
 import { copilotRequestClient } from './copilot-session'
 import { deliverCopilot } from './copilot-delivery'
+import { dedupeCopilotMessages } from './copilot-history'
 import { sendProjectCopilot } from './project-copilot.js'
 import { loadCopilotProfile } from './copilot-profile.js'
 import { replyToCopilotReminder, followupButtons } from './copilot-reminders.js'
@@ -402,17 +403,8 @@ export async function getCopilotActivity(limit = 50, expectedActor = null) {
     // Dedup de seguridad por VENTANA DE TIEMPO: si el mismo mensaje (role+contenido)
     // se logueó dos veces en <15s (ej. frontend + un camino de backend), se muestra una
     // sola vez. Repeticiones legítimas (mismo texto minutos después) se conservan.
-    const seenAt = new Map()
-    const deduped = []
-    for (const m of messages) {
-      if (m.media_path || m.imageUrl || m.videoUrl) { deduped.push(m); continue } // adjuntos: cada foto/video es único, nunca colapsar
-      const key = (m.role || '') + '|' + String(m.content || '')
-      const t = new Date(m.occurred_at || m.created_at || 0).getTime() || 0
-      const prevT = seenAt.get(key)
-      if (prevT !== undefined && Math.abs(prevT - t) < 15000) continue
-      seenAt.set(key, t)
-      deduped.push(m)
-    }
+    const deduped = dedupeCopilotMessages(messages.map(m =>
+      m.meta?.inline_keyboard && !m.buttons ? { ...m, buttons: flatKeyboard(m.meta.inline_keyboard) } : m))
     if (!await sameActor()) return { messages: [], error: 'sesion_expirada' }
     return { messages: deduped.slice(0, limit), error: deduped.length === 0 ? errorHistorial : null }
   } catch (e) {
