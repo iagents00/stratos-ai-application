@@ -1,9 +1,9 @@
-import { ArrowUpRight, Smartphone, Globe } from "lucide-react";
+import { ArrowUpRight, Smartphone } from "lucide-react";
 import "./AppDownloads.css";
+import { APP_STORES } from "../lib/app-stores.mjs";
 
-export const appStoreUrl = "https://apps.apple.com/app/stratos-ai/id6804826565";
 
-export default function AppDownloads({ loginUrl }) {
+export default function AppDownloads() {
   return <section id="descargar" className="smk-section smk-container smk-downloads" aria-labelledby="smk-download-title">
     <div className="smk-download-panel">
       <div className="smk-download-copy">
@@ -15,12 +15,11 @@ export default function AppDownloads({ loginUrl }) {
       <div className="smk-download-options">
         <div className="smk-download-option">
           <div className="smk-download-label"><Smartphone size={20} aria-hidden="true" /><span>Para iPhone</span><span className="smk-download-available">Disponible</span></div>
-          <a className="smk-download-link" href={appStoreUrl} target="_blank" rel="noopener noreferrer" aria-label="Descargar Stratos AI en App Store (abre en otra pestaña)"><span><small>Descárgala en</small><strong>App Store</strong></span><ArrowUpRight size={22} aria-hidden="true" /></a>
+          <a className="smk-download-link" href={APP_STORES.ios.url} target="_blank" rel="noopener noreferrer" aria-label="Descargar Stratos AI en App Store (abre en otra pestaña)"><span><small>Descárgala en</small><strong>App Store</strong></span><ArrowUpRight size={22} aria-hidden="true" /></a>
         </div>
         <div className="smk-download-option">
-          <div className="smk-download-label"><Globe size={20} aria-hidden="true" /><span>Para Android</span><span className="smk-download-web">Versión web</span></div>
-          <a className="smk-download-link smk-download-link-web" href={loginUrl}><span><small>Accede desde tu navegador</small><strong>Abrir Stratos AI</strong></span><ArrowUpRight size={22} aria-hidden="true" /></a>
-          <p className="smk-download-note">En Android, utiliza la versión web de Stratos AI.</p>
+          <div className="smk-download-label"><Smartphone size={20} aria-hidden="true" /><span>Para Android</span><span className="smk-download-available">Disponible</span></div>
+          <a className="smk-download-link" href={APP_STORES.android.url} target="_blank" rel="noopener noreferrer" aria-label="Descargar Stratos AI en Google Play (abre en otra pestaña)"><span><small>Descárgala en</small><strong>Google Play</strong></span><ArrowUpRight size={22} aria-hidden="true" /></a>
         </div>
       </div>
     </div>

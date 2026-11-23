@@ -170,7 +170,6 @@ Servicios de terceros con los que habla el código.
 | `glulgyhkrqpykxmujodb.supabase.co` | 6 archivos |
 | `drive.google.com` | 4 archivos |
 | `cal.com` | 3 archivos |
-| `apps.apple.com` | 2 archivos |
 | `docs.google.com` | 2 archivos |
 | `app.getstratosai.com` | 1 archivo |
 | `app.hulipractice.com` | 1 archivo |
@@ -178,6 +177,7 @@ Servicios de terceros con los que habla el código.
 | `brokers.simca.mx` | 1 archivo |
 | `maps.app` | 1 archivo |
 | `meet.google.com` | 1 archivo |
+| `mexicorealestatesolutions.com` | 1 archivo |
 
 ---
 

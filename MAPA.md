@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**308 archivos · 86.810 líneas**
+**308 archivos · 86.828 líneas**
 
 ---
 
@@ -436,7 +436,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `manual-content.js` | 2944 | Manual público de Stratos. Contenido revisado el 23 de noviembre de 2026. |
+| `manual-content.js` | 2958 | Manual público de Stratos. Contenido revisado el 23 de noviembre de 2026. |
 | `PrivacyPolicy.jsx` | 1222 | _sin describir_ |
 | `ManualMarketing.jsx` | 1026 | _sin describir_ |
 | `Diagnostico.jsx` | 974 | _sin describir_ |
@@ -448,8 +448,8 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `PricingScreen.jsx` | 552 | _sin describir_ |
 | `DukeLeadRouter.jsx` | 343 | _sin describir_ |
 | `LandingMarketing.css` | 288 | _sin describir_ |
+| `ManualNSG.jsx` | 288 | _sin describir_ |
 | `ManualGasil.jsx` | 285 | _sin describir_ |
-| `ManualNSG.jsx` | 285 | _sin describir_ |
 | `ManualLegacy.jsx` | 246 | _sin describir_ |
 | `ManualBrasa.jsx` | 235 | _sin describir_ |
 | `ManualMuebleria.jsx` | 224 | _sin describir_ |
@@ -468,8 +468,8 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `FeatureMotion.css` | 55 | _sin describir_ |
 | `LoginScreen.css` | 45 | _sin describir_ |
 | `LoginScreenNative.css` | 39 | _sin describir_ |
-| `AppDownloads.jsx` | 29 | _sin describir_ |
 | `ServicesTicker.jsx` | 29 | _sin describir_ |
+| `AppDownloads.jsx` | 28 | _sin describir_ |
 | `HeroFlowBackdrop.css` | 26 | _sin describir_ |
 | `AppDownloads.css` | 24 | _sin describir_ |
 | `ServicesTicker.css` | 23 | _sin describir_ |
@@ -492,7 +492,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `push-native.js` | 302 | _sin describir_ |
 | `lead-save.js` | 288 | _sin describir_ |
 | `native.js` | 282 | _sin describir_ |
-| `manual-stratos-doc.js` | 230 | _sin describir_ |
+| `manual-stratos-doc.js` | 232 | _sin describir_ |
 | `organize-notes.js` | 220 | _sin describir_ |
 | `docx.js` | 201 | _sin describir_ |
 | `whatsapp-signup.js` | 196 | _sin describir_ |
@@ -866,10 +866,10 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/MetaPanel/DocsStratos.jsx` (293 líneas)
 - `src/dental-demo/ClinicalReadiness.jsx` (290 líneas)
 - `src/landing/LandingMarketing.css` (288 líneas)
+- `src/landing/ManualNSG.jsx` (288 líneas)
 - `src/lib/lead-save.js` (288 líneas)
 - `src/app/features/Admin/PlatformAdminConsole.jsx` (285 líneas)
 - `src/landing/ManualGasil.jsx` (285 líneas)
-- `src/landing/ManualNSG.jsx` (285 líneas)
 - `src/app/views/ZoomControl/Graficas.jsx` (284 líneas)
 - `src/lib/native.js` (282 líneas)
 - `src/index.css` (278 líneas)
@@ -879,7 +879,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/landing/ManualLegacy.jsx` (246 líneas)
 - `src/app/views/Nomina.jsx` (238 líneas)
 - `src/landing/ManualBrasa.jsx` (235 líneas)
-- `src/lib/manual-stratos-doc.js` (230 líneas)
+- `src/lib/manual-stratos-doc.js` (232 líneas)
 - `src/app/views/ProductividadTab.jsx` (225 líneas)
 - `src/app/features/Admin/PlatformAdminConsole.css` (224 líneas)
 - `src/landing/ManualMuebleria.jsx` (224 líneas)

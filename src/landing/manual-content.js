@@ -2,6 +2,7 @@
  * Mantener los ids: Copilot y enlaces compartidos los usan como anclas.
  * Las fichas del asistente conservan su catálogo; el índice incluye toda la plataforma.
  */
+import { APP_STORES } from '../lib/app-stores.mjs';
 import { INTEL_FEATURES } from '../app/constants/intelFeatures.js';
 export const MANUAL_VERSION = '3.0';
 export const MANUAL_REVIEWED_AT = '2026-11-23';
@@ -187,57 +188,70 @@ const GUIDES = [
     "id": "instalar-app-celular",
     "category": "empezar",
     "title": "Instalar Stratos en iPhone, Android o como app web",
-    "summary": "Elige la aplicación oficial o agrega la web a tu pantalla de inicio.",
-    "where": "Descargas oficiales y navegador",
+    "summary": "Descarga las aplicaciones oficiales desde Google Play o App Store y entra con la cuenta de tu empresa.",
+    "where": "Google Play para Android · App Store para iPhone",
     "access": "Todos los usuarios",
     "tags": [
       "descargar",
-      "ios",
+      "instalar",
+      "Android",
+      "iPhone",
+      "Google Play",
+      "Play Store",
+      "App Store",
       "móvil",
-      "apk",
       "PWA"
     ],
     "content": [
       {
-        "type": "heading",
-        "text": "iPhone"
-      },
-      {
-        "type": "steps",
-        "items": [
-          "Abre la sección de descargas del sitio de Stratos o la ficha oficial de Stratos AI en App Store.",
-          "Instala la aplicación y entra con tu cuenta habitual.",
-          "Para actualizarla, abre App Store y busca actualizaciones de Stratos AI."
-        ]
-      },
-      {
-        "type": "heading",
-        "text": "Android"
-      },
-      {
-        "type": "steps",
-        "items": [
-          "En Android, utiliza la versión web oficial en app.stratoscapitalgroup.com.",
-          "Abre Stratos en Chrome. Puedes usarla desde el navegador o instalar la versión web desde el menú → Instalar aplicación o Agregar a pantalla de inicio.",
-          "Inicia sesión con tu cuenta de la empresa. Cuando aparezca una actualización web, conserva los borradores y recarga."
-        ]
-      },
-      {
-        "type": "heading",
-        "text": "Alternativa: app web"
-      },
-      {
         "type": "p",
-        "text": "Abre app.stratoscapitalgroup.com. En iPhone, usa Safari → Compartir → Agregar a inicio. En Android, usa el menú de Chrome → Instalar aplicación o Agregar a pantalla de inicio, según lo que muestre el navegador."
+        "text": "Descarga Stratos AI directamente desde la tienda de tu teléfono. Usa la misma cuenta de tu empresa para entrar en la app y en la web."
       },
       {
         "type": "link",
-        "text": "Abrir Stratos AI en App Store",
-        "url": "https://apps.apple.com/app/stratos-ai/id6804826565"
+        "text": "Descargar Stratos AI en Google Play",
+        "url": APP_STORES.android.url
       },
       {
-        "type": "warn",
-        "text": "Una actualización de la web y una actualización de la app de la tienda son entregas distintas. Usa siempre los enlaces oficiales; no necesitas otra cuenta ni registrar de nuevo tus clientes."
+        "type": "link",
+        "text": "Descargar Stratos AI en App Store",
+        "url": APP_STORES.ios.url
+      },
+      {
+        "type": "heading",
+        "text": "Android: Google Play"
+      },
+      {
+        "type": "steps",
+        "items": [
+          "Abre el enlace de Google Play desde tu teléfono Android. La ficha se llama Stratos AI y su desarrollador es NSG.Dev.",
+          "Toca Instalar y, cuando termine, abre Stratos AI.",
+          "Inicia sesión con el correo y la contraseña de tu cuenta de empresa."
+        ]
+      },
+      {
+        "type": "heading",
+        "text": "iPhone: App Store"
+      },
+      {
+        "type": "steps",
+        "items": [
+          "Abre el enlace de App Store desde tu iPhone. La ficha se llama Stratos AI y el desarrollador figura como Ivan Rodriguez.",
+          "Toca Obtener o el icono de descarga y abre Stratos AI al terminar.",
+          "Inicia sesión con la misma cuenta de tu empresa."
+        ]
+      },
+      {
+        "type": "tip",
+        "text": "Para actualizar la aplicación, abre su ficha en la misma tienda y toca Actualizar cuando aparezca. No necesitas otra cuenta ni registrar de nuevo tus clientes."
+      },
+      {
+        "type": "heading",
+        "text": "También puedes usar la versión web"
+      },
+      {
+        "type": "p",
+        "text": "Si prefieres el navegador, abre app.stratoscapitalgroup.com. También puedes agregar la web a la pantalla de inicio desde el menú de tu navegador; en iPhone, usa Safari → Compartir → Agregar a inicio."
       },
       {
         "type": "links",

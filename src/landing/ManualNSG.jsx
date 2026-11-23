@@ -1,3 +1,4 @@
+import { APP_STORES } from "../lib/app-stores.mjs";
 import { P as darkPalette } from "../design-system/tokens";
 /**
  * ManualNSG.jsx — Manual de uso de Stratos IA para NSG
@@ -36,7 +37,8 @@ const SECCIONES = [
     id: "empezar", icono: Smartphone, titulo: "Cómo entrar",
     bloques: [
       { t: "p", v: `En la computadora: ${APP}` },
-      { t: "p", v: "En el celular: la misma dirección. En Android está el APK; en iPhone se abre en Safari, tocas Compartir y después «Agregar a inicio» — queda como una app en la pantalla." },
+      { t: "p", v: "En el celular, descarga Stratos AI desde Google Play si usas Android o desde App Store si usas iPhone. Abre la app y entra con la misma cuenta de tu empresa." },
+      { t: "tiendas" },
       { t: "tip", v: "La primera vez el celular te va a preguntar si permites notificaciones. Di que sí: de eso dependen los avisos de llamada, las menciones del chat y el resumen de la mañana." },
       { t: "warn", v: "Si alguna vez la app queda en negro y no abre, espera unos segundos: se recupera sola. Si insiste, te va a aparecer un botón «Volver a intentar»." },
     ],
@@ -158,6 +160,7 @@ const SECCIONES = [
 
 /* ── Piezas visuales ─────────────────────────────────────────────────────── */
 const Bloque = ({ b }) => {
+  if (b.t === "tiendas") return <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 18 }}>{Object.values(APP_STORES).map(store => <a key={store.label} href={store.url} target="_blank" rel="noopener noreferrer" style={{ minHeight: 44, display: "inline-flex", alignItems: "center", padding: "10px 16px", border: `1px solid ${P.accentB}`, borderRadius: 10, color: P.accent, textDecoration: "none", fontFamily: font, fontSize: 15 }}>Descargar en {store.label}</a>)}</div>;
   if (b.t === "p") return <p style={{ margin: "0 0 14px", fontSize: 15.5, lineHeight: 1.65, color: P.txt2, fontFamily: font }}>{b.v}</p>;
   if (b.t === "sub") return <h3 style={{ margin: "24px 0 10px", fontSize: 15, fontWeight: 600, color: P.txt, fontFamily: fontD }}>{b.v}</h3>;
   if (b.t === "lista") return (

@@ -13,6 +13,8 @@
 // tercera es la que le importa a quien decide: sin ella esto es una lista de
 // botones.
 
+import { APP_STORES } from "./app-stores.mjs";
+
 export const MANUAL = {
   titulo: "Stratos IA de NSG",
   bajada: "Todo lo que hace el sistema, módulo por módulo y función por función.",
@@ -25,10 +27,10 @@ export const MANUAL = {
       items: [
         { que: "En la computadora", como: "app.stratoscapitalgroup.com/nsg, con tu correo y tu clave.",
           cambia: "No hay que instalar nada ni pedirle acceso a nadie." },
-        { que: "En Android", como: "Se instala el APK desde el link fijo del equipo.",
+        { que: "En Android", como: `Descarga Stratos AI desde Google Play: ${APP_STORES.android.url}`,
           cambia: "Queda como una app más del teléfono, con su ícono." },
-        { que: "En iPhone", como: "Se abre en Safari, botón Compartir → «Agregar a inicio».",
-          cambia: "Mismo resultado que una app, sin pasar por la App Store." },
+        { que: "En iPhone", como: `Descarga Stratos AI desde App Store: ${APP_STORES.ios.url}`,
+          cambia: "La app oficial se instala y actualiza desde App Store, con la misma cuenta de tu empresa." },
         { que: "Los avisos", como: "La primera vez el teléfono pregunta si permites notificaciones. Hay que decir que sí.",
           cambia: "De eso dependen las llamadas, las menciones del chat y el resumen de la mañana." },
       ],

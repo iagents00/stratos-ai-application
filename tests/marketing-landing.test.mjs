@@ -42,8 +42,9 @@ test('the public site preserves commercial terms, contact and fixed login routes
     assert.ok(links.includes('https://apps.apple.com/app/stratos-ai/id6804826565'), 'Verified iPhone listing');
     assert.ok(ids.has('descargar'), 'Download navigation has a destination');
     assert.match(html, /Para Android/);
-    assert.match(html, /Versión web/);
-    assert.ok(!links.some(link => link.includes('play.google.com')), 'Do not advertise an unverified Android store listing');
+    assert.match(html, /Google Play/);
+    assert.ok(links.includes('https://play.google.com/store/apps/details?id=com.stratoscapitalgroup.crm'), 'Verified Android listing');
+    assert.ok(!links.some(link => /github\.com.*releases|stratos-ai\.apk/i.test(link)), 'Public downloads use official stores');
     assert.doesNotMatch(html, /smk-hero-aura/);
     // Signals must stay on actual lattice edges, including across the quiet center.
     const networks = [...html.matchAll(/<svg class="smk-hero-flow-network[^"]*"[\s\S]*?<\/svg>/g)].map(match => match[0]);
