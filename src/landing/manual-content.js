@@ -520,6 +520,19 @@ const GUIDES = [
           "clientes-documentos",
           "historial-cambios"
         ]
+      },
+      {
+        "type": "heading",
+        "text": "Completar el perfilamiento o Discovery"
+      },
+      {
+        "type": "steps",
+        "items": [
+          "Abre Discovery o Perfilamiento cuando tu ficha lo incluya.",
+          "Registra lo que sabes del presupuesto y moneda, necesidad, zona, plazo y las demás preguntas de tu proceso.",
+          "Distingue un dato confirmado de uno que aún está pendiente.",
+          "Guarda los cambios y comprueba su resultado antes de pedir recomendaciones o preparar una cita."
+        ]
       }
     ]
   },
@@ -2328,6 +2341,23 @@ const GUIDES = [
           "copilot-consultar",
           "comando-indicadores"
         ]
+      },
+      {
+        "type": "heading",
+        "text": "Organizar clientes en Prioridad"
+      },
+      {
+        "type": "p",
+        "text": "El carrusel de Prioridad reúne los clientes destacados para trabajar. Usa el control de posición, el orden disponible o el arrastre cuando se ofrezca. La lista completa del CRM conserva los demás clientes."
+      },
+      {
+        "type": "steps",
+        "items": [
+          "Abre el cliente de una tarjeta antes de decidir su siguiente acción.",
+          "Ajusta su posición de prioridad con el control disponible.",
+          "Para sacarlo del carrusel, usa Quitar de prioridad. Esto no elimina su ficha.",
+          "Usa la lista y sus filtros para localizar clientes que no aparecen en las tarjetas prioritarias."
+        ]
       }
     ]
   },
@@ -2520,6 +2550,18 @@ const GUIDES = [
           "cambiar-contrasena",
           "notificaciones-telefono"
         ]
+      },
+      {
+        "type": "heading",
+        "text": "Eliminar tu cuenta personal"
+      },
+      {
+        "type": "p",
+        "text": "Perfil también ofrece Eliminar mi cuenta. Esta acción elimina tu acceso, perfil y notificaciones; los clientes, seguimientos y registros de la empresa permanecen con el equipo."
+      },
+      {
+        "type": "warn",
+        "text": "La eliminación personal es permanente. Antes de continuar, coordina la continuidad de tus clientes y tareas. El formulario pide escribir tu correo y confirmar; puedes cancelar antes de la confirmación final. No está disponible en demo o sin conexión."
       }
     ]
   },
