@@ -35,7 +35,7 @@ export const INTEL_FEATURES = [
     how: [
       "Abre el módulo Copilot en el CRM y escríbele —o díctale por voz con el micrófono.",
       'Ejemplo: "Crea un cliente, Mariana López, teléfono 55 1234 5678, llamarla en 4 horas".',
-      "Lo registra al instante y te confirma. Si conectaste Telegram, también puedes hacerlo desde ahí.",
+      "Revisa el borrador y confirma cuando te lo pida. Comprueba el resultado y la ficha guardada; Telegram es un canal opcional.",
     ],
   },
   {
@@ -86,7 +86,7 @@ export const INTEL_FEATURES = [
     tagline: "Coordina la visita a la propiedad, con recordatorios automáticos.",
     how: [
       'En el Copilot: "Agenda una visita con Diana el sábado 4pm en Portofino".',
-      "El asistente te avisa 30, 15 y 7 días antes, y el día de la visita.",
+      "Los avisos previos se envían según la pauta de visitas habilitada para tu organización. Revisa fecha, hora y estado.",
     ],
   },
   {
@@ -157,7 +157,7 @@ export const INTEL_FEATURES = [
     where: "Automático → notificación al teléfono (con la app cerrada)",
     tagline: "Los avisos del asistente te llegan al celular aunque tengas la app cerrada.",
     how: [
-      "Instala la app en tu teléfono (en iPhone: Compartir → Agregar a inicio) y activa las notificaciones.",
+      "En iPhone usa la app oficial de App Store o instala la web con Safari → Compartir → Agregar a inicio. Activa las notificaciones en el dispositivo.",
       "Desde ahí, los Zooms, tareas y recordatorios te llegan como notificación del teléfono — igual que un chat.",
     ],
   },
@@ -195,9 +195,9 @@ export const INTEL_FEATURES = [
     id: "coach", label: "Coach de tareas", icon: "ListChecks", color: "#A78BFA", kind: "agente",
     chan: "Automático",
     where: "Automático → aviso al Copilot y al teléfono",
-    tagline: 'El asistente te persigue: "¿ya la hiciste?" para que nada se caiga.',
+    tagline: 'Revisa tus pendientes y responde a los avisos de seguimiento.',
     how: [
-      "Te recuerda tus acciones pendientes y las de equipo hasta que las cierres.",
+      "Los avisos siguen la pauta de tu organización y terminan según tu respuesta o al finalizar su secuencia.",
       "Si algo queda sin hacer, escala al admin (para los que son admin).",
     ],
   },

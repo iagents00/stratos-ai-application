@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**308 archivos · 86.755 líneas**
+**308 archivos · 86.756 líneas**
 
 ---
 
@@ -441,7 +441,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ManualMarketing.jsx` | 1026 | _sin describir_ |
 | `Diagnostico.jsx` | 974 | _sin describir_ |
 | `DeliveryHubCRM.jsx` | 881 | _sin describir_ |
-| `manual-telegram-content.js` | 714 | Manual del COPILOT / Asistente IA (Duke del Caribe) |
+| `manual-telegram-content.js` | 715 | Manual del COPILOT / Asistente IA (Duke del Caribe) |
 | `OnboardingCallCenter.jsx` | 687 | _sin describir_ |
 | `LoginScreen.jsx` | 652 | Pantalla de autenticación completa para la app |
 | `DataDeletion.jsx` | 554 | _sin describir_ |
