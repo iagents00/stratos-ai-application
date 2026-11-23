@@ -51,6 +51,7 @@ const icons = {
   perfil: UserCircleIcon,
   admin: ShieldCheckIcon,
   pipelines: StackIcon,
+  projects: StackIcon,
   menu: SquaresFourIcon,
   add: PlusIcon,
   intel: LightbulbIcon,

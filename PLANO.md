@@ -157,6 +157,8 @@ error no está en el frontend.
 | `rails_resolver_accion` | `lib/agenda.js` |
 | `request_telegram_pairing_code` | `lib/telegram.js` |
 | `resolve_portfolio_link` | `app/views/LandingPages/PublicLanding.jsx` |
+| `work_project_action` | `app/features/Projects/workspace.js` |
+| `work_project_snapshot` | `app/features/Projects/workspace.js` |
 
 ---
 
@@ -189,7 +191,7 @@ casa; por eso mismo son los que más cuidado piden.
 | Archivo | Archivos que lo importan |
 |---|---|
 | `design-system/tokens.js` | **97** |
-| `lib/supabase.js` | **44** |
+| `lib/supabase.js` | **45** |
 | `hooks/useAuth.js` | **37** |
 | `hooks/useViewport.js` | **30** |
 | `hooks/useClient.js` | **20** |
@@ -198,8 +200,8 @@ casa; por eso mismo son los que más cuidado piden.
 | `app/views/CRM/date-range.js` | **13** |
 | `lib/whatsapp-admin.js` | **9** |
 | `app/views/CRM/zoom-metrics.js` | **9** |
+| `app/components/Logo.jsx` | **8** |
 | `lib/common-entry.js` | **7** |
-| `app/components/Logo.jsx` | **6** |
 | `lib/utils.js` | **5** |
 | `app/views/CRM/command-metrics.js` | **5** |
 | `lib/offline-mode.js` | **4** |

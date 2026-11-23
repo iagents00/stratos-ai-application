@@ -1,3 +1,4 @@
+import ProjectCopilot from "../features/Projects/ProjectCopilot";
 /**
  * app/views/Copilot.jsx — v2 (15-jul)
  * ─────────────────────────────────────────────────────────────────────────────
@@ -67,7 +68,7 @@ const fmtCuando = (iso) => {
   return `${d.toLocaleDateString("es-MX", { day: "numeric", month: "long" })}, ${hora}`;
 };
 
-export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp, onBack, score, demoContext }) {
+export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp, onBack, score, demoContext, projectContext, onBackToProjects }) {
   const isLight = isLightProp != null ? isLightProp : theme === "light";
   const T = Tprop || (isLight ? LP : P);
   const { config: clientConfig } = useClient();
@@ -101,6 +102,8 @@ export default function Copilot({ theme = "dark", T: Tprop, isLight: isLightProp
   // el chat — jamás la vieja pantalla "Conecta tu Telegram para activar", que
   // parecía un muro. (`ConnectPrompt` queda en el archivo por si algún tenant
   // futuro con pairing manual lo necesita, pero no se muestra por defecto.)
+  if (projectContext) return <ProjectCopilot key={`${user?.id}:${orgId}:${projectContext.id || "overview"}`}
+    isLight={isLight} org={orgId} context={projectContext} onBack={onBackToProjects} />;
   return <Chat key={`${user?.id}:${orgId}`} actorId={user?.id} T={T} isLight={isLight} botUsername={botUsername} onUnpaired={onUnpaired} onBack={onBack} score={score} isMarketing={isMarketing} puedeCajaFoto={puedeCajaFoto} orgId={orgId} isDemo={!!user?.isDemo} demoContext={demoContext} />;
 }
 

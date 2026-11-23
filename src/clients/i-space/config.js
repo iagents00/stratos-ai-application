@@ -48,6 +48,7 @@ export default {
     copilotWebhook: "https://personal-n8n.suwsiw.easypanel.host/webhook/copilot-tenant",
     copilotHelp: PROJECT_COPILOT_ENABLED ? "Puedo leer y organizar tus proyectos de I Space, crear y editar tarjetas separadas, checklists de aceptación, responsables existentes, fechas, prioridades y dependencias. También preparo prompts completos para pegar en Codex. Solo confirmo guardado cuando la base lo confirma. La ejecución en Codex y los sistemas externos todavía requieren que lleves allí la instrucción." : "Soy tu Copilot de I Space. El motor actual permite consultar pendientes y trabajar con tareas. Para preparar una instrucción completa para Codex, abre una tarjeta en Proyectos y elige Preparar prompt para Codex. El nuevo motor de planificación está pendiente de activar; no tengo conexión automática con tus chats de Codex ni con IAOS.",
   },
+  navLabels: { ...tenantConfig.navLabels, mkt: "Tablero anterior" },
   features: {
     ...tenantConfig.features,
     dash: false,
@@ -57,6 +58,7 @@ export default {
     copilotBrain: "tareas",
     mktModule: true,
     projectKanban: true,
+    projectWorkspace: true,
     projectCopilot: PROJECT_COPILOT_ENABLED,
   },
   mkt: {

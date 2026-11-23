@@ -43,6 +43,7 @@ export function TenantConfigGate({ children }) {
           copilotModule: configuredFeatures.copilotModule !== false,
           landingPages: configuredFeatures.landingPages === true,
           erp: configuredFeatures.erp === true,
+          projectWorkspace: configuredFeatures.projectWorkspace === true,
           // Integraciones: nunca se prenden por defecto. La consola las activa
           // solo cuando el canal supera las pruebas de coexistencia.
           whatsappModule: configuredFeatures.whatsappModule === true,
@@ -52,7 +53,7 @@ export function TenantConfigGate({ children }) {
           // La RLS del servidor continúa siendo la autoridad.
           caja: cajaPolicy?.enabled === true,
           cajaPolicy,
-        } : {}, isManaged);
+        } : { projectWorkspace: configuredFeatures.projectWorkspace === true }, isManaged);
       })
       .catch(() => { if (active) setError("No se pudo cargar la configuración de tu empresa."); });
     return () => { active = false; };

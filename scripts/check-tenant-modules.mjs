@@ -46,7 +46,7 @@ const glyphKeys = new Set();
 }
 
 // Espejo de resolverAccesible() en App.jsx (mantener en sync).
-const CANDIDATOS = ["mkt", "c", "d", "copilot", "miespacio", "perfil"];
+const CANDIDATOS = ["projects", "mkt", "c", "d", "copilot", "perfil"];
 
 const soloTenant = process.argv[2] || null;
 const tenants = clients.REGISTERED_CLIENT_IDS.filter((id) => !soloTenant || id === soloTenant);
