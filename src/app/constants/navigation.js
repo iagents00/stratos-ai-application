@@ -14,6 +14,7 @@ import { Target,
 
 export const nav = [
   { id: "mi_espacio", l: "Agenda",    i: Target     },
+  { id: "projects", l: "Proyectos", i: Layers },
   { id: "c",     l: "CRM",       i: Users      },
   // Mi Espacio como módulo VISIBLE bajo el CRM (reunión 11-ago): es una segunda
   // puerta al MISMO panel (metaOpen), no una vista nueva — no hay dos estados.
@@ -143,7 +144,7 @@ export const MODULE_NAMES = {
   mkt_dia: "Mi Día", mkt_marcas: "Marcas", mkt_pipe: "Registro de Propiedades", mkt_sol: "Solicitudes",
   mkt_equipo: "Equipo", mkt_reporte: "Actividades", midrive: "Mi Drive", plan: "Plan Semanal",
   planes: "Planes", perfil: "Perfil", admin: "Usuarios", pipelines: "Pipelines",
-  mi_espacio: "Agenda",
+  mi_espacio: "Agenda", projects: "Proyectos",
 };
 
 // ─── Aislamiento por organización ─────────────────────────────────────────────
@@ -201,7 +202,7 @@ export function isStratosOrg(orgId) {
 // En un arranque en frío no existe una vista anterior; elegir una pantalla
 // real y permitida evita el bucle chat → módulo restringido → chat guardado.
 export function resolveImmersiveBackView(previous, user, clientConfig) {
-  const home = clientConfig?.features?.projectKanban ? "mkt"
+  const home = canAccessModule("projects", user, clientConfig) ? "projects" : clientConfig?.features?.projectKanban ? "mkt"
     : user?.role === "colaborador" ? "plan"
       : (isMarketingUser(user) || clientConfig?.features?.crm === false) ? "mkt_reporte"
         : (!isStratosOrg(user?.organizationId) || user?.role === "asesor") ? "c" : "d";
@@ -260,6 +261,10 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   // el problema nunca fue el dato, era esta regla aplicándose donde no va.
   if (user.isMarketingAdmin === true && isStratosOrg(user.organizationId)
       && !MARKETING_ADMIN_MODULES.has(moduleId)) return false;
+  if (moduleId === "projects") {
+    return Boolean(user.organizationId) && !user.isDemo && user.isActive !== false
+      && clientConfig?.features?.projectWorkspace === true && MODULE_ROLES.copilot.includes(user.role);
+  }
   // Empresas nuevas: el servidor devuelve los permisos efectivos del usuario.
   // Esta condición solo organiza el menú; RLS y RPC comprueban los datos.
   if (moduleId === "caja" && clientConfig?.id === "tenant") {

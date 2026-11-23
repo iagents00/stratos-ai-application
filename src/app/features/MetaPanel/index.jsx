@@ -1,3 +1,4 @@
+import { lazy as lazyProjectAgenda, Suspense as ProjectAgendaSuspense } from "react";
 /**
  * app/features/MetaPanel/index.jsx
  * ─────────────────────────────────────────────────────────────────────────────
@@ -96,6 +97,8 @@ const AGENDA_CATEGORIES = [
   { id: "personal", label: "Personal", accent: "#10B981" },
   { id: "profesional", label: "Profesional", accent: "#3B82F6" },
 ];
+const ProjectAgenda = lazyProjectAgenda(() => import("../Projects/ProjectAgenda"));
+
 const normalizeAgendaCategory = (value) => {
   const v = String(value || "").trim().toLowerCase();
   return v === "personal" ? "personal" : "profesional";
@@ -132,6 +135,7 @@ export default function MetaPanel({
   agendaOnly = false,
   marketingMode = false,
   requestedDocumentId = null,
+  onOpenProjectDelivery,
 }) {
   const isMobile = typeof window !== "undefined" && (window.matchMedia?.("(pointer: coarse)")?.matches || window.innerWidth <= 768);
   const panelRef = useRef(null);
@@ -1376,6 +1380,10 @@ export default function MetaPanel({
                 })()}
 
               {/* Empty state */}
+              {open && onOpenProjectDelivery && <ProjectAgendaSuspense fallback={null}>
+                <ProjectAgenda key={`${user.id}:${user.organizationId}`} org={user.organizationId} userId={user.id}
+                  team={_isManager && agendaView === "team"} onOpen={onOpenProjectDelivery} T={T} />
+              </ProjectAgendaSuspense>}
               {pendingAgendaActions.length === 0 && (
                 <div style={{ textAlign:"center", padding:"56px 20px 44px" }}>
                   <div style={{ width:56, height:56, borderRadius:16, background:T.successS, border:`1px solid ${T.successB}`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px" }}>

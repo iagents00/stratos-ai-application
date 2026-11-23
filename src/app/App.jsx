@@ -143,7 +143,7 @@ function resolveInitialView(user, clientConfig) {
   // Tenant con el CRM APAGADO (features.crm: false — ej. Brasa y Piedra): su
   // casa es Actividades, jamás "c" (caería en «Acceso restringido» en bucle).
   const crmApagado = clientConfig?.features?.crm === false;
-  const fallbackDeseado = clientConfig?.features?.projectKanban ? "mkt" : user?.role === "colaborador"
+  const fallbackDeseado = canAccessModule("projects", user, clientConfig) ? "projects" : clientConfig?.features?.projectKanban ? "mkt" : user?.role === "colaborador"
     ? "plan"
     : ((user?.isMarketingAdmin || user?.role === "marketing" || crmApagado)
         ? "mkt_reporte"
@@ -219,6 +219,7 @@ const Profile       = lazy(() => import("./views/Profile"));
 const Trash         = lazy(() => import("./views/Trash"));
 const Marketing     = lazy(() => import("./views/Marketing"));
 const ISpaceBoard = lazy(() => import("./views/ISpaceBoard"));
+const ProjectWorkspace = lazy(() => import("./features/Projects/ProjectWorkspace"));
 const MiDrive       = lazy(() => import("./views/MiDrive"));
 const PlanSemanal   = lazy(() => import("./views/PlanSemanal"));
 
@@ -443,9 +444,12 @@ export default function App() {
   // gateado, o el asesor no ve Comando/ERP) se RELLENAN con los siguientes
   // módulos accesibles — así la barra nunca queda con 1-2 botones sueltos.
   const accessibleBarNav = nav.filter(n => !n.more && n.id !== "lp" && canAccessModule(n.id, user, clientConfig));
+  const primaryModuleIds = canAccessModule("projects", user, clientConfig)
+    ? ["projects", "miespacio", "copilot", ...MOBILE_PRIMARY_NAV.filter(id => !["miespacio", "copilot"].includes(id))]
+    : MOBILE_PRIMARY_NAV;
   const mobilePrimaryBar = [
-    ...MOBILE_PRIMARY_NAV.map(id => accessibleBarNav.find(n => n.id === id)).filter(Boolean),
-    ...accessibleBarNav.filter(n => !MOBILE_PRIMARY_NAV.includes(n.id)),
+    ...primaryModuleIds.map(id => accessibleBarNav.find(n => n.id === id)).filter(Boolean),
+    ...accessibleBarNav.filter(n => !primaryModuleIds.includes(n.id)),
   ].slice(0, 3);
   // Cuadro "+" (todas las opciones): TODOS los módulos accesibles — también
   // los 4 de la barra, así el cuadro es el mapa completo de la app.
@@ -1701,6 +1705,27 @@ export default function App() {
 
   /* ── MetaPanel state ── */
   const [metaOpen, setMetaOpen]     = useState(false);
+  const [requestedDelivery, setRequestedDelivery] = useState(null);
+  const [projectHelp, setProjectHelp] = useState(null);
+  const projectsEnabled = canAccessModule("projects", user, clientConfig);
+  const clearRequestedDelivery = useCallback(() => setRequestedDelivery(null), []);
+  useEffect(() => {
+    if (v !== "copilot") setProjectHelp(null);
+  }, [v]);
+  const openProjectDelivery = (id) => {
+    setRequestedDelivery(id);
+    setMetaOpen(false);
+    setV("projects");
+  };
+  const openProjectHelp = (context) => {
+    setProjectHelp({ ...context, actor: user.id, org: user.organizationId });
+    setV("copilot");
+  };
+  const returnFromProjectHelp = () => {
+    if (projectHelp?.id) setRequestedDelivery(projectHelp.id);
+    setProjectHelp(null);
+    setV("projects");
+  };
   // El chat avisa cuando abre un canal en el celular: ahí la app esconde su
   // header y la barra de abajo y el hilo ocupa toda la pantalla, igual que el
   // Copilot (pedido de Ángel, 27-jul).
@@ -2852,7 +2877,11 @@ export default function App() {
                       : <Dash oc={oc} leadsData={leadsData} T={T} />)}
                   {v === "c"      && (clientConfig.liveHuli ? <HuliWorkspace view="patients" /> : <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} isRefreshing={leadsRefreshing} loadError={leadsLoadError} onRetry={() => fetchLeads({ silent: true })} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} autoOpenNewLead={crmNewLeadTick} onNewLeadHandled={() => setCrmNewLeadTick(0)} onOpenComando={() => setV("d")} />)}
                   {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} openExpediente={openLeadExpediente} onBack={backToPrevView} chatCount={waInbox.conversations?.length || 0} />}
-                  {v === "copilot" && canAccessModule("copilot", user, clientConfig) && (clientConfig.liveHuli ? <HuliWorkspace view="copilot" /> : <Copilot T={T} isLight={isLight} theme={theme} onBack={backToPrevView} score={asesorScore} demoContext={user?.isDemo ? { leads: leadsData, tasks: metaActions } : undefined} />)}
+                  {v === "copilot" && canAccessModule("copilot", user, clientConfig) && (clientConfig.liveHuli ? <HuliWorkspace view="copilot" /> : <Copilot T={T} isLight={isLight} theme={theme} onBack={backToPrevView} score={asesorScore} projectContext={projectsEnabled && projectHelp?.actor === user.id && projectHelp?.org === user.organizationId ? projectHelp : null} onBackToProjects={returnFromProjectHelp} demoContext={user?.isDemo ? { leads: leadsData, tasks: metaActions } : undefined} />)}
+                  {v === "projects" && projectsEnabled && <ProjectWorkspace key={`${user.id}:${user.organizationId}`} user={user} isLight={isLight}
+                    requestedDelivery={requestedDelivery} onRequestHandled={clearRequestedDelivery}
+                    onCopilot={copilotEnabled ? openProjectHelp : undefined}
+                    onAgenda={() => { setMetaTab("acciones"); setMetaOpen(true); }} />}
                   {(v === "mkt" || v === "mkt_reporte" || v === "mkt_equipo" || v === "mkt_dia" || v === "mkt_marcas" || v === "mkt_pipe" || v === "mkt_sol") && canAccessModule(v, user, clientConfig) && (
                     clientConfig?.features?.projectKanban ? <ISpaceBoard T={T} onOpenCopilot={canAccessModule("copilot", user, clientConfig) ? () => setV("copilot") : undefined} /> : <Marketing T={T}
                       initialTab={{ mkt_reporte: "reporte", mkt_equipo: "equipo", mkt_dia: "dia", mkt_marcas: "marcas", mkt_pipe: "pipeline", mkt_sol: "solicitudes" }[v]}
@@ -3252,6 +3281,7 @@ export default function App() {
       {/* ══ META PANEL ══ */}
       <MetaPanel
         requestedDocumentId={spaceDocumentId}
+        onOpenProjectDelivery={projectsEnabled ? openProjectDelivery : undefined}
         open={metaOpen && v !== "mi_espacio"}
         onClose={() => setMetaOpen(false)}
         user={user}
