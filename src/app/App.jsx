@@ -1932,7 +1932,10 @@ export default function App() {
   }, [orgMetaConfig, user?.organizationId, user?._offline]);
 
   /* ── Notifications ── */
-  const onLogout = () => logout();
+  const onLogout = async () => {
+    if (user?.id && usaPushIOS()) await detenerPushNativo(user.id);
+    return logout();
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -2033,11 +2036,11 @@ export default function App() {
       <h1 style={{ fontSize: 24, fontWeight: 500 }}>No pude comprobar tu acceso</h1>
       <p role="alert" style={{ color: T.txt2, lineHeight: 1.6 }}>La conexión con la plataforma está tardando. Puedes reintentar o continuar al espacio de tu empresa.</p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}><button style={{ ...button, color: T.accent }} onClick={() => setPlatformRetry(value => value + 1)}>Reintentar acceso</button>
-        <button style={button} onClick={() => setPlatformConsole({ userId: user.id, status: "denied", data: null })}>Continuar a mi empresa</button><button style={button} onClick={logout}>Cerrar sesión</button></div>
+        <button style={button} onClick={() => setPlatformConsole({ userId: user.id, status: "denied", data: null })}>Continuar a mi empresa</button><button style={button} onClick={onLogout}>Cerrar sesión</button></div>
     </div></div>;
   }
   if (hasPlatformAccess && consoleOpen) {
-    return <Suspense fallback={null}><PlatformAdminConsole initialData={platformConsole.data} T={T} theme={theme} onThemeChange={setTheme} onOpenOwnCRM={canAccessModule("c", user, clientConfig) ? () => { setV("c"); setConsoleOpen(false); } : undefined} /></Suspense>;
+    return <Suspense fallback={null}><PlatformAdminConsole initialData={platformConsole.data} T={T} theme={theme} onThemeChange={setTheme} onLogout={onLogout} onOpenOwnCRM={canAccessModule("c", user, clientConfig) ? () => { setV("c"); setConsoleOpen(false); } : undefined} /></Suspense>;
   }
 
   /* ── Sidebar helpers ── */
