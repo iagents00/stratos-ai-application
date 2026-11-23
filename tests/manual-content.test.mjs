@@ -1,9 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { MANUAL_SECTIONS as sections, CATEGORIES, searchManual } from '../src/landing/manual-content.js';
+import { APP_STORES } from '../src/lib/app-stores.mjs';
 import { INTEL_FEATURES } from '../src/app/constants/intelFeatures.js';
 
 test('manual keeps shareable anchors and every related guide resolves', () => {
+  const install = sections.find(s => s.id === 'instalar-app-celular');
+  for (const store of Object.values(APP_STORES)) assert.ok(install.content.some(block => block.type === 'link' && block.url === store.url), store.label);
+  assert.doesNotMatch(JSON.stringify(install), /github\.com|stratos-ai\.apk|orígenes desconocidos/i);
   const ids = new Set(sections.map(s => s.id));
   assert.equal(ids.size, sections.length);
   for (const id of ['fn-indice','primer-acceso','agregar-cliente-manual','copilot-registrar','mi-espacio-que-es','asignar-cliente-otro-asesor','roles-permisos']) assert.ok(ids.has(id), id);
