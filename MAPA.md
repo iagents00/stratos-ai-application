@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**307 archivos · 85.351 líneas**
+**308 archivos · 86.798 líneas**
 
 ---
 
@@ -436,13 +436,12 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
+| `manual-content.js` | 2932 | Manual público de Stratos. Contenido revisado el 23 de noviembre de 2026. |
 | `PrivacyPolicy.jsx` | 1222 | _sin describir_ |
 | `ManualMarketing.jsx` | 1026 | _sin describir_ |
-| `manual-content.js` | 1004 | _sin describir_ |
 | `Diagnostico.jsx` | 974 | _sin describir_ |
 | `DeliveryHubCRM.jsx` | 881 | _sin describir_ |
-| `ManualCRM.jsx` | 790 | _sin describir_ |
-| `manual-telegram-content.js` | 714 | Manual del COPILOT / Asistente IA (Duke del Caribe) |
+| `manual-telegram-content.js` | 715 | Manual del COPILOT / Asistente IA (Duke del Caribe) |
 | `OnboardingCallCenter.jsx` | 687 | _sin describir_ |
 | `LoginScreen.jsx` | 652 | Pantalla de autenticación completa para la app |
 | `DataDeletion.jsx` | 554 | _sin describir_ |
@@ -455,6 +454,8 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `ManualBrasa.jsx` | 235 | _sin describir_ |
 | `ManualMuebleria.jsx` | 224 | _sin describir_ |
 | `Functionalities.css` | 203 | _sin describir_ |
+| `ManualCRM.css` | 182 | _sin describir_ |
+| `ManualCRM.jsx` | 126 | _sin describir_ |
 | `HeroFlowBackdrop.jsx` | 119 | _sin describir_ |
 | `LandingMarketing.jsx` | 115 | _sin describir_ |
 | `marketing-content.js` | 108 | _sin describir_ |
@@ -822,7 +823,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/Marketing.jsx` (3084 líneas)
 - `src/landing/PrivacyPolicy.jsx` (1222 líneas)
 - `src/landing/ManualMarketing.jsx` (1026 líneas)
-- `src/landing/manual-content.js` (1004 líneas)
 - `src/landing/Diagnostico.jsx` (974 líneas)
 - `src/app/views/ComandoDirectivo.jsx` (962 líneas)
 - `src/app/views/CRM/LeadWhatsAppChat.jsx` (945 líneas)
@@ -830,7 +830,6 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/RRHHModule.jsx` (846 líneas)
 - `src/app/features/Admin/Rails.css` (832 líneas)
 - `src/dental-demo/ClinicalDemoApp.jsx` (832 líneas)
-- `src/landing/ManualCRM.jsx` (790 líneas)
 - `src/app/views/InformeAvances.jsx` (747 líneas)
 - `src/app/views/ERP.jsx` (722 líneas)
 - `src/lib/auth.js` (702 líneas)
@@ -897,6 +896,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/components/Chat.jsx` (182 líneas)
 - `src/app/views/CRM/CallActionButton.jsx` (182 líneas)
 - `src/clients/muebleria/config.js` (182 líneas)
+- `src/landing/ManualCRM.css` (182 líneas)
 - `src/app/views/MiDrive.jsx` (179 líneas)
 - `src/lib/recordatorios-locales.js` (179 líneas)
 - `src/hooks/useWhatsAppInbox.js` (178 líneas)
@@ -919,6 +919,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/clients/brasa-y-piedra/config.js` (140 líneas)
 - `src/lib/push-ios.js` (133 líneas)
 - `src/app/components/CopilotCapabilities.jsx` (131 líneas)
+- `src/landing/ManualCRM.jsx` (126 líneas)
 - `src/lib/iagents-actions.js` (126 líneas)
 - `src/mobile-perf.css` (121 líneas)
 - `src/app/data/rivieraProperties.js` (119 líneas)

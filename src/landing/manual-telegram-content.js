@@ -35,11 +35,11 @@ export const MANUAL_SECTIONS_TG = [
     summary: 'Tu asistente inteligente conectado en vivo a tu CRM. Vive DENTRO del sistema (pestaña Copilot) y funciona solo con tu login. Le hablas o le mandas un audio y hace el trabajo por ti. Telegram es un plus opcional.',
     tags: ['asistente', 'bot', 'telegram', 'copilot', 'que es', 'para que sirve', 'sin telegram'],
     content: [
-      { type: 'p', text: 'Imagina tener un asistente que conoce a todos tus clientes y nunca se olvida de nada. Eso es tu Copilot: le hablas como a un compañero y hace el trabajo por ti. Lo tienes DENTRO del sistema, en la pestaña "Copilot" (app.stratoscapitalgroup.com) — funciona solo con tu login, sin conectar nada más.' },
-      { type: 'p', text: 'Le escribes o le mandas un audio, y él trabaja dentro del sistema: registra clientes, agenda zooms, programa actividades para el equipo, busca fichas, te recuerda lo importante y te avisa antes de cada compromiso. Todo lo que haces por el chat queda guardado al instante en el CRM.' },
+      { type: 'p', text: 'Copilot utiliza los datos registrados de tu cartera para ayudarte a consultar y operar las funciones habilitadas. Lo tienes DENTRO del sistema, en la pestaña "Copilot" (app.stratoscapitalgroup.com) — funciona solo con tu login, sin conectar nada más.' },
+      { type: 'p', text: 'Le escribes o le mandas un audio, y él trabaja dentro del sistema: registra clientes, agenda zooms, programa actividades para el equipo, busca fichas, te recuerda lo importante y te avisa antes de cada compromiso. Revisa el borrador cuando lo solicite y comprueba el resultado final en la ficha o en Agenda. Un acuse de recepción todavía no confirma el guardado.' },
       { type: 'list', items: [
         'Trabajas desde el celular, sin abrir la computadora.',
-        'No se te escapa ningún cliente: él te persigue a ti, no al revés.',
+        'Revisa tus pendientes y los avisos habilitados para tu organización.',
         'Llegas preparado a cada reunión y a cada llamada.',
       ]},
       { type: 'tip', text: 'No hay que memorizar comandos ni menús. Háblale natural, con tus palabras. Tolera errores de dedo y audios revueltos; y si algo no le queda claro, te lo pregunta en vez de adivinar.' },
@@ -55,7 +55,7 @@ export const MANUAL_SECTIONS_TG = [
     tags: ['audio', 'nota de voz', 'voz', 'hablar', 'sin escribir', 'microfono', 'enter', 'dictar'],
     content: [
       { type: 'p', text: 'No siempre puedes escribir. En el Copilot toca el micrófono (a la izquierda del cuadro de texto), habla normal y, cuando termines, presiona Enter: la grabación se corta y se envía en un solo gesto. Con Escape la cancelas. Si prefieres el mouse, toca "Listo" y revisa la nota antes de enviarla.' },
-      { type: 'p', text: 'Mientras grabas vas a ver el texto crudo tal como lo oye el teléfono — con errores y palabras pegadas. No te preocupes: la limpieza pasa al enviar. El asistente entiende audios largos y revueltos, separa cada cosa que pediste y las ejecuta todas.' },
+      { type: 'p', text: 'Mientras grabas vas a ver el texto crudo tal como lo oye el teléfono — con errores y palabras pegadas. No te preocupes: la limpieza pasa al enviar. Revisa la transcripción, el plan y el resultado para comprobar nombres, cifras y cada acción solicitada. Si falla la carga, conserva el audio original.' },
       { type: 'ex', items: [
         '(audio) "Agenda el zoom de Carlos para el viernes a las 11 de la mañana"',
         '(audio) "Crea un cliente, Mariana López, teléfono 521 55 1234 5678, llamarla en 4 horas"',
@@ -114,8 +114,8 @@ export const MANUAL_SECTIONS_TG = [
         { n: '2', title: 'Genera tu código en el CRM', text: 'Entra a app.stratoscapitalgroup.com, inicia sesión, y abajo busca la sección "Conectar Telegram". Toca "Generar código" — te da un código de 8 dígitos.' },
         { n: '3', title: 'Pega el código en el chat', text: 'Vuelve al chat del bot y mándale ese código. Cuando veas "Conectado, [tu nombre]" ya está. Escribe hola para empezar.' },
       ]},
-      { type: 'warn', text: 'El bot correcto es @Strato_sasistente_crm_bot (revisa bien el nombre). El código vence en unos minutos: si se te pasa, genera uno nuevo.' },
-      { type: 'tip', text: 'Tu Telegram queda ligado SOLO a tu perfil — nadie más ve ni toca tus clientes. Si cambias de teléfono, repite estos 3 pasos.' },
+      { type: 'warn', text: 'Usa el bot que indica tu Perfil. Algunas empresas usan @Strato_sasistente_crm_bot y otras disponen de un bot propio. El código vence en unos minutos: si se te pasa, genera uno nuevo.' },
+      { type: 'tip', text: 'La cuenta vinculada conserva los permisos de tu perfil y organización. Revisa el estado de vinculación antes de generar otro código.' },
     ],
   },
 
@@ -150,7 +150,7 @@ export const MANUAL_SECTIONS_TG = [
       { type: 'ex', items: [
         '"Registra estos clientes: Juan Pérez, 5215511112222 — María López, 5215533334444 Bay View Grand"',
       ]},
-      { type: 'p', text: 'Te responde con un resumen (por ejemplo "Procesé 14 clientes: 14 nuevos"). Todos quedan en "Contáctame Ya". Si alguno ya existía, lo reasigna conservando su historial; y si a alguno le falta el nombre, te avisa cuál para que lo corrijas.' },
+      { type: 'p', text: 'Revisa el resumen y el resultado de cada registro. La etapa inicial y los datos requeridos dependen de tu empresa. Si existe un contacto coincidente, verifica su ficha y el negocio antes de crear o reasignar otro.' },
       { type: 'tip', text: 'Lo único obligatorio por cada cliente es el nombre y el teléfono. La campaña es opcional.' },
     ],
   },
@@ -207,7 +207,7 @@ export const MANUAL_SECTIONS_TG = [
     category: 'pedidos',
     icon: 'Home',
     title: 'Agendar una visita',
-    summary: 'Programa la visita presencial del cliente. El asistente te recuerda 1 mes, 15 días, 1 semana y 1 día antes.',
+    summary: 'Registra una visita con día y hora. Los avisos previos dependen de la configuración de tu organización.',
     tags: ['visita', 'agendar visita', 'presencial', 'visita agendada', 'recorrido', 'tour'],
     content: [
       { type: 'ex', items: [
@@ -371,17 +371,18 @@ export const MANUAL_SECTIONS_TG = [
     id: 'equipo-coach',
     category: 'equipo',
     icon: 'MessageCircle',
-    title: 'El coach que no te deja quedar mal',
-    summary: 'Antes de la hora de cada actividad te llegan recordatorios con botones: 1 hora antes, 10 minutos antes y a la hora exacta.',
+    title: 'Responder al seguimiento de actividades',
+    summary: 'Consulta los avisos habilitados y responde con el estado real de la actividad.',
     tags: ['coach', 'ya la hice', 'en proceso', 'no la hice', 'seguimiento equipo', 'recordatorios actividades'],
     content: [
-      { type: 'p', text: 'Cada actividad con hora trae su cadena de recordatorios: "En 1 hora: … (hoy 3:00 p.m.)", "En 10 minutos: …" y "Es la hora: …". Los tres llegan con botones para responder en un toque:' },
+      { type: 'p', text: 'Las actividades con fecha y hora pueden generar avisos según la pauta de tu empresa. Los botones disponibles permiten informar el resultado:' },
       { type: 'list', items: [
         'Hecho → la marca completada y deja de recordártela.',
         'En proceso → la anota y te vuelve a preguntar en un rato.',
         'No la hice → la anota y avisa a los administradores para que te apoyen.',
       ]},
-      { type: 'tip', text: 'El aviso de "Nueva actividad asignada" llega limpio, sin botones — los botones aparecen en los recordatorios, que es cuando tiene sentido responder.' },
+      { type: 'tip', text: 'Los seguimientos con pauta de tres avisos se envían a los 3, 30 y 60 minutos desde su inicio y después termina esa secuencia. No voy a poder detiene ese seguimiento, aunque la actividad puede seguir pendiente.' },
+      { type: 'link', text: 'Consultar la guía actual de recordatorios', url: '/manual#agenda-recordatorios' },
     ],
   },
 
@@ -410,16 +411,16 @@ export const MANUAL_SECTIONS_TG = [
     category: 'fechas',
     icon: 'History',
     title: 'La zona horaria (importante)',
-    summary: 'Por defecto el asistente interpreta y muestra todo en hora de Cancún. Si estás en otra zona, puedes cambiarla en el CRM.',
+    summary: 'El asistente utiliza la zona horaria configurada. Revísala en Perfil y comprueba la fecha que confirma.',
     tags: ['zona horaria', 'cancun', 'hora', 'huso', 'timezone'],
     content: [
-      { type: 'p', text: 'El asistente interpreta y muestra todas las fechas en una zona horaria. Por defecto es Cancún (México). Si trabajas desde otra zona, conviene ajustarla para que las horas te caigan bien.' },
+      { type: 'p', text: 'El asistente interpreta y muestra todas las fechas en una zona horaria. La zona depende de la configuración de tu perfil y empresa. Revísala antes de programar actividades para otra ciudad.' },
       { type: 'steps', items: [
         'En el CRM (app.stratoscapitalgroup.com), busca la sección "Zona horaria".',
         'Elige tu zona en la lista (o toca "Usar la detectada" para usar la de tu navegador).',
         'Toca "Guardar zona horaria".',
       ]},
-      { type: 'tip', text: 'Cuando el asistente te confirma algo, te aclara la hora legible, por ejemplo "mañana 9:45 a.m.". Así nunca hay confusión.' },
+      { type: 'tip', text: 'Cuando el asistente te confirma algo, te aclara la hora legible, por ejemplo "mañana 9:45 a.m.". Comprueba el día y la hora antes de confirmar.' },
     ],
   },
 
