@@ -1,789 +1,125 @@
-import { P as darkPalette } from "../design-system/tokens";
-/**
- * ManualCRM.jsx — Manual del CRM Stratos AI para asesores
- *
- * URL pública (sin login): stratoscapitalgroup.com/manual o /manual-crm
- * Audiencia: asesores y operadores del CRM (uso diario).
- * Tono: instructivo paso-a-paso, coloquial.
- *
- * Estructura:
- *   - Sidebar izquierdo con categorías y buscador.
- *   - Contenido central con la sección activa.
- *   - Placeholder de "Asistente IA — próximamente" (para conectar agente futuro).
- *
- * Datos en src/landing/manual-content.js — se exponen en window.__STRATOS_MANUAL__
- * para que un agente IA embebido los consuma.
- */
-import { useState, useEffect, useMemo } from "react";
-import {
-  BarChart3, Bell, BellRing, ClipboardList, Flame, ListChecks, MapPin, TrendingUp, Video, Zap,
-  ArrowLeft, ArrowRight, Search, Bot, X,
-  ChevronRight, Lightbulb, AlertTriangle, Mail, MessageCircle,
-  // Iconos usados por las secciones (importados aquí para que esté en bundle)
-  LogIn, KeyRound, Layout, UserPlus, FileSearch, MoveRight, Workflow,
-  NotebookPen, CheckSquare, History, UserCheck, ShieldCheck,
-  LayoutDashboard, Send, HelpCircle, AlertCircle, Users, Layers,
-  FileText, UsersRound, LineChart, LifeBuoy, AlarmClock, Home, Smartphone,
-  // Módulos agregados 29-jul: Copilot, WhatsApp, Mi Espacio, Proyectos,
-  // Create, Caja, Comando, Papelera, llamadas y audios.
-  FolderOpen, Building2, Hexagon, Wallet, Activity, Trash2, Phone, Mic,
-} from "lucide-react";
-import { CATEGORIES, MANUAL_SECTIONS, searchManual, exposeManualToWindow } from "./manual-content";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowLeft, ArrowRight, BookOpen, Search, X, ChevronDown, ChevronRight, Lightbulb, AlertTriangle, Menu, Moon, Sun, Printer, Link as LinkIcon, ExternalLink, Check, Clock, MapPin, ShieldCheck, Home, Users, UsersRound, Layers, NotebookPen, CalendarDays, Bot, FolderOpen, CalendarRange, MessageCircle, MessagesSquare, Building2, Hexagon, Wallet, BarChart3, Megaphone, HardDrive, Send, Settings, LifeBuoy, LayoutGrid, Zap } from 'lucide-react';
+import { P, LP, font } from '../design-system/tokens';
+import { CATEGORIES, MANUAL_SECTIONS, MANUAL_REVIEWED_AT, searchManual, exposeManualToWindow } from './manual-content';
+import './ManualCRM.css';
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   PALETA — coherente con DeliveryHubCRM, LandingMarketing, PrivacyPolicy
-   ═══════════════════════════════════════════════════════════════════════════ */
-const P = {
-  bg:       darkPalette.bg,
-  surface:  darkPalette.surface,
-  glass:    "rgba(255,255,255,0.028)",
-  glassH:   "rgba(255,255,255,0.048)",
-  border:   "rgba(255,255,255,0.06)",
-  borderH:  "rgba(255,255,255,0.12)",
-  accent:   "#52D9B8",
-  accentS:  "rgba(82,217,184,0.07)",
-  accentB:  "rgba(82,217,184,0.13)",
-  accentG:  "linear-gradient(135deg, #52D9B8 0%, #34C49C 100%)",
-  // Tono frío para "próximamente" — disciplina cromática sin amarillos.
-  muted:    "#8A97AA",
-  mutedS:   "rgba(138,151,170,0.06)",
-  mutedB:   "rgba(138,151,170,0.18)",
-  // Mantenemos `warn` para callouts de advertencia operativa (no es decoración,
-  // es alerta funcional dentro del contenido del manual).
-  warn:     "#E8A488",
-  warnS:    "rgba(232,164,136,0.07)",
-  warnB:    "rgba(232,164,136,0.22)",
-  blue:     "#7EB8F0",
-  blueS:    "rgba(126,184,240,0.08)",
-  blueB:    "rgba(126,184,240,0.22)",
-  rose:     "#E8818C",
-  roseS:    "rgba(232,129,140,0.08)",
-  roseB:    "rgba(232,129,140,0.22)",
-  w:        "#FFFFFF",
-  txt:      darkPalette.txt,
-  txt2:     darkPalette.txt2,
-  txt3:     darkPalette.txt3,
-  r:        14,
-};
-const font  = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
-const fontD = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
-
-const APP_URL = "https://app.stratoscapitalgroup.com";
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   ICONOS — mapa nombre → componente Lucide
-   Permite usar icon: 'LogIn' como string en manual-content.js
-   ═══════════════════════════════════════════════════════════════════════════ */
-const ICON_MAP = {
-  BarChart3, Bell, BellRing, ClipboardList, Flame, ListChecks, MapPin, TrendingUp, Video, Zap,
-  // 'Sparkles' del manual-content.js queda mapeado al átomo potente
-  Sparkles: PowerAtom,
-  Atom: PowerAtom,
-  Users, Layers, FileText, UsersRound, LineChart,
-  MessageCircle, LifeBuoy,
-  LogIn, KeyRound, Layout, UserPlus, FileSearch, MoveRight, Workflow,
-  NotebookPen, CheckSquare, History, UserCheck, ShieldUser: ShieldCheck,
-  LayoutDashboard, Send, HelpCircle, AlertCircle, AlarmClock, Home, Smartphone,
-  Bot, Search, FolderOpen, Building2, Hexagon, Wallet, Activity, Trash2, Phone, Mic,
-};
-const iconFor = (name) => ICON_MAP[name] || ChevronRight;
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   STYLES
-   ═══════════════════════════════════════════════════════════════════════════ */
-const CSS = `
-  .mn-wrap { background: ${P.bg}; color: ${P.txt}; font-family: ${font}; min-height: 100vh; }
-  .mn-wrap *, .mn-wrap *::before, .mn-wrap *::after { box-sizing: border-box; }
-  .mn-wrap a { color: ${P.accent}; text-decoration: none; }
-  .mn-wrap a:hover { text-decoration: underline; }
-  .mn-wrap h1, .mn-wrap h2, .mn-wrap h3 { font-family: ${fontD}; color: ${P.w}; letter-spacing: -0.02em; margin: 0; }
-  .mn-wrap p { margin: 0; line-height: 1.7; color: ${P.txt}; font-size: 15px; }
-  .mn-wrap ::selection { background: ${P.accentB}; color: ${P.w}; }
-
-  /* Top nav sticky */
-  .mn-nav {
-    position: sticky; top: 0; z-index: 50;
-    background: rgba(0,0,0,0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid ${P.border};
-  }
-
-  /* Layout grid */
-  .mn-shell {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    max-width: 1280px;
-    margin: 0 auto;
-    gap: 0;
-  }
-  @media (max-width: 900px) {
-    .mn-shell { grid-template-columns: 1fr; }
-    .mn-sidebar { position: static !important; height: auto !important; border-right: none !important; border-bottom: 1px solid ${P.border}; }
-  }
-
-  /* Sidebar */
-  .mn-sidebar {
-    position: sticky;
-    top: 64px;
-    height: calc(100vh - 64px);
-    overflow-y: auto;
-    border-right: 1px solid ${P.border};
-    padding: 24px 16px;
-    background: ${P.surface};
-  }
-  .mn-sidebar::-webkit-scrollbar { width: 6px; }
-  .mn-sidebar::-webkit-scrollbar-thumb { background: ${P.border}; border-radius: 3px; }
-
-  /* Sections list */
-  .mn-cat-label {
-    font-size: 11px; font-weight: 700; color: ${P.txt3};
-    letter-spacing: 0.14em; text-transform: uppercase;
-    padding: 14px 12px 8px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .mn-link {
-    display: block;
-    padding: 9px 12px;
-    border-radius: 9px;
-    color: ${P.txt2};
-    font-size: 13.5px;
-    line-height: 1.4;
-    transition: all 0.15s;
-    border-left: 2px solid transparent;
-    cursor: pointer;
-    background: transparent;
-    border-top: none; border-right: none; border-bottom: none;
-    text-align: left;
-    width: 100%;
-    font-family: ${font};
-  }
-  .mn-link:hover {
-    background: ${P.glass};
-    color: ${P.w};
-  }
-  .mn-link.active {
-    background: ${P.accentS};
-    color: ${P.accent};
-    border-left-color: ${P.accent};
-    font-weight: 600;
-  }
-
-  /* Search */
-  .mn-search {
-    position: relative;
-    margin-bottom: 18px;
-  }
-  .mn-search input {
-    width: 100%;
-    padding: 11px 14px 11px 38px;
-    border-radius: 10px;
-    background: ${P.glass};
-    border: 1px solid ${P.border};
-    color: ${P.txt};
-    font-size: 13.5px;
-    font-family: ${font};
-    outline: none;
-    transition: all 0.18s;
-  }
-  .mn-search input:focus {
-    border-color: ${P.accentB};
-    background: ${P.glassH};
-  }
-  .mn-search input::placeholder { color: ${P.txt3}; }
-  .mn-search-icon {
-    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-    color: ${P.txt3};
-    pointer-events: none;
-  }
-  .mn-search-clear {
-    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-    background: transparent; border: none; cursor: pointer;
-    color: ${P.txt3};
-    padding: 4px;
-    display: flex; align-items: center;
-    border-radius: 6px;
-  }
-  .mn-search-clear:hover { color: ${P.w}; background: ${P.glass}; }
-
-  /* Content area */
-  .mn-content {
-    padding: 48px 56px 80px;
-    max-width: 800px;
-  }
-  @media (max-width: 720px) {
-    .mn-content { padding: 32px 20px 56px; }
-  }
-
-  .mn-eyebrow {
-    font-size: 11px; font-weight: 700; color: ${P.accent};
-    letter-spacing: 0.14em; text-transform: uppercase;
-    margin-bottom: 12px;
-    display: inline-flex; align-items: center; gap: 8px;
-  }
-  .mn-title {
-    font-size: clamp(28px, 4vw, 36px);
-    font-weight: 700;
-    line-height: 1.2;
-    margin-bottom: 14px;
-  }
-  .mn-summary {
-    font-size: 16.5px;
-    color: ${P.txt2};
-    line-height: 1.6;
-    margin-bottom: 32px;
-  }
-
-  /* Content blocks */
-  .mn-block { margin-bottom: 18px; }
-  .mn-block ol, .mn-block ul { padding-left: 24px; margin: 8px 0; }
-  .mn-block ol li, .mn-block ul li {
-    color: ${P.txt}; font-size: 15px; line-height: 1.7;
-    margin-bottom: 6px;
-  }
-  .mn-block ol li::marker { color: ${P.accent}; font-weight: 700; }
-  .mn-block ul li::marker { color: ${P.txt3}; }
-
-  /* Callouts */
-  .mn-callout {
-    display: flex; gap: 12px; align-items: flex-start;
-    padding: 14px 18px;
-    border-radius: 11px;
-    margin: 18px 0;
-    line-height: 1.6;
-    font-size: 14px;
-  }
-  .mn-callout-tip {
-    background: ${P.blueS};
-    border: 1px solid ${P.blueB};
-    color: ${P.txt};
-  }
-  .mn-callout-tip .mn-callout-icon { color: ${P.blue}; }
-  .mn-callout-warn {
-    background: ${P.warnS};
-    border: 1px solid ${P.warnB};
-    color: ${P.txt};
-  }
-  .mn-callout-warn .mn-callout-icon { color: ${P.warn}; }
-  .mn-callout-icon { flex-shrink: 0; margin-top: 2px; }
-
-  /* Flow — diagrama de pasos (tarjetas numeradas) */
-  .mn-flow { display: flex; flex-direction: column; gap: 12px; margin: 22px 0; }
-  .mn-flow-step {
-    display: flex; gap: 14px; align-items: flex-start;
-    padding: 16px 18px; border-radius: 12px;
-    background: ${P.glass}; border: 1px solid ${P.border};
-  }
-  .mn-flow-n {
-    flex-shrink: 0; width: 30px; height: 30px; border-radius: 9px;
-    background: ${P.accentB}; color: ${P.accent};
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 15px; font-family: ${fontD};
-  }
-  .mn-flow-title { color: ${P.w}; font-weight: 700; font-size: 14.5px; margin-bottom: 3px; font-family: ${fontD}; }
-  .mn-flow-text { color: ${P.txt2}; font-size: 14px; line-height: 1.6; }
-
-  /* Ejemplos — chips de "decile así" */
-  .mn-ex { margin: 16px 0 22px; }
-  .mn-ex-label { font-size: 12px; color: ${P.txt3}; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px; }
-  .mn-ex-item {
-    background: ${P.accentS}; border: 1px solid ${P.accentB};
-    border-radius: 10px; padding: 11px 14px; margin-bottom: 7px;
-    color: ${P.txt}; font-size: 14px; line-height: 1.55;
-    font-family: inherit;
-  }
-
-  /* AI Assistant card (placeholder) */
-  .mn-ai-card {
-    margin-top: 48px;
-    padding: 24px;
-    border-radius: 14px;
-    background: linear-gradient(145deg, rgba(82,217,184,0.05) 0%, rgba(82,217,184,0.02) 100%);
-    border: 1px solid ${P.accentB};
-    position: relative;
-    overflow: hidden;
-  }
-  .mn-ai-card::before {
-    content: "";
-    position: absolute;
-    top: -40px; right: -40px;
-    width: 160px; height: 160px;
-    background: radial-gradient(circle, ${P.accentS} 0%, transparent 70%);
-    pointer-events: none;
-  }
-  .mn-ai-input-row {
-    display: flex; gap: 8px;
-    margin-top: 14px;
-    position: relative;
-  }
-  .mn-ai-input {
-    flex: 1;
-    padding: 12px 14px;
-    border-radius: 10px;
-    background: rgba(0,0,0,0.25);
-    border: 1px solid ${P.border};
-    color: ${P.txt3};
-    font-size: 14px;
-    font-family: ${font};
-    cursor: not-allowed;
-  }
-  .mn-ai-button {
-    padding: 12px 18px;
-    border-radius: 10px;
-    background: ${P.glass};
-    border: 1px solid ${P.border};
-    color: ${P.txt3};
-    font-weight: 600;
-    cursor: not-allowed;
-    font-family: ${font};
-    font-size: 13px;
-    display: inline-flex; align-items: center; gap: 6px;
-  }
-
-  /* Empty state */
-  .mn-empty {
-    text-align: center;
-    padding: 80px 20px;
-    color: ${P.txt2};
-  }
-  .mn-empty h3 { color: ${P.txt}; margin-bottom: 8px; font-size: 18px; }
-
-  /* Footer */
-  .mn-footer {
-    border-top: 1px solid ${P.border};
-    background: ${P.surface};
-    padding: 32px 24px;
-    color: ${P.txt2};
-    font-size: 13px;
-    margin-top: 60px;
-  }
-`;
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   LOGO Stratos clásico (uso sutil en footer)
-   ═══════════════════════════════════════════════════════════════════════════ */
-function StratosAtom({ size = 22, color = P.accent }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      <circle cx="16" cy="16" r="10" stroke={color} strokeWidth="1.2" opacity="0.32" />
-      <circle cx="16" cy="16" r="4"  stroke={color} strokeWidth="1.2" opacity="0.62" />
-      <circle cx="16" cy="16" r="1.5" fill={color} />
-      <ellipse cx="16" cy="16" rx="10" ry="4" stroke={color} strokeWidth="1" opacity="0.25" transform="rotate(-35 16 16)" />
-    </svg>
-  );
+const APP_URL = 'https://app.stratoscapitalgroup.com';
+const ICONS = { Home, Users, UsersRound, Layers, NotebookPen, CalendarDays, Bot, FolderOpen, CalendarRange, MessageCircle, MessagesSquare, Building2, Hexagon, Wallet, BarChart3, Megaphone, HardDrive, Send, Settings, LifeBuoy, LayoutGrid, Zap };
+const categoryIcon = name => ICONS[name] || BookOpen;
+const isSafeLink = url => typeof url === 'string' && (/^\/(?!\/)/.test(url) || /^(https:\/\/|mailto:)/.test(url));
+function SectionLink({ section, onSelect, children, className = '' }) {
+  if (!section) return null;
+  return <a className={className} href={'#' + section.id} onClick={event => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault(); onSelect(section.id);
+  }}>{children || section.title}</a>;
 }
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   PowerAtom — átomo potente con 3 órbitas + electrones + núcleo radial
-   Usado en el nav y como icono destacado en secciones IA / "Empezar".
-   ═══════════════════════════════════════════════════════════════════════════ */
-function PowerAtom({ size = 16, color = P.accent }) {
-  const uid = `mpa-${size}-${color.replace(/[^a-z0-9]/gi, '')}`;
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <defs>
-        <radialGradient id={`${uid}-core`} cx="50%" cy="50%" r="50%">
-          <stop offset="0%"  stopColor="#FFFFFF" stopOpacity="0.95" />
-          <stop offset="60%" stopColor={color}   stopOpacity="0.95" />
-          <stop offset="100%" stopColor={color}  stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      <ellipse cx="16" cy="16" rx="13" ry="5" stroke={color} strokeWidth="1.4" opacity="0.85" />
-      <ellipse cx="16" cy="16" rx="13" ry="5" stroke={color} strokeWidth="1.4" opacity="0.55" transform="rotate(60 16 16)" />
-      <ellipse cx="16" cy="16" rx="13" ry="5" stroke={color} strokeWidth="1.4" opacity="0.55" transform="rotate(-60 16 16)" />
-      <circle cx="16" cy="16" r="6" fill={`url(#${uid}-core)`} />
-      <circle cx="16" cy="16" r="2.6" fill={color} />
-      <circle cx="29"  cy="16"  r="1.7" fill={color} />
-      <circle cx="9.5" cy="5.2" r="1.7" fill={color} />
-      <circle cx="9.5" cy="26.8" r="1.7" fill={color} />
-    </svg>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   RENDERER de bloques de contenido
-   ═══════════════════════════════════════════════════════════════════════════ */
-function ContentBlock({ block }) {
-  if (block.type === 'p') {
-    return <p className="mn-block">{block.text}</p>;
+function ContentBlock({ block, sections, categories, onSelect }) {
+  if (block.type === 'p') return <p>{block.text}</p>;
+  if (block.type === 'heading') return <h2>{block.text}</h2>;
+  if (block.type === 'steps') return <ol className="mn-steps">{block.items.map((text,index) => <li key={index}><span className="mn-step-number" aria-hidden="true">{index + 1}</span><span>{text}</span></li>)}</ol>;
+  if (block.type === 'list') return <ul className="mn-list">{block.items.map((text,index) => <li key={index}>{text}</li>)}</ul>;
+  if (block.type === 'tip' || block.type === 'warn') {
+    const Icon = block.type === 'tip' ? Lightbulb : AlertTriangle;
+    return <aside className={'mn-callout mn-' + block.type}><Icon size={20} aria-hidden="true"/><div><strong>{block.type === 'tip' ? 'Para tener en cuenta' : 'Antes de continuar'}</strong><p>{block.text}</p></div></aside>;
   }
-  if (block.type === 'steps') {
-    return (
-      <div className="mn-block">
-        <ol>
-          {block.items.map((it, i) => <li key={i}>{it}</li>)}
-        </ol>
-      </div>
-    );
-  }
-  if (block.type === 'list') {
-    return (
-      <div className="mn-block">
-        <ul>
-          {block.items.map((it, i) => <li key={i}>{it}</li>)}
-        </ul>
-      </div>
-    );
-  }
-  if (block.type === 'tip') {
-    return (
-      <div className="mn-callout mn-callout-tip">
-        <Lightbulb size={18} className="mn-callout-icon" />
-        <div>{block.text}</div>
-      </div>
-    );
-  }
-  if (block.type === 'warn') {
-    return (
-      <div className="mn-callout mn-callout-warn">
-        <AlertTriangle size={18} className="mn-callout-icon" />
-        <div>{block.text}</div>
-      </div>
-    );
-  }
-  if (block.type === 'flow') {
-    return (
-      <div className="mn-block mn-flow">
-        {block.items.map((it, i) => (
-          <div key={i} className="mn-flow-step">
-            <div className="mn-flow-n">{it.n}</div>
-            <div>
-              <div className="mn-flow-title">{it.title}</div>
-              <div className="mn-flow-text">{it.text}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  if (block.type === 'ex') {
-    return (
-      <div className="mn-block mn-ex">
-        {/* Label impersonal a propósito: este componente renderiza TANTO el manual
-            del CRM (español neutro) como el de Telegram (voseo). Sin conjugar en
-            segunda persona, encaja en los dos sin sonar mal en ninguno. */}
-        <div className="mn-ex-label">Ejemplos para pedírselo (por texto o por audio):</div>
-        {block.items.map((it, i) => (
-          <div key={i} className="mn-ex-item">{it}</div>
-        ))}
-      </div>
-    );
-  }
+  if (block.type === 'ex') return <section className="mn-examples" aria-label="Ejemplos"><h2>Así puedes pedirlo</h2>{block.items.map((text,index) => <blockquote key={index}>{text}</blockquote>)}</section>;
+  if (block.type === 'flow') return <ol className="mn-steps">{block.items.map((item,index) => <li key={index}><span className="mn-step-number" aria-hidden="true">{item.n || index + 1}</span><span><strong>{item.title}</strong><br/>{item.text}</span></li>)}</ol>;
+  if (block.type === 'links') return <section className="mn-related"><h2>Continúa con estas guías</h2><div>{block.ids.map(id => <SectionLink key={id} section={sections.find(s => s.id === id)} onSelect={onSelect}><span>{sections.find(s => s.id === id)?.title}</span><ArrowRight size={17} aria-hidden="true"/></SectionLink>)}</div></section>;
+  if (block.type === 'link' && isSafeLink(block.url)) return <a className="mn-external" href={block.url} {...(block.url.startsWith('https://') ? {target:'_blank', rel:'noopener noreferrer'} : {})}>{block.text}<ExternalLink size={16} aria-hidden="true"/></a>;
+  if (block.type === 'directory') return <div className="mn-directory">{categories.filter(c => c.id !== 'funciones').map(cat => {
+    const items = sections.filter(s => s.category === cat.id); const Icon = categoryIcon(cat.icon);
+    if (!items.length) return null;
+    return <section key={cat.id}><div className="mn-directory-heading"><Icon size={23} aria-hidden="true"/><h2>{cat.label}</h2><span>{items.length} guías</span></div><div>{items.map(s => <SectionLink key={s.id} section={s} onSelect={onSelect}><span>{s.title}</span><ChevronRight size={16} aria-hidden="true"/></SectionLink>)}</div></section>;
+  })}</div>;
   return null;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   COMPONENTE PRINCIPAL
-   ═══════════════════════════════════════════════════════════════════════════ */
-export default function ManualCRM({
-  sections = MANUAL_SECTIONS,
-  categories = CATEGORIES,
-  search = searchManual,
-  navLabel = "Manual del CRM",
-  docTitle = "Manual del CRM · Stratos AI",
-  docDesc = "Manual operativo del CRM Stratos AI. Cómo agregar clientes, mover el pipeline, programar tareas y todo lo que tu equipo necesita para usar el sistema día a día.",
-  footerLabel = "Manual del CRM v1.0",
-  waNumber = "17479779711",
-  waText = "Hola, necesito ayuda con el CRM Stratos AI",
-} = {}) {
-  const [query, setQuery] = useState("");
-  const [activeId, setActiveId] = useState(sections[0]?.id || "");
-
-  // Resultados de búsqueda en vivo
-  const filtered = useMemo(() => search(query), [query, search]);
-
-  // Sección activa = la del activeId, o la primera del filtrado si la activa no está
-  const activeSection = useMemo(() => {
-    return sections.find(s => s.id === activeId)
-      || filtered[0]
-      || sections[0];
-  }, [activeId, filtered, sections]);
-
-  // Agrupar secciones por categoría para el sidebar (solo las que pasan el filtro)
-  const sectionsByCategory = useMemo(() => {
-    const map = {};
-    for (const cat of categories) map[cat.id] = [];
-    for (const s of filtered) {
-      if (map[s.category]) map[s.category].push(s);
-    }
-    return map;
-  }, [filtered]);
-
-  // Setup inicial: title, meta, exponer manual a window
+export default function ManualCRM({ sections = MANUAL_SECTIONS, categories = CATEGORIES, search = searchManual, navLabel = 'Manual de Stratos', docTitle = 'Manual de Stratos AI · Guía completa', docDesc = 'Aprende a usar Stratos AI: CRM, Agenda, Equipos, Copilot, Space, WhatsApp, proyectos, portafolios y administración. Guías paso a paso.', footerLabel, waNumber = '17479779711', waText = 'Hola, necesito ayuda con Stratos AI' } = {}) {
+  const [query,setQuery] = useState('');
+  const [activeId,setActiveId] = useState(() => sections.find(s => s.id === window.location.hash.slice(1))?.id || sections[0]?.id);
+  const [menuOpen,setMenuOpen] = useState(false);
+  const [light,setLight] = useState(false);
+  const [copied,setCopied] = useState(false);
+  const [expanded,setExpanded] = useState(() => [sections.find(s=>s.id===window.location.hash.slice(1))?.category || sections[0]?.category]);
+  const searchRef = useRef(null); const titleRef = useRef(null); const copyTimer = useRef(null);
+  const isMain = sections === MANUAL_SECTIONS;
+  const current = sections.find(s => s.id === activeId) || sections[0];
+  const category = categories.find(c => c.id === current?.category);
+  const filtered = useMemo(() => search(query), [query,search]);
+  const grouped = useMemo(() => new Map(categories.map(c => [c.id, sections.filter(s => s.category === c.id)])), [categories,sections]);
+  const currentIndex = sections.indexOf(current);
+  const T = light ? LP : P;
+  const theme = { '--mn-bg': T.bg, '--mn-panel': T.surface, '--mn-inset': T.glass, '--mn-hover': T.glassH, '--mn-text': T.txt, '--mn-muted': T.txt2, '--mn-border': T.border, '--mn-accent': T.accent, '--mn-accent-soft': T.accentS, '--mn-accent-border': T.accentB, '--mn-on-accent': T.onAccent, '--mn-danger': T.rose, fontFamily: font, colorScheme: light ? 'light' : 'dark' };
+  const primaryId = isMain ? 'fn-indice' : sections[0]?.id;
   useEffect(() => {
+    const previousTitle = document.title;
+    const existing = document.querySelector('meta[name="description"]');
+    const previousDescription = existing?.getAttribute('content');
+    const meta = existing || document.createElement('meta'); meta.name = 'description'; meta.content = docDesc;
+    if (!existing) document.head.appendChild(meta);
     document.title = docTitle;
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (!metaDesc) {
-      metaDesc = document.createElement("meta");
-      metaDesc.setAttribute("name", "description");
-      document.head.appendChild(metaDesc);
-    }
-    metaDesc.setAttribute("content", docDesc);
-    document.documentElement.lang = "es";
-    exposeManualToWindow();
-  }, []);
-
-  // Soportar deep-link via hash (#agregar-cliente-manual)
+    exposeManualToWindow(sections,categories,search);
+    return () => { document.title = previousTitle; if (!existing) meta.remove(); else if (previousDescription !== null) meta.setAttribute('content', previousDescription); };
+  }, [docTitle,docDesc,sections,categories,search]);
   useEffect(() => {
-    const fromHash = window.location.hash.replace('#', '');
-    if (fromHash && sections.some(s => s.id === fromHash)) {
-      setActiveId(fromHash);
-    }
-  }, []);
-
-  // Actualizar hash al cambiar de sección (sin scroll)
-  const selectSection = (id) => {
-    setActiveId(id);
-    if (window.history.replaceState) {
-      window.history.replaceState(null, "", `#${id}`);
-    }
-    // En mobile, hacer scroll al contenido
-    const main = document.querySelector('.mn-content');
-    if (main && window.innerWidth < 900) {
-      main.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    const sync = () => { const id = window.location.hash.slice(1); if (!id || sections.some(s => s.id === id)) { const nextId = id || sections[0]?.id; setActiveId(nextId);setQuery('');setMenuOpen(false);setExpanded(prev => [...new Set([...prev, sections.find(s=>s.id===nextId)?.category])]); } };
+    window.addEventListener('popstate',sync); window.addEventListener('hashchange',sync);
+    return () => {window.removeEventListener('popstate',sync);window.removeEventListener('hashchange',sync);};
+  }, [sections]);
+  useEffect(() => { if (!menuOpen) return; const onKey = e => { if(e.key === 'Escape') setMenuOpen(false); }; window.addEventListener('keydown',onKey); return () => window.removeEventListener('keydown',onKey); }, [menuOpen]);
+  useEffect(() => () => clearTimeout(copyTimer.current), []);
+  const select = id => {
+    setActiveId(id); setQuery(''); setMenuOpen(false); setCopied(false);
+    setExpanded(prev => [...new Set([...prev, sections.find(s => s.id === id)?.category])]);
+    if (window.location.hash !== '#' + id) window.history.pushState(null,'','#' + id);
+    requestAnimationFrame(() => {titleRef.current?.focus({preventScroll:true}); window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'});});
   };
-
-  return (
-    <div className="mn-wrap">
-      <style>{CSS}</style>
-
-      {/* ─────────────── NAV ─────────────── */}
-      <nav className="mn-nav">
-        <div style={{
-          maxWidth: 1280,
-          margin: "0 auto",
-          padding: "14px 24px",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          gap: 16, flexWrap: "wrap",
-        }}>
-          <a href="https://stratoscapitalgroup.com" style={{
-            display: "flex", alignItems: "center", gap: 10, color: P.w,
-            fontWeight: 700, fontSize: 15, fontFamily: fontD, letterSpacing: "-0.01em",
-          }}>
-            <PowerAtom size={22} color={P.accent} />
-            Stratos <span style={{ fontWeight: 300, opacity: 0.55 }}>AI</span>
-            <span style={{
-              marginLeft: 12, paddingLeft: 12, borderLeft: `1px solid ${P.border}`,
-              fontSize: 13, fontWeight: 500, color: P.txt2, fontFamily: font,
-            }}>{navLabel}</span>
-          </a>
-          <a href={APP_URL} style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            padding: "8px 14px", borderRadius: 10,
-            background: "transparent", border: `1px solid ${P.border}`,
-            color: P.txt, fontSize: 13, fontWeight: 500, textDecoration: "none",
-          }}>
-            Ir al sistema
-            <ArrowRight size={13} />
-          </a>
-        </div>
-      </nav>
-
-      {/* ─────────────── SHELL ─────────────── */}
-      <div className="mn-shell">
-        {/* SIDEBAR */}
-        <aside className="mn-sidebar">
-          {/* Search */}
-          <div className="mn-search">
-            <Search size={16} className="mn-search-icon" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              aria-label="Buscar en el manual" placeholder="Buscar en el manual..."
-              autoComplete="off"
-              spellCheck="false"
-            />
-            {query && (
-              <button
-                type="button"
-                className="mn-search-clear"
-                onClick={() => setQuery("")}
-                aria-label="Limpiar búsqueda"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
-
-          {/* Lista por categoría */}
-          {filtered.length === 0 ? (
-            <div style={{ padding: "20px 12px", color: P.txt3, fontSize: 13, lineHeight: 1.6 }}>
-              Sin resultados para "<span style={{ color: P.txt }}>{query}</span>".
-              <br />
-              Prueba con otras palabras o limpia la búsqueda.
-            </div>
-          ) : (
-            categories.map(cat => {
-              const items = sectionsByCategory[cat.id] || [];
-              if (items.length === 0) return null;
-              const CatIcon = iconFor(cat.icon);
-              return (
-                <div key={cat.id}>
-                  <div className="mn-cat-label">
-                    <CatIcon size={12} color={P.txt3} />
-                    {cat.label}
-                  </div>
-                  {items.map(s => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      className={`mn-link ${activeId === s.id ? "active" : ""}`}
-                      onClick={() => selectSection(s.id)}
-                    >
-                      {s.title}
-                    </button>
-                  ))}
-                </div>
-              );
-            })
-          )}
-        </aside>
-
-        {/* CONTENT */}
-        <main className="mn-content">
-          {!activeSection ? (
-            <div className="mn-empty">
-              <h3>Sin sección seleccionada</h3>
-              <p>Elige un tema del menú de la izquierda para empezar.</p>
-            </div>
-          ) : (
-            <>
-              <div className="mn-eyebrow">
-                {(() => {
-                  const cat = categories.find(c => c.id === activeSection.category);
-                  const Icon = iconFor(cat?.icon || 'ChevronRight');
-                  return (
-                    <>
-                      <Icon size={12} />
-                      {cat?.label || 'Manual'}
-                    </>
-                  );
-                })()}
-              </div>
-              <h1 className="mn-title">{activeSection.title}</h1>
-              <p className="mn-summary">{activeSection.summary}</p>
-
-              <div>
-                {activeSection.content.map((b, i) => (
-                  <ContentBlock key={i} block={b} />
-                ))}
-              </div>
-
-              {/* Quick contact */}
-              <div style={{ marginTop: 40, padding: "20px 0", borderTop: `1px solid ${P.border}`,
-                            display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
-                <span style={{ color: P.txt2, fontSize: 13 }}>
-                  ¿No encuentras lo que buscas?
-                </span>
-                <a
-                  href={`https://wa.me/${waNumber}?text=${encodeURIComponent(waText)}`}
-                  target="_blank" rel="noopener noreferrer"
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    fontSize: 13, fontWeight: 600, color: P.accent,
-                  }}
-                >
-                  <MessageCircle size={14} />
-                  Pregunta por WhatsApp
-                </a>
-                <a
-                  href="mailto:info@stratoscapitalgroup.com?subject=Soporte%20CRM%20Stratos%20AI"
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    fontSize: 13, fontWeight: 600, color: P.accent,
-                  }}
-                >
-                  <Mail size={14} />
-                  Escríbenos un correo
-                </a>
-              </div>
-            </>
-          )}
-        </main>
-      </div>
-
-      {/* ─────────────── ASISTENTE DEL MANUAL (sección única al final) ─────────────── */}
-      <section style={{
-        borderTop: `1px solid ${P.border}`,
-        background: P.bg,
-        padding: "72px 24px",
-      }}>
-        <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
-          <div style={{
-            width: 64, height: 64, borderRadius: 18,
-            background: P.accentS, border: `1px solid ${P.accentB}`,
-            display: "inline-flex", alignItems: "center", justifyContent: "center",
-            marginBottom: 20,
-            boxShadow: `0 8px 32px ${P.accentS}`,
-          }}>
-            <Bot size={30} color={P.accent} />
-          </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 12 }}>
-            <h2 style={{
-              fontSize: "clamp(22px, 3vw, 28px)", fontWeight: 700,
-              color: P.w, fontFamily: fontD, letterSpacing: "-0.02em",
-            }}>
-              Asistente del Manual
-            </h2>
-            <span style={{
-              fontSize: 10, padding: "4px 10px", borderRadius: 999,
-              background: P.mutedS, color: P.muted,
-              border: `1px solid ${P.mutedB}`,
-              fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
-            }}>
-              Próximamente
-            </span>
-          </div>
-          <p style={{
-            color: P.txt2, fontSize: 15, lineHeight: 1.6,
-            maxWidth: 540, margin: "0 auto 28px",
-          }}>
-            Pronto vas a poder preguntarle al asistente cualquier duda en lenguaje natural.
-            Va a leer este manual completo y darte la respuesta exacta paso-a-paso.
-          </p>
-          <div className="mn-ai-input-row" style={{ maxWidth: 540, margin: "0 auto" }}>
-            <input
-              type="text"
-              className="mn-ai-input"
-              aria-label="Pregunta al asistente del manual (próximamente)" placeholder="Pregúntale al asistente..."
-              disabled
-              aria-disabled="true"
-            />
-            <button type="button" className="mn-ai-button" disabled aria-disabled="true">
-              <PowerAtom size={14} color={P.txt3} />
-              Preguntar
-            </button>
-          </div>
-          <p style={{
-            color: P.txt3, fontSize: 12, marginTop: 16, lineHeight: 1.5,
-          }}>
-            Mientras tanto, usa el buscador de la izquierda para encontrar lo que necesitas.
-          </p>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="mn-footer">
-        <div style={{
-          maxWidth: 1280, margin: "0 auto",
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-          gap: 16, flexWrap: "wrap",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-            <StratosAtom size={18} color={P.accent} />
-            <span style={{ color: P.txt2 }}>
-              © {new Date().getFullYear()} Stratos Capital Group · {footerLabel}
-            </span>
-          </div>
-          <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
-            <a href="/entrega-crm" style={{ color: P.txt2 }}>Entrega oficial</a>
-            <a href="https://stratoscapitalgroup.com" style={{ color: P.txt2 }}>Sitio principal</a>
-            <a href={APP_URL} style={{ color: P.accent, fontWeight: 600 }}>Ir al sistema →</a>
-          </div>
-        </div>
-      </footer>
+  const copyLink = async () => {
+    try { await navigator.clipboard.writeText(window.location.origin + window.location.pathname + '#' + current.id); setCopied(true); clearTimeout(copyTimer.current); copyTimer.current=setTimeout(()=>setCopied(false),2500); }
+    catch { setCopied(false); }
+  };
+  const renderBlock = (block,index) => <ContentBlock key={index} block={block} sections={sections} categories={categories} onSelect={select}/>;
+  const wordCount = current ? JSON.stringify(current.content).split(/\s+/).length : 0;
+  const featured = isMain ? ['agenda-crear','equipos-usuarios','copilot-registrar','fn-indice'] : sections.slice(0,4).map(s=>s.id);
+  return <div className="mn-wrap" data-theme={light ? 'light' : 'dark'} style={theme}>
+    <a className="mn-skip" href="#mn-content">Saltar al contenido</a>
+    <header className="mn-nav"><div className="mn-nav-inner">
+      <a className="mn-brand" href="https://stratoscapitalgroup.com"><img src="/branding/stratos-logo-web-20261016.webp" alt="" width="38" height="38"/><span>Stratos <span>AI</span></span></a>
+      <span className="mn-nav-label">{navLabel}</span>
+      <div className="mn-nav-actions"><button className="mn-icon-button" type="button" aria-label={light ? 'Usar tema oscuro' : 'Usar tema claro'} onClick={()=>setLight(v=>!v)}>{light ? <Moon size={19}/> : <Sun size={19}/>}</button><a className="mn-app-link" href={APP_URL}>Ir al sistema<ArrowRight size={16}/></a></div>
+    </div></header>
+    <div className="mn-mobile-bar"><button type="button" aria-expanded={menuOpen} aria-controls="mn-sidebar" onClick={()=>setMenuOpen(v=>!v)}><Menu size={19}/>Temas<ChevronDown size={16}/></button><span>{category?.label || 'Manual'}</span></div>
+    <div className="mn-shell">
+      <aside className={'mn-sidebar ' + (menuOpen ? 'mn-open' : '')} id="mn-sidebar" aria-label="Temas del manual">
+        <div className="mn-sidebar-heading"><BookOpen size={17}/><span>Guía de uso</span><button className="mn-mobile-close mn-icon-button" type="button" aria-label="Cerrar temas" onClick={()=>setMenuOpen(false)}><X size={18}/></button></div>
+        <label className="mn-search" htmlFor="mn-search"><Search size={18} aria-hidden="true"/><input ref={searchRef} id="mn-search" type="search" value={query} onChange={e=>setQuery(e.target.value)} aria-label="Buscar en todo el manual" onKeyDown={e=>{if(e.key==='Enter'&&query.trim()){setMenuOpen(false);titleRef.current?.focus();}}} placeholder="Buscar en todo el manual" autoComplete="off" spellCheck={false}/>{query && <button type="button" aria-label="Limpiar búsqueda" onClick={()=>{setQuery('');searchRef.current?.focus();}}><X size={18}/></button>}</label>
+        <p className="mn-search-help">Busca una función o una duda.</p>
+        {query.trim()&&<button type="button" className="mn-button mn-mobile-results" onClick={()=>{setMenuOpen(false);titleRef.current?.focus();}}>Ver {filtered.length} resultados</button>}
+        <nav className="mn-topics" aria-label="Índice del manual">
+          <SectionLink section={sections.find(s=>s.id===primaryId)} onSelect={select} className="mn-all-link"><LayoutGrid size={17}/> {isMain ? 'Ver todas las funciones' : 'Empezar a leer'}<ArrowRight size={15}/></SectionLink>
+          {categories.map(cat=>{const items=grouped.get(cat.id)||[];if(!items.length)return null;const Icon=categoryIcon(cat.icon); const open=expanded.includes(cat.id);
+            return <details className="mn-topic" key={cat.id} open={open}><summary onClick={e=>{e.preventDefault();setExpanded(prev=>prev.includes(cat.id)?prev.filter(id=>id!==cat.id):[...prev,cat.id]);}}><Icon size={17}/><span>{cat.label}</span><small>{items.length}</small><ChevronDown size={14}/></summary><div>{items.map(s=><SectionLink key={s.id} section={s} onSelect={select} className={'mn-topic-link '+(s.id===current?.id?'mn-active':'')}><span aria-current={s.id===current?.id?'page':undefined}>{s.title}</span></SectionLink>)}</div></details>;
+          })}
+        </nav><div className="mn-sidebar-footer"><ShieldCheck size={16}/><span>Las funciones disponibles dependen de tu empresa y tus permisos.</span></div>
+      </aside>
+      <main id="mn-content" className="mn-content" tabIndex={-1}>
+        {query.trim() ? <section className="mn-results" aria-labelledby="mn-title"><div className="mn-eyebrow">Búsqueda en el manual</div><h1 ref={titleRef} tabIndex={-1} id="mn-title">Resultados para «{query}»</h1><p role="status">{filtered.length} {filtered.length===1?'guía encontrada':'guías encontradas'}</p><div className="mn-result-list">{filtered.map(s=><SectionLink key={s.id} section={s} onSelect={select}><small>{categories.find(c=>c.id===s.category)?.label}</small><h2>{s.title}</h2><p>{s.summary}</p><ArrowRight size={19}/></SectionLink>)}</div>{!filtered.length&&<div className="mn-no-results"><Search size={28}/><h2>Prueba con otras palabras</h2><p>Por ejemplo: agenda, equipos, audio, teléfono o cambiar etapa.</p><button type="button" className="mn-button" onClick={()=>{setQuery('');searchRef.current?.focus();}}>Limpiar búsqueda</button></div>}</section> : current && <>
+          <div className="mn-breadcrumb"><button type="button" onClick={()=>select(sections[0]?.id)}>Manual</button><ChevronRight size={14}/><span>{category?.label}</span></div>
+          <div className="mn-article-tools"><span><Clock size={14}/>{Math.max(1,Math.ceil(wordCount/180))} min de lectura</span><div><button className="mn-icon-button" type="button" onClick={copyLink} aria-label={copied?'Enlace copiado':'Copiar enlace de esta guía'}>{copied?<Check size={17}/>:<LinkIcon size={17}/>}</button><button className="mn-icon-button" type="button" onClick={()=>window.print()} aria-label="Imprimir manual completo"><Printer size={17}/></button></div></div>
+          <div className="mn-eyebrow">{isMain && current.id==='guia-inicio'?'Aprende a tu ritmo':category?.label}</div>
+          <h1 id="mn-title" tabIndex={-1} ref={titleRef}>{current.title}</h1>
+          <p className="mn-summary">{current.summary}</p>
+          {current.id==='guia-inicio' && <div className="mn-featured">{featured.map(id=>{const s=sections.find(s=>s.id===id); const cat=categories.find(c=>c.id===s?.category); const Icon=categoryIcon(cat?.icon); return <SectionLink key={id} section={s} onSelect={select}><Icon size={22}/><strong>{id==='fn-indice'?'Todas las funciones':cat?.label}</strong><span>{id==='fn-indice'?'Explora el manual completo':s?.summary}</span><ArrowRight size={17}/></SectionLink>;})}</div>}
+          {(current.where||current.access)&&<dl className="mn-context">{current.where&&<div><dt><MapPin size={16}/>Dónde está</dt><dd>{current.where}</dd></div>}{current.access&&<div><dt><ShieldCheck size={16}/>Quién puede usarlo</dt><dd>{current.access}</dd></div>}</dl>}
+          <article className="mn-article" aria-label={current.title}>{current.content.map(renderBlock)}</article>
+          <nav className="mn-prev-next" aria-label="Más guías">{currentIndex>0?<SectionLink section={sections[currentIndex-1]} onSelect={select}><ArrowLeft size={18}/><span><small>Guía anterior</small>{sections[currentIndex-1].title}</span></SectionLink>:<div/>}{currentIndex<sections.length-1&&<SectionLink section={sections[currentIndex+1]} onSelect={select}><span><small>Siguiente guía</small>{sections[currentIndex+1].title}</span><ArrowRight size={18}/></SectionLink>}</nav>
+          <section className="mn-help"><LifeBuoy size={24}/><div><h2>¿Necesitas una mano?</h2><p>Tu administrador puede ayudarte con accesos y configuración. Para una falla, envía la hora, la pantalla y lo que intentabas hacer.</p><div><a href={'https://wa.me/'+waNumber+'?text='+encodeURIComponent(waText)} target="_blank" rel="noopener noreferrer">Soporte por WhatsApp<ExternalLink size={14}/></a><a href="mailto:info@stratoscapitalgroup.com">Escribir por correo<ArrowRight size={14}/></a></div></div></section>
+        </>}
+        <footer className="mn-footer"><span>{footerLabel || (isMain ? 'Revisado el 23 de noviembre de 2026' : navLabel)}</span><a href="https://stratoscapitalgroup.com">Stratos AI</a>{isMain&&<time dateTime={MANUAL_REVIEWED_AT}>Guía v3.0</time>}</footer>
+      </main>
     </div>
-  );
+    <div className="mn-print"><h1>{navLabel}</h1>{isMain&&<p>Revisado el 23 de noviembre de 2026 · stratoscapitalgroup.com/manual</p>}{sections.filter(s=>!s.id.startsWith('fn-')).map(s=><section key={s.id}><h2>{s.title}</h2><p>{s.summary}</p>{s.where&&<p><strong>Dónde:</strong> {s.where}</p>}{s.access&&<p><strong>Acceso:</strong> {s.access}</p>}{s.content.filter(b=>!['links','directory'].includes(b.type)).map(renderBlock)}</section>)}</div>
+  </div>;
 }

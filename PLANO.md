@@ -170,10 +170,10 @@ Servicios de terceros con los que habla el código.
 | `glulgyhkrqpykxmujodb.supabase.co` | 6 archivos |
 | `drive.google.com` | 4 archivos |
 | `cal.com` | 3 archivos |
+| `apps.apple.com` | 2 archivos |
 | `docs.google.com` | 2 archivos |
 | `app.getstratosai.com` | 1 archivo |
 | `app.hulipractice.com` | 1 archivo |
-| `apps.apple.com` | 1 archivo |
 | `brokers.mycocay.com` | 1 archivo |
 | `brokers.simca.mx` | 1 archivo |
 | `maps.app` | 1 archivo |
@@ -188,7 +188,7 @@ casa; por eso mismo son los que más cuidado piden.
 
 | Archivo | Archivos que lo importan |
 |---|---|
-| `design-system/tokens.js` | **98** |
+| `design-system/tokens.js` | **97** |
 | `lib/supabase.js` | **44** |
 | `hooks/useAuth.js` | **37** |
 | `hooks/useViewport.js` | **30** |
