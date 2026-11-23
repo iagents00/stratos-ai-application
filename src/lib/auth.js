@@ -22,6 +22,7 @@
 import { supabase, SUPABASE_REST_URL, SUPABASE_ANON_KEY } from './supabase'
 import { requestRecoveryCode } from './recovery'
 import { logAuthEvent } from './audit'
+import { detenerPushNativo, usaPushIOS } from './push-native'
 import { getAppReviewLogin, readAppReviewSession } from './app-review-access'
 import { isServiceUnavailableError, SERVICE_UNAVAILABLE_MESSAGE } from './service-errors'
 import {
@@ -355,6 +356,7 @@ export async function signOut() {
     const { data: { session } } = await supabase.auth.getSession()
     if (session?.user?.id) {
       await logAuthEvent('LOGOUT', session.user.id, { email: session.user.email })
+      if (usaPushIOS()) await detenerPushNativo(session.user.id)
     }
     // scope 'local': cerrar sesión en ESTE dispositivo no mata las sesiones de
     // los demás. El default de Supabase es 'global' — con él, salir en la PC

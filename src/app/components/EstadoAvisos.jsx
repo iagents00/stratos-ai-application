@@ -23,7 +23,7 @@ import { Bell, BellOff, CheckCircle2, AlertCircle } from "lucide-react";
 import { G } from "../SharedComponents";
 import { font, fontDisp } from "../../design-system/tokens";
 import { isNativeApp, nativePlugin, ensureNotifPermission } from "../../lib/native";
-import { motivoPushNativo, pushNativoRegistrado, iniciarPushNativo } from "../../lib/push-native";
+import { motivoPushNativo, iniciarPushNativo, observarPushNativo, usaPushIOS } from "../../lib/push-native";
 import { sincronizarRecordatorios } from "../../lib/recordatorios-locales";
 
 /** Traduce el motivo técnico a algo que se entienda y se pueda accionar. */
@@ -55,6 +55,9 @@ function explicar(motivo, permiso) {
       queHacer: "Los recordatorios que pidas con antelación sí te van a sonar. Falta un trámite pendiente para el resto.",
     };
   }
+  if (motivo === "guardando-registro") {
+    return { tono: "regular", texto: "Estamos conectando este teléfono para recibir avisos.", queHacer: null };
+  }
   if (motivo === "esperando-que-el-sistema-de-el-numero") {
     return {
       tono: "regular",
@@ -84,10 +87,11 @@ export default function EstadoAvisos({ T, isLight = false, userId }) {
       const r = await ln?.getPending?.();
       setAgendados(r?.notifications?.length ?? 0);
     } catch { setAgendados(null); }
-    setMotivo(pushNativoRegistrado() ? "registrado" : motivoPushNativo());
+    setMotivo(motivoPushNativo());
   }, []);
 
-  useEffect(() => { if (isNativeApp()) mirar(); }, [mirar]);
+  useEffect(() => { if (isNativeApp()) void Promise.resolve().then(mirar); }, [mirar]);
+  useEffect(() => observarPushNativo(() => setMotivo(motivoPushNativo())), []);
 
   // En el navegador esta tarjeta no aplica: ahí los avisos van por otro camino.
   if (!isNativeApp()) return null;
@@ -96,7 +100,7 @@ export default function EstadoAvisos({ T, isLight = false, userId }) {
     setPidiendo(true);
     try {
       // 1. El permiso. Si ya está dado, esto no molesta a nadie.
-      await ensureNotifPermission();
+      if (!usaPushIOS()) await ensureNotifPermission();
       // 2. REGISTRAR EL TELÉFONO. Este paso faltaba, y era el que dejaba el
       //    botón sin salida: pedía el permiso, la persona lo daba, y el
       //    teléfono seguía sin registrarse porque nadie lo volvía a intentar.
