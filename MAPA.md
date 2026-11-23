@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**307 archivos · 85.345 líneas**
+**307 archivos · 85.351 líneas**
 
 ---
 
@@ -480,7 +480,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `telegram.js` | 810 | Pareo del bot de Telegram con el perfil del asesor. |
+| `telegram.js` | 802 | Pareo del bot de Telegram con el perfil del asesor. |
 | `auth.js` | 702 | _sin describir_ |
 | `push.js` | 422 | Sistema de suscripción a notificaciones Web Push |
 | `next-action-engine.js` | 371 | _sin describir_ |
@@ -529,6 +529,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `copilot-demo.js` | 36 | Demo messages are local examples; they never claim to write to a real account. |
 | `copilot-reminders.js` | 36 | _sin describir_ |
 | `read-all-rows.js` | 36 | _sin describir_ |
+| `copilot-history.js` | 34 | _sin describir_ |
 | `app-review-access.native.js` | 32 | _sin describir_ |
 | `service-errors.js` | 32 | _sin describir_ |
 | `copilot-profile.js` | 29 | A failed profile lookup is not evidence that Copilot is disabled. |
@@ -537,7 +538,6 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `rails-gestion.js` | 24 | Valida el borrador una vez; un envío incierto se reintenta sin alterar su payload. |
 | `auth-events.js` | 22 | _sin describir_ |
 | `account-security.js` | 20 | Bound network waits without treating an uncertain write as success. |
-| `copilot-history.js` | 20 | _sin describir_ |
 | `project-copilot.js` | 18 | _sin describir_ |
 | `app-review-access.js` | 12 | Implementación web: App Review no existe fuera del binario móvil. |
 | `copilot-session.js` | 12 | _sin describir_ |

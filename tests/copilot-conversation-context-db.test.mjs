@@ -57,6 +57,7 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
   for(const f of ['301_copilot_business_contact_identity.sql','302_copilot_registration_contracts.sql','303_copilot_business_family_queries.sql','304_copilot_server_business_effect_guard.sql','305_copilot_all_typed_contact_multi_actions.sql','306_copilot_pending_business_identity_priority.sql','307_copilot_compound_registration_single_card.sql','308_copilot_pending_business_context_preserved.sql','309_copilot_explicit_copy_intent_in_upsert.sql','310_copilot_compact_card_and_dictated_next_action.sql','311_copilot_shared_phone_requires_business.sql','312_copilot_business_identity_archive_lifecycle.sql','313_copilot_keep_canonical_phone_resolution.sql']) await db.exec(readFileSync('supabase/migrations/'+f,'utf8'));
   const stages=['RS Primer contacto','RS Contactado','RS Reunión','RS Cliente Ganado','M Primer Contacto','M Contactado','M Reunión','M Cliente Ganado'];
   await db.exec(readFileSync('supabase/migrations/318_copilot_delivered_replies_are_conversation.sql','utf8'));
+  await db.exec(readFileSync('supabase/migrations/323_copilot_registration_confirmation_boundary.sql','utf8'));
   const businessLines=[{id:'realestate',label:'Bienes raíces',entryStage:stages[0],stages:stages.slice(0,4),aliases:['bienes raíces']},{id:'medicine',label:'Medicina',entryStage:stages[4],stages:stages.slice(4),aliases:['medicina']}];
   await db.query("insert into organizations(id,name,slug,meta_config) values($1,'Own','own',$2),($3,'Other','other','{}')",[org,{crm:{businessLines,pipeline:stages.map(name=>({name}))}},other]);
   for(const [i,name] of stages.entries())await db.query('insert into org_stages(organization_id,orden,nombre) values($1,$2,$3)',[org,i+1,name]);
@@ -76,7 +77,9 @@ test('dictated contacts persist without phone, confirm once, keep notes and thei
   await db.query("insert into bot_pending_confirm(telegram_chat_id,organization_id,action,payload,created_at) values(-771,$1,'team_plan','{\"tareas\":[{}]}',now()-interval '1 hour')",[org]);
   assert.equal((await db.query('select fn_copilot_contexto(-771) result')).rows[0].result.plan_esperando_confirmacion,null);
   assert.equal((await db.query('select count(*)::int n from leads')).rows[0].n,0);
-  r=(await db.query('select bot_confirm_latest_pending(-771) result')).rows[0].result;assert.equal(r.ok,true,JSON.stringify(r));
+  // The classifier may choose creation again; the original short acceptance wins.
+  r=await call('upsert_lead',{input_text:'crea a Marco en bienes raíces',_original_input_text:'si',name:'Marco Valerio Pérez Goya'});assert.equal(r.ok,true,JSON.stringify(r));
+  const again=await call('create_lead',{input_text:'sí'});assert.equal(again.already_closed,true);assert.notEqual(again.staged,true);
   let saved=(await db.query('select * from leads where organization_id=$1',[org])).rows[0];
   assert.equal(saved.phone,null);assert.equal(saved.next_action_at,null);assert.equal(saved.stage,'RS Primer contacto');
   assert.match((await db.query('select descripcion from expediente_items where lead_id=$1',[saved.id])).rows[0].descripcion,/10 ha/);

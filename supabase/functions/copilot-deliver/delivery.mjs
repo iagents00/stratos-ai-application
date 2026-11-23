@@ -8,3 +8,7 @@ export function classifyDelivery(status,body){
 export function failure(code){
  return {status:'uncertain',code,response:{ok:false,error:code,reply:{text:'No pude confirmar la respuesta del asistente. Tu solicitud quedó identificada; revisa la conversación antes de repetirla. Ya avisamos al equipo de soporte.',inline_keyboard:[]}}};
 }
+export function isRegistrationAcceptance(text){
+ const clean=String(text||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+ return /^(si|si registrar|si confirmar|confirmo|confirmar|adelante|de acuerdo|dale|ok|registralo|hazlo|correcto)$/.test(clean);
+}

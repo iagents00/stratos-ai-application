@@ -1,5 +1,5 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
-import {routes,classifyDelivery,failure} from './delivery.mjs';
+import {routes,classifyDelivery,failure,isRegistrationAcceptance} from './delivery.mjs';
 const url=Deno.env.get('SB_URL')??Deno.env.get('SUPABASE_URL')!,anon=Deno.env.get('SB_ANON_KEY')??Deno.env.get('SUPABASE_ANON_KEY')!,service=Deno.env.get('SB_SERVICE_ROLE_KEY')??Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const headers={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization,apikey,content-type,x-client-info','Content-Type':'application/json','Cache-Control':'no-store'};
 const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers});
@@ -33,11 +33,20 @@ Deno.serve(async req=>{
     await new Promise(resolve=>setTimeout(resolve,1000));
    }
   }
+  const confirmation=body.route==='crm'&&!body.callback_data&&isRegistrationAcceptance(body.text)
+   ? await rpc('copilot_confirm_registration',{p_text:body.text},token) : null;
+  if(confirmation){
+   // A missing business/name is a real conversational answer, not an engine
+   // outage. Database failures still reject the RPC and enter the error path.
+   result=confirmation.reply?.text
+    ? {status:'completed',response:confirmation,code:null} : classifyDelivery(200,confirmation);
+  }else{
   const response=await fetch('https://personal-n8n.suwsiw.easypanel.host/webhook/'+routes[body.route],{
    method:'POST',headers:{'Content-Type':'application/json',Authorization:token},
    body:JSON.stringify({chat_id:actor.chat_id,text:body.text,callback_data:body.callback_data||undefined,original_type:body.callback_data?'callback':'text',request_id:receipt.id}),signal:AbortSignal.timeout(80000)});
   let data={};try{data=await response.json();}catch{/* Empty/HTML responses are delivery failures. */}
   result=classifyDelivery(response.status,data);
+  }
  }catch(e){result=failure(e.name==='TimeoutError'?'engine_timeout':e.name==='QueueTimeout'?'engine_queue_timeout':'engine_network');}
  try{
   const saved=await rpc('fn_copilot_delivery_finish',{p_org:actor.organization_id,p_profile:actor.profile_id,p_id:receipt.id,p_status:result.status,p_response:result.response,p_code:result.code},'Bearer '+service);
@@ -48,7 +57,16 @@ Deno.serve(async req=>{
  // The authenticated RPC used by installed clients only waits for acceptance.
  // The same receipt and history writer deliver the final reply afterwards.
  if(body.background===true){
-  EdgeRuntime.waitUntil(complete());
+  const work=complete();
+  // A short confirmation normally completes quickly. Return its real result
+  // to installed clients instead of replacing it with another acceptance.
+  if(body.route==='crm'&&!body.callback_data&&isRegistrationAcceptance(body.text)){
+   let timer:ReturnType<typeof setTimeout>;
+   const ready=await Promise.race([work,new Promise<null>(resolve=>{timer=setTimeout(()=>resolve(null),1200);})]);
+   clearTimeout(timer!);
+   if(ready)return ready;
+  }
+  EdgeRuntime.waitUntil(work);
   return reply({ok:true,pending:true,request_id:receipt.id,reply:{text:'Estoy atendiendo tu solicitud. Te confirmaré aquí el resultado.',inline_keyboard:[]}},202);
  }
  return await complete();
