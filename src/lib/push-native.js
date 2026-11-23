@@ -175,8 +175,8 @@ async function guardarToken(userId, token) {
  *        notificación. Recibe el payload (ej. { view: "c", leadId: 123 }).
  * @returns {Promise<boolean>} true si quedó registrado
  */
-export async function iniciarPushNativo(userId, alTocar) {
-  if (usaPushIOS()) return await registroIOS()?.iniciar(userId, alTocar) ?? false;
+export async function iniciarPushNativo(userId, alTocar, opciones) {
+  if (usaPushIOS()) return await registroIOS()?.iniciar(userId, alTocar, opciones) ?? false;
   const PN = plugin();
   if (!PN) { motivo = "no-hay-plugin"; return false; }
   if (!userId) { motivo = "sin-sesion"; return false; }

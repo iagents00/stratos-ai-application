@@ -105,7 +105,7 @@ export default function EstadoAvisos({ T, isLight = false, userId }) {
       //    botón sin salida: pedía el permiso, la persona lo daba, y el
       //    teléfono seguía sin registrarse porque nadie lo volvía a intentar.
       //    Tocar el botón otra vez daba exactamente el mismo resultado.
-      if (userId) await iniciarPushNativo(userId);
+      if (userId) await iniciarPushNativo(userId, undefined, { forzar: true });
       // 3. Los recordatorios, que ya pueden agendarse con el permiso dado.
       if (userId) await sincronizarRecordatorios(userId);
     } catch { /* el estado de abajo lo va a mostrar igual */ }

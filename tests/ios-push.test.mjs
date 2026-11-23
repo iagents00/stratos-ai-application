@@ -44,6 +44,14 @@ test('el registro espera al token y reintenta guardarlo sin perder el callback d
   assert.deepEqual(escritos, [['a', 'token'], ['a', 'token']]);
   telefono.eventos.get('pushNotificationActionPerformed')({ notification: { data: { view: 'copilot' } } });
   assert.deepEqual(abiertos, [{ view: 'copilot' }]);
+
+  assert.equal(await registro.iniciar('a'), true);
+  assert.equal(telefono.registros, 1);
+  await registro.iniciar('a', undefined, { forzar: true });
+  assert.equal(telefono.registros, 2);
+  telefono.eventos.get('registration')({ value: 'token' });
+  await esperarEventos();
+  assert.deepEqual(escritos.at(-1), ['a', 'token']);
 });
 
 test('vuelve a pedir registro al expirar la espera o recuperar el permiso', async t => {

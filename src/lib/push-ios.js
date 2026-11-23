@@ -92,14 +92,14 @@ export function crearRegistroPushIOS(plugin, guardar, desvincular) {
     }
   }
 
-  function iniciar(id, alTocar) {
+  function iniciar(id, alTocar, { forzar = false } = {}) {
     if (!id || cerrando) return Promise.resolve(false);
     if (sesion?.id !== id) sesion = { id, confirmadoHasta: 0, solicitudHasta: 0 };
     const actual = sesion;
     if (alTocar) actual.alTocar = alTocar;
     if (actual.intento) return actual.intento;
     if (actual.guardando) return actual.guardando;
-    if (actual.confirmadoHasta > Date.now()) return Promise.resolve(true);
+    if (!forzar && actual.confirmadoHasta > Date.now()) return Promise.resolve(true);
     if (actual.solicitudHasta > Date.now()) return Promise.resolve(false);
     actual.intento = intentar(actual).finally(() => { actual.intento = null; });
     return actual.intento;
