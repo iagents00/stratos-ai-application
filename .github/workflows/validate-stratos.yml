@@ -39,3 +39,25 @@ jobs:
       - run: npm run build
       - name: Verificar paquete móvil y acceso de App Review
         run: npm run build:app && npm run verificar:appstore-ios
+      - name: Detectar cambios de esquema de Proyectos
+        id: project_staging
+        if: github.event_name == 'pull_request'
+        run: |
+          if git diff --name-only origin/main...HEAD | grep -Eq '^(supabase/migrations/326_|tests/sql/work-projects-|.github/workflows/validate-stratos.yml$)'; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: supabase/setup-cli@v2
+        if: steps.project_staging.outputs.enabled == 'true'
+        with:
+          version: 2.101.0
+      - name: Ensayo de Proyectos en Supabase local
+        if: steps.project_staging.outputs.enabled == 'true'
+        run: |
+          project_stage="$(mktemp -d)"
+          supabase init --workdir "$project_stage"
+          trap 'supabase stop --no-backup --workdir "$project_stage" >/dev/null 2>&1' EXIT
+          mkdir -p "$project_stage/supabase/migrations"
+          cp tests/sql/work-projects-staging-fixture.sql "$project_stage/supabase/migrations/20260101000000_fixture.sql"
+          cp supabase/migrations/326_project_delivery_workspace.sql "$project_stage/supabase/migrations/20260101000001_projects.sql"
+          supabase start --workdir "$project_stage" -x analytics,edge-runtime,imgproxy,inbucket,meta,realtime,storage,studio,vector >/dev/null
+          node tests/sql/work-projects-supabase-staging.mjs "$project_stage"
