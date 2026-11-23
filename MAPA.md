@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**308 archivos · 86.798 líneas**
+**308 archivos · 86.810 líneas**
 
 ---
 
@@ -436,7 +436,7 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 
 | Archivo | Líneas | Qué hace |
 |---|---|---|
-| `manual-content.js` | 2932 | Manual público de Stratos. Contenido revisado el 23 de noviembre de 2026. |
+| `manual-content.js` | 2944 | Manual público de Stratos. Contenido revisado el 23 de noviembre de 2026. |
 | `PrivacyPolicy.jsx` | 1222 | _sin describir_ |
 | `ManualMarketing.jsx` | 1026 | _sin describir_ |
 | `Diagnostico.jsx` | 974 | _sin describir_ |
