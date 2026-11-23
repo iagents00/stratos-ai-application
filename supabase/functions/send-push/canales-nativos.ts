@@ -174,6 +174,7 @@ export async function enviarAPNs(
 
   const esLlamada = aviso.kind === "llamada";
   const cuerpo = JSON.stringify(cuerpoAPNs(aviso));
+  const expiracion = Math.floor(Date.now() / 1000) + (esLlamada ? 60 : 86_400);
 
   await Promise.all(dispositivos.map(async (d) => {
     // Un token sacado con la app compilada desde Xcode vive en el sandbox y el
@@ -191,19 +192,8 @@ export async function enviarAPNs(
           "apns-push-type": "alert",
           "apns-priority": "10",
           "apns-collapse-id": aviso.tag.slice(0, 64),
-          // CUÁNTO VALE LA PENA GUARDAR ESTE AVISO SI EL TELÉFONO NO ESTÁ.
-          //
-          // Estaba justo al revés y era grave: los recordatorios llevaban
-          // expiration 0 —«entregar ahora o descartar para siempre»— así que un
-          // asesor con el teléfono apagado o sin señal los perdía sin enterarse,
-          // y la llamada, que es lo único que de verdad caduca, no llevaba nada
-          // y Apple podía entregarla horas después.
-          //
-          // Una llamada de hace diez minutos no sirve; un recordatorio o un lead
-          // sirven igual cuando el teléfono vuelve a tener señal.
-          ...(esLlamada
-            ? { "apns-expiration": String(Math.floor(Date.now() / 1000) + 60) }
-            : {}),
+          // APNs puede conservar el aviso hasta que el teléfono vuelva a tener red.
+          "apns-expiration": String(expiracion),
           "content-type": "application/json",
         },
         body: cuerpo,

@@ -37,7 +37,7 @@ import { isNativeApp, ensureNotifPermission, notifyUser, addNotificationTapListe
 
 /* Push REAL de la app nativa (APNs): es el único que llega con la app CERRADA.
    notifyUser de arriba solo dispara con la app abierta, porque lo maneja React. */
-import { iniciarPushNativo, detenerPushNativo } from "../lib/push-native";
+import { iniciarPushNativo, detenerPushNativo, usaPushIOS } from "../lib/push-native";
 import { prepararAvisos } from "../lib/avisos-nativos";
 import { sincronizarRecordatorios, limpiarRecordatorios } from "../lib/recordatorios-locales";
 import { llamadaEnCurso, marcarLlamadaDespachada } from "../lib/llamadas";
@@ -770,28 +770,12 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, user?.role, user?.organizationId, user?.email, user?.name, clientConfig]);
 
-  // ── EL PERMISO SE PIDE AL ABRIR LA APP, COMO CUALQUIER OTRA ──────────────
-  //
-  // Antes se pedía recién DESPUÉS de iniciar sesión, y eso está mal por dos
-  // razones. La obvia: una app recién instalada pide sus permisos al abrirse,
-  // no escondidos detrás de un login — la persona no entiende por qué le
-  // aparece un diálogo del sistema en medio de otra cosa (Ángel, 27-ago-2026).
-  //
-  // Y la que rompía de verdad: quien abría la app, entraba, y NO llegaba a
-  // responder el diálogo antes de que el registro consultara el permiso, se
-  // quedaba sin avisos para siempre — el registro lo veía «sin responder» y no
-  // volvía a intentarlo.
-  //
-  // Pedirlo acá lo resuelve de raíz: para cuando hay sesión, la respuesta ya
-  // está dada. Corre una sola vez por apertura y no depende de nadie.
-  //
-  // Los otros permisos (micrófono, cámara, fotos) NO van acá a propósito: iOS
-  // obliga a pedirlos en el momento de usarlos, y pedirlos de golpe al abrir es
-  // la forma más rápida de que digan que no a todo.
+  // Android prepara sus canales y pide permiso al abrir. El registro de APNs
+  // gestiona el permiso en iPhone para evitar dos solicitudes simultáneas.
   useEffect(() => {
     if (!isNativeApp()) return;
     prepararAvisos()
-      .then(() => ensureNotifPermission())
+      .then(() => { if (!usaPushIOS()) return ensureNotifPermission(); })
       .catch(() => { /* nunca romper el arranque por un aviso */ });
   }, []);
 
@@ -806,18 +790,23 @@ export default function App() {
   useEffect(() => {
     if (!user?.id || !isNativeApp()) return;
     const uid = user.id;
+    const ios = usaPushIOS();
+    let vigente = true;
+    const conectarAvisos = () => {
+      if (!vigente) return;
+      iniciarPushNativo(uid, (data) => {
+        if (!vigente) return;
+        const destino = typeof data?.view === "string" ? data.view : "c";
+        setV(destino);
+      }).catch(() => {});
+    };
 
-    // El permiso ya se pidió al abrir la app (efecto de arriba), así que acá
-    // solo queda ligar este teléfono al usuario que entró. prepararAvisos se
-    // vuelve a llamar por si esta sesión empezó sin pasar por el arranque; es
-    // idempotente y no cuesta nada.
+    // iOS pide permiso y registra el teléfono en un solo flujo.
+    if (ios) conectarAvisos();
     prepararAvisos()
       .then(() => {
-        iniciarPushNativo(uid, (data) => {
-          // El payload manda a donde ir. Por defecto, al CRM.
-          const destino = typeof data?.view === "string" ? data.view : "c";
-          setV(destino);
-        });
+        if (!vigente) return;
+        if (!ios) conectarAvisos();
         // Los recordatorios con hora conocida se dejan agendados en el propio
         // telefono: suenan con la app cerrada y sin internet, sin depender de
         // que un servidor acierte a despertarla.
@@ -836,9 +825,14 @@ export default function App() {
     //     el recordatorio se creo despues de la ultima sincronizacion y nadie
     //     lo dejo agendado. Es el caso mas comun de todos.
     const alCambiarVisibilidad = () => {
+      if (ios && !document.hidden) conectarAvisos();
       sincronizarRecordatorios(uid).catch(() => {});
     };
     document.addEventListener("visibilitychange", alCambiarVisibilidad);
+    const alVolverInternet = () => {
+      if (!document.hidden) conectarAvisos();
+    };
+    if (ios) window.addEventListener("online", alVolverInternet);
 
     // Red de seguridad, porque lo de arriba es una CARRERA que se puede perder:
     // cuando la app se va al fondo, iOS congela el navegador de adentro casi de
@@ -847,7 +841,9 @@ export default function App() {
     // recordatorio recien creado quede agendado antes de que el usuario cierre.
     // Es barato: una consulta filtrada por asesor y con tope de 48 filas.
     const repaso = setInterval(() => {
-      if (!document.hidden) sincronizarRecordatorios(uid).catch(() => {});
+      if (document.hidden) return;
+      if (ios) conectarAvisos();
+      sincronizarRecordatorios(uid).catch(() => {});
     }, 60000);
 
     // ANDROID: la llamada ABRE la app encima de todo, pero no le cuenta al CRM
@@ -865,10 +861,12 @@ export default function App() {
     document.addEventListener("visibilitychange", mirarSiLlaman);
 
     return () => {
+      vigente = false;
       clearInterval(repaso);
+      if (ios) window.removeEventListener("online", alVolverInternet);
       document.removeEventListener("visibilitychange", alCambiarVisibilidad);
       document.removeEventListener("visibilitychange", mirarSiLlaman);
-      detenerPushNativo(uid);
+      if (!ios) detenerPushNativo(uid);
       limpiarRecordatorios();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1934,7 +1932,10 @@ export default function App() {
   }, [orgMetaConfig, user?.organizationId, user?._offline]);
 
   /* ── Notifications ── */
-  const onLogout = () => logout();
+  const onLogout = async () => {
+    if (user?.id && usaPushIOS()) await detenerPushNativo(user.id);
+    return logout();
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -2035,11 +2036,11 @@ export default function App() {
       <h1 style={{ fontSize: 24, fontWeight: 500 }}>No pude comprobar tu acceso</h1>
       <p role="alert" style={{ color: T.txt2, lineHeight: 1.6 }}>La conexión con la plataforma está tardando. Puedes reintentar o continuar al espacio de tu empresa.</p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}><button style={{ ...button, color: T.accent }} onClick={() => setPlatformRetry(value => value + 1)}>Reintentar acceso</button>
-        <button style={button} onClick={() => setPlatformConsole({ userId: user.id, status: "denied", data: null })}>Continuar a mi empresa</button><button style={button} onClick={logout}>Cerrar sesión</button></div>
+        <button style={button} onClick={() => setPlatformConsole({ userId: user.id, status: "denied", data: null })}>Continuar a mi empresa</button><button style={button} onClick={onLogout}>Cerrar sesión</button></div>
     </div></div>;
   }
   if (hasPlatformAccess && consoleOpen) {
-    return <Suspense fallback={null}><PlatformAdminConsole initialData={platformConsole.data} T={T} theme={theme} onThemeChange={setTheme} onOpenOwnCRM={canAccessModule("c", user, clientConfig) ? () => { setV("c"); setConsoleOpen(false); } : undefined} /></Suspense>;
+    return <Suspense fallback={null}><PlatformAdminConsole initialData={platformConsole.data} T={T} theme={theme} onThemeChange={setTheme} onLogout={onLogout} onOpenOwnCRM={canAccessModule("c", user, clientConfig) ? () => { setV("c"); setConsoleOpen(false); } : undefined} /></Suspense>;
   }
 
   /* ── Sidebar helpers ── */

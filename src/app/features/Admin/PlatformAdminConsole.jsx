@@ -156,8 +156,8 @@ function TemporaryAccessPanel({ T, credentials, organizations, partners, loading
   </div>;
 }
 
-export default function PlatformAdminConsole({ initialData, T: palette = P, theme = "dark", onThemeChange, onOpenOwnCRM }) {
-  const { logout, user } = useAuth();
+export default function PlatformAdminConsole({ initialData, T: palette = P, theme = "dark", onThemeChange, onLogout, onOpenOwnCRM }) {
+  const { user } = useAuth();
   const isMobile = useIsMobile();
   const T = palette;
   const [crmCompany, setCrmCompany] = useState("");
@@ -260,7 +260,7 @@ export default function PlatformAdminConsole({ initialData, T: palette = P, them
       </nav>
       <div className="platform-rail-footer">
         {onOpenOwnCRM && <button title="Abrir mi CRM" aria-label="Abrir mi CRM" disabled={crmGuard.saving} onClick={() => choose("own-crm")}><ContactRound size={21} strokeWidth={1.6} /><span>Mi CRM</span></button>}
-        <button title="Cerrar sesión" aria-label="Cerrar sesión" onClick={logout}><LogOut size={20} strokeWidth={1.6} /><span>Salir</span></button>
+        <button title="Cerrar sesión" aria-label="Cerrar sesión" onClick={onLogout}><LogOut size={20} strokeWidth={1.6} /><span>Salir</span></button>
       </div>
     </aside>
     <main className="platform-main" inert={isMobile && menuOpen ? true : undefined}>

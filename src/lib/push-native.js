@@ -32,6 +32,7 @@
  */
 import { supabase } from "./supabase";
 import { isNativeApp, nativePlugin } from "./native";
+import { crearRegistroPushIOS } from "./push-ios";
 
 /**
  * El plugin solo existe dentro del contenedor nativo.
@@ -63,7 +64,39 @@ function entorno() {
   } catch { return "production"; }
 }
 
-let yaRegistrado = false;
+let ios;
+
+export function usaPushIOS() { return plataforma() === 'ios' && isNativeApp(); }
+
+async function escribirVinculoIOS(consulta) {
+  const controller = new AbortController();
+  const limite = setTimeout(() => controller.abort(), 8000);
+  try {
+    const { error } = await consulta.abortSignal(controller.signal);
+    return !error;
+  } finally {
+    clearTimeout(limite);
+  }
+}
+
+function registroIOS() {
+  if (ios) return ios;
+  const pn = plugin();
+  if (!pn) return null;
+  ios = crearRegistroPushIOS(pn,
+    (userId, token) => escribirVinculoIOS(supabase.from('device_tokens').upsert({
+      user_id: userId, token, platform: 'ios', entorno: entorno(),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id,token' })),
+    (userId, token) => escribirVinculoIOS(supabase.from('device_tokens').delete()
+      .eq('user_id', userId).eq('platform', 'ios').eq('token', token)),
+  );
+  return ios;
+}
+
+export function observarPushNativo(observar) {
+  return (usaPushIOS() && registroIOS()?.observar(observar)) || (() => {});
+}
 
 /**
  * Por que NO quedo registrado este telefono. Se muestra en Perfil.
@@ -74,11 +107,13 @@ let yaRegistrado = false;
  * de los cuatro pasos se caia. Un fallo mudo no se arregla: se adivina.
  */
 let motivo = "todavia-no-se-intento";
-export function motivoPushNativo() { return motivo; }
+export function motivoPushNativo() {
+  return usaPushIOS() ? registroIOS()?.motivo() ?? 'no-hay-plugin' : motivo;
+}
 
 /** true cuando el token quedo guardado contra el usuario. */
 let registrado = false;
-export function pushNativoRegistrado() { return registrado; }
+export function pushNativoRegistrado() { return motivoPushNativo() === 'registrado'; }
 
 /**
  * Guarda el token del dispositivo contra el usuario. Idempotente: la tabla
@@ -140,7 +175,8 @@ async function guardarToken(userId, token) {
  *        notificación. Recibe el payload (ej. { view: "c", leadId: 123 }).
  * @returns {Promise<boolean>} true si quedó registrado
  */
-export async function iniciarPushNativo(userId, alTocar) {
+export async function iniciarPushNativo(userId, alTocar, opciones) {
+  if (usaPushIOS()) return await registroIOS()?.iniciar(userId, alTocar, opciones) ?? false;
   const PN = plugin();
   if (!PN) { motivo = "no-hay-plugin"; return false; }
   if (!userId) { motivo = "sin-sesion"; return false; }
@@ -152,7 +188,6 @@ export async function iniciarPushNativo(userId, alTocar) {
   // 27-ago-2026: iOS decia que el permiso estaba dado y la app seguia diciendo
   // que faltaba.
   if (registrado) return true;
-  yaRegistrado = false;
 
   // Los oyentes se limpian antes de volver a intentar: si no, cada reintento
   // deja uno mas y el token se guarda tantas veces como intentos hubo.
@@ -216,7 +251,6 @@ export async function iniciarPushNativo(userId, alTocar) {
     });
 
     await PN.register();
-    yaRegistrado = true;
     // register() vuelve enseguida; el numero del telefono llega despues por el
     // listener de arriba.
     //
@@ -242,8 +276,11 @@ export async function iniciarPushNativo(userId, alTocar) {
  * teléfono sigue recibiendo los leads del usuario anterior.
  */
 export async function detenerPushNativo(userId) {
+  if (usaPushIOS()) {
+    try { await registroIOS()?.detener(userId); } catch { /* logout debe continuar */ }
+    return;
+  }
   const PN = plugin();
-  yaRegistrado = false;
   if (!PN || !userId) return;
   try {
     await PN.removeAllListeners();
