@@ -1,15 +1,7 @@
 .pw, .pw-dialog {
-  --pw-bg: #edf3f9;
-  --pw-white: #fff;
-  --pw-ink: #0a132b;
-  --pw-muted: #475777;
-  --pw-border: #d1ddeb;
-  --pw-line: #e6edf5;
-  --pw-blue: #0753eb;
-  --pw-button: #0753eb;
-  --pw-sky: #e3f3fd;
-  --pw-blue-text: #0043bd;
-  --pw-badge-sky: #cce8ff;
+  --pw-sky: color-mix(in srgb, var(--pw-blue) 11%, var(--pw-white));
+  --pw-badge-sky: color-mix(in srgb, var(--pw-blue) 19%, var(--pw-white));
+  --pw-button-hover: color-mix(in srgb, var(--pw-button) 76%, var(--pw-navy-depth));
   --pw-warning: #fff0d6;
   --pw-warning-text: #824500;
   --pw-success: #dff5e9;
@@ -18,16 +10,6 @@
   font-family: inherit;
 }
 .pw[data-theme="dark"], .pw[data-theme="dark"] .pw-dialog {
-  --pw-bg: #101a2a;
-  --pw-white: #18263a;
-  --pw-ink: #eff5ff;
-  --pw-muted: #bacbe5;
-  --pw-border: #354761;
-  --pw-line: #2b3c55;
-  --pw-blue: #9ec6ff;
-  --pw-sky: #213c5a;
-  --pw-blue-text: #b9d8ff;
-  --pw-badge-sky: #2c4f78;
   --pw-warning: #503c1e;
   --pw-warning-text: #ffe0a6;
   --pw-success: #1b4033;
@@ -64,11 +46,11 @@
 .pw-row-copy small, .pw-sub { color: var(--pw-muted); font-size: 14px; line-height: 1.45; }
 .pw-tile, .pw-rank { display: grid; place-items: center; flex: none; width: 43px; height: 43px; border-radius: 12px; background: var(--pw-sky); color: var(--pw-blue); }
 .pw-rank { border-radius: 50%; color: var(--pw-ink); background: var(--pw-line); font-size: 17px; font-weight: 700; }
-.pw-first .pw-rank { background: var(--pw-button); color: #fff; }
+.pw-first .pw-rank { background: var(--pw-button); color: var(--pw-on-button); }
 .pw-badge { display: inline-flex; align-items: center; align-self: flex-start; gap: 6px; padding: 5px 9px; border-radius: 999px; background: var(--pw-line); color: var(--pw-muted); font-weight: 720; font-size: 12px; white-space: nowrap; }
 .pw-row > .pw-badge { align-self: center; }
 .pw-badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.pw-badge[data-state="active"], .pw-badge[data-state="review"] { background: var(--pw-sky); color: var(--pw-blue-text); }
+.pw-badge[data-state="active"], .pw-badge[data-state="review"] { background: var(--pw-sky); color: var(--pw-blue); }
 .pw-badge[data-state="blocked"], .pw-alert { background: var(--pw-warning); color: var(--pw-warning-text); }
 .pw-badge[data-state="approved"], .pw-status { background: var(--pw-success); color: var(--pw-success-text); }
 .pw-highlight { padding: 16px; display: flex; justify-content: space-between; gap: 12px; border-radius: 12px; background: var(--pw-sky); margin-bottom: 13px; }
@@ -78,8 +60,8 @@
 .pw-panel > .pw-after { border-top: 1px solid var(--pw-line); padding-top: 15px; margin-top: 16px; margin-bottom: 6px; color: var(--pw-muted); }
 .pw-btn { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 44px; padding: 9px 15px; border-radius: 10px; border: 1px solid var(--pw-border); background: var(--pw-white); color: var(--pw-ink); font-weight: 680; text-align: center; }
 .pw-btn:hover:not(:disabled) { background: var(--pw-sky); }
-.pw-btn.pw-primary { background: var(--pw-button); color: #fff; border-color: var(--pw-button); }
-.pw-btn.pw-primary:hover:not(:disabled) { background: #0341c3; }
+.pw-btn.pw-primary { background: var(--pw-button); color: var(--pw-on-button); border-color: var(--pw-button); }
+.pw-btn.pw-primary:hover:not(:disabled) { background: var(--pw-button-hover); }
 .pw-btn.pw-quiet { border-color: transparent; color: var(--pw-blue); background: transparent; }
 .pw-actions { display: flex; flex-wrap: wrap; gap: 9px; margin: 10px 0; }
 .pw-compact .pw-actions > button { flex: 1 1 135px; }
@@ -119,7 +101,7 @@ a.pw-evidence { display: flex; align-items: center; gap: 9px; min-height: 44px; 
 .pw-columns section { background: var(--pw-bg); border-radius: 10px; min-width: 0; padding: 10px; }
 .pw-columns .pw-row-copy strong { font-size: 15px; }
 .pw-dialog { width: min(580px,calc(100% - 28px)); max-height: calc(100% - 28px); color: var(--pw-ink); background: var(--pw-white); border: 1px solid var(--pw-border); border-radius: 16px; padding: 20px; }
-.pw-dialog::backdrop { background: #0a132b90; }
+.pw-dialog::backdrop { background: color-mix(in srgb, var(--pw-navy-depth) 57%, transparent); }
 .pw-dialog-heading { display: flex; align-items: start; justify-content: space-between; gap: 10px; margin-bottom: 11px; }
 .pw-dialog-heading h2 { padding-top: 7px; font-size: 23px; }
 .pw-icon { min-height: 44px; min-width: 44px; display: grid; place-items: center; color: inherit; background: none; border: 0; border-radius: 9px; }
