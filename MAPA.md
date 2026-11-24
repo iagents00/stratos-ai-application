@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**316 archivos · 88.082 líneas**
+**316 archivos · 88.091 líneas**
 
 ---
 
@@ -153,9 +153,9 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `DocsStratos.jsx` | 293 | _sin describir_ |
 | `PlatformAdminConsole.jsx` | 285 | _sin describir_ |
 | `PlatformCompanyCRM.jsx` | 258 | _sin describir_ |
+| `ProjectWeekPlanner.jsx` | 225 | _sin describir_ |
 | `PlatformAdminConsole.css` | 224 | _sin describir_ |
-| `ProjectWeekPlanner.jsx` | 217 | _sin describir_ |
-| `projects.css` | 168 | _sin describir_ |
+| `projects.css` | 169 | _sin describir_ |
 | `CatalogConfiguratorAdmin.jsx` | 158 | _sin describir_ |
 | `PlatformUsersAdmin.jsx` | 158 | _sin describir_ |
 | `CompanyOnboarding.jsx` | 157 | _sin describir_ |
@@ -618,11 +618,12 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Activa tu Copilot AI | `src/app/views/Copilot.jsx:1965` |
 | Activar para el equipo | `src/app/features/Admin/RailsSettings.jsx:72` |
 | Activar solo lectura | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:312` |
-| Actividad | `src/app/features/Projects/ProjectWeekPlanner.jsx:172` |
+| Actividad | `src/app/features/Projects/ProjectWeekPlanner.jsx:176` |
 | Actividad del equipo IA — hoy | `src/app/views/IACRM.jsx:299` |
 | Actividad reciente | `src/app/views/CRM/index.jsx:5940` |
 | Actividad registrada | `src/app/features/Admin/PlatformCompanyCRM.jsx:246` |
 | Actividad y alertas | `src/app/features/Admin/PlatformAdminConsole.jsx:113` |
+| Actividades de la semana | `src/app/features/Projects/ProjectWeekPlanner.jsx:207` |
 | ACTIVO | `src/app/views/CRM/components.jsx:5304` |
 | Activos | `src/app/features/Admin/PlatformUsersAdmin.jsx:121` |
 | Activos e inactivos | `src/app/features/Admin/PlatformUsersAdmin.jsx:121` |
@@ -654,7 +655,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Agente Stratos | `src/app/components/Chat.jsx:60` |
 | Agrega un teléfono…  +1 555 … | `src/app/views/CRM/components.jsx:1308` |
 | Agregar | `src/app/features/MetaPanel/index.jsx:1377` |
-| Agregar actividad | `src/app/features/Projects/ProjectWeekPlanner.jsx:195` |
+| Agregar actividad | `src/app/features/Projects/ProjectWeekPlanner.jsx:199` |
 | Agregar etapa | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:326` |
 | Agregar otro | `src/app/views/Marketing.jsx:2521` |
 | Agregar propiedad | `src/app/views/LandingPages/CreateWorkspace.jsx:44` |
@@ -815,10 +816,9 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Cohorte con Zoom | `src/app/views/ComandoDirectivo.jsx:478` |
 | Color de acento para la tarjeta | `src/app/views/LandingPages/index.jsx:805` |
 | Color personalizado | `src/app/views/LandingPages/index.jsx:818` |
-| Columna nueva | `src/app/views/Marketing.jsx:1470` |
 
 
-_(927 textos más — usá `npm run buscar "texto"`)_
+_(928 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -892,11 +892,11 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/Nomina.jsx` (238 líneas)
 - `src/landing/ManualBrasa.jsx` (235 líneas)
 - `src/lib/manual-stratos-doc.js` (232 líneas)
+- `src/app/features/Projects/ProjectWeekPlanner.jsx` (225 líneas)
 - `src/app/views/ProductividadTab.jsx` (225 líneas)
 - `src/app/features/Admin/PlatformAdminConsole.css` (224 líneas)
 - `src/landing/ManualMuebleria.jsx` (224 líneas)
 - `src/lib/organize-notes.js` (220 líneas)
-- `src/app/features/Projects/ProjectWeekPlanner.jsx` (217 líneas)
 - `src/app/constants/intelFeatures.js` (211 líneas)
 - `src/app/views/CRM/zoom-metrics.js` (210 líneas)
 - `src/landing/Functionalities.css` (203 líneas)
@@ -916,7 +916,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/CRM/RequiresHumanButton.jsx` (177 líneas)
 - `src/lib/informe-doc.js` (175 líneas)
 - `src/app/views/LandingPages/PortfolioDocument.css` (174 líneas)
-- `src/app/features/Projects/projects.css` (168 líneas)
+- `src/app/features/Projects/projects.css` (169 líneas)
 - `src/app/components/EstadoAvisos.jsx` (162 líneas)
 - `src/app/features/Admin/CatalogConfiguratorAdmin.jsx` (158 líneas)
 - `src/app/features/Admin/PlatformUsersAdmin.jsx` (158 líneas)

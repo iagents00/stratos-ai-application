@@ -40,6 +40,7 @@ export default function ProjectWeekPlanner({ user, data, onSaved, onOpen, initia
   const [error,setError] = useState("");
   const [confirmation,setConfirmation] = useState("");
   const [person,setPerson] = useState("");
+  const [startDay,setStartDay] = useState("");
   const [expanded,setExpanded] = useState({});
   const lock = useRef(false);
   const { message, zone, project, draft, notes, attempt } = state;
@@ -49,8 +50,9 @@ export default function ProjectWeekPlanner({ user, data, onSaved, onOpen, initia
   })));
   const micBusy = voice.phase !== "idle";
   const today = dayInZone(zone);
-  const last = addCalendarDays(today,6);
-  const due = data.deliveries.filter((item) => item.due_on>=today && item.due_on<=last &&
+  const first = startDay || today;
+  const last = addCalendarDays(first,6);
+  const due = data.deliveries.filter((item) => item.due_on>=first && item.due_on<=last &&
     (!person || item.assignee_id === person)).sort(bySchedule);
   const nameOf = (id) => data.people.find((entry) => entry.id === id)?.name || "Integrante";
   const titleOf = (id) => data.projects.find((entry) => entry.id === id)?.title || "Proyecto";
@@ -96,6 +98,8 @@ export default function ProjectWeekPlanner({ user, data, onSaved, onOpen, initia
         }
         return;
       }
+      const firstPlanned = request.plan.map((entry) => entry.due_on).sort()[0];
+      if (firstPlanned < first || firstPlanned > last) setStartDay(firstPlanned);
       update({ draft:[], notes:[], attempt:null, message:"" });
       setConfirmation(`Plan confirmado. ${receipt.created.length} nuevas actividades${receipt.reused.length ? ` · ${receipt.reused.length} ya registradas` : ""}.`);
       await onSaved();
@@ -168,25 +172,25 @@ export default function ProjectWeekPlanner({ user, data, onSaved, onOpen, initia
             {!complete && <span className="pw-week-check">Por revisar</span>}<ChevronDown size={18} aria-hidden="true" />
           </button>
           {editing && <fieldset id={`week-${row.key}`} disabled={busy || micBusy || Boolean(attempt)}>
-        <div className="pw-form-grid">
-          <label>Actividad<input maxLength={160} value={row.title} onChange={(event)=>edit(row.key,{title:event.target.value})} /></label>
-          <label>Persona<select value={row.assignee_id} onChange={(event)=>edit(row.key,{assignee_id:event.target.value})}>
-            <option value="">{row.who ? `Elegir · ${row.who}` : "Elegir persona"}</option>
-            {data.people.map(({id,name}) => <option key={id} value={id}>{id===user.id ? `${name} (yo)` : name}</option>)}
-          </select></label>
-          <label>Proyecto<select value={row.project_id} onChange={(event)=>edit(row.key,{project_id:event.target.value})}>
-            <option value="">Elegir proyecto</option>
-            {data.projects.map(({id,title}) => <option key={id} value={id}>{title}</option>)}
-          </select></label>
-          <label>Revisa<select value={row.reviewer_id} onChange={(event)=>edit(row.key,{reviewer_id:event.target.value})}>
-            {data.people.map(({id,name}) => <option key={id} value={id}>{id===user.id ? `${name} (yo)` : name}</option>)}
-          </select></label>
-          <label>Día<input type="date" value={row.due_on} onChange={(event)=>edit(row.key,{due_on:event.target.value})} /></label>
-          <label>{row.requires_time && !row.time ? "Hora por confirmar" : "Hora"}<input type="time" value={row.time} onChange={(event)=>edit(row.key,{time:event.target.value})} /></label>
-          <label>Resultado esperado<textarea rows={2} maxLength={2000} value={row.outcome} onChange={(event)=>edit(row.key,{outcome:event.target.value})} /></label>
-          <label>Criterios de aceptación<textarea rows={2} maxLength={2900} placeholder="Uno por línea" value={row.criteria} onChange={(event)=>edit(row.key,{criteria:event.target.value})} /></label>
-        </div>
-        <button type="button" className="pw-btn pw-quiet" onClick={() => update({draft:draft.filter((entry)=>entry.key!==row.key)})}><Trash2 size={17} /> Quitar actividad</button>
+              <div className="pw-form-grid">
+                <label>Actividad<input maxLength={160} value={row.title} onChange={(event)=>edit(row.key,{title:event.target.value})} /></label>
+                <label>Persona<select value={row.assignee_id} onChange={(event)=>edit(row.key,{assignee_id:event.target.value})}>
+                  <option value="">{row.who ? `Elegir · ${row.who}` : "Elegir persona"}</option>
+                  {data.people.map(({id,name}) => <option key={id} value={id}>{id===user.id ? `${name} (yo)` : name}</option>)}
+                </select></label>
+                <label>Proyecto<select value={row.project_id} onChange={(event)=>edit(row.key,{project_id:event.target.value})}>
+                  <option value="">Elegir proyecto</option>
+                  {data.projects.map(({id,title}) => <option key={id} value={id}>{title}</option>)}
+                </select></label>
+                <label>Revisa<select value={row.reviewer_id} onChange={(event)=>edit(row.key,{reviewer_id:event.target.value})}>
+                  {data.people.map(({id,name}) => <option key={id} value={id}>{id===user.id ? `${name} (yo)` : name}</option>)}
+                </select></label>
+                <label>Día<input type="date" value={row.due_on} onChange={(event)=>edit(row.key,{due_on:event.target.value})} /></label>
+                <label>{row.requires_time && !row.time ? "Hora por confirmar" : "Hora"}<input type="time" value={row.time} onChange={(event)=>edit(row.key,{time:event.target.value})} /></label>
+                <label>Resultado esperado<textarea rows={2} maxLength={2000} value={row.outcome} onChange={(event)=>edit(row.key,{outcome:event.target.value})} /></label>
+                <label>Criterios de aceptación<textarea rows={2} maxLength={2900} placeholder="Uno por línea" value={row.criteria} onChange={(event)=>edit(row.key,{criteria:event.target.value})} /></label>
+              </div>
+              <button type="button" className="pw-btn pw-quiet" onClick={() => update({draft:draft.filter((entry)=>entry.key!==row.key)})}><Trash2 size={17} /> Quitar actividad</button>
           </fieldset>}
         </div>;
       })}
@@ -200,12 +204,16 @@ export default function ProjectWeekPlanner({ user, data, onSaved, onOpen, initia
       {incomplete>0 && <p className="pw-sub">Completa los datos de {incomplete} {incomplete===1 ? "actividad" : "actividades"} antes de guardar.</p>}
     </section>
     <section className="pw-panel">
-      <div className="pw-week-list-head"><h2>Próximos 7 días</h2>
+      <div className="pw-week-list-head"><h2>Actividades de la semana</h2>
+        <div className="pw-week-filters">
+        <label>Desde<input type="date" value={first} onChange={(event)=>setStartDay(event.target.value)} /></label>
         <label>Persona<select value={person} onChange={(event)=>setPerson(event.target.value)}>
           <option value="">Todo el equipo</option>
           {data.people.map(({id,name}) => <option key={id} value={id}>{name}</option>)}
         </select></label>
+        </div>
       </div>
+      <p className="pw-sub">{dayLabel(first,zone)} a {dayLabel(last,zone)} · {zone.replaceAll("_"," ")}</p>
       {due.length ? due.map((item) => <button className="pw-row" type="button" key={item.id} onClick={()=>onOpen(item.id)}>
         <span className="pw-tile" aria-hidden="true"><CalendarRange size={21} /></span>
         <span className="pw-row-copy"><strong>{item.title}</strong><small>{nameOf(item.assignee_id)} · {titleOf(item.project_id)}</small></span>
