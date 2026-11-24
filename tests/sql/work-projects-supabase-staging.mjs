@@ -39,7 +39,7 @@ const org = "cd478b82-d2ff-4543-981d-fb9d7aa1583e";
 const otherOrg = randomUUID();
 pg(`
   insert into organizations values ('${org}',true,'{}'), ('${otherOrg}',true,'{"features":{"projectWorkspace":true}}');
-  insert into profiles values ('${founder.id}','${org}',true,false,'ceo','Fundador'),
+  insert into profiles(id,organization_id,active,crm_only,role,name) values ('${founder.id}','${org}',true,false,'ceo','Fundador'),
     ('${executor.id}','${org}',true,false,'colaborador','Equipo'),
     ('${outsider.id}','${otherOrg}',true,false,'admin','Otra organización');
 `);
@@ -62,3 +62,24 @@ assert.equal(delivery.state, "approved");
 const anonymous = createClient(api.href, config.ANON_KEY, { auth });
 assert.ok((await anonymous.rpc("work_project_snapshot", { p_org: org })).error);
 console.log("Supabase de ensayo: autenticación, permisos, evidencias y aprobación comprobados por PostgREST.");
+
+const [dukeOwner, otherSuperadmin] = await Promise.all([signIn(), signIn()]);
+const duke = "00000000-0000-0000-0000-000000000001";
+pg(`
+  insert into organizations values ('${duke}',true,'{"features":{"projectWorkspace":true}}');
+  insert into profiles(id,organization_id,active,crm_only,role,name) values
+    ('${dukeOwner.id}','${duke}',true,false,'super_admin','Admin autorizado'),
+    ('${otherSuperadmin.id}','${duke}',true,false,'super_admin','Otro admin');
+  insert into work_duke_project_accounts(profile_id) values ('${dukeOwner.id}');
+`);
+const dukeAccess = (actor) => actor.client.rpc("work_project_duke_access");
+assert.equal(await checked(dukeAccess(dukeOwner)), true);
+assert.equal(await checked(dukeAccess(otherSuperadmin)), false);
+assert.equal(await checked(dukeAccess(founder)), false);
+assert.equal((await checked(dukeOwner.client.rpc("work_project_snapshot", { p_org: duke }))).manage, true);
+assert.equal((await otherSuperadmin.client.rpc("work_project_snapshot", { p_org: duke })).error?.code, "42501");
+assert.ok((await otherSuperadmin.client.from("work_duke_project_accounts").insert({ profile_id: otherSuperadmin.id })).error);
+assert.ok((await anonymous.rpc("work_project_duke_access")).error);
+pg(`update profiles set role='admin' where id='${dukeOwner.id}';`);
+assert.equal(await checked(dukeAccess(dukeOwner)), false);
+console.log("Duke: solo el superadministrador autorizado pudo usar Proyectos.");

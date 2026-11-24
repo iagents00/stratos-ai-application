@@ -158,6 +158,7 @@ error no está en el frontend.
 | `request_telegram_pairing_code` | `lib/telegram.js` |
 | `resolve_portfolio_link` | `app/views/LandingPages/PublicLanding.jsx` |
 | `work_project_action` | `app/features/Projects/workspace.js` |
+| `work_project_duke_access` | `app/App.jsx` |
 | `work_project_snapshot` | `app/features/Projects/workspace.js` |
 
 ---

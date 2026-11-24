@@ -4,6 +4,6 @@ create table public.organizations (id uuid primary key, active boolean, meta_con
 create table public.profiles (
   id uuid primary key references auth.users(id),
   organization_id uuid references public.organizations(id),
-  active boolean, crm_only boolean, role text, name text
+  active boolean, crm_only boolean, role text, name text, is_marketing_admin boolean default false
 );
 create table public.front_rpc_registry (nombre text primary key, nota text);

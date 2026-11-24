@@ -132,6 +132,18 @@ if (!soloTenant || soloTenant === "tenant") {
   }
 }
 
+if (!soloTenant || soloTenant === "duke") {
+  const base = clients.getClientConfig("duke");
+  const profile = { role: "super_admin", organizationId: nav.STRATOS_ORG_ID };
+  const orgOnly = { ...base, features: { ...base.features, projectWorkspace: true } };
+  const scoped = { ...base, features: { ...base.features, dukeProjectWorkspace: true } };
+  if (nav.canAccessModule("projects", profile, orgOnly)) fail("Duke: el interruptor de empresa abrió Proyectos");
+  if (!nav.canAccessModule("projects", profile, scoped)) fail("Duke: falta Proyectos con permiso individual");
+  for (const blocked of [{ role: "admin" }, { isMarketingAdmin: true }, { crmOnly: true }, { isActive: false }]) {
+    if (nav.canAccessModule("projects", { ...profile, ...blocked }, scoped)) fail("Duke: Proyectos se abrió para un perfil restringido");
+  }
+}
+
 await server.close();
 console.log(fallos === 0 ? `\n✅ Todo en orden (${tenants.length} tenants × ${roles.length} roles)` : `\n🔴 ${fallos} fallo(s)`);
 process.exit(fallos === 0 ? 0 : 1);
