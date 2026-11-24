@@ -53,17 +53,24 @@ function ProjectForm({ busy, onSave }) {
   </form>;
 }
 
-function DeliveryForm({ item, project, deliveries, people, userId, busy, onSave }) {
+function DeliveryForm({ item, project, projectOptions, deliveries, people, userId, busy, onSave }) {
   const [executor, setExecutor] = useState(item?.executor || "person");
+  const [projectId, setProjectId] = useState(project?.id || projectOptions?.[0]?.id || "");
   function submit(event) {
     event.preventDefault();
     const payload = Object.fromEntries(new FormData(event.currentTarget));
-    if (!item) payload.criteria = payload.criteria.split("\n").map((value) => value.trim()).filter(Boolean);
+    if (!item) {
+      payload.criteria = payload.criteria.split("\n").map((value) => value.trim()).filter(Boolean);
+      payload.project_id = projectId;
+    }
     onSave(payload);
   }
   return <form onSubmit={submit}>
+    {projectOptions && <label>Proyecto<select value={projectId} onChange={(event) => setProjectId(event.target.value)} required>
+      {projectOptions.map(({ id, title }) => <option key={id} value={id}>{title}</option>)}
+    </select></label>}
     {!item && <>
-      <label>Nombre de la entrega<input name="title" maxLength={160} required /></label>
+      <label>Nombre de la actividad<input name="title" maxLength={160} required /></label>
       <label>Resultado esperado<textarea name="outcome" maxLength={2000} rows={2} required /></label>
     </>}
     <label>Ejecutor<select name="executor" value={executor} onChange={(event) => setExecutor(event.target.value)}>
@@ -84,14 +91,14 @@ function DeliveryForm({ item, project, deliveries, people, userId, busy, onSave 
       </select></label>
     </div>
     {!item && <>
-      <label>Depende de<select name="depends_on" defaultValue="">
+      <label>Depende de<select name="depends_on" key={projectId} defaultValue="">
         <option value="">Sin dependencia</option>
-        {deliveries.filter((entry) => entry.project_id === project.id).map((entry) => <option key={entry.id} value={entry.id}>{entry.title}</option>)}
+        {deliveries.filter((entry) => entry.project_id === projectId).map((entry) => <option key={entry.id} value={entry.id}>{entry.title}</option>)}
       </select></label>
       <label>Criterios de aceptación<textarea name="criteria" placeholder="Un criterio por línea" maxLength={2900} rows={3} required /></label>
     </>}
     {executor === "progress_report" && <p className="pw-sub">El agente prepara un informe interno y lo envía al revisor cuando lo ejecutes.</p>}
-    <button className="pw-btn pw-primary" type="submit" disabled={busy}>{item ? "Guardar delegación" : "Crear entrega"}</button>
+    <button className="pw-btn pw-primary" type="submit" disabled={busy}>{item ? "Guardar delegación" : "Crear actividad"}</button>
   </form>;
 }
 
@@ -195,12 +202,12 @@ function DeliveryHistory({ org, id, version, people }) {
   </li>)}</ol>;
 }
 
-export default function ProjectWorkspace({ user, isLight, requestedDelivery, onRequestHandled, onCopilot, onAgenda }) {
+export default function ProjectWorkspace({ user, isLight, requestedDelivery, onRequestHandled, onCopilot, onAgenda, onCloseDetail }) {
   const org = user.organizationId;
   const { data, loading, error, reload } = useProjects(org);
   const [selectedMode, setMode] = useState(null);
   const [tab, setTab] = useState("today");
-  const [dialog, setDialog] = useState(null);
+  const [dialog, setDialog] = useState(() => onCloseDetail ? { type:"detail", id:requestedDelivery } : null);
   const [notice, setNotice] = useState("");
   const [problem, setProblem] = useState("");
   const [busy, setBusy] = useState(false);
@@ -218,12 +225,12 @@ export default function ProjectWorkspace({ user, isLight, requestedDelivery, onR
   const currentProject = projects.get(dialog?.projectId);
 
   useEffect(() => {
-    if (!requestedDelivery || !data) return;
+    if (onCloseDetail || !requestedDelivery || !data) return;
     const exists = data.deliveries.some((item) => item.id === requestedDelivery);
     if (exists) setDialog({ type: "detail", id: requestedDelivery });
     else setProblem("La entrega no está disponible para tu cuenta.");
     onRequestHandled();
-  }, [requestedDelivery, data, onRequestHandled]);
+  }, [requestedDelivery, data, onRequestHandled, onCloseDetail]);
 
   const open = (value) => { setProblem(""); setNotice(""); setDialog(value); };
   const show = (id) => open({ type: "detail", id });
@@ -285,7 +292,8 @@ export default function ProjectWorkspace({ user, isLight, requestedDelivery, onR
   const projectRow = (project) => <Row key={project.id} title={project.title} detail={project.outcome} onClick={() => showProject(project.id)} />;
   const messages = <>{problem && <p className="pw-alert" role="alert">{problem}</p>}{notice && <p className="pw-status" role="status">{notice}</p>}</>;
 
-  return <section className="pw" data-theme={isLight ? "light" : "dark"} aria-label="Proyectos">
+  return <section className={onCloseDetail ? "pw pw-detail-host" : "pw"} data-theme={isLight ? "light" : "dark"} aria-label={onCloseDetail ? "Actividad de Agenda" : "Proyectos"}>
+    {!onCloseDetail && <>
     <div className="pw-toolbar">
       <nav aria-label="Vistas de proyectos">{tabs[mode].map(([id, label]) => <button type="button" key={id}
         aria-current={tab === id ? "page" : undefined} disabled={busy} onClick={() => setTab(id)}>{label}</button>)}</nav>
@@ -293,6 +301,8 @@ export default function ProjectWorkspace({ user, isLight, requestedDelivery, onR
         {data?.manage && <button type="button" className="pw-btn" disabled={busy} onClick={() => { setMode(mode === "direction" ? "operation" : "direction"); setTab("today"); }}>
           {mode === "direction" ? "Mi trabajo" : "Dirección"}</button>}
         {data?.manage && mode === "direction" && <button type="button" className="pw-btn pw-primary" disabled={busy} onClick={() => add("newProject")}><Plus size={18} /> Nuevo proyecto</button>}
+        {data?.manage && mode === "direction" && data.projects.length > 0 && <button type="button" className="pw-btn"
+          disabled={busy} onClick={() => add("newActivity")}><Plus size={18} /> Nueva actividad</button>}
         {onAgenda && <button type="button" className="pw-btn" disabled={busy} onClick={onAgenda}><CalendarDays size={17} /> Agenda</button>}
       </div>
     </div>
@@ -347,10 +357,14 @@ export default function ProjectWorkspace({ user, isLight, requestedDelivery, onR
       <span className="pw-atom" style={{ animation: "pw-orbit 12s linear infinite" }}><StratosAtomHex size={34} color="var(--pw-blue)" edge="#43bfff" /></span><strong>Copilot</strong>
       <span>{mode === "operation" && focus ? "Ayúdame con esta entrega" : "¿Qué quieres avanzar?"}</span><ArrowRight size={25} />
     </button>}
-    {dialog && <Modal key={`${dialog.type}:${dialog.id || dialog.projectId || ""}`} busy={busy} onClose={() => open(null)}
-      title={dialog.type === "newProject" ? "Nuevo proyecto" : dialog.type === "newDelivery" ? "Nueva entrega"
+    </>}
+    {dialog && <Modal key={`${dialog.type}:${dialog.id || dialog.projectId || ""}`} busy={busy} onClose={onCloseDetail || (() => open(null))}
+      title={dialog.type === "newProject" ? "Nuevo proyecto" : ["newDelivery","newActivity"].includes(dialog.type) ? "Nueva actividad"
         : dialog.type === "delegate" ? "Delegar entrega" : detail?.title || currentProject?.title || "Proyecto"}>
       {messages}
+      {onCloseDetail && loading && !data && <p className="pw-sub" role="status">Cargando actividad…</p>}
+      {onCloseDetail && error && <p className="pw-alert" role="alert">{error} <button className="pw-btn" type="button" onClick={reload}>Reintentar</button></p>}
+      {onCloseDetail && data && !detail && <p className="pw-sub">Esta actividad ya no está asignada a tu cuenta.</p>}
       {dialog.type === "newProject" && <ProjectForm busy={busy} onSave={(payload) => perform("create_project", { ...payload,id:dialog.newId },
         (saved) => ({ type:"project", projectId:saved.id }))} />}
       {dialog.type === "project" && currentProject && <>
@@ -358,13 +372,13 @@ export default function ProjectWorkspace({ user, isLight, requestedDelivery, onR
         {data.manage && <p className="pw-sub">{items.filter((item) => item.project_id === currentProject.id && item.state === "approved").length}
           {" de "}{items.filter((item) => item.project_id === currentProject.id).length} entregas aprobadas</p>}
         {data.manage && <button type="button" className="pw-btn pw-primary" disabled={busy} onClick={() => add("newDelivery",currentProject.id)}>
-          <Plus size={18} /> Nueva entrega</button>}
+          <Plus size={18} /> Nueva actividad</button>}
         {items.filter((item) => item.project_id === currentProject.id).map((item) => taskRow(item,true))}
       </>}
-      {(dialog.type === "newDelivery" || dialog.type === "delegate") && <DeliveryForm item={detail} project={currentProject}
-        deliveries={items} people={data.people} userId={user.id} busy={busy}
+      {["newDelivery","newActivity","delegate"].includes(dialog.type) && <DeliveryForm item={detail} project={currentProject}
+        projectOptions={dialog.type === "newActivity" ? data.projects : undefined} deliveries={items} people={data.people} userId={user.id} busy={busy}
         onSave={(payload) => perform(detail ? "delegate" : "create_delivery", {
-          ...payload, id:detail?.id || dialog.newId, version:detail?.version, project_id:currentProject?.id,
+          ...payload, id:detail?.id || dialog.newId, version:detail?.version,
         }, (saved) => ({ type:"detail", id:saved.id }))} />}
       {dialog.type === "detail" && detail && <>
         <p className="pw-sub">{description(detail)}</p><Badge item={detail} /><p className="pw-result">{detail.outcome}</p>
@@ -376,7 +390,7 @@ export default function ProjectWorkspace({ user, isLight, requestedDelivery, onR
         <div className="pw-actions">
           {data.manage && ["ready","active","blocked"].includes(detail.state) && <button type="button" className="pw-btn"
             disabled={busy || Boolean(detail.running_until)} onClick={() => open({ type:"delegate", id:detail.id })}>Delegar</button>}
-          {detail.assignee_id === user.id && ["ready","active","blocked"].includes(detail.state) && <button type="button" className="pw-btn" disabled={busy}
+          {!onCloseDetail && detail.assignee_id === user.id && ["ready","active","blocked"].includes(detail.state) && <button type="button" className="pw-btn" disabled={busy}
             onClick={() => perform("focus", { id:detail.id }, () => { setMode("operation"); setTab("today"); return null; })}>Usar como entrega actual</button>}
         </div>
         <details><summary>Historial</summary><DeliveryHistory org={org} id={detail.id} version={detail.version} people={people} /></details>

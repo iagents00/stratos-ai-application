@@ -4,9 +4,9 @@ import { byPriority, dayLabel, deliveryState, states, useProjects } from "./work
 export default function ProjectAgenda({ org, userId, team, onOpen, T }) {
   const { data, loading, error, reload } = useProjects(org);
   const projects = new Map(data?.projects.map((project) => [project.id, project.title]));
-  const items = data?.deliveries.filter((item) => item.due_on && item.state !== "approved" &&
+  const items = data?.deliveries.filter((item) => item.state !== "approved" &&
     ((team && data.manage) || item.assignee_id === userId || (item.reviewer_id === userId && item.state === "review")))
-    .sort((a, b) => a.due_on.localeCompare(b.due_on) || byPriority(a, b)) || [];
+    .sort((a, b) => (a.due_on || "z").localeCompare(b.due_on || "z") || byPriority(a, b)) || [];
 
   if (!items.length && !loading && !error) return null;
   return <section aria-label="Entregas de proyectos" style={{ margin: "16px 0", border: `1px solid ${T.border}`, borderRadius: 14, padding: "12px 16px" }}>

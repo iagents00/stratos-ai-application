@@ -34,6 +34,7 @@
   --pw-success-text: #a6ebc7;
 }
 .pw { background: var(--pw-bg); border-radius: 16px; padding: 22px; min-width: 0; }
+.pw-detail-host { padding: 0; background: transparent; }
 .pw *, .pw-dialog * { box-sizing: border-box; }
 .pw button, .pw-dialog button { font: inherit; cursor: pointer; }
 .pw button:disabled, .pw-dialog button:disabled { opacity: .57; cursor: default; }
