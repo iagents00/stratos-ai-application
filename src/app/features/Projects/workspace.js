@@ -12,13 +12,42 @@ export function localDay(date = new Date()) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-export function dayLabel(day) {
+export function dayInZone(zone, date = new Date()) {
+  const format = new Intl.DateTimeFormat("en-CA", { timeZone:zone, year:"numeric", month:"2-digit", day:"2-digit" });
+  const parts = Object.fromEntries(format.formatToParts(date).map(({type,value}) => [type,value]));
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+export function addCalendarDays(day, count) {
+  const date = new Date(`${day}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate()+count);
+  return date.toISOString().slice(0,10);
+}
+
+export function dayLabel(day, zone) {
   if (!day) return "Sin fecha";
-  const now = new Date();
-  if (day === localDay(now)) return "Hoy";
-  now.setDate(now.getDate() + 1);
-  if (day === localDay(now)) return "Mañana";
-  return new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short" }).format(new Date(`${day}T12:00:00`));
+  const today = zone ? dayInZone(zone) : localDay();
+  if (day === today) return "Hoy";
+  if (day === addCalendarDays(today,1)) return "Mañana";
+  return new Intl.DateTimeFormat("es-MX", { day:"numeric", month:"short", timeZone:"UTC" }).format(new Date(`${day}T12:00:00Z`));
+}
+
+export function scheduleLabel(item) {
+  if (!item.scheduled_at || !item.schedule_zone) return dayLabel(item.due_on);
+  try {
+    const clock = new Intl.DateTimeFormat("es-MX", {
+      timeZone: item.schedule_zone, hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+    }).format(new Date(item.scheduled_at));
+    const location = item.schedule_zone.split("/").at(-1).replaceAll("_", " ");
+    return `${dayLabel(item.due_on,item.schedule_zone)} · ${clock} (${location})`;
+  } catch {
+    return dayLabel(item.due_on);
+  }
+}
+
+export function bySchedule(a, b) {
+  return (a.due_on || "z").localeCompare(b.due_on || "z") ||
+    (a.scheduled_at || "z").localeCompare(b.scheduled_at || "z") || byPriority(a,b);
 }
 
 export function byPriority(a, b) {
@@ -39,13 +68,21 @@ export async function askProjects(org, delivery, text, history = []) {
   return invoke({ organization: org, delivery: delivery || null, mode: "help", text, history });
 }
 
+export function draftProjectWeek(org, text, zone, project) {
+  return invoke({ organization: org, delivery: null, mode: "plan", text, zone, project: project || null });
+}
+
+export async function applyProjectWeek(org, request, zone, plan) {
+  return await supabase.rpc("work_project_apply_week", { p_org: org, p_request: request, p_zone: zone, p_plan: plan });
+}
+
 export async function runProjectAgent(org, item) {
   return invoke({ organization: org, delivery: item.id, mode: "report", version: item.version });
 }
 
 async function invoke(body) {
   try {
-    const { data, error } = await supabase.functions.invoke("work-project-copilot", { body, timeout: 60000 });
+    const { data, error } = await supabase.functions.invoke("work-project-copilot", { body, timeout: body.mode === "plan" ? 105000 : 60000 });
     if (!error) return data;
     const detail = await error.context?.json?.().catch(() => null);
     return { error: detail?.error || "No pudimos confirmar la respuesta. Actualiza antes de volver a intentar." };

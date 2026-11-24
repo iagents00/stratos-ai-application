@@ -1,12 +1,12 @@
 import { CalendarDays, ChevronRight } from "lucide-react";
-import { byPriority, dayLabel, deliveryState, states, useProjects } from "./workspace";
+import { bySchedule, scheduleLabel, deliveryState, states, useProjects } from "./workspace";
 
 export default function ProjectAgenda({ org, userId, team, onOpen, T }) {
   const { data, loading, error, reload } = useProjects(org);
   const projects = new Map(data?.projects.map((project) => [project.id, project.title]));
   const items = data?.deliveries.filter((item) => item.state !== "approved" &&
     ((team && data.manage) || item.assignee_id === userId || (item.reviewer_id === userId && item.state === "review")))
-    .sort((a, b) => (a.due_on || "z").localeCompare(b.due_on || "z") || byPriority(a, b)) || [];
+    .sort(bySchedule) || [];
 
   if (!items.length && !loading && !error) return null;
   return <section aria-label="Entregas de proyectos" style={{ margin: "16px 0", border: `1px solid ${T.border}`, borderRadius: 14, padding: "12px 16px" }}>
@@ -18,7 +18,7 @@ export default function ProjectAgenda({ org, userId, team, onOpen, T }) {
         color: T.txt, background: "transparent", border: 0, textAlign: "left", cursor: "pointer" }}>
       <CalendarDays size={18} color={T.accent} aria-hidden="true" />
       <span style={{ flex: 1, minWidth: 0, overflowWrap: "anywhere" }}><strong style={{ display: "block" }}>{item.title}</strong>
-        <span style={{ color: T.txt2, fontSize: 13 }}>{projects.get(item.project_id)} · {dayLabel(item.due_on)} · {states[deliveryState(item)]}</span>
+        <span style={{ color: T.txt2, fontSize: 13 }}>{projects.get(item.project_id)} · {scheduleLabel(item)} · {states[deliveryState(item)]}</span>
       </span>
       <ChevronRight size={17} aria-hidden="true" />
     </button>)}
