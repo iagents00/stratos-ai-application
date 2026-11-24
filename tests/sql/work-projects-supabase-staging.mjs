@@ -63,23 +63,48 @@ const anonymous = createClient(api.href, config.ANON_KEY, { auth });
 assert.ok((await anonymous.rpc("work_project_snapshot", { p_org: org })).error);
 console.log("Supabase de ensayo: autenticación, permisos, evidencias y aprobación comprobados por PostgREST.");
 
-const [dukeOwner, otherSuperadmin] = await Promise.all([signIn(), signIn()]);
+const [dukeOwner, otherSuperadmin, teamMember] = await Promise.all([signIn(), signIn(), signIn()]);
 const duke = "00000000-0000-0000-0000-000000000001";
 pg(`
   insert into organizations values ('${duke}',true,'{"features":{"projectWorkspace":true}}');
   insert into profiles(id,organization_id,active,crm_only,role,name) values
     ('${dukeOwner.id}','${duke}',true,false,'super_admin','Admin autorizado'),
-    ('${otherSuperadmin.id}','${duke}',true,false,'super_admin','Otro admin');
+    ('${otherSuperadmin.id}','${duke}',true,false,'super_admin','Otro admin'),
+    ('${teamMember.id}','${duke}',true,false,'asesor','Integrante de Duke');
   insert into work_duke_project_accounts(profile_id) values ('${dukeOwner.id}');
 `);
 const dukeAccess = (actor) => actor.client.rpc("work_project_duke_access");
 assert.equal(await checked(dukeAccess(dukeOwner)), true);
 assert.equal(await checked(dukeAccess(otherSuperadmin)), false);
 assert.equal(await checked(dukeAccess(founder)), false);
-assert.equal((await checked(dukeOwner.client.rpc("work_project_snapshot", { p_org: duke }))).manage, true);
-assert.equal((await otherSuperadmin.client.rpc("work_project_snapshot", { p_org: duke })).error?.code, "42501");
+const dukeSnapshot = (actor, deliveryId = null) => actor.client.rpc("work_project_snapshot", { p_org: duke, p_delivery: deliveryId });
+const dukeAction = (actor, action, data) => actor.client.rpc("work_project_action", { p_org: duke, p_action: action, p_data: data });
+const dukeWorkspace = await checked(dukeSnapshot(dukeOwner));
+assert.equal(dukeWorkspace.manage, true);
+assert.ok(dukeWorkspace.people.some((person) => person.id === teamMember.id));
+assert.equal((await checked(dukeSnapshot(otherSuperadmin))).manage, false);
 assert.ok((await otherSuperadmin.client.from("work_duke_project_accounts").insert({ profile_id: otherSuperadmin.id })).error);
 assert.ok((await anonymous.rpc("work_project_duke_access")).error);
+
+const dukeProject = randomUUID();
+await checked(dukeAction(dukeOwner, "create_project", { id: dukeProject, title: "Proyecto Duke", outcome: "Revisar entregas" }));
+await assert.rejects(checked(dukeAction(otherSuperadmin, "create_project",
+  { id: randomUUID(), title: "No autorizado", outcome: "Debe rechazarlo" })));
+const activity = randomUUID();
+const payload = {
+  id: activity, project_id: dukeProject, title: "Actividad individual", outcome: "Evidencia lista",
+  assignee_id: teamMember.id, reviewer_id: dukeOwner.id, executor: "person", criteria: ["Comprobar fuentes"],
+};
+await assert.rejects(checked(dukeAction(dukeOwner, "create_delivery", { ...payload, assignee_id: outsider.id })));
+let assigned = await checked(dukeAction(dukeOwner, "create_delivery", payload));
+assert.equal(assigned.due_on, null);
+assert.deepEqual((await checked(dukeSnapshot(teamMember))).deliveries.map((entry) => entry.id), [activity]);
+assert.equal((await dukeSnapshot(otherSuperadmin, activity)).error?.code, "42501");
+assert.equal((await dukeSnapshot(outsider, activity)).error?.code, "42501");
+assert.equal(await checked(dukeAccess(teamMember)), false);
+assigned = await checked(dukeAction(teamMember, "start", { id: activity, version: assigned.version }));
+assigned = await checked(dukeAction(teamMember, "submit", { id: activity, version: assigned.version, checked: [true], evidence: "Fuentes verificadas" }));
+assert.equal((await checked(dukeAction(dukeOwner, "approve", { id: activity, version: assigned.version }))).state, "approved");
 pg(`update profiles set role='admin' where id='${dukeOwner.id}';`);
 assert.equal(await checked(dukeAccess(dukeOwner)), false);
-console.log("Duke: solo el superadministrador autorizado pudo usar Proyectos.");
+console.log("Duke: el módulo sigue limitado al superadministrador. Un integrante pudo trabajar su actividad y otro superadministrador quedó excluido.");

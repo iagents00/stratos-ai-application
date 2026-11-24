@@ -321,7 +321,7 @@ export default function App() {
   const clientConfig = useMemo(() => dukeProjectsAllowed ? {
     ...baseClientConfig,
     features: { ...baseClientConfig.features, dukeProjectWorkspace: true },
-    navLabels: { ...baseClientConfig.navLabels, e: "Catálogo" },
+    navLabels: { ...baseClientConfig.navLabels, e: "Portafolio" },
   } : baseClientConfig, [baseClientConfig, dukeProjectsAllowed]);
   const isAsesorRole     = !["super_admin","admin","director","ceo"].includes(user?.role);
   const marketingMode    = isMarketingUser(user);
@@ -1734,16 +1734,23 @@ export default function App() {
   /* ── MetaPanel state ── */
   const [metaOpen, setMetaOpen]     = useState(false);
   const [requestedDelivery, setRequestedDelivery] = useState(null);
+  const [agendaDelivery, setAgendaDelivery] = useState(null);
   const [projectHelp, setProjectHelp] = useState(null);
   const projectsEnabled = canAccessModule("projects", user, clientConfig);
+  const dukeAgendaActivities = isStratosOrg(user?.organizationId) && !user.isDemo && !user._offline
+    && !user.crmOnly && user.isActive !== false && MODULE_ROLES.copilot.includes(user.role);
   const clearRequestedDelivery = useCallback(() => setRequestedDelivery(null), []);
   useEffect(() => {
     if (v !== "copilot") setProjectHelp(null);
   }, [v]);
   const openProjectDelivery = (id) => {
-    setRequestedDelivery(id);
     setMetaOpen(false);
-    setV("projects");
+    if (projectsEnabled) {
+      setRequestedDelivery(id);
+      setV("projects");
+    } else if (dukeAgendaActivities) {
+      setAgendaDelivery({ id, userId: user.id });
+    }
   };
   const openProjectHelp = (context) => {
     setProjectHelp({ ...context, actor: user.id, org: user.organizationId });
@@ -3306,10 +3313,18 @@ export default function App() {
         document.body
       )}
 
+      {dukeAgendaActivities && agendaDelivery?.userId === user.id && <Suspense fallback={null}>
+        <ProjectWorkspace key={`${user.id}:${agendaDelivery.id}`} user={user} isLight={isLight}
+          requestedDelivery={agendaDelivery.id} onCloseDetail={() => {
+            setAgendaDelivery(null);
+            setMetaTab("acciones");
+            setMetaOpen(true);
+          }} />
+      </Suspense>}
       {/* ══ META PANEL ══ */}
       <MetaPanel
         requestedDocumentId={spaceDocumentId}
-        onOpenProjectDelivery={projectsEnabled ? openProjectDelivery : undefined}
+        onOpenProjectDelivery={projectsEnabled || dukeAgendaActivities ? openProjectDelivery : undefined}
         open={metaOpen && v !== "mi_espacio"}
         onClose={() => setMetaOpen(false)}
         user={user}
