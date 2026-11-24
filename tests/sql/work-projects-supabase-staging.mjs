@@ -107,6 +107,32 @@ assert.equal(await checked(admin.rpc("work_project_limit_help", { p_org: duke, p
 assigned = await checked(dukeAction(teamMember, "start", { id: activity, version: assigned.version }));
 assigned = await checked(dukeAction(teamMember, "submit", { id: activity, version: assigned.version, checked: [true], evidence: "Fuentes verificadas" }));
 assert.equal((await checked(dukeAction(dukeOwner, "approve", { id: activity, version: assigned.version }))).state, "approved");
+const weekRequest = randomUUID();
+const applyWeek = (actor, requestId, activities, zone = "America/Tijuana") => actor.client.rpc("work_project_apply_week", {
+  p_org: duke, p_request: requestId, p_zone: zone, p_plan: activities,
+});
+const planned = [
+  { project_id:dukeProject, title:"Revisar propuesta", outcome:"Propuesta revisada", assignee_id:teamMember.id,
+    reviewer_id:dukeOwner.id, due_on:"2026-11-24", time:"09:00", criteria:["Validar alcance"] },
+  { project_id:dukeProject, title:"Cerrar revisión", outcome:"Resultado confirmado", assignee_id:dukeOwner.id,
+    reviewer_id:dukeOwner.id, due_on:"2026-11-25", time:"16:00", criteria:["Verificar resultado"] },
+];
+assert.equal((await applyWeek(teamMember,weekRequest,planned)).error?.code,"42501");
+await assert.rejects(checked(applyWeek(dukeOwner,randomUUID(),[planned[0],{...planned[1],assignee_id:outsider.id}])));
+assert.ok(!(await checked(dukeSnapshot(dukeOwner))).deliveries.some(item=>item.title===planned[0].title));
+const weekReceipt = await checked(applyWeek(dukeOwner,weekRequest,planned));
+assert.equal(weekReceipt.created.length,2);
+assert.deepEqual(await checked(applyWeek(dukeOwner,weekRequest,planned)),weekReceipt);
+assert.equal((await applyWeek(dukeOwner,weekRequest,[planned[0]])).error?.code,"23505");
+assert.equal((await checked(applyWeek(dukeOwner,randomUUID(),planned))).reused.length,2);
+const [assignedWeek] = (await checked(dukeSnapshot(teamMember))).deliveries.filter(item=>item.title===planned[0].title);
+assert.equal(assignedWeek.schedule_zone,"America/Tijuana");
+assert.equal(new Date(assignedWeek.scheduled_at).toISOString(),"2026-11-24T17:00:00.000Z");
+assert.equal((await dukeSnapshot(otherSuperadmin,weekReceipt.created[0])).error?.code,"42501");
+const moved = await checked(dukeAction(dukeOwner,"delegate",{id:assignedWeek.id,version:assignedWeek.version,
+  assignee_id:teamMember.id,reviewer_id:dukeOwner.id,executor:"person",due_on:"2026-11-26"}));
+assert.equal(new Date(moved.scheduled_at).toISOString(),"2026-11-26T17:00:00.000Z");
+console.log("Semana: lote atómico, recibo reproducible, horario local y permisos confirmados.");
 pg(`update profiles set role='admin' where id='${dukeOwner.id}';`);
 assert.equal(await checked(dukeAccess(dukeOwner)), false);
 console.log("Duke: el módulo sigue limitado al superadministrador. Un integrante pudo trabajar su actividad y otro superadministrador quedó excluido.");

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, CalendarDays, ChevronRight, CircleHelp, Layers, Paperclip, Plus, X } from "lucide-react";
+import { ArrowRight, CalendarDays, CalendarRange, ChevronRight, CircleHelp, Layers, Paperclip, Plus, X } from "lucide-react";
 import { StratosAtomHex } from "../../components/Logo";
-import { byPriority, changeProject, dayLabel, deliveryState, loadProjects, localDay, runProjectAgent, states, useProjects } from "./workspace";
+import { byPriority, changeProject, dayLabel, deliveryState, loadProjects, localDay, runProjectAgent, scheduleLabel, states, useProjects } from "./workspace";
+import ProjectWeekPlanner from "./ProjectWeekPlanner";
 import { projectTheme } from "./project-theme";
 import "./projects.css";
 
@@ -203,11 +204,11 @@ function DeliveryHistory({ org, id, version, people }) {
   </li>)}</ol>;
 }
 
-export default function ProjectWorkspace({ user, isLight, requestedDelivery, onRequestHandled, onCopilot, onAgenda, onCloseDetail }) {
+export default function ProjectWorkspace({ user, isLight, requestedDelivery, onRequestHandled, onCopilot, onAgenda, onCloseDetail, initialWeekText = null }) {
   const org = user.organizationId;
   const { data, loading, error, reload } = useProjects(org);
   const [selectedMode, setMode] = useState(null);
-  const [tab, setTab] = useState("today");
+  const [tab, setTab] = useState(initialWeekText === null ? "today" : "week");
   const [dialog, setDialog] = useState(() => onCloseDetail ? { type:"detail", id:requestedDelivery } : null);
   const [notice, setNotice] = useState("");
   const [problem, setProblem] = useState("");
@@ -285,7 +286,7 @@ export default function ProjectWorkspace({ user, isLight, requestedDelivery, onR
     actionRank(a) - actionRank(b) || Number((b.due_on || "z") <= localDay()) - Number((a.due_on || "z") <= localDay()) || byPriority(a,b)).slice(0,3);
   const activeProjects = data?.projects.filter((project) => !items.some((item) => item.project_id === project.id)
     || items.some((item) => item.project_id === project.id && item.state !== "approved")) || [];
-  const description = (item) => `${projects.get(item.project_id)?.title || "Proyecto"} · ${dayLabel(item.due_on)}`;
+  const description = (item) => `${projects.get(item.project_id)?.title || "Proyecto"} · ${scheduleLabel(item)}`;
   const person = (id) => people.get(id) || "Integrante";
   const help = onCopilot ? (item) => onCopilot(item ? { id: item.id, title: item.title } : { id: null }) : undefined;
   const taskRow = (item, status = false) => <Row key={item.id} title={item.title} detail={description(item)} Icon={CalendarDays}
@@ -304,12 +305,17 @@ export default function ProjectWorkspace({ user, isLight, requestedDelivery, onR
         {data?.manage && mode === "direction" && <button type="button" className="pw-btn pw-primary" disabled={busy} onClick={() => add("newProject")}><Plus size={18} /> Nuevo proyecto</button>}
         {data?.manage && mode === "direction" && data.projects.length > 0 && <button type="button" className="pw-btn"
           disabled={busy} onClick={() => add("newActivity")}><Plus size={18} /> Nueva actividad</button>}
+        {data?.manage && mode === "direction" && onCopilot && <button
+          type="button" className="pw-btn" aria-pressed={tab === "week"} disabled={busy}
+          onClick={() => setTab("week")}><CalendarRange size={18} /> Planear semana</button>}
         {onAgenda && <button type="button" className="pw-btn" disabled={busy} onClick={onAgenda}><CalendarDays size={17} /> Agenda</button>}
       </div>
     </div>
     {!dialog && messages}
     {loading && !data && <p className="pw-panel pw-sub" role="status">Cargando proyectos…</p>}
     {error && <p className="pw-alert" role="alert">{error} <button className="pw-btn" type="button" onClick={reload}>Reintentar</button></p>}
+    {data?.manage && tab === "week" && <ProjectWeekPlanner user={user} data={data} initialText={initialWeekText}
+      onSaved={reload} onOpen={show} />}
     {data && tab === "today" && mode === "direction" && <div className="pw-grid">
       <section className="pw-panel"><h1 className="pw-today"><span>Hoy</span> Tu siguiente paso</h1>
         {attention.length ? attention.map((item,i) => <Row key={item.id} rank={i+1} title={item.title}

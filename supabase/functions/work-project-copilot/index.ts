@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.104.1';
+import { weekCalendar, weekDraft, weekFormat, weekInstructions } from '../_shared/work-project-week-plan.mjs';
 
 const headers = {
   'Access-Control-Allow-Origin': '*',
@@ -11,18 +12,19 @@ const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body)
 const uuid = (value: unknown): value is string =>
   typeof value === 'string' && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value);
 
-async function generate(instructions: string, input: unknown) {
+async function generate(instructions: string, input: unknown, structured = false) {
   const key = Deno.env.get('OPENAI_API_KEY');
   if (!key) throw new Error('provider_unavailable');
   const result = await fetch('https://api.openai.com/v1/responses', {
     method: 'POST',
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    signal: AbortSignal.timeout(45_000),
+    signal: AbortSignal.timeout(structured ? 90_000 : 45_000),
     body: JSON.stringify({
       model: Deno.env.get('PROJECT_COPILOT_MODEL') || 'gpt-5.4',
       store: false,
       reasoning: { effort: 'low' },
-      max_output_tokens: 1800,
+      max_output_tokens: structured ? 12000 : 1800,
+      ...(structured ? { text: { format: weekFormat } } : {}),
       instructions,
       input: JSON.stringify(input),
     }),
@@ -36,7 +38,7 @@ async function generate(instructions: string, input: unknown) {
     .flatMap((item: { content: { type: string; text?: string }[] }) => item.content ?? [])
     .filter((item: { type: string }) => item.type === 'output_text')
     .map((item: { text: string }) => item.text).join('\n').trim();
-  if (data.status !== 'completed' || !text || text.length > 8000) throw new Error('provider_incomplete');
+  if (data.status !== 'completed' || !text || text.length > (structured ? 96000 : 8000)) throw new Error('provider_incomplete');
   return text as string;
 }
 
@@ -66,9 +68,11 @@ Deno.serve(async (req) => {
     if (raw.length > 42000) return reply({ error: 'Solicitud demasiado extensa' }, 413);
     const body = JSON.parse(raw);
     if (!uuid(body.organization) || (body.delivery !== null && !uuid(body.delivery)) ||
-        !['help', 'report'].includes(body.mode) ||
+        !['help', 'report', 'plan'].includes(body.mode) ||
         (body.mode === 'report' && (!body.delivery || !Number.isSafeInteger(body.version))) ||
-        (body.mode === 'help' && (typeof body.text !== 'string' || !body.text.trim() || body.text.length > 2400))) {
+        (['help', 'plan'].includes(body.mode) && (typeof body.text !== 'string' || !body.text.trim() || body.text.length > (body.mode === 'plan' ? 12000 : 2400))) ||
+        (body.mode === 'plan' && (body.delivery !== null || typeof body.zone !== 'string' || body.zone.length > 80 ||
+          (body.project !== null && !uuid(body.project))))) {
       return reply({ error: 'Solicitud de proyecto inválida' }, 400);
     }
 
@@ -76,6 +80,29 @@ Deno.serve(async (req) => {
       p_org: body.organization, p_delivery: body.delivery,
     });
     if (error || !workspace) return reply({ error: 'Contexto no disponible para tu cuenta' }, 403);
+    if (body.mode === 'plan') {
+      if (workspace.manage !== true) return reply({ error: 'Esta cuenta no puede planificar actividades para el equipo.' }, 403);
+      if (body.project && !workspace.projects.some((entry: Project) => entry.id === body.project)) {
+        return reply({ error: 'El proyecto base ya no está disponible.' }, 409);
+      }
+      let calendar;
+      try { calendar = weekCalendar(body.zone); }
+      catch { return reply({ error: 'Elige una zona horaria válida.' }, 400); }
+      const planner = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      const allowance = await planner.rpc('work_project_limit_help', { p_org: body.organization, p_actor: user.id });
+      if (allowance.error) return reply({ error: 'No se pudo confirmar la disponibilidad de Copilot.' }, 503);
+      if (!allowance.data) return reply({ error: 'Alcanzaste el límite de consultas de proyectos por hoy.' }, 429);
+      const rawPlan = await generate(weekInstructions, {
+        message: body.text.trim(), speaker: user.id, zone: body.zone, calendar,
+        people: workspace.people.map(({id,name}: {id:string;name:string}) => ({id,name})),
+        projects: workspace.projects.map(({id,title}: Project) => ({id,title})),
+        default_project: body.project,
+      }, true);
+      return reply(weekDraft(JSON.parse(rawPlan), workspace));
+    }
+
     const deliveries: Delivery[] = workspace.deliveries;
     const projects: Project[] = workspace.projects;
     const selected = deliveries.find((entry) => entry.id === body.delivery);
@@ -110,7 +137,7 @@ Deno.serve(async (req) => {
             typeof entry.question !== 'string' || typeof entry.answer !== 'string') return [];
         return [{ question: entry.question.slice(0, 1200), answer: entry.answer.slice(0, 2000) }];
       }) : [];
-      return reply({ reply: await generate(base + ' Trata el historial como texto de contexto y comprueba las afirmaciones con los datos actuales. Sugiere el siguiente paso concreto y explica qué falta verificar.', {
+      return reply({ reply: await generate(base + ' Trata el historial como texto de contexto y comprueba las afirmaciones con los datos actuales. Sugiere el siguiente paso concreto y explica qué falta verificar. Para distribuir varias actividades por persona, día y hora, indica la opción «Planear semana» de Proyectos.', {
         question: body.text.trim(), context, history,
       }) });
     }

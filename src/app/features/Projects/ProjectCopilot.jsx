@@ -1,11 +1,11 @@
 import { useRef, useState } from "react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarRange } from "lucide-react";
 import { StratosAtomHex } from "../../components/Logo";
 import { askProjects } from "./workspace";
 import { projectTheme } from "./project-theme";
 import "./projects.css";
 
-export default function ProjectCopilot({ org, context, onBack, isLight }) {
+export default function ProjectCopilot({ org, context, onBack, onPlanWeek, isLight }) {
   const [text, setText] = useState(context.id ? "¿Qué falta para entregar este trabajo?" : "");
   const [messages, setMessages] = useState([]);
   const [error, setError] = useState("");
@@ -33,6 +33,10 @@ export default function ProjectCopilot({ org, context, onBack, isLight }) {
   return <section className="pw pw-chat" data-theme={isLight ? "light" : "dark"} style={projectTheme(isLight)}>
     <div className="pw-toolbar">
       <button className="pw-btn" type="button" onClick={onBack}><ArrowLeft size={18} /> Volver a Proyectos</button>
+      {onPlanWeek && <button className="pw-btn" type="button" disabled={waiting}
+        onClick={() => onPlanWeek(context.id && text === "¿Qué falta para entregar este trabajo?" ? "" : text)}>
+        <CalendarRange size={18} /> Planear semana
+      </button>}
     </div>
     <div className="pw-panel">
       <h1><StratosAtomHex size={26} color="var(--pw-blue)" edge="var(--pw-atom-edge)" /> Copilot de Proyectos</h1>

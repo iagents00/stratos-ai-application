@@ -1736,12 +1736,14 @@ export default function App() {
   const [requestedDelivery, setRequestedDelivery] = useState(null);
   const [agendaDelivery, setAgendaDelivery] = useState(null);
   const [projectHelp, setProjectHelp] = useState(null);
+  const [projectWeek, setProjectWeek] = useState(null);
   const projectsEnabled = canAccessModule("projects", user, clientConfig);
   const dukeAgendaActivities = isStratosOrg(user?.organizationId) && !user.isDemo && !user._offline
     && !user.crmOnly && user.isActive !== false && MODULE_ROLES.copilot.includes(user.role);
   const clearRequestedDelivery = useCallback(() => setRequestedDelivery(null), []);
   useEffect(() => {
     if (v !== "copilot") setProjectHelp(null);
+    if (v !== "projects") setProjectWeek(null);
   }, [v]);
   const openProjectDelivery = (id) => {
     setMetaOpen(false);
@@ -1755,6 +1757,10 @@ export default function App() {
   const openProjectHelp = (context) => {
     setProjectHelp({ ...context, actor: user.id, org: user.organizationId });
     setV("copilot");
+  };
+  const openProjectWeek = (text) => {
+    setProjectWeek({ actor:user.id, org:user.organizationId, text });
+    setV("projects");
   };
   const returnFromProjectHelp = () => {
     if (projectHelp?.id) setRequestedDelivery(projectHelp.id);
@@ -2912,9 +2918,10 @@ export default function App() {
                       : <Dash oc={oc} leadsData={leadsData} T={T} />)}
                   {v === "c"      && (clientConfig.liveHuli ? <HuliWorkspace view="patients" /> : <CRM oc={oc} leadsData={leadsData} setLeadsData={setLeadsData} theme={theme} setTheme={setTheme} isRefreshing={leadsRefreshing} loadError={leadsLoadError} onRetry={() => fetchLeads({ silent: true })} autoOpenPriority1={autoOpenPriority1} onAutoOpenHandled={() => setAutoOpenPriority1(0)} softDeleteLead={softDeleteLead} autoOpenLead={crmAutoOpenLead} onAutoOpenLeadHandled={() => setCrmAutoOpenLead(null)} autoOpenNewLead={crmNewLeadTick} onNewLeadHandled={() => setCrmNewLeadTick(0)} onOpenComando={() => setV("d")} />)}
                   {v === "wa"     && canAccessModule("wa", user, clientConfig) && <WhatsAppInbox T={T} isLight={isLight} inbox={waInbox} openLead={waOpenLead} openExpediente={openLeadExpediente} onBack={backToPrevView} chatCount={waInbox.conversations?.length || 0} />}
-                  {v === "copilot" && canAccessModule("copilot", user, clientConfig) && (clientConfig.liveHuli ? <HuliWorkspace view="copilot" /> : <Copilot T={T} isLight={isLight} theme={theme} onBack={backToPrevView} score={asesorScore} projectContext={projectsEnabled && projectHelp?.actor === user.id && projectHelp?.org === user.organizationId ? projectHelp : null} onBackToProjects={returnFromProjectHelp} demoContext={user?.isDemo ? { leads: leadsData, tasks: metaActions } : undefined} />)}
+                  {v === "copilot" && canAccessModule("copilot", user, clientConfig) && (clientConfig.liveHuli ? <HuliWorkspace view="copilot" /> : <Copilot T={T} isLight={isLight} theme={theme} onBack={backToPrevView} score={asesorScore} projectContext={projectsEnabled && projectHelp?.actor === user.id && projectHelp?.org === user.organizationId ? projectHelp : null} onBackToProjects={returnFromProjectHelp} onPlanWeek={projectsEnabled && ["super_admin","admin","director","ceo"].includes(user.role) ? openProjectWeek : undefined} demoContext={user?.isDemo ? { leads: leadsData, tasks: metaActions } : undefined} />)}
                   {v === "projects" && projectsEnabled && <ProjectWorkspace key={`${user.id}:${user.organizationId}`} user={user} isLight={isLight}
                     requestedDelivery={requestedDelivery} onRequestHandled={clearRequestedDelivery}
+                    initialWeekText={projectWeek?.actor === user.id && projectWeek?.org === user.organizationId ? projectWeek.text : null}
                     onCopilot={copilotEnabled ? openProjectHelp : undefined}
                     onAgenda={() => { setMetaTab("acciones"); setMetaOpen(true); }} />}
                   {(v === "mkt" || v === "mkt_reporte" || v === "mkt_equipo" || v === "mkt_dia" || v === "mkt_marcas" || v === "mkt_pipe" || v === "mkt_sol") && canAccessModule(v, user, clientConfig) && (
