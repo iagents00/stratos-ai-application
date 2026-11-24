@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { CalendarRange, Mic, Plus, Square, Trash2 } from "lucide-react";
+import { CalendarRange, ChevronDown, Mic, Plus, Square, Trash2 } from "lucide-react";
 import { addCalendarDays, applyProjectWeek, bySchedule, dayInZone, dayLabel, draftProjectWeek, scheduleLabel } from "./workspace";
 import { useWeekDictation } from "./useWeekDictation";
 
@@ -40,6 +40,7 @@ export default function ProjectWeekPlanner({ user, data, onSaved, onOpen, initia
   const [error,setError] = useState("");
   const [confirmation,setConfirmation] = useState("");
   const [person,setPerson] = useState("");
+  const [expanded,setExpanded] = useState({});
   const lock = useRef(false);
   const { message, zone, project, draft, notes, attempt } = state;
   const update = (patch) => setState((previous) => ({ ...previous,...patch }));
@@ -103,9 +104,12 @@ export default function ProjectWeekPlanner({ user, data, onSaved, onOpen, initia
     } finally { lock.current = false; setBusy(false); }
   }
 
-  const edit = (key, patch) => setState((previous) => ({
-    ...previous,draft:previous.draft.map((row) => row.key===key ? { ...row,...patch } : row),
-  }));
+  const edit = (key, patch) => {
+    setExpanded((previous) => previous[key] === undefined ? { ...previous,[key]:true } : previous);
+    setState((previous) => ({
+      ...previous,draft:previous.draft.map((row) => row.key===key ? { ...row,...patch } : row),
+    }));
+  };
   const incomplete = draft.filter((row) => !ready(row,data.projects,data.people)).length;
   const changedZone = zone !== deviceZone() && !zones.some(([id])=>id===zone);
   return <div className="pw-week">
@@ -152,8 +156,18 @@ export default function ProjectWeekPlanner({ user, data, onSaved, onOpen, initia
       <h2>Borrador {draft.length > 0 ? `· ${draft.length}` : ""}</h2>
       {notes.length > 0 && <ul className="pw-week-notes">{notes.map((note,index) => <li key={index}>{note}</li>)}</ul>}
       {!draft.length && <p className="pw-sub">Aquí aparecerán las actividades sugeridas por Copilot.</p>}
-      {draft.map((row,index) => <fieldset key={row.key} className="pw-week-activity" disabled={busy || micBusy || Boolean(attempt)}>
-        <legend>{index+1}. {row.title || "Actividad nueva"}</legend>
+      {draft.map((row,index) => {
+        const complete = ready(row,data.projects,data.people);
+        const editing = expanded[row.key] ?? !complete;
+        return <div key={row.key} className="pw-week-activity">
+          <button type="button" className="pw-week-preview" aria-expanded={editing} aria-controls={editing ? `week-${row.key}` : undefined}
+            onClick={() => setExpanded((previous) => ({...previous,[row.key]:!editing}))}>
+            <span className="pw-row-copy"><strong>{index+1}. {row.title || "Actividad nueva"}</strong>
+              <small>{row.assignee_id ? nameOf(row.assignee_id) : row.who || "Persona por definir"} · {row.due_on ? dayLabel(row.due_on,zone) : "Día por definir"}{row.time ? ` · ${row.time}` : ""}</small>
+            </span>
+            {!complete && <span className="pw-week-check">Por revisar</span>}<ChevronDown size={18} aria-hidden="true" />
+          </button>
+          {editing && <fieldset id={`week-${row.key}`} disabled={busy || micBusy || Boolean(attempt)}>
         <div className="pw-form-grid">
           <label>Actividad<input maxLength={160} value={row.title} onChange={(event)=>edit(row.key,{title:event.target.value})} /></label>
           <label>Persona<select value={row.assignee_id} onChange={(event)=>edit(row.key,{assignee_id:event.target.value})}>
@@ -168,12 +182,14 @@ export default function ProjectWeekPlanner({ user, data, onSaved, onOpen, initia
             {data.people.map(({id,name}) => <option key={id} value={id}>{id===user.id ? `${name} (yo)` : name}</option>)}
           </select></label>
           <label>Día<input type="date" value={row.due_on} onChange={(event)=>edit(row.key,{due_on:event.target.value})} /></label>
-          <label>{row.requires_time ? "Hora por confirmar" : "Hora opcional"}<input type="time" value={row.time} onChange={(event)=>edit(row.key,{time:event.target.value})} /></label>
+          <label>{row.requires_time && !row.time ? "Hora por confirmar" : "Hora"}<input type="time" value={row.time} onChange={(event)=>edit(row.key,{time:event.target.value})} /></label>
           <label>Resultado esperado<textarea rows={2} maxLength={2000} value={row.outcome} onChange={(event)=>edit(row.key,{outcome:event.target.value})} /></label>
           <label>Criterios de aceptación<textarea rows={2} maxLength={2900} placeholder="Uno por línea" value={row.criteria} onChange={(event)=>edit(row.key,{criteria:event.target.value})} /></label>
         </div>
         <button type="button" className="pw-btn pw-quiet" onClick={() => update({draft:draft.filter((entry)=>entry.key!==row.key)})}><Trash2 size={17} /> Quitar actividad</button>
-      </fieldset>)}
+          </fieldset>}
+        </div>;
+      })}
       <div className="pw-actions">
         <button type="button" className="pw-btn" disabled={busy || micBusy || Boolean(attempt) || draft.length>=50}
           onClick={() => update({draft:[...draft,blank(project,user.id)]})}><Plus size={17} /> Agregar actividad</button>

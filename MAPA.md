@@ -6,7 +6,7 @@
 >
 > ¿Buscás un botón o un texto y no está acá? `npm run buscar "texto"`
 
-**316 archivos · 88.061 líneas**
+**316 archivos · 88.082 líneas**
 
 ---
 
@@ -154,8 +154,8 @@ Lo que ves en el menú lateral, y el archivo que lo dibuja.
 | `PlatformAdminConsole.jsx` | 285 | _sin describir_ |
 | `PlatformCompanyCRM.jsx` | 258 | _sin describir_ |
 | `PlatformAdminConsole.css` | 224 | _sin describir_ |
-| `ProjectWeekPlanner.jsx` | 201 | _sin describir_ |
-| `projects.css` | 163 | _sin describir_ |
+| `ProjectWeekPlanner.jsx` | 217 | _sin describir_ |
+| `projects.css` | 168 | _sin describir_ |
 | `CatalogConfiguratorAdmin.jsx` | 158 | _sin describir_ |
 | `PlatformUsersAdmin.jsx` | 158 | _sin describir_ |
 | `CompanyOnboarding.jsx` | 157 | _sin describir_ |
@@ -618,7 +618,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Activa tu Copilot AI | `src/app/views/Copilot.jsx:1965` |
 | Activar para el equipo | `src/app/features/Admin/RailsSettings.jsx:72` |
 | Activar solo lectura | `src/app/features/Admin/WhatsAppOnboardingAdmin.jsx:312` |
-| Actividad | `src/app/features/Projects/ProjectWeekPlanner.jsx:158` |
+| Actividad | `src/app/features/Projects/ProjectWeekPlanner.jsx:172` |
 | Actividad del equipo IA — hoy | `src/app/views/IACRM.jsx:299` |
 | Actividad reciente | `src/app/views/CRM/index.jsx:5940` |
 | Actividad registrada | `src/app/features/Admin/PlatformCompanyCRM.jsx:246` |
@@ -654,7 +654,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Agente Stratos | `src/app/components/Chat.jsx:60` |
 | Agrega un teléfono…  +1 555 … | `src/app/views/CRM/components.jsx:1308` |
 | Agregar | `src/app/features/MetaPanel/index.jsx:1377` |
-| Agregar actividad | `src/app/features/Projects/ProjectWeekPlanner.jsx:179` |
+| Agregar actividad | `src/app/features/Projects/ProjectWeekPlanner.jsx:195` |
 | Agregar etapa | `src/app/features/Admin/PipelineConfiguratorAdmin.jsx:326` |
 | Agregar otro | `src/app/views/Marketing.jsx:2521` |
 | Agregar propiedad | `src/app/views/LandingPages/CreateWorkspace.jsx:44` |
@@ -818,7 +818,7 @@ dice "cambiá el botón que dice X" y no sabés por dónde empezar.
 | Columna nueva | `src/app/views/Marketing.jsx:1470` |
 
 
-_(926 textos más — usá `npm run buscar "texto"`)_
+_(927 textos más — usá `npm run buscar "texto"`)_
 
 ---
 
@@ -896,11 +896,11 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/features/Admin/PlatformAdminConsole.css` (224 líneas)
 - `src/landing/ManualMuebleria.jsx` (224 líneas)
 - `src/lib/organize-notes.js` (220 líneas)
+- `src/app/features/Projects/ProjectWeekPlanner.jsx` (217 líneas)
 - `src/app/constants/intelFeatures.js` (211 líneas)
 - `src/app/views/CRM/zoom-metrics.js` (210 líneas)
 - `src/landing/Functionalities.css` (203 líneas)
 - `src/hooks/useZoomAgendados.js` (202 líneas)
-- `src/app/features/Projects/ProjectWeekPlanner.jsx` (201 líneas)
 - `src/lib/docx.js` (201 líneas)
 - `src/clients/vega/config.js` (196 líneas)
 - `src/lib/whatsapp-signup.js` (196 líneas)
@@ -916,7 +916,7 @@ hacen. Agregarles un bloque `/** ... */` arriba los hace aparecer solos acá.
 - `src/app/views/CRM/RequiresHumanButton.jsx` (177 líneas)
 - `src/lib/informe-doc.js` (175 líneas)
 - `src/app/views/LandingPages/PortfolioDocument.css` (174 líneas)
-- `src/app/features/Projects/projects.css` (163 líneas)
+- `src/app/features/Projects/projects.css` (168 líneas)
 - `src/app/components/EstadoAvisos.jsx` (162 líneas)
 - `src/app/features/Admin/CatalogConfiguratorAdmin.jsx` (158 líneas)
 - `src/app/features/Admin/PlatformUsersAdmin.jsx` (158 líneas)

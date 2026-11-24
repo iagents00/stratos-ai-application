@@ -44,6 +44,7 @@ async function generate(instructions: string, input: unknown, structured = false
 
 type Delivery = {
   id: string; project_id: string; title: string; outcome: string; due_on: string | null;
+  assignee_id: string; scheduled_at: string | null; schedule_zone: string | null;
   state: string; note: string; priority: number; waiting: boolean; version: number;
   criteria: { text: string; done: boolean }[]; evidence: string;
 };
@@ -108,16 +109,24 @@ Deno.serve(async (req) => {
     const selected = deliveries.find((entry) => entry.id === body.delivery);
     if (body.delivery && !selected) return reply({ error: 'Entrega no disponible' }, 403);
     // Related items contribute factual status only. Context never includes other conversations or credentials.
-    const related = deliveries.filter((entry) => entry.id !== selected?.id).slice(0, 60).map((entry) => ({
+    const now = new Date().toISOString();
+    const people = new Map<string,string>(workspace.people.map(({id,name}: {id:string;name:string}) => [id,name]));
+    const dueRank = (entry: Delivery) => !entry.due_on ? 1 : entry.due_on >= now.slice(0,10) ? 0 : 2;
+    const related = deliveries.filter((entry) => entry.id !== selected?.id).sort((a,b) =>
+      dueRank(a)-dueRank(b) || (a.due_on || "z").localeCompare(b.due_on || "z"),
+    ).slice(0,60).map((entry) => ({
       title: entry.title, project: projects.find((project) => project.id === entry.project_id)?.title,
-      due_on: entry.due_on, state: entry.state, priority: entry.priority, waiting: entry.waiting,
+      assignee: people.get(entry.assignee_id), due_on: entry.due_on,
+      scheduled_at: entry.scheduled_at, schedule_zone: entry.schedule_zone,
+      state: entry.state, priority: entry.priority, waiting: entry.waiting,
     }));
     const context = {
-      today: new Date().toISOString().slice(0, 10),
+      today: now.slice(0,10),
       projects: projects.slice(0, 20).map(({ title, outcome, target_date }) => ({ title, outcome, target_date })),
       related,
       delivery: selected ? {
-        title: selected.title, outcome: selected.outcome, due_on: selected.due_on, state: selected.state,
+        title: selected.title, outcome: selected.outcome, assignee: people.get(selected.assignee_id), due_on: selected.due_on,
+        scheduled_at: selected.scheduled_at, schedule_zone: selected.schedule_zone, state: selected.state,
         criteria: selected.criteria, waiting: selected.waiting, note: selected.note,
       } : null,
     };
