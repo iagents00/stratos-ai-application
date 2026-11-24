@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { StratosAtomHex } from "../../components/Logo";
 import { askProjects } from "./workspace";
+import { projectTheme } from "./project-theme";
 import "./projects.css";
 
 export default function ProjectCopilot({ org, context, onBack, isLight }) {
@@ -29,12 +30,12 @@ export default function ProjectCopilot({ org, context, onBack, isLight }) {
     setText("");
   }
 
-  return <section className="pw pw-chat" data-theme={isLight ? "light" : "dark"}>
+  return <section className="pw pw-chat" data-theme={isLight ? "light" : "dark"} style={projectTheme(isLight)}>
     <div className="pw-toolbar">
       <button className="pw-btn" type="button" onClick={onBack}><ArrowLeft size={18} /> Volver a Proyectos</button>
     </div>
     <div className="pw-panel">
-      <h1><StratosAtomHex size={26} color="var(--pw-blue)" edge="#32bbff" /> Copilot de Proyectos</h1>
+      <h1><StratosAtomHex size={26} color="var(--pw-blue)" edge="var(--pw-atom-edge)" /> Copilot de Proyectos</h1>
       <p className="pw-sub">{context.title || "Proyectos de tu organización"}</p>
       {messages.map(({ question, answer }, index) => <div className="pw-exchange" key={index}>
         <p><strong>Tú</strong> {question}</p><p className="pw-evidence">{answer}</p>

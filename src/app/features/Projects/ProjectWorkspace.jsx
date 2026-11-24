@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, CalendarDays, ChevronRight, CircleHelp, Layers, Paperclip, Plus, X } from "lucide-react";
 import { StratosAtomHex } from "../../components/Logo";
 import { byPriority, changeProject, dayLabel, deliveryState, loadProjects, localDay, runProjectAgent, states, useProjects } from "./workspace";
+import { projectTheme } from "./project-theme";
 import "./projects.css";
 
 const tabs = {
@@ -292,7 +293,7 @@ export default function ProjectWorkspace({ user, isLight, requestedDelivery, onR
   const projectRow = (project) => <Row key={project.id} title={project.title} detail={project.outcome} onClick={() => showProject(project.id)} />;
   const messages = <>{problem && <p className="pw-alert" role="alert">{problem}</p>}{notice && <p className="pw-status" role="status">{notice}</p>}</>;
 
-  return <section className={onCloseDetail ? "pw pw-detail-host" : "pw"} data-theme={isLight ? "light" : "dark"} aria-label={onCloseDetail ? "Actividad de Agenda" : "Proyectos"}>
+  return <section className={onCloseDetail ? "pw pw-detail-host" : "pw"} data-theme={isLight ? "light" : "dark"} style={projectTheme(isLight)} aria-label={onCloseDetail ? "Actividad de Agenda" : "Proyectos"}>
     {!onCloseDetail && <>
     <div className="pw-toolbar">
       <nav aria-label="Vistas de proyectos">{tabs[mode].map(([id, label]) => <button type="button" key={id}
@@ -354,7 +355,7 @@ export default function ProjectWorkspace({ user, isLight, requestedDelivery, onR
       {!items.some((item) => item.assignee_id === user.id || item.reviewer_id === user.id) && <p className="pw-sub">Todavía no tienes entregas asignadas.</p>}
     </section>}
     {help && data && <button className="pw-copilot" type="button" disabled={busy} onClick={() => help(mode === "operation" ? focus : null)}>
-      <span className="pw-atom" style={{ animation: "pw-orbit 12s linear infinite" }}><StratosAtomHex size={34} color="var(--pw-blue)" edge="#43bfff" /></span><strong>Copilot</strong>
+      <span className="pw-atom" style={{ animation: "pw-orbit 12s linear infinite" }}><StratosAtomHex size={34} color="var(--pw-blue)" edge="var(--pw-atom-edge)" /></span><strong>Copilot</strong>
       <span>{mode === "operation" && focus ? "Ayúdame con esta entrega" : "¿Qué quieres avanzar?"}</span><ArrowRight size={25} />
     </button>}
     </>}
