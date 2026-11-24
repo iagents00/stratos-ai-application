@@ -21,3 +21,19 @@ returns text language sql stable security invoker set search_path = '' as $$
         to_jsonb(o.id='cd478b82-d2ff-4543-981d-fb9d7aa1583e'::uuid)) = 'true'::jsonb
     end;
 $$;
+
+-- Agenda participation does not activate the project Copilot for Duke teammates.
+create or replace function public.work_project_limit_help(p_org uuid, p_actor uuid)
+returns boolean language plpgsql security definer set search_path = '' as $$
+declare
+  actor_role text := public.work_project_role(p_org,p_actor);
+begin
+  if actor_role is null or (p_org='00000000-0000-0000-0000-000000000001'::uuid and actor_role<>'super_admin')
+  then return false; end if;
+  delete from public.work_project_help_usage where organization_id=p_org and actor_id=p_actor and day<current_date-7;
+  insert into public.work_project_help_usage(organization_id,actor_id,day)
+    values(p_org,p_actor,current_date)
+    on conflict (organization_id,actor_id,day) do update set turns=work_project_help_usage.turns+1
+    where work_project_help_usage.turns<60;
+  return found;
+end $$;

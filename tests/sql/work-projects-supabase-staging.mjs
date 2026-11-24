@@ -102,6 +102,8 @@ assert.deepEqual((await checked(dukeSnapshot(teamMember))).deliveries.map((entry
 assert.equal((await dukeSnapshot(otherSuperadmin, activity)).error?.code, "42501");
 assert.equal((await dukeSnapshot(outsider, activity)).error?.code, "42501");
 assert.equal(await checked(dukeAccess(teamMember)), false);
+assert.equal(await checked(admin.rpc("work_project_limit_help", { p_org: duke, p_actor: teamMember.id })), false);
+assert.equal(await checked(admin.rpc("work_project_limit_help", { p_org: duke, p_actor: dukeOwner.id })), true);
 assigned = await checked(dukeAction(teamMember, "start", { id: activity, version: assigned.version }));
 assigned = await checked(dukeAction(teamMember, "submit", { id: activity, version: assigned.version, checked: [true], evidence: "Fuentes verificadas" }));
 assert.equal((await checked(dukeAction(dukeOwner, "approve", { id: activity, version: assigned.version }))).state, "approved");
