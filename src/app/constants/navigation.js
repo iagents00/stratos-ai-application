@@ -262,8 +262,11 @@ export function canAccessModule(moduleId, user, clientConfig = null) {
   if (user.isMarketingAdmin === true && isStratosOrg(user.organizationId)
       && !MARKETING_ADMIN_MODULES.has(moduleId)) return false;
   if (moduleId === "projects") {
-    return Boolean(user.organizationId) && !user.isDemo && user.isActive !== false
-      && clientConfig?.features?.projectWorkspace === true && MODULE_ROLES.copilot.includes(user.role);
+    if (!user.organizationId || user.isDemo || user.isActive === false) return false;
+    if (isStratosOrg(user.organizationId)) {
+      return user.role === "super_admin" && clientConfig?.features?.dukeProjectWorkspace === true;
+    }
+    return clientConfig?.features?.projectWorkspace === true && MODULE_ROLES.copilot.includes(user.role);
   }
   // Empresas nuevas: el servidor devuelve los permisos efectivos del usuario.
   // Esta condición solo organiza el menú; RLS y RPC comprueban los datos.

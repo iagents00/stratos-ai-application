@@ -76,7 +76,7 @@ const PlatformAdminConsole = lazy(() => import("./features/Admin/PlatformAdminCo
 const RailsSettings = lazy(() => import("./features/Admin/RailsSettings"));
 
 /* ── Navigation & roles ── */
-import { nav, MODULE_ROLES, MOBILE_PRIMARY_NAV, getAccessibleNavigation, canAccessModule, isMarketingUser, resolveImmersiveBackView } from "./constants/navigation";
+import { nav, MODULE_ROLES, MOBILE_PRIMARY_NAV, getAccessibleNavigation, canAccessModule, isMarketingUser, isStratosOrg, resolveImmersiveBackView } from "./constants/navigation";
 
 // Vistas que NO se persisten entre F5: son flujos efímeros (entrar a Planes
 // desde una promo, abrir admin desde un settings click). El F5 te regresa
@@ -294,7 +294,35 @@ export default function App() {
   // fallback para orgBrand cuando la organización del user no tiene `brand`
   // explícitamente seteado en meta_config — así cada cliente ve su propia
   // marca sin depender de checks hardcoded.
-  const { config: clientConfig } = useClient();
+  const { config: baseClientConfig } = useClient();
+  const [dukeProjectsActor, setDukeProjectsActor] = useState(null);
+  const dukeCandidate = user?.role === "super_admin" && isStratosOrg(user.organizationId)
+    && !user.isDemo && !user._offline && !user.crmOnly && !user.isMarketingAdmin && user.isActive !== false;
+  const dukeActorId = dukeCandidate ? user.id : null;
+  useEffect(() => {
+    if (!dukeActorId) {
+      setDukeProjectsActor(null);
+      return;
+    }
+    const controller = new AbortController();
+    const refresh = async () => {
+      try {
+        const { data, error } = await supabase.rpc("work_project_duke_access").abortSignal(controller.signal);
+        if (!controller.signal.aborted) setDukeProjectsActor(!error && data === true ? dukeActorId : null);
+      } catch {
+        if (!controller.signal.aborted) setDukeProjectsActor(null);
+      }
+    };
+    refresh();
+    window.addEventListener("focus", refresh);
+    return () => { controller.abort(); window.removeEventListener("focus", refresh); };
+  }, [dukeActorId]);
+  const dukeProjectsAllowed = dukeActorId !== null && dukeActorId === dukeProjectsActor;
+  const clientConfig = useMemo(() => dukeProjectsAllowed ? {
+    ...baseClientConfig,
+    features: { ...baseClientConfig.features, dukeProjectWorkspace: true },
+    navLabels: { ...baseClientConfig.navLabels, e: "Catálogo" },
+  } : baseClientConfig, [baseClientConfig, dukeProjectsAllowed]);
   const isAsesorRole     = !["super_admin","admin","director","ceo"].includes(user?.role);
   const marketingMode    = isMarketingUser(user);
   // Telefono de soporte del tenant para mostrar como atajo en el header.
